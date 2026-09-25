@@ -1,5 +1,7 @@
 # 数学Ⅰ デジタル教材
 
+**公開URL：https://taichi9445-jpg.github.io/taichi_math/**
+
 高校数学Ⅰ の教材 31 本を、1 つのサイトにまとめたものです。
 GAS・Canva でバラバラに作られていたものを、素の HTML / CSS / JavaScript で作り直しています。
 
@@ -47,7 +49,7 @@ GAS・Canva でバラバラに作られていたものを、素の HTML / CSS / 
 4. 1〜2 分待つと、ページの上部に公開 URL が出ます
 
 ```
-https://<あなたのユーザー名>.github.io/math1/
+https://taichi9445-jpg.github.io/taichi_math/
 ```
 
 この URL を生徒に配れば、誰でもアクセスして遊べます。
@@ -57,8 +59,8 @@ https://<あなたのユーザー名>.github.io/math1/
 一覧を経由しなくても、教材ごとに直接リンクできます。授業で 1 つだけ使うときに便利です。
 
 ```
-https://<ユーザー名>.github.io/math1/m/tenkai-koushiki.html   ← 展開の公式
-https://<ユーザー名>.github.io/math1/m/root-tower.html        ← 平方根タワー
+https://taichi9445-jpg.github.io/taichi_math/m/tenkai-koushiki.html   ← 展開の公式
+https://taichi9445-jpg.github.io/taichi_math/m/root-tower.html        ← 平方根タワー
 ```
 
 ファイル名は下の一覧表を見てください。
