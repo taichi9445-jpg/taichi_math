@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2次関数の平行移動</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/graph.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   20. 2次関数の平行移動
+
+   元教材から直した点：
+     ・y = (x−3)² を「左に3」と答えても正解になることがあった
+       （選択肢の正解番号が問題データとずれていた）。
+       → 移動量から式を作り、そこから選択肢を作るので、ずれようがない。
+     ・「上に4」「下に4」「右に4」「左に4」の4択で、
+       上下と左右が混ざった移動が出題できず、内容が単調だった。
+       → 上下・左右・両方の3タイプを用意した。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt;
+
+  function baseShow(a) {
+    return 'y = ' + (a === 1 ? '' : a === -1 ? '-' : a) + 'x<sup>2</sup>';
+  }
+
+  /** y = a(x − p)² + q を表示用の文字列にする */
+  function movedShow(a, p, q) {
+    var head = (a === 1 ? '' : a === -1 ? '-' : a);
+    var inner = p === 0 ? 'x' : 'x ' + (p > 0 ? '- ' : '+ ') + Math.abs(p);
+    var body = p === 0 ? 'x<sup>2</sup>' : '(' + inner + ')<sup>2</sup>';
+    var tail = q === 0 ? '' : (q > 0 ? ' + ' : ' - ') + Math.abs(q);
+    return 'y = ' + head + body + tail;
+  }
+
+  function describe(p, q) {
+    var parts = [];
+    if (p !== 0) parts.push(p > 0 ? '右に' + p : '左に' + (-p));
+    if (q !== 0) parts.push(q > 0 ? '上に' + q : '下に' + (-q));
+    if (!parts.length) return '動かさない';
+    return parts.join('、');
+  }
+
+  /* ---------- 式 → 移動のようす を答える ---------- */
+  function fromFormula(kind) {
+    var a = Quiz.pick([1, 1, 1, 2, -1]);
+    var p = kind === 'v' ? 0 : A.nz(-5, 5);
+    var q = kind === 'h' ? 0 : A.nz(-5, 5);
+
+    var correct = describe(p, q);
+    var wrongs = [];
+    var cands = [describe(-p, q), describe(p, -q), describe(-p, -q), describe(q, p)];
+    cands.forEach(function (c) {
+      if (wrongs.length < 3 && c !== correct && wrongs.indexOf(c) < 0) wrongs.push(c);
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 30) {
+      var c2 = describe(A.nz(-5, 5), kind === 'h' ? 0 : A.nz(-5, 5));
+      if (c2 !== correct && wrongs.indexOf(c2) < 0) wrongs.push(c2);
+    }
+
+    return {
+      tag: kind === 'h' ? '左右' : kind === 'v' ? '上下' : '上下＋左右',
+      text: '元の関数　<b>' + baseShow(a) + '</b>　を平行移動して、次の関数になりました。<br>どのように動かしたものですか。',
+      math: movedShow(a, p, q),
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: '(x − p)² の p は「右へ p」、＋q は「上へ q」。' +
+        'かっこの中の符号は、動かす向きと逆になることに注意。' +
+        '<br>' + Graph.parabola({ a: a, b: -2 * a * p, c: a * p * p + q, markVertex: true }),
+      explain: '頂点は ( ' + p + ' , ' + q + ' ) に移っています。つまり ' + correct + ' 平行移動したものです。'
+    };
+  }
+
+  /* ---------- 移動のようす → 式 を答える ---------- */
+  function toFormula(kind) {
+    var a = Quiz.pick([1, 1, 2, -1]);
+    var p = kind === 'v' ? 0 : A.nz(-5, 5);
+    var q = kind === 'h' ? 0 : A.nz(-5, 5);
+
+    var correct = movedShow(a, p, q);
+    var wrongs = [];
+    [movedShow(a, -p, q), movedShow(a, p, -q), movedShow(a, -p, -q)].forEach(function (w) {
+      if (wrongs.length < 3 && w !== correct && wrongs.indexOf(w) < 0) wrongs.push(w);
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 30) {
+      var w2 = movedShow(a, A.nz(-5, 5), A.nz(-5, 5));
+      if (w2 !== correct && wrongs.indexOf(w2) < 0) wrongs.push(w2);
+    }
+
+    return {
+      tag: '式にする',
+      text: '<b>' + baseShow(a) + '</b> を <b>' + describe(p, q) + '</b> 平行移動した関数はどれですか。',
+      math: baseShow(a),
+      mathPlain: true,
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: '右へ p 動かすときは x を (x − p) に置きかえます。上へ q 動かすときは ＋q をつけます。',
+      explain: '答え： ' + correct + '　（頂点は ( ' + p + ' , ' + q + ' )）'
+    };
+  }
+
+  /* ---------- 頂点を答える ---------- */
+  function vertexQuestion() {
+    var a = Quiz.pick([1, 2, -1]);
+    var p = A.nz(-5, 5), q = A.nz(-5, 5);
+    var correct = '( ' + p + ' , ' + q + ' )';
+    var wrongs = ['( ' + (-p) + ' , ' + q + ' )', '( ' + p + ' , ' + (-q) + ' )', '( ' + q + ' , ' + p + ' )']
+      .filter(function (w) { return w !== correct; });
+
+    return {
+      tag: '頂点',
+      text: '次の2次関数のグラフの頂点の座標を答えなさい。',
+      math: movedShow(a, p, q),
+      type: 'choice',
+      choices: [correct].concat(wrongs.slice(0, 3)),
+      correct: 0,
+      hint: 'y = a(x − p)² + q の頂点は ( p , q ) です。',
+      explain: '頂点は ' + correct + ' です。' +
+        '<br>' + Graph.parabola({ a: a, b: -2 * a * p, c: a * p * p + q, markVertex: true })
+    };
+  }
+
+  function build(maker, kind, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(maker(kind));
+    return out;
+  }
+
+  Quiz.start({
+    title: '2次関数の平行移動',
+    subtitle: 'かっこの中の符号と、動かす向きの関係をつかもう。',
+    modes: [
+      { id: 'f:v', group: '式 → 動かし方', name: '基本（上下だけ）', desc: '10問' },
+      { id: 'f:h', group: '式 → 動かし方', name: '基本（左右だけ）', desc: '10問' },
+      { id: 'f:b', group: '式 → 動かし方', name: '応用（上下＋左右）', desc: '10問' },
+      { id: 't:v', group: '動かし方 → 式', name: '基本（上下だけ）', desc: '8問' },
+      { id: 't:h', group: '動かし方 → 式', name: '基本（左右だけ）', desc: '8問' },
+      { id: 't:b', group: '動かし方 → 式', name: '応用（上下＋左右）', desc: '8問' },
+      { id: 'v:b', group: '頂点', name: '頂点を求める', desc: '10問' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      if (p[0] === 'f') return build(fromFormula, p[1], 10);
+      if (p[0] === 't') return build(toFormula, p[1], 8);
+      return build(vertexQuestion, null, 10);
+    }
+  });
+})();
+</script>
+</body>
+</html>

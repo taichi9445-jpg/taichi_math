@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>因数分解マスター Pro</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   12. 因数分解の練習（因数分解マスター Pro）
+     【基本公式】x²+(a+b)x+ab ／ (x±a)² ／ x²−a²
+     【応用】Lv.2 ミックス ／ Lv.3 たすき掛け
+   それぞれ「4択」と「穴埋め」で練習できる。
+
+   元教材から直した点：
+     ・記述で答えるとき、展開したままの x²+5x+6 を入力しても正解になっていた。
+       → 因数分解の問題では「積の形になっているか」も判定する。
+         値が合っていても、くくれていなければ不正解にする。
+     ・(x+2)(x+3) と (x+3)(x+2) で片方しか正解にならなかった。
+       → 数式として同値かで見るので、どちらでも正解。
+     ・たすき掛けの選択肢に、展開すると同じ式になる重複が混ざっていた。
+       → 選択肢を作るときに、正解と同値なものを除外する。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  var KINDS = {
+    ab: { label: 'x²+(a+b)x+ab', make: function () { return A.quadraticFromRoots({ lo: -8, hi: 8, allowSame: false }); },
+          hint: 'かけて定数項、たして x の係数になる 2 数をさがします。' },
+    sq: { label: '(x±a)²', make: function () { return A.squareForm({ lo: -8, hi: 8 }); },
+          hint: 'x² ± 2ax + a² = (x ± a)² の形です。定数項が平方数になっています。' },
+    df: { label: 'x²−a²', make: function () { return A.diffOfSquares({ hi: 9 }); },
+          hint: 'x² − a² = (x + a)(x − a)。2乗の差の形です。' },
+    cross: { label: 'たすき掛け', make: function () { return A.crossForm(); },
+          hint: 'x² の係数と定数項を、たすきにかけて x の係数になる組をさがします。' }
+  };
+
+  /* --- 誤答（因数の形）を作る。正解と同値になるものは採用しない --- */
+  function wrongFactorForms(it, need) {
+    var correctPlain = F.plain(it.expanded);
+    var out = [];
+    var candidates = [];
+
+    if (it.a !== undefined && it.b !== undefined) {
+      // 符号のミス・数のミスをそのまま因数の形にする
+      candidates.push(A.paren(1, -it.a) + A.paren(1, it.b));
+      candidates.push(A.paren(1, it.a) + A.paren(1, -it.b));
+      candidates.push(A.paren(1, -it.a) + A.paren(1, -it.b));
+      candidates.push(A.paren(1, it.a + 1) + A.paren(1, it.b - 1));
+      candidates.push(A.paren(1, it.a) + A.paren(1, it.b + 1));
+    } else if (it.p !== undefined) {
+      candidates.push(A.paren(it.p, -it.q) + A.paren(it.r, it.s));
+      candidates.push(A.paren(it.p, it.s) + A.paren(it.r, it.q));
+      candidates.push(A.paren(it.r, it.q) + A.paren(it.p, it.s));
+      candidates.push(A.paren(it.p, it.q + 1) + A.paren(it.r, it.s));
+    }
+    if (it.a !== undefined && it.b === undefined) {
+      candidates.push(A.paren(1, -it.a) + '<sup>2</sup>');
+      candidates.push(A.paren(1, it.a) + A.paren(1, -it.a));
+      candidates.push(A.paren(1, it.a + 1) + '<sup>2</sup>');
+      candidates.push(A.paren(1, 2 * it.a) + '<sup>2</sup>');
+    }
+
+    Quiz.shuffle(candidates).forEach(function (c) {
+      if (out.length >= need) return;
+      if (c === it.factored) return;
+      if (M.isEqual(F.plain(c), correctPlain)) return;   // 展開すると同じになるものは誤答にしない
+      if (out.indexOf(c) >= 0) return;
+      out.push(c);
+    });
+
+    var guard = 0;
+    while (out.length < need && guard++ < 40) {
+      var w = A.paren(1, A.nz(-9, 9)) + A.paren(1, A.nz(-9, 9));
+      if (!M.isEqual(F.plain(w), correctPlain) && out.indexOf(w) < 0) out.push(w);
+    }
+    return out;
+  }
+
+  function choiceQuestion(kindKey) {
+    var k = KINDS[kindKey];
+    var it = k.make();
+    return {
+      tag: '4択',
+      text: '次の式を因数分解しなさい。',
+      math: it.expanded,
+      type: 'choice',
+      choices: [it.factored].concat(wrongFactorForms(it, 3)),
+      correct: 0,
+      hint: k.hint,
+      explain: k.hint + '<br>答え： ' + it.factored
+    };
+  }
+
+  function blankQuestion(kindKey) {
+    var k = KINDS[kindKey];
+    var it = k.make();
+
+    if (kindKey === 'cross') {
+      return {
+        tag: '穴埋め',
+        text: '因数分解した形になるように、空欄を埋めなさい。',
+        math: it.expanded,
+        type: 'blanks',
+        template: '( _ x ＋ _ )( _ x ＋ _ )',
+        answers: [String(it.p), String(it.q), String(it.r), String(it.s)],
+        answerLabel: it.factored,
+        hint: k.hint + '　マイナスのときは符号もつけて入れます。',
+        explain: k.hint + '<br>答え： ' + it.factored
+      };
+    }
+
+    if (kindKey === 'sq') {
+      return {
+        tag: '穴埋め',
+        text: '因数分解した形になるように、空欄を埋めなさい。',
+        math: it.expanded,
+        type: 'blanks',
+        template: '( x ＋ _ )<sup>2</sup>',
+        answers: [String(it.a)],
+        answerLabel: it.factored,
+        hint: k.hint,
+        explain: k.hint + '<br>答え： ' + it.factored
+      };
+    }
+
+    var a = it.a !== undefined ? it.a : 0;
+    var b = it.b !== undefined ? it.b : -a;
+    return {
+      tag: '穴埋め',
+      text: '因数分解した形になるように、空欄を埋めなさい。',
+      math: it.expanded,
+      type: 'blanks',
+      template: '( x ＋ _ )( x ＋ _ )',
+      answers: [String(a), String(b)],
+      // どちらの順番で入れても正解にする
+      checkEach: function (value, index) {
+        return MathCore.isEqualNumber(value, index === 0 ? a : b) ||
+               MathCore.isEqualNumber(value, index === 0 ? b : a);
+      },
+      answerLabel: it.factored,
+      hint: k.hint + '　順番はどちらでもかまいません。',
+      explain: k.hint + '<br>答え： ' + it.factored
+    };
+  }
+
+  function inputQuestion(kindKey) {
+    var k = KINDS[kindKey];
+    var it = k.make();
+    return {
+      tag: '記述',
+      text: '次の式を因数分解しなさい。',
+      math: it.expanded,
+      type: 'input',
+      answer: F.plain(it.expanded),
+      answerLabel: it.factored,
+      requireFactored: true,          // 展開したままの式は不正解にする
+      placeholder: '例： (x+2)(x+3)',
+      note: 'かけ算の形（かっこの積）で答えます。',
+      hint: k.hint,
+      explain: k.hint + '<br>答え： ' + it.factored
+    };
+  }
+
+  function build(kinds, maker, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(maker(Quiz.pick(kinds)));
+    return out;
+  }
+
+  Quiz.start({
+    title: '因数分解マスター Pro',
+    subtitle: '基本の3公式をかためてから、ミックスとたすき掛けへ。',
+    modes: [
+      { id: 'ab:c', group: '【基本公式】', name: 'x²+(a+b)x+ab　4択', desc: '10問' },
+      { id: 'ab:b', group: '【基本公式】', name: 'x²+(a+b)x+ab　穴埋め', desc: '8問' },
+      { id: 'sq:c', group: '【基本公式】', name: '(x±a)²　4択', desc: '8問' },
+      { id: 'sq:b', group: '【基本公式】', name: '(x±a)²　穴埋め', desc: '8問' },
+      { id: 'df:c', group: '【基本公式】', name: 'x²−a²　4択', desc: '8問' },
+      { id: 'df:b', group: '【基本公式】', name: 'x²−a²　穴埋め', desc: '8問' },
+      { id: 'mix:c', group: '【応用】', name: 'Lv.2 ミックス　4択', desc: '3公式まぜて10問' },
+      { id: 'mix:i', group: '【応用】', name: 'Lv.2 ミックス　記述', desc: '自分で書く8問' },
+      { id: 'cross:c', group: '【応用】', name: 'Lv.3 たすき掛け　4択', desc: '8問' },
+      { id: 'cross:b', group: '【応用】', name: 'Lv.3 たすき掛け　穴埋め', desc: '6問' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      var kinds = p[0] === 'mix' ? ['ab', 'sq', 'df'] : [p[0]];
+      if (p[1] === 'c') return build(kinds, choiceQuestion, p[0] === 'ab' || p[0] === 'mix' ? 10 : 8);
+      if (p[1] === 'b') return build(kinds, blankQuestion, p[0] === 'cross' ? 6 : 8);
+      return build(kinds, inputQuestion, 8);
+    }
+  });
+})();
+</script>
+</body>
+</html>

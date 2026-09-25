@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>有名角の三角比の値</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/yuumeikaku.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   26. 有名角の三角比の値
+   問題データ（全63問）は元教材からそのまま引き継いでいる。
+
+   元教材から直した点：
+     ・図（SVG）が固定幅で、スマホだと右側が切れていた
+       → 枠に収まるようにして、収まらないときだけ横スクロールする形にした。
+     ・分数の表示がレイアウトによって縦につぶれることがあった
+       → 分数を inline-flex で組み直し、どの文字サイズでも崩れないようにした。
+     ・選択肢の並びが固定だった → 毎回シャッフルする。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var DATA = window.DATA_YUUMEIKAKU;
+
+  var LEVELS = [
+    { id: '0', name: 'レベル1：辺の長さ', desc: '図を見て辺の長さを求める（' + DATA['0'].length + '問）' },
+    { id: '1', name: 'レベル2：30°45°60°', desc: '有名角の sin・cos・tan（' + DATA['1'].length + '問）' },
+    { id: '2', name: 'レベル3：鈍角まで', desc: '90°〜180° をふくむ（' + DATA['2'].length + '問）' },
+    { id: '3', name: 'レベル4：総合', desc: '0°〜180° を全部まぜて（' + DATA['3'].length + '問）' },
+    { id: 'mix10', name: 'ランダム10問', desc: '全レベルから10問だけ' }
+  ];
+
+  function toQuestion(p) {
+    return {
+      text: p.question,
+      figure: p.diagram || null,
+      type: 'choice',
+      choices: p.choices.slice(),
+      correct: p.correct,
+      answerLabel: p.choices[p.correct]
+    };
+  }
+
+  Quiz.start({
+    title: '有名角の三角比の値',
+    subtitle: '30°・45°・60° を中心に、三角比の値を確実にする。',
+    modes: LEVELS,
+    build: function (id) {
+      var list;
+      if (id === 'mix10') {
+        var all = [];
+        Object.keys(DATA).forEach(function (k) { all = all.concat(DATA[k]); });
+        list = Quiz.shuffle(all).slice(0, 10);
+      } else {
+        list = (DATA[id] || []).slice();
+      }
+      return list.map(toQuestion).filter(function (q) {
+        // 正解番号が選択肢の範囲外のデータは出題しない（誤採点を防ぐ）
+        return q.correct >= 0 && q.correct < q.choices.length;
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>

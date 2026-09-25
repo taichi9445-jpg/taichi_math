@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>因数分解ステップ学習</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/steps.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   11. 因数分解を段階的に学ぶ（因数分解ステップ学習）
+   「かけて○・たして△」を、手順を追って埋めながら身につける。
+
+   元教材から直した点：
+     ・ステップの入力欄が前の入力に連動していて、途中で直すと
+       後ろの欄が空になったまま進めなくなることがあった。
+       → 各欄は独立。いつでも直せるし、「ぜんぶ消す」でやり直せる。
+     ・答えの順番（(x+2)(x+3) と (x+3)(x+2)）で片方しか通らなかった。
+       → 2数は小さい順に入れる形にそろえ、どちらの順でも意味が通るようにした。
+     ・問題が固定で、何度やっても同じだった。 → 毎回作り直すので繰り返し練習できる。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt;
+
+  /** かけて prod・たして sum になる 2 数を持つ問題を 1 つ作る */
+  function makeProblem(index, level) {
+    var it = A.quadraticFromRoots({ lo: level === 1 ? 1 : -8, hi: 8, allowSame: false });
+    var a = it.a, b = it.b;
+    // 小さい順にそろえる（どちらの順に書いても同じ式だが、表示は 1 通りに決めておく）
+    if (a > b) { var t = a; a = b; b = t; }
+
+    var sum = it.sum, prod = it.prod;
+
+    var lines = [
+      ['まず、かけて ', { a: String(prod), kind: 'math' }, '　たして ', { a: String(sum), kind: 'math' }, ' になる 2 つの数をさがす。'],
+      [],
+      ['その 2 数は　', { a: String(a), kind: 'math' }, '　と　', { a: String(b), kind: 'math' }],
+      [],
+      ['たしかめ：　', { a: String(a), kind: 'math' }, ' × ', { a: String(b), kind: 'math' }, ' = ', { a: String(prod), kind: 'math' }],
+      ['　　　　　　', { a: String(a), kind: 'math' }, ' + ', { a: String(b), kind: 'math' }, ' = ', { a: String(sum), kind: 'math' }],
+      [],
+      ['よって　', it.expanded, '　=　( x ＋ ', { a: String(a), kind: 'math' }, ' )( x ＋ ', { a: String(b), kind: 'math' }, ' )']
+    ];
+
+    // まぎらわしい数を候補に混ぜる
+    var extras = [];
+    [-a, -b, a + 1, b - 1, sum - a, prod + 1, a * 2].forEach(function (v) {
+      var s = String(v);
+      if (extras.length < 6 && s !== String(a) && s !== String(b) &&
+          s !== String(sum) && s !== String(prod) && extras.indexOf(s) < 0) extras.push(s);
+    });
+
+    return {
+      name: '問題' + (index + 1),
+      given: it.expanded,
+      target: 'この式を因数分解',
+      lines: lines,
+      extras: extras,
+      hint: '「かけて定数項・たして x の係数」の 2 数をさがすのがコツです。',
+      summary: '答え： ' + it.factored + '　（展開すると ' + it.expanded + ' に戻ります）'
+    };
+  }
+
+  // レベル1（正の数どうし）を4問、レベル2（負の数もあり）を4問
+  var problems = [];
+  for (var i = 0; i < 4; i++) problems.push(makeProblem(problems.length, 1));
+  for (var j = 0; j < 4; j++) problems.push(makeProblem(problems.length, 2));
+
+  Steps.start({
+    title: '因数分解を段階的に学ぶ',
+    subtitle: '「かけて○・たして△」の手順を、ひとつずつ埋めながら身につけよう。',
+    problems: problems
+  });
+})();
+</script>
+</body>
+</html>

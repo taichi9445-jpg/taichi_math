@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>展開マスター</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   09. 展開マスター
+     レベル1（10問）… 単項式×多項式、そして基本の展開
+     レベル2（5問） … 少し複雑な展開
+     方式は「選択式」と「つなげる（候補をタップして式を組み立てる）」の2つ。
+
+   元教材から直した点：
+     ・「つなげる」でパーツを置いたあと、置き直しができず詰んでいた。
+       → 空欄をタップし直せばいつでも入れ替えられる。「やり直す」ボタンも追加。
+     ・レベル2で問題が5問より多く出たり、途中で止まったりしていた。
+       → 問題数を出題エンジンが管理するので、指定どおりに終わる。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  /* ---------- レベル1：単項式 × 多項式 ---------- */
+  function monoTimesPoly() {
+    var k = A.nz(-6, 6);
+    var hasX = Math.random() < 0.5;          // かける側に x をつけるか
+    var p = A.nz(1, 6), q = A.nz(-8, 8);
+
+    var left = (k === 1 && hasX) ? 'x' : (k === -1 && hasX) ? '-x' : (hasX ? k + 'x' : String(k));
+    var right = '(' + A.linear(p, q) + ')';
+
+    var t1 = k * p, t2 = k * q;
+    var expanded = hasX
+      ? F.poly([[t1, F.pow('x', 2)], [t2, 'x']])
+      : F.poly([[t1, 'x'], [t2, '']]);
+
+    return {
+      question: left + right,
+      answer: expanded,
+      hint: 'かっこの外の数を、中のどちらの項にもかけます（分配法則）。',
+      explain: '分配法則より ' + left + ' × ' + A.linear(p, q) + ' = ' + expanded
+    };
+  }
+
+  /* ---------- レベル1・2：2項×2項 ---------- */
+  function twoByTwo(level) {
+    var it = level >= 2 ? A.crossForm() : Quiz.pick([
+      A.quadraticFromRoots({ lo: -7, hi: 7 }),
+      A.squareForm({ lo: -7, hi: 7 }),
+      A.diffOfSquares({ hi: 8 })
+    ]);
+    return {
+      question: it.factored,
+      answer: it.expanded,
+      coefs: it.coefs,
+      hint: level >= 2
+        ? '前どうし・外どうし・内どうし・後ろどうしを、すべてかけて足します。'
+        : '(x + a)(x + b) = x² + (a + b)x + ab',
+      explain: '答え： ' + it.expanded
+    };
+  }
+
+  /* ---------- 出題の形 ---------- */
+
+  function toChoice(item) {
+    var correct = item.answer;
+    var correctPlain = F.plain(correct);
+    var wrongs = [];
+    var tries = 0;
+    while (wrongs.length < 3 && tries++ < 60) {
+      var c = item.coefs;
+      var cand;
+      if (c) {
+        cand = F.poly([
+          [c.x2, F.pow('x', 2)],
+          [c.x1 + Quiz.pick([-2, -1, 1, 2, 0]), 'x'],
+          [c.x0 + Quiz.pick([-3, -1, 1, 2, 0]), '']
+        ]);
+      } else {
+        // 単項式×多項式のときは、片方だけかけ忘れた形などを作る
+        cand = correct.replace(/(\d+)/, function (m) { return String(Number(m) + Quiz.pick([1, -1, 2])); });
+      }
+      if (cand === correct) continue;
+      if (M.isEqual(F.plain(cand), correctPlain)) continue;   // 中身が同じものは誤答にしない
+      if (wrongs.indexOf(cand) >= 0) continue;
+      wrongs.push(cand);
+    }
+    return {
+      text: '次の式を展開しなさい。',
+      math: item.question,
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: item.hint,
+      explain: item.explain
+    };
+  }
+
+  /** 「つなげる」＝候補をタップして係数の空欄を埋める形 */
+  function toPick(item) {
+    var c = item.coefs;
+    if (!c) {
+      // 単項式×多項式のときは記述で答える
+      return {
+        text: '次の式を展開しなさい。',
+        math: item.question,
+        type: 'input',
+        answer: F.plain(item.answer),
+        answerLabel: item.answer,
+        placeholder: '例： 3x^2 - 6x',
+        hint: item.hint,
+        explain: item.explain
+      };
+    }
+
+    // 正解の係数＋まぎらわしい数を候補にする
+    var bank = [String(c.x1), String(c.x0)];
+    [c.x1 * -1, c.x0 * -1, c.x1 + 1, c.x0 - 1, c.x1 + c.x0].forEach(function (v) {
+      var s = String(v);
+      if (bank.length < 6 && bank.indexOf(s) < 0) bank.push(s);
+    });
+
+    return {
+      text: '展開した式になるように、空欄に入る数を選びなさい。',
+      math: item.question,
+      type: 'pick',
+      template: (c.x2 === 1 ? 'x<sup>2</sup>' : c.x2 + 'x<sup>2</sup>') + ' ＋ _ x ＋ _',
+      choices: bank,
+      answers: [String(c.x1), String(c.x0)],
+      answerLabel: item.answer,
+      hint: item.hint,
+      explain: item.explain
+    };
+  }
+
+  function build(level, style, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var item = (level === 1 && Math.random() < 0.4) ? monoTimesPoly() : twoByTwo(level);
+      out.push(style === 'choice' ? toChoice(item) : toPick(item));
+    }
+    return out;
+  }
+
+  Quiz.start({
+    title: '展開マスター',
+    subtitle: '分配法則から展開の公式まで。選択式とつなげるの2つの方式で。',
+    modes: [
+      { id: '1:choice', group: '選択式', name: 'レベル1', desc: '10問' },
+      { id: '2:choice', group: '選択式', name: 'レベル2', desc: '係数つき　5問' },
+      { id: '1:pick', group: 'つなげる', name: 'レベル1', desc: '10問' },
+      { id: '2:pick', group: 'つなげる', name: 'レベル2', desc: '係数つき　5問' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      var level = Number(p[0]);
+      return build(level, p[1], level === 1 ? 10 : 5);
+    }
+  });
+})();
+</script>
+</body>
+</html>

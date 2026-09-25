@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三角比（座標）</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/sankakuhi-zahyou.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   30. 三角比（座標）
+   角度ごとの座標・三角比のデータは元教材からそのまま引き継いでいる。
+
+   元教材から直した点：
+     ・単位円の図が canvas のアニメーションで、描画が終わる前に次へ進むと
+       図が消えたり残ったりしていた → 静止した SVG に描き直した。
+     ・図がウィンドウ幅に追従せず、スマホで右側が切れていた → 可変にした。
+     ・数学Ⅰでは 0°〜180° しか扱わないのに 360° まで混ざっていた
+       → 範囲を選べるようにした（そのまま全角度でも遊べる）。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var DATA = window.DATA_SANKAKUHI_ZAHYOU;
+  var ANGLES = Object.keys(DATA).map(Number).sort(function (a, b) { return a - b; });
+  var ANGLES_1 = ANGLES.filter(function (a) { return a >= 0 && a <= 180; });
+
+  /* --- 単位円の図を描く --------------------------------------------------- */
+  function circleFigure(angle, label) {
+    var W = 320, H = 320, cx = W / 2, cy = H / 2, R = 110;
+    var rad = angle * Math.PI / 180;
+    var px = cx + R * Math.cos(rad);
+    var py = cy - R * Math.sin(rad);
+
+    // 角を示す扇形
+    var arcR = 34;
+    var large = (angle % 360) > 180 ? 1 : 0;
+    var ax = cx + arcR, ay = cy;
+    var bx = cx + arcR * Math.cos(rad), by = cy - arcR * Math.sin(rad);
+    var arc = (angle % 360 === 0)
+      ? ''
+      : '<path d="M ' + ax + ' ' + ay + ' A ' + arcR + ' ' + arcR + ' 0 ' + large + ' 0 ' +
+        bx.toFixed(1) + ' ' + by.toFixed(1) + '" fill="none" stroke="#e79b16" stroke-width="3"/>';
+
+    return '' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="320" role="img" aria-label="単位円と角' + angle + '度">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#c9d4e6" stroke-width="2"/>' +
+      '<line x1="' + (cx - R - 26) + '" y1="' + cy + '" x2="' + (cx + R + 26) + '" y2="' + cy + '" stroke="#8896aa" stroke-width="1.5"/>' +
+      '<line x1="' + cx + '" y1="' + (cy + R + 26) + '" x2="' + cx + '" y2="' + (cy - R - 26) + '" stroke="#8896aa" stroke-width="1.5"/>' +
+      '<text x="' + (cx + R + 30) + '" y="' + (cy + 5) + '" font-size="13" fill="#5b6676">x</text>' +
+      '<text x="' + (cx + 6) + '" y="' + (cy - R - 30) + '" font-size="13" fill="#5b6676">y</text>' +
+      arc +
+      '<text x="' + (cx + 42) + '" y="' + (cy - 12) + '" font-size="15" fill="#c9820c" font-weight="bold">' + angle + '°</text>' +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + px.toFixed(1) + '" y2="' + py.toFixed(1) + '" stroke="#2f6fed" stroke-width="3"/>' +
+      '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + px.toFixed(1) + '" y2="' + cy + '" stroke="#d1477a" stroke-width="2" stroke-dasharray="5 4"/>' +
+      '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="6" fill="#2f6fed"/>' +
+      '<text x="' + (px + (Math.cos(rad) >= 0 ? 10 : -34)).toFixed(1) + '" y="' + (py - 10).toFixed(1) + '" font-size="15" fill="#1e4fbc" font-weight="bold">' + (label || 'P') + '</text>' +
+      '</svg>';
+  }
+
+  /* --- 問題を作る --------------------------------------------------------- */
+
+  function coordQuestion(angle) {
+    var d = DATA[angle];
+    var which = Quiz.pick(['x', 'y', 'r']);
+    var name = which === 'r' ? '原点Oから点Pまでの距離 r' : '点Pの ' + which + ' 座標';
+    var choices = d.coordChoices.slice();
+    return {
+      tag: '座標',
+      text: '半径 r の円周上に、角 ' + angle + '° の点 P をとりました。<b>' + name + '</b> を求めなさい。',
+      figure: circleFigure(angle),
+      type: 'choice',
+      choices: choices,
+      correct: choices.indexOf(d[which]),
+      explain: '点Pの座標は ( ' + d.x + ' , ' + d.y + ' )、r = ' + d.r + ' です。'
+    };
+  }
+
+  function trigQuestion(angle) {
+    var d = DATA[angle];
+    var fn = Quiz.pick(['sin', 'cos', 'tan']);
+    var choices = d.trigChoices.map(function (c) { return c.display; });
+    var values = d.trigChoices.map(function (c) { return c.value; });
+    var formula = fn === 'sin' ? 'sin = y / r' : fn === 'cos' ? 'cos = x / r' : 'tan = y / x';
+    return {
+      tag: '三角比',
+      text: '<b>' + fn + ' ' + angle + '°</b> の値を求めなさい。',
+      figure: circleFigure(angle),
+      type: 'choice',
+      choices: choices,
+      correct: values.indexOf(d[fn]),
+      hint: formula + '　（点Pの座標は x = ' + d.x + '、y = ' + d.y + '、r = ' + d.r + '）',
+      explain: formula + ' なので、' + fn + ' ' + angle + '° = ' + d[fn] + ' です。'
+    };
+  }
+
+  function buildList(angles, maker, n) {
+    var out = [];
+    Quiz.shuffle(angles).forEach(function (a) {
+      var q = maker(a);
+      if (q.correct >= 0) out.push(q);   // 正解が選択肢に無い問題は出さない
+    });
+    return out.slice(0, n);
+  }
+
+  Quiz.start({
+    title: '三角比（座標）',
+    subtitle: '三角比を「円周上の点の座標」としてとらえる練習。',
+    modes: [
+      { id: 'c1', group: '数学Ⅰの範囲（0°〜180°）', name: '座標を求める', desc: '点Pの x・y と r（10問）' },
+      { id: 't1', group: '数学Ⅰの範囲（0°〜180°）', name: '三角比の値', desc: 'sin・cos・tan（10問）' },
+      { id: 'm1', group: '数学Ⅰの範囲（0°〜180°）', name: '総合', desc: '座標と三角比をまぜて（12問）' },
+      { id: 'c2', group: '発展（0°〜360°）', name: '座標を求める', desc: '一般角まで（12問）' },
+      { id: 't2', group: '発展（0°〜360°）', name: '三角比の値', desc: '一般角まで（12問）' }
+    ],
+    build: function (id) {
+      if (id === 'c1') return buildList(ANGLES_1, coordQuestion, 10);
+      if (id === 't1') return buildList(ANGLES_1, trigQuestion, 10);
+      if (id === 'c2') return buildList(ANGLES, coordQuestion, 12);
+      if (id === 't2') return buildList(ANGLES, trigQuestion, 12);
+      // 総合：座標と三角比を半分ずつ
+      var a = buildList(ANGLES_1, coordQuestion, 6);
+      var b = buildList(ANGLES_1, trigQuestion, 6);
+      return Quiz.shuffle(a.concat(b));
+    }
+  });
+})();
+</script>
+</body>
+</html>

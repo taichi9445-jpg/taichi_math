@@ -1,0 +1,471 @@
+/* ===========================================================================
+   base.css  —  全教材で共通の見た目とレイアウト
+   ---------------------------------------------------------------------------
+   旧教材の「レイアウトが崩れる」は、ほぼ次の 3 つが原因だった。
+     ・選択肢を固定幅や絶対配置で並べていて、文字数が増えるとはみ出す
+     ・スマホの画面幅を考えていない（横スクロールが発生する）
+     ・数式が長いと折り返せずに枠を突き破る
+   ここでは
+     ・並ぶものは全部 grid / flex の auto-fit で、幅は minmax で下限だけ決める
+     ・本文は max-width で読みやすい幅に固定し、余白は clamp で画面に追従
+     ・数式は overflow-wrap: anywhere で必ず折り返す
+     ・タップ領域は最低 48px（Chromebook のタッチ・スマホ両対応）
+   という方針で、崩れようがない作りにしている。
+   ========================================================================= */
+
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --ink: #1f2937;
+  --ink-soft: #5b6676;
+  --line: #e3e8f0;
+
+  --brand: #2f6fed;
+  --brand-dark: #1e4fbc;
+  --brand-soft: #e8f0ff;
+
+  --ok: #10a05a;
+  --ok-soft: #e4f7ed;
+  --ng: #e0483c;
+  --ng-soft: #fdeceb;
+  --warn: #e79b16;
+  --warn-soft: #fdf3e0;
+
+  --radius: 14px;
+  --shadow: 0 2px 4px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .07);
+  --pad: clamp(14px, 3vw, 26px);
+
+  --font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI",
+          "Yu Gothic", Meiryo, system-ui, -apple-system, sans-serif;
+  --font-math: "Cambria Math", "Latin Modern Math", Georgia,
+               "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: clamp(15px, 1.6vw, 17px);
+  line-height: 1.7;
+  /* 横スクロールは常に禁止。ここが崩れの温床だった。 */
+  overflow-x: hidden;
+}
+
+/* ---------- レイアウトの器 ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + env(safe-area-inset-bottom, 0px));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--pad);
+}
+
+.card + .card { margin-top: 14px; }
+
+/* ---------- ヘッダー ---------- */
+
+.app-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.app-head h1 {
+  font-size: clamp(19px, 4vw, 26px);
+  margin: 0;
+  line-height: 1.35;
+  flex: 1 1 auto;
+  min-width: 0;           /* flex 子要素がはみ出さないための保険 */
+}
+
+.app-head .home {
+  flex: 0 0 auto;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 7px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+.app-head .home:hover { background: var(--brand-soft); color: var(--brand-dark); }
+
+.sub { color: var(--ink-soft); margin: 0 0 16px; font-size: .95em; }
+
+/* ---------- ステータスバー（問題番号・スコア） ---------- */
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-size: .92em;
+  color: var(--ink-soft);
+}
+
+.status b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.bar {
+  height: 8px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brand), #7aa5ff);
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+
+/* ---------- 問題文と数式 ---------- */
+
+.q-label {
+  font-size: .85em;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.q-text {
+  font-size: clamp(16px, 2.4vw, 19px);
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;      /* 長い問題文でも必ず折り返す */
+}
+
+.math {
+  font-family: var(--font-math);
+  font-size: clamp(22px, 5.5vw, 34px);
+  text-align: center;
+  padding: 18px 12px;
+  margin: 0 0 18px;
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+  color: var(--brand-dark);
+  /* 式が長くても枠を突き破らない */
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.math.plain { background: #f7f9fc; color: var(--ink); }
+
+sup { font-size: .62em; vertical-align: super; line-height: 0; }
+sub { font-size: .62em; vertical-align: sub; line-height: 0; }
+
+/* ---------- 選択肢 ---------- */
+
+/* auto-fit + minmax なので、選択肢が何個でも・文字が何文字でも崩れない */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  min-height: 56px;
+  padding: 12px 14px;
+  font-size: clamp(15px, 2.2vw, 18px);
+  font-family: var(--font-math);
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  overflow-wrap: anywhere;
+  width: 100%;
+}
+
+.choice:hover:not(:disabled) { border-color: var(--brand); background: var(--brand-soft); }
+.choice:active:not(:disabled) { transform: scale(.985); }
+.choice:disabled { cursor: default; }
+
+.choice.is-correct {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+  color: #0a6b3c;
+  font-weight: 700;
+}
+.choice.is-wrong {
+  border-color: var(--ng);
+  background: var(--ng-soft);
+  color: #a32a20;
+}
+.choice.is-dim { opacity: .5; }
+
+/* ---------- 入力欄 ---------- */
+
+.answer-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.input {
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 14px;
+  font-size: clamp(17px, 3vw, 21px);
+  font-family: var(--font-math);
+  text-align: center;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+.input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+.input.is-correct { border-color: var(--ok); background: var(--ok-soft); }
+.input.is-wrong { border-color: var(--ng); background: var(--ng-soft); }
+
+/* 穴埋め用の小さい入力 */
+.blank {
+  width: clamp(56px, 14vw, 88px);
+  min-height: 44px;
+  padding: 6px 8px;
+  font-size: clamp(17px, 3vw, 21px);
+  font-family: var(--font-math);
+  text-align: center;
+  border: 2px dashed var(--brand);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  vertical-align: middle;
+  margin: 0 2px;
+}
+.blank:focus { outline: none; border-style: solid; box-shadow: 0 0 0 4px var(--brand-soft); }
+.blank.is-correct { border-color: var(--ok); border-style: solid; background: var(--ok-soft); }
+.blank.is-wrong { border-color: var(--ng); border-style: solid; background: var(--ng-soft); }
+
+/* ---------- ボタン ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 12px 22px;
+  font-size: clamp(15px, 2.2vw, 17px);
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: var(--brand);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform .08s ease, background .15s ease;
+  text-decoration: none;
+}
+.btn:hover:not(:disabled) { background: var(--brand-dark); }
+.btn:active:not(:disabled) { transform: scale(.985); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.btn.wide { width: 100%; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 2px solid var(--line); }
+.btn.ghost:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-dark); }
+.btn.warn { background: var(--warn); }
+.btn.warn:hover:not(:disabled) { background: #c9820c; }
+.btn.small { min-height: 42px; padding: 8px 16px; font-size: 14px; }
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.btn-row > * { flex: 1 1 160px; }
+
+/* ---------- 判定の表示 ---------- */
+
+.verdict {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border-left: 5px solid var(--line);
+  background: #f7f9fc;
+  overflow-wrap: anywhere;
+}
+.verdict .head { font-weight: 700; font-size: 1.05em; margin-bottom: 4px; }
+.verdict.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.verdict.ok .head { color: #0a6b3c; }
+.verdict.ng { background: var(--ng-soft); border-left-color: var(--ng); }
+.verdict.ng .head { color: #a32a20; }
+.verdict .why { color: var(--ink-soft); font-size: .95em; }
+.verdict .why .math-inline { font-family: var(--font-math); color: var(--ink); font-size: 1.1em; }
+
+.hint {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--warn-soft);
+  border-left: 5px solid var(--warn);
+  border-radius: var(--radius);
+  font-size: .95em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- モード選択 ---------- */
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+.mode {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  min-height: 76px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform .08s ease, border-color .15s ease, background .15s ease;
+}
+.mode:hover { border-color: var(--brand); background: var(--brand-soft); }
+.mode:active { transform: scale(.99); }
+.mode .name { font-weight: 700; font-size: 1.05em; display: block; }
+.mode .desc { color: var(--ink-soft); font-size: .88em; display: block; margin-top: 2px; }
+
+/* ---------- 結果画面 ---------- */
+
+.result { text-align: center; }
+.result .score {
+  font-size: clamp(40px, 12vw, 64px);
+  font-weight: 800;
+  color: var(--brand);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.result .score small { font-size: .38em; color: var(--ink-soft); font-weight: 600; }
+.result .msg { font-size: 1.1em; margin: 8px 0 4px; font-weight: 700; }
+
+.review { text-align: left; margin-top: 18px; }
+.review h3 { font-size: 1em; margin: 0 0 8px; color: var(--ink-soft); }
+.review ol { margin: 0; padding-left: 1.3em; }
+.review li { margin-bottom: 8px; overflow-wrap: anywhere; }
+.review .mine { color: var(--ng); font-family: var(--font-math); }
+.review .right { color: var(--ok); font-family: var(--font-math); font-weight: 700; }
+
+/* ---------- 途中式（steps.js 用） ---------- */
+
+.work {
+  background: #f7f9fc;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px clamp(12px, 3vw, 20px);
+  margin-bottom: 16px;
+}
+
+/* 1 行ずつ独立した flex にしてあるので、式が長いと自然に折り返す。
+   元教材はここを 1 枚の絶対配置レイヤーでやっていて崩れやすかった。 */
+.work-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-height: 40px;
+  font-family: var(--font-math);
+  font-size: clamp(16px, 3vw, 20px);
+  line-height: 1.9;
+}
+.work-line + .work-line { margin-top: 2px; }
+.work-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.blank.is-active {
+  border-style: solid;
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 4px var(--brand-soft);
+}
+
+/* ---------- 分数の表示 ---------- */
+
+/* 分数は inline-flex の縦積み。画像でもテーブルでもないので、
+   文字サイズが変わっても選択肢の中でも崩れない。 */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 .18em;
+  line-height: 1.15;
+  font-family: var(--font-math);
+}
+.frac > .num { padding: 0 .3em; border-bottom: 2px solid currentColor; }
+.frac > .den { padding: 0 .3em; }
+
+/* 分数の中に空欄が入るとき（steps.js）は、入力欄を小さめにする */
+.frac .blank {
+  width: clamp(46px, 11vw, 70px);
+  min-height: 34px;
+  font-size: clamp(14px, 2.4vw, 17px);
+  margin: 2px;
+}
+
+/* ---------- 図（SVG）を入れる枠 ---------- */
+
+.figure {
+  margin: 0 0 16px;
+  text-align: center;
+  /* 図が大きくても枠内に収める。はみ出す場合だけ横スクロール。 */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.figure svg { max-width: 100%; height: auto; display: inline-block; }
+
+/* ---------- 補助 ---------- */
+
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-size: .78em;
+  font-weight: 700;
+}
+.center { text-align: center; }
+.muted { color: var(--ink-soft); }
+.hidden { display: none !important; }
+
+/* キーボードでの操作にもちゃんと枠が出るようにする */
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+/* 動きを減らす設定の端末では、アニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>平方根タワー</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/root-tower.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   16. ルートの計算全般 ／ 平方根タワー
+   問題データ（全115問）は元教材からそのまま引き継いでいる。
+
+   元教材から直した点：
+     ・2F と 4F には中級・上級のデータが無いのに選択肢だけ出ていて、
+       選ぶと問題が 0 問になって画面が止まっていた。
+       → 用意されている難易度だけを出すようにした。
+     ・10F「総合ランダム」に対応するデータが無く、選ぶと止まっていた。
+       → 全フロアから 10 問を抽選する形で実装し直した。
+     ・選択肢の並びが固定で、位置で答えを覚えられてしまっていた。
+       → 毎回シャッフルする（正解の追跡は出題エンジン側が行う）。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var DATA = window.DATA_ROOT_TOWER;
+  var DIFF_NAME = { beginner: '初級', intermediate: '中級', advanced: '上級' };
+  var DIFF_ORDER = ['beginner', 'intermediate', 'advanced'];
+
+  // --- モード一覧をデータから組み立てる（データが無い難易度は最初から出さない） ---
+  var modes = [];
+  DATA.stages.forEach(function (stage, i) {
+    var floor = String(i + 1);
+    var pack = DATA.problems[floor] || {};
+    DIFF_ORDER.forEach(function (d) {
+      if (!pack[d] || !pack[d].length) return;
+      modes.push({
+        id: floor + ':' + d,
+        group: stage.floor + '　' + stage.name,
+        name: DIFF_NAME[d],
+        desc: pack[d].length + '問'
+      });
+    });
+  });
+  modes.push({
+    id: 'mix',
+    group: '10F　総合ランダム',
+    name: '総合ランダム',
+    desc: '1F〜9F の全問題から10問'
+  });
+
+  // --- 元データ 1 問 → 出題エンジンの問題オブジェクト ---
+  function toQuestion(p) {
+    return {
+      text: p.instruction,
+      math: p.q,
+      type: 'choice',
+      choices: p.choices.slice(),
+      correct: p.choices.indexOf(p.answer),
+      answerLabel: p.answer
+    };
+  }
+
+  function allProblems() {
+    var out = [];
+    Object.keys(DATA.problems).forEach(function (floor) {
+      Object.keys(DATA.problems[floor]).forEach(function (d) {
+        DATA.problems[floor][d].forEach(function (p) { out.push(p); });
+      });
+    });
+    return out;
+  }
+
+  Quiz.start({
+    title: '平方根タワー',
+    subtitle: '9つのフロアを登ってマスターを目指そう。最後の10Fは総合ランダム。',
+    modes: modes,
+    build: function (id) {
+      var list;
+      if (id === 'mix') {
+        // 同じ問題が重複しないように、シャッフルしてから先頭10問を取る
+        var seen = {};
+        list = Quiz.shuffle(allProblems()).filter(function (p) {
+          var k = p.instruction + '|' + p.q;
+          if (seen[k]) return false;
+          seen[k] = true;
+          return true;
+        }).slice(0, 10);
+      } else {
+        var parts = id.split(':');
+        list = (DATA.problems[parts[0]] || {})[parts[1]] || [];
+        list = list.slice();
+      }
+
+      return list.map(toQuestion).filter(function (q) {
+        // 正解が選択肢に無いデータがあれば出題しない（誤採点を根本から防ぐ）
+        return q.correct >= 0;
+      });
+    }
+  });
+})();
+</script>
+</body>
+</html>

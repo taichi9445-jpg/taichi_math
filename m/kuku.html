@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>九九の練習</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   04. 九九の練習（九九フラッシュカード）
+   「だん」ごとの練習と、全部まぜたチャンピオンモード。
+
+   元教材から直した点：
+     ・入力欄に全角数字を入れると、正しい答えでも不正解になっていた。
+       → 全角・空白は自動でそろえてから判定する。
+     ・空欄のまま「こたえあわせ」を押すと正解あつかいになることがあった。
+       → 空欄のうちは採点しない。
+     ・同じ問題が続けて出ることがあった。 → 出題順をシャッフルして重複を避ける。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  // 元教材のキャラクター設定をそのまま引き継ぐ
+  var LEVELS = [
+    { dan: 1, name: '1のだん', ch: '🚀' },
+    { dan: 2, name: '2のだん', ch: '🦁' },
+    { dan: 3, name: '3のだん', ch: '🐉' },
+    { dan: 4, name: '4のだん', ch: '🦅' },
+    { dan: 5, name: '5のだん', ch: '🐺' },
+    { dan: 6, name: '6のだん', ch: '🦈' },
+    { dan: 7, name: '7のだん', ch: '🐅' },
+    { dan: 8, name: '8のだん', ch: '🦖' },
+    { dan: 9, name: '9のだん', ch: '🤖' }
+  ];
+
+  function makeQuestion(a, b, useChoices) {
+    var ans = a * b;
+    var q = {
+      text: 'こたえは？',
+      math: a + ' × ' + b,
+      explain: a + ' × ' + b + ' = ' + ans
+    };
+    if (useChoices) {
+      // まちがえやすい数（ひとつ隣のだん・ひとつ隣の数）を誤答にする
+      var candidates = [
+        a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b,
+        ans + 1, ans - 1, ans + 10
+      ].filter(function (v) { return v > 0 && v !== ans; });
+      var wrongs = [];
+      Quiz.shuffle(candidates).forEach(function (v) {
+        if (wrongs.length < 3 && wrongs.indexOf(v) < 0) wrongs.push(v);
+      });
+      q.type = 'choice';
+      q.choices = [String(ans)].concat(wrongs.map(String));
+      q.correct = 0;
+    } else {
+      q.type = 'input';
+      q.inputmode = 'numeric';
+      q.answer = String(ans);
+      q.placeholder = 'すうじ';
+    }
+    return q;
+  }
+
+  function buildDan(dan, useChoices) {
+    var pairs = [];
+    for (var b = 1; b <= 9; b++) pairs.push([dan, b]);
+    return Quiz.shuffle(pairs).map(function (p) {
+      return makeQuestion(p[0], p[1], useChoices);
+    });
+  }
+
+  function buildAll(useChoices, n) {
+    var pairs = [];
+    for (var a = 1; a <= 9; a++) for (var b = 1; b <= 9; b++) pairs.push([a, b]);
+    return Quiz.shuffle(pairs).slice(0, n).map(function (p) {
+      return makeQuestion(p[0], p[1], useChoices);
+    });
+  }
+
+  var modes = [];
+  LEVELS.forEach(function (lv) {
+    modes.push({ id: 'c' + lv.dan, group: '4たくモード', name: lv.ch + ' ' + lv.name, desc: '9問' });
+  });
+  modes.push({ id: 'call', group: '4たくモード', name: '👑 チャンピオン', desc: '全部まぜて20問' });
+
+  LEVELS.forEach(function (lv) {
+    modes.push({ id: 'i' + lv.dan, group: '入力モード', name: lv.ch + ' ' + lv.name, desc: '9問' });
+  });
+  modes.push({ id: 'iall', group: '入力モード', name: '👑 チャンピオン', desc: '全部まぜて20問' });
+  // timed / survival は出題エンジンが見て動きを変える印
+  modes.push({ id: 'time', group: 'ちょうせん', name: '⏱ タイムアタック', desc: '20問を最速で', timed: true });
+  modes.push({ id: 'survival', group: 'ちょうせん', name: '💥 サバイバル', desc: 'まちがえるまで、ずっと', survival: true });
+
+  Quiz.start({
+    title: '九九の練習',
+    subtitle: 'だんごとに練習して、さいごは全部まぜたチャンピオンにちょうせん。',
+    modes: modes,
+    build: function (id) {
+      if (id === 'call') return buildAll(true, 20);
+      if (id === 'iall') return buildAll(false, 20);
+      if (id === 'time') return buildAll(false, 20);
+      if (id === 'survival') return buildAll(false, 81);
+      var useChoices = id[0] === 'c';
+      return buildDan(parseInt(id.slice(1), 10), useChoices);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ルート・アルケミスト</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/root-alchemist.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   15. ルートの計算（ルート・アルケミスト）
+   7つのステージ × 難易度5段階。問題データ（全64問）は元教材のまま。
+
+   元教材から直した点：
+     ・最後のステージをクリアしたあと、次のステージ番号のデータが無いために
+       画面が真っ白になって進めなくなっていた。
+       → 最後まで解いたらきちんと結果画面に進む。
+     ・難易度を上げると一部のステージにデータが無く、そこで止まっていた。
+       → 用意されている難易度・ステージだけを表示する。
+     ・経験値バーが問題文に重なって、式が読めなくなることがあった。
+       → 進捗は上部の細いバーに分離し、式にかぶらないようにした。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var DATA = window.DATA_ALCHEMIST;
+  var STAGES = DATA.stages;
+  var MONSTERS = DATA.monsters;
+
+  var DIFF_NAME = { 1: '見習い', 2: '弟子', 3: '術師', 4: '賢者', 5: '大賢者' };
+
+  function emojiOf(monsterName) {
+    var m = MONSTERS[monsterName];
+    return m ? m.emoji : '✨';
+  }
+
+  function toQuestion(q, stage) {
+    return {
+      tag: stage.name,
+      text: emojiOf(stage.monster) + '　<b>' + stage.monster + '</b> があらわれた！',
+      math: q.q,
+      mathPlain: true,
+      type: 'choice',
+      choices: q.choices.slice(),
+      correct: q.choices.indexOf(q.answer),
+      answerLabel: q.answer
+    };
+  }
+
+  // 実際にデータがある難易度・ステージだけをモードにする
+  var modes = [];
+  Object.keys(STAGES).sort().forEach(function (d) {
+    var pack = STAGES[d];
+    var total = 0;
+    Object.keys(pack).forEach(function (s) { total += pack[s].questions.length; });
+    modes.push({
+      id: 'all:' + d,
+      group: '難易度 ' + d + '　' + DIFF_NAME[d],
+      name: '全ステージ通し',
+      desc: '7ステージ ' + total + '問を続けて'
+    });
+    Object.keys(pack).sort().forEach(function (s) {
+      var st = pack[s];
+      modes.push({
+        id: d + ':' + s,
+        group: '難易度 ' + d + '　' + DIFF_NAME[d],
+        name: emojiOf(st.monster) + ' ' + s + '. ' + st.name,
+        desc: st.monster + '（' + st.questions.length + '問）'
+      });
+    });
+  });
+
+  Quiz.start({
+    title: 'ルート・アルケミスト',
+    subtitle: '7つのステージのモンスターを、ルートの計算で倒していこう。',
+    modes: modes,
+    build: function (id) {
+      var p = id.split(':');
+      var out = [];
+      if (p[0] === 'all') {
+        var pack = STAGES[p[1]] || {};
+        Object.keys(pack).sort().forEach(function (s) {
+          pack[s].questions.forEach(function (q) { out.push(toQuestion(q, pack[s])); });
+        });
+      } else {
+        var st = (STAGES[p[0]] || {})[p[1]];
+        if (st) st.questions.forEach(function (q) { out.push(toQuestion(q, st)); });
+      }
+      return out.filter(function (q) { return q.correct >= 0; });
+    }
+  });
+})();
+</script>
+</body>
+</html>

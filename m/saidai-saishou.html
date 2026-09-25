@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>最大値・最小値</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/graph.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   21. 最大値・最小値
+
+   元教材から直した点：
+     ・グラフの x 軸の目盛りが「0, -8, -6 …」の順に並ぶなど、
+       目盛りの表示が壊れていた。 → 座標変換を一本化して描き直した。
+     ・定義域が示されていても、放物線の強調部分がずれていた。
+       → 定義域は同じ座標変換で描くので必ず一致する。
+     ・頂点が定義域の外にあるとき、頂点の値を最大値としてしまう
+       まちがった正解が設定されていた。
+       → 定義域の端と頂点を全部比べて、機械的に最大・最小を決める。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt;
+
+  /** 定義域つきの2次関数を1つ作り、最大・最小を正しく求める */
+  function makeProblem(level) {
+    var a = Quiz.pick(level === 1 ? [1, -1] : [1, -1, 2, -2]);
+    var p = A.randInt(-3, 3);                 // 頂点の x
+    var q = A.randInt(-5, 5);                 // 頂点の y
+
+    // 定義域。レベル2以上では、頂点が定義域の外に出ることもある
+    var lo, hi;
+    if (level === 1) { lo = p - Quiz.randInt(1, 3); hi = p + Quiz.randInt(1, 3); }
+    else {
+      lo = p + Quiz.randInt(-4, 2);
+      hi = lo + Quiz.randInt(2, 5);
+    }
+
+    var f = function (x) { return a * (x - p) * (x - p) + q; };
+
+    // 候補は「定義域の両端」と、頂点が定義域に入っていれば「頂点」
+    var cands = [{ x: lo, y: f(lo) }, { x: hi, y: f(hi) }];
+    if (p >= lo && p <= hi) cands.push({ x: p, y: q });
+
+    var max = cands[0], min = cands[0];
+    cands.forEach(function (c) {
+      if (c.y > max.y) max = c;
+      if (c.y < min.y) min = c;
+    });
+
+    var show = 'y = ' + (a === 1 ? '' : a === -1 ? '-' : a) +
+      '(x ' + (p >= 0 ? '- ' + p : '+ ' + (-p)) + ')<sup>2</sup>' +
+      (q === 0 ? '' : (q > 0 ? ' + ' + q : ' - ' + (-q)));
+
+    return {
+      a: a, p: p, q: q, lo: lo, hi: hi,
+      show: show,
+      max: max, min: min,
+      // グラフ用に一般形の係数も出しておく
+      coef: { a: a, b: -2 * a * p, c: a * p * p + q },
+      vertexInside: (p >= lo && p <= hi)
+    };
+  }
+
+  function askQuestion(level, which) {
+    var it = makeProblem(level);
+    var target = which || (Math.random() < 0.5 ? 'max' : 'min');
+    var ans = it[target];
+    var word = target === 'max' ? '最大値' : '最小値';
+
+    var correct = 'x = ' + ans.x + '　' + word + ' = ' + ans.y;
+    var wrongSet = {};
+    wrongSet[correct] = true;
+    var wrongs = [];
+    var other = it[target === 'max' ? 'min' : 'max'];
+    [
+      'x = ' + other.x + '　' + word + ' = ' + other.y,
+      'x = ' + ans.x + '　' + word + ' = ' + (ans.y + Quiz.pick([1, 2, -1, -2])),
+      'x = ' + it.p + '　' + word + ' = ' + it.q,
+      'x = ' + (ans.x + 1) + '　' + word + ' = ' + ans.y
+    ].forEach(function (w) {
+      if (wrongs.length < 3 && !wrongSet[w]) { wrongSet[w] = true; wrongs.push(w); }
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 30) {
+      var w2 = 'x = ' + A.randInt(it.lo, it.hi) + '　' + word + ' = ' + A.randInt(-12, 12);
+      if (!wrongSet[w2]) { wrongSet[w2] = true; wrongs.push(w2); }
+    }
+
+    return {
+      tag: it.vertexInside ? '頂点が定義域の中' : '頂点が定義域の外',
+      text: '定義域 <b>' + it.lo + ' ≦ x ≦ ' + it.hi + '</b> のとき、この関数の <b>' + word + '</b> と、そのときの x を答えなさい。',
+      math: it.show,
+      figure: Graph.parabola({
+        a: it.coef.a, b: it.coef.b, c: it.coef.c,
+        domain: [it.lo, it.hi],
+        markVertex: true
+      }),
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: it.vertexInside
+        ? '頂点が定義域の中にあります。頂点と、定義域の両端の値を比べましょう。'
+        : '頂点は定義域の外にあります。この場合、最大・最小は定義域の端でとります。',
+      explain: '頂点は ( ' + it.p + ' , ' + it.q + ' )。' +
+        (it.vertexInside ? '定義域の中に頂点があります。' : '頂点は定義域の外なので使えません。') +
+        '　定義域の端は x = ' + it.lo + ' で y = ' + (it.a * (it.lo - it.p) * (it.lo - it.p) + it.q) +
+        '、x = ' + it.hi + ' で y = ' + (it.a * (it.hi - it.p) * (it.hi - it.p) + it.q) +
+        '。よって ' + word + ' は ' + ans.y + '（x = ' + ans.x + ' のとき）です。'
+    };
+  }
+
+  function build(level, which, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(askQuestion(level, which));
+    return out;
+  }
+
+  Quiz.start({
+    title: '最大値・最小値',
+    subtitle: '定義域つきの最大・最小。頂点が定義域に入っているかどうかが分かれ目。',
+    modes: [
+      { id: '1:max', group: '基本（頂点は定義域の中）', name: '最大値', desc: '8問' },
+      { id: '1:min', group: '基本（頂点は定義域の中）', name: '最小値', desc: '8問' },
+      { id: '1:', group: '基本（頂点は定義域の中）', name: '最大・最小まぜて', desc: '10問' },
+      { id: '2:max', group: '応用（頂点が外に出ることも）', name: '最大値', desc: '8問' },
+      { id: '2:min', group: '応用（頂点が外に出ることも）', name: '最小値', desc: '8問' },
+      { id: '2:', group: '応用（頂点が外に出ることも）', name: '最大・最小まぜて', desc: '10問' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      var which = p[1] || null;
+      return build(Number(p[0]), which, which ? 8 : 10);
+    }
+  });
+})();
+</script>
+</body>
+</html>

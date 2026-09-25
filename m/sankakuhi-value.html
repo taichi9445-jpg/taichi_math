@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三角比の値（総合）</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/sankakuhi-zahyou.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   31. 三角比の値（総合）
+   0°〜180° の sin・cos・tan を、値・角度の両方向から確認する。
+   角度ごとの値のデータは、三角比（座標）の教材と同じものを使っている。
+
+   元教材は開発中のURL（.../dev）で公開されていて、
+   本人以外がアクセスすると「ページが見つかりません」になっていた。
+   ここでは誰でも開ける形で作り直している。
+
+   そのほか直した点：
+     ・tan 90° が「0」と表示されていた。 → 正しく「定義されない」を扱う。
+     ・鈍角の符号（cos 120° = −1/2 など）が一部まちがっていた。
+       → 単位円の座標から機械的に決めるので、符号がずれない。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var DATA = window.DATA_SANKAKUHI_ZAHYOU;
+  // 数学Ⅰで扱う 0°〜180°
+  var ANGLES = Object.keys(DATA).map(Number)
+    .filter(function (a) { return a >= 0 && a <= 180; })
+    .sort(function (a, b) { return a - b; });
+
+  var FAMOUS = [0, 30, 45, 60, 90];
+  var OBTUSE = [120, 135, 150, 180];
+
+  function valueOf(angle, fn) {
+    var d = DATA[angle];
+    var v = d[fn];
+    return v === '定義なし' ? '定義されない' : v;
+  }
+
+  /* ---------- ① 角度 → 値 ---------- */
+  function angleToValue(pool) {
+    var angle = Quiz.pick(pool);
+    var fn = Quiz.pick(['sin', 'cos', 'tan']);
+    var correct = valueOf(angle, fn);
+
+    // 同じ角の他の三角比、符号ちがい、よくある混同を誤答にする
+    var cands = [];
+    ['sin', 'cos', 'tan'].forEach(function (f) {
+      if (f !== fn) cands.push(valueOf(angle, f));
+    });
+    cands.push(correct.charAt(0) === '-' ? correct.slice(1) : '-' + correct);
+    ANGLES.forEach(function (a) { if (a !== angle) cands.push(valueOf(a, fn)); });
+
+    var choices = [correct];
+    Quiz.shuffle(cands).forEach(function (c) {
+      if (choices.length < 4 && c !== correct && choices.indexOf(c) < 0) choices.push(c);
+    });
+
+    return {
+      tag: angle > 90 ? '鈍角' : '鋭角・直角',
+      text: '次の値を求めなさい。',
+      math: fn + ' ' + angle + '°',
+      mathPlain: true,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: '単位円で考えます。点の座標は ( ' + DATA[angle].x + ' , ' + DATA[angle].y + ' )、r = ' + DATA[angle].r +
+        '。sin = y/r、cos = x/r、tan = y/x です。',
+      explain: fn + ' ' + angle + '° = ' + correct +
+        (correct === '定義されない' ? '（x = 0 なので y ÷ x が計算できません）' : '')
+    };
+  }
+
+  /* ---------- ② 値 → 角度 ---------- */
+  function valueToAngle(pool) {
+    var angle = Quiz.pick(pool.filter(function (a) {
+      return valueOf(a, 'sin') !== '定義されない';
+    }));
+    var fn = Quiz.pick(['sin', 'cos']);
+    var v = valueOf(angle, fn);
+
+    var choices = [angle + '°'];
+    Quiz.shuffle(ANGLES).forEach(function (a) {
+      if (choices.length < 4 && a !== angle && valueOf(a, fn) !== v && choices.indexOf(a + '°') < 0) {
+        choices.push(a + '°');
+      }
+    });
+
+    return {
+      tag: '逆に求める',
+      text: '0° ≦ θ ≦ 180° のとき、次を満たす θ を求めなさい。',
+      math: fn + ' θ = ' + v,
+      mathPlain: true,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: fn === 'sin' ? 'sin は 0°〜180° で 0 以上です。' : 'cos は 90° より大きい角で負になります。',
+      explain: fn + ' ' + angle + '° = ' + v + ' なので、θ = ' + angle + '° です。'
+    };
+  }
+
+  /* ---------- ③ 符号の判定 ---------- */
+  function signQuestion() {
+    var angle = Quiz.pick(ANGLES.filter(function (a) { return a !== 0 && a !== 90 && a !== 180; }));
+    var fn = Quiz.pick(['sin', 'cos', 'tan']);
+    var v = valueOf(angle, fn);
+    var sign = v.charAt(0) === '-' ? '負（マイナス）' : '正（プラス）';
+
+    return {
+      tag: '符号',
+      text: '0° < θ < 180° のとき、次の値は正・負のどちらですか。',
+      math: fn + ' ' + angle + '°',
+      mathPlain: true,
+      type: 'choice',
+      choices: ['正（プラス）', '負（マイナス）'],
+      correct: sign === '正（プラス）' ? 0 : 1,
+      noShuffle: true,
+      hint: '単位円で、点の x 座標と y 座標の符号を考えます。' +
+        '（' + angle + '° の点は x = ' + DATA[angle].x + '、y = ' + DATA[angle].y + '）',
+      explain: fn + ' ' + angle + '° = ' + v + ' なので ' + sign + ' です。'
+    };
+  }
+
+  function build(makers, pool, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(Quiz.pick(makers)(pool));
+    return out;
+  }
+
+  Quiz.start({
+    title: '三角比の値（総合）',
+    subtitle: '0°〜180° の sin・cos・tan を、値からも角度からも確かめよう。',
+    modes: [
+      { id: 'famous', group: '角度 → 値', name: '有名角（0°〜90°）', desc: '10問' },
+      { id: 'obtuse', group: '角度 → 値', name: '鈍角をふくむ（90°〜180°）', desc: '10問' },
+      { id: 'all', group: '角度 → 値', name: '0°〜180° 総合', desc: '12問' },
+      { id: 'rev', group: '値 → 角度', name: '角度を求める', desc: '10問' },
+      { id: 'sign', group: '符号', name: '正か負かを判定', desc: '10問' },
+      { id: 'final', group: '仕上げ', name: '総合テスト', desc: '全種類まぜて15問' }
+    ],
+    build: function (id) {
+      if (id === 'famous') return build([angleToValue], FAMOUS, 10);
+      if (id === 'obtuse') return build([angleToValue], OBTUSE.concat([90]), 10);
+      if (id === 'all') return build([angleToValue], ANGLES, 12);
+      if (id === 'rev') return build([valueToAngle], ANGLES, 10);
+      if (id === 'sign') {
+        var out = [];
+        for (var i = 0; i < 10; i++) out.push(signQuestion());
+        return out;
+      }
+      var mixed = build([angleToValue, valueToAngle], ANGLES, 10);
+      for (var j = 0; j < 5; j++) mixed.push(signQuestion());
+      return Quiz.shuffle(mixed);
+    }
+  });
+})();
+</script>
+</body>
+</html>

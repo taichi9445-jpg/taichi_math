@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2次方程式をマスターしよう</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   18. 2次方程式をマスターしよう
+     モード01 因数分解ステップ学習（5問）
+     モード02 解の公式 穴埋め学習（5問）
+     モード03 実践ランダム特訓
+     モード04 6択数式テスト（解法を混ぜた完全ランダム）
+
+   元教材から直した点：
+     ・解が 2 つある問題で「x = 2, 3」と「x = 3, 2」の片方しか正解にならなかった。
+       → 解の組として判定するので、順番はどちらでもよい。
+     ・解の公式モードで、判別式が負になる問題が混ざり、
+       √の中がマイナスのまま答えが出せず止まっていた。
+       → 実数解を持つ問題だけを出す（数学Ⅰの範囲）。
+     ・「重解」のとき解を 2 つ入力しないと正解にならなかった。
+       → 重解は 1 つの答えとして扱う。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  /* ---------- 因数分解で解く ---------- */
+
+  function byFactoring() {
+    var it = A.quadraticFromRoots({ lo: -8, hi: 8, allowSame: false });
+    var roots = [-it.a, -it.b].sort(function (x, y) { return x - y; });
+    return {
+      shown: it.expanded + ' = 0',
+      factored: it.factored + ' = 0',
+      roots: roots,
+      label: 'x = ' + roots.join(', '),
+      hint: 'かけて ' + it.prod + '、たして ' + it.sum + ' になる 2 数をさがして因数分解します。',
+      explain: '因数分解すると ' + it.factored + ' = 0。' +
+        'かけて 0 になるのは、どちらかが 0 のときなので x = ' + roots.join('、') + ' です。'
+    };
+  }
+
+  /* ---------- 解の公式で解く（実数解を持つものだけ） ---------- */
+
+  function byFormula() {
+    var guard = 0;
+    while (guard++ < 200) {
+      var a = Quiz.pick([1, 1, 1, 2, 2, 3]);
+      var b = A.randInt(-9, 9);
+      var c = A.randInt(-9, 9);
+      var D = b * b - 4 * a * c;
+      if (D < 0) continue;                       // 実数解を持たないものは出さない
+      var sq = Math.sqrt(D);
+      var r1 = (-b + sq) / (2 * a);
+      var r2 = (-b - sq) / (2 * a);
+      var roots = D === 0 ? [r1] : [Math.min(r1, r2), Math.max(r1, r2)];
+      return {
+        a: a, b: b, c: c, D: D,
+        shown: F.poly([[a, F.pow('x', 2)], [b, 'x'], [c, '']]) + ' = 0',
+        roots: roots,
+        label: 'x = ' + roots.map(function (r) { return Math.round(r * 1000) / 1000; }).join(', ') +
+          (D === 0 ? '（重解）' : ''),
+        hint: '解の公式： x = ( −b ± √(b² − 4ac) ) ÷ 2a',
+        explain: 'a = ' + a + '、b = ' + b + '、c = ' + c + '　→　' +
+          'b² − 4ac = ' + (b * b) + ' − ' + (4 * a * c) + ' = ' + D +
+          (D === 0 ? '。判別式が 0 なので重解です。' : '。') +
+          '　x = ( ' + (-b) + ' ± √' + D + ' ) ÷ ' + (2 * a)
+      };
+    }
+    return byFactoring();
+  }
+
+  /* ---------- モード01：因数分解ステップ ---------- */
+
+  function mode01() {
+    var it = A.quadraticFromRoots({ lo: -8, hi: 8, allowSame: false });
+    var a = it.a, b = it.b;
+    if (a > b) { var t = a; a = b; b = t; }
+    var roots = [-a, -b].sort(function (x, y) { return x - y; });
+
+    return {
+      tag: 'モード01',
+      text: 'かけて ' + it.prod + '、たして ' + it.sum + ' になる 2 数をさがして、空欄を埋めなさい。',
+      math: it.expanded + ' = 0',
+      type: 'blanks',
+      template: '( x ＋ _ )( x ＋ _ ) = 0　　→　　x = _ , _',
+      answers: [String(a), String(b), String(roots[0]), String(roots[1])],
+      checkEach: function (value, index) {
+        // かっこの中は順不同、解も順不同で正解にする
+        if (index === 0 || index === 1) {
+          return MathCore.isEqualNumber(value, a) || MathCore.isEqualNumber(value, b);
+        }
+        return MathCore.isEqualNumber(value, roots[0]) || MathCore.isEqualNumber(value, roots[1]);
+      },
+      answerLabel: it.factored + ' = 0　→　x = ' + roots.join(', '),
+      hint: 'かっこの中が 0 になる x が、そのまま解になります。',
+      explain: '因数分解すると ' + it.factored + ' = 0。よって x = ' + roots.join('、') + ' です。'
+    };
+  }
+
+  /* ---------- モード02：解の公式 穴埋め ---------- */
+
+  function mode02() {
+    var it = byFormula();
+    return {
+      tag: 'モード02',
+      text: '解の公式を使います。a・b・c と 判別式 b²−4ac を入れなさい。',
+      math: it.shown,
+      type: 'blanks',
+      template: 'a = _ 　 b = _ 　 c = _ 　 b<sup>2</sup>−4ac = _',
+      answers: [String(it.a), String(it.b), String(it.c), String(it.D)],
+      answerLabel: 'a = ' + it.a + '、b = ' + it.b + '、c = ' + it.c + '、b²−4ac = ' + it.D,
+      hint: it.hint,
+      explain: it.explain
+    };
+  }
+
+  /* ---------- モード03：実践ランダム（記述で解を答える） ---------- */
+
+  function mode03() {
+    var it = byFactoring();
+    return {
+      tag: 'モード03',
+      text: '次の2次方程式を解きなさい。',
+      math: it.shown,
+      type: 'input',
+      answer: it.roots,                     // 配列を渡すと「解の組」として判定される
+      answerLabel: it.label,
+      placeholder: '例： 2, 3',
+      note: '解が2つあるときは「2, 3」のようにカンマで区切って入力します。順番は自由です。',
+      hint: it.hint,
+      explain: it.explain
+    };
+  }
+
+  /* ---------- モード04：6択テスト ---------- */
+
+  function mode04() {
+    var it = Math.random() < 0.6 ? byFactoring() : byFormula();
+    var correct = 'x = ' + it.roots.map(function (r) {
+      return Number.isInteger(r) ? r : Math.round(r * 100) / 100;
+    }).join(', ');
+
+    var wrongs = [];
+    var seen = {};
+    seen[correct] = true;
+    var guard = 0;
+    while (wrongs.length < 5 && guard++ < 100) {
+      var rs = it.roots.map(function (r) { return r + Quiz.pick([-2, -1, 1, 2]); });
+      if (Math.random() < 0.4) rs = it.roots.map(function (r) { return -r; });
+      var s = 'x = ' + rs.map(function (r) {
+        return Number.isInteger(r) ? r : Math.round(r * 100) / 100;
+      }).join(', ');
+      if (seen[s]) continue;
+      seen[s] = true;
+      wrongs.push(s);
+    }
+
+    return {
+      tag: 'モード04',
+      text: '次の2次方程式の解を選びなさい。',
+      math: it.shown,
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: it.hint,
+      explain: it.explain
+    };
+  }
+
+  Quiz.start({
+    title: '2次方程式をマスターしよう',
+    subtitle: '因数分解 → 解の公式 → 実戦。順番に積み上げていこう。',
+    modes: [
+      { id: '1', name: 'モード01', desc: '因数分解ステップ学習（5問）' },
+      { id: '2', name: 'モード02', desc: '解の公式 穴埋め学習（5問）' },
+      { id: '3', name: 'モード03', desc: '実践ランダム特訓（8問・記述）' },
+      { id: '4', name: 'モード04', desc: '6択数式テスト（解法混ざる・8問）' }
+    ],
+    build: function (id) {
+      var makers = { '1': mode01, '2': mode02, '3': mode03, '4': mode04 };
+      var n = (id === '1' || id === '2') ? 5 : 8;
+      var out = [];
+      for (var i = 0; i < n; i++) out.push(makers[id]());
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

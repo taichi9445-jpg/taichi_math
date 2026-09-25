@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二次不等式グラフクイズ</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/graph.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   24. 2次不等式（因数分解の練習つき）
+     レベル0 … 因数分解の練習
+     レベル1 … グラフを見て、x軸より上・下になる範囲を読む
+     レベル2 … 2次不等式を解く
+
+   元教材から直した点：
+     ・選択肢が2つの大きな枠に押し込まれていて、左半分が空白のまま
+       右にはみ出すレイアウト崩れが起きていた。
+       → 選択肢は画面幅に応じて自動で折り返す並べ方に変えた。
+     ・「解説不十分」とメモされていたとおり、なぜその範囲になるのかが
+       示されていなかった。
+       → グラフと数直線をつけ、「x軸より上か下か」で説明するようにした。
+     ・不等号に等号がつく場合（≧ ≦）で、境界を含む・含まないの
+       区別が選択肢になく、どちらでも正解になっていた。
+       → 境界を含むかどうかを必ず区別して出題する。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt;
+
+  /* ---------- レベル0：因数分解の練習 ---------- */
+  function level0() {
+    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
+    var wrongs = [];
+    [A.paren(1, -it.a) + A.paren(1, it.b),
+     A.paren(1, it.a) + A.paren(1, -it.b),
+     A.paren(1, -it.a) + A.paren(1, -it.b)].forEach(function (w) {
+      if (wrongs.length < 3 && w !== it.factored && !MathCore.isEqual(F.plain(w), F.plain(it.expanded))) {
+        if (wrongs.indexOf(w) < 0) wrongs.push(w);
+      }
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 30) {
+      var w2 = A.paren(1, A.nz(-8, 8)) + A.paren(1, A.nz(-8, 8));
+      if (!MathCore.isEqual(F.plain(w2), F.plain(it.expanded)) && wrongs.indexOf(w2) < 0) wrongs.push(w2);
+    }
+    return {
+      tag: 'レベル0',
+      text: 'まずは因数分解の練習。次の式を因数分解しなさい。',
+      math: it.expanded,
+      type: 'choice',
+      choices: [it.factored].concat(wrongs),
+      correct: 0,
+      hint: 'かけて ' + it.prod + '、たして ' + it.sum + ' になる 2 数をさがします。',
+      explain: '答え： ' + it.factored
+    };
+  }
+
+  /* ---------- 2次不等式の材料を作る ---------- */
+  function makeInequality() {
+    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
+    var r = [-it.a, -it.b].sort(function (x, y) { return x - y; });
+    var op = Quiz.pick(['>', '<', '≧', '≦']);
+    var strict = (op === '>' || op === '<');
+    var isGreater = (op === '>' || op === '≧');
+
+    // 上に凸ではないので、> なら外側、< なら内側
+    var answer = isGreater
+      ? 'x ' + (strict ? '<' : '≦') + ' ' + r[0] + '　または　x ' + (strict ? '>' : '≧') + ' ' + r[1]
+      : r[0] + ' ' + (strict ? '<' : '≦') + ' x ' + (strict ? '<' : '≦') + ' ' + r[1];
+
+    return {
+      it: it, roots: r, op: op, strict: strict, isGreater: isGreater,
+      shown: it.expanded + ' ' + op + ' 0',
+      answer: answer
+    };
+  }
+
+  function wrongAnswers(q) {
+    var r = q.roots;
+    var s = q.strict, g = q.isGreater;
+    var lt = s ? '<' : '≦', gt = s ? '>' : '≧';
+    var ltO = s ? '≦' : '<', gtO = s ? '≧' : '>';
+
+    var cands = [
+      // 内側と外側を取りちがえた
+      g ? r[0] + ' ' + lt + ' x ' + lt + ' ' + r[1]
+        : 'x ' + lt + ' ' + r[0] + '　または　x ' + gt + ' ' + r[1],
+      // 等号のつけまちがい
+      g ? 'x ' + ltO + ' ' + r[0] + '　または　x ' + gtO + ' ' + r[1]
+        : r[0] + ' ' + ltO + ' x ' + ltO + ' ' + r[1],
+      // 符号のミス
+      g ? 'x ' + lt + ' ' + (-r[1]) + '　または　x ' + gt + ' ' + (-r[0])
+        : (-r[1]) + ' ' + lt + ' x ' + lt + ' ' + (-r[0])
+    ];
+    return cands.filter(function (c) { return c !== q.answer; });
+  }
+
+  /* ---------- レベル1：グラフから読む ---------- */
+  function level1() {
+    var q = makeInequality();
+    var r = q.roots;
+    return {
+      tag: 'レベル1',
+      text: 'グラフを見て考えよう。' +
+        (q.isGreater ? 'y の値が <b>0 より大きくなる</b>（x軸より上にある）' :
+                       'y の値が <b>0 より小さくなる</b>（x軸より下にある）') +
+        ' x の範囲はどれですか。',
+      math: 'y = ' + q.it.expanded,
+      figure: Graph.parabola({
+        a: 1, b: q.it.sum, c: q.it.prod,
+        points: r.map(function (x) { return { x: x, y: 0 }; })
+      }),
+      type: 'choice',
+      choices: [q.answer].concat(wrongAnswers(q).slice(0, 3)),
+      correct: 0,
+      hint: 'グラフが x 軸と交わるのは x = ' + r[0] + ' と x = ' + r[1] + '。' +
+        '下に凸の放物線なので、2 点の<b>間</b>ではグラフは x 軸より下、<b>外側</b>では上になります。',
+      explain: 'x軸との交点は ' + r[0] + ' と ' + r[1] + '。下に凸なので、' +
+        (q.isGreater ? '外側で y > 0 になります。' : '間で y < 0 になります。') +
+        '　答え： ' + q.answer +
+        '<br>' + Graph.numberLine({
+          lo: r[0] - 3, hi: r[1] + 3,
+          ranges: q.isGreater
+            ? [{ from: r[0] - 3, to: r[0] }, { from: r[1], to: r[1] + 3 }]
+            : [{ from: r[0], to: r[1] }],
+          points: [{ x: r[0], filled: !q.strict }, { x: r[1], filled: !q.strict }]
+        })
+    };
+  }
+
+  /* ---------- レベル2：2次不等式を解く ---------- */
+  function level2() {
+    var q = makeInequality();
+    var r = q.roots;
+    return {
+      tag: 'レベル2',
+      text: '次の二次不等式を解きなさい。',
+      math: q.shown,
+      type: 'choice',
+      choices: [q.answer].concat(wrongAnswers(q).slice(0, 3)),
+      correct: 0,
+      hint: 'まず因数分解して、x軸との交点を求めます。次にグラフの上下で範囲を決めます。',
+      explain: '因数分解すると ' + q.it.factored + ' ' + q.op + ' 0。' +
+        '交点は ' + r[0] + ' と ' + r[1] + ' なので、答えは ' + q.answer + ' です。' +
+        '<br>' + Graph.parabola({
+          a: 1, b: q.it.sum, c: q.it.prod,
+          points: r.map(function (x) { return { x: x, y: 0 }; })
+        })
+    };
+  }
+
+  Quiz.start({
+    title: '二次不等式グラフクイズ',
+    subtitle: 'グラフとx軸の位置関係を考えよう！',
+    modes: [
+      { id: '0', name: 'レベル0（因数分解の練習）', desc: 'まずはここから（10問）' },
+      { id: '1', name: 'レベル1（グラフ問題）', desc: 'グラフを見て範囲を読む（10問）' },
+      { id: '2', name: 'レベル2（二次不等式を解く）', desc: '式だけから解く（10問）' },
+      { id: 'mix', name: '総合', desc: 'レベル0〜2をまぜて（12問）' }
+    ],
+    build: function (id) {
+      var out = [], i;
+      if (id === '0') { for (i = 0; i < 10; i++) out.push(level0()); }
+      else if (id === '1') { for (i = 0; i < 10; i++) out.push(level1()); }
+      else if (id === '2') { for (i = 0; i < 10; i++) out.push(level2()); }
+      else {
+        for (i = 0; i < 4; i++) { out.push(level0()); out.push(level1()); out.push(level2()); }
+        out = Quiz.shuffle(out);
+      }
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

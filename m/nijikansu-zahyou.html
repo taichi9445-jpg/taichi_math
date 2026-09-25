@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二次関数座標クイズ</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/graph.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   19. x＝○のときの y の値 ／ y＝○のときの x の値（二次関数座標クイズ）
+
+   元教材から直した点：
+     ・「グラフのヒントを見る」を押すと、グラフが問題文の上に重なって
+       式が読めなくなっていた。 → ヒントは下に開くので重ならない。
+     ・y の値から x を求める問題で、答えが 2 つあるのに 1 つしか
+       正解にならなかった（±の片方だけが正解あつかい）。
+       → 解が 2 つあるときは、両方そろって正解。
+     ・レベルを上げると同じ問題ばかり出ていた。 → 毎回作り直す。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt;
+
+  /** レベルごとの関数の形を決める */
+  function makeFunc(level) {
+    if (level === 1) return { a: 1, b: 0, c: 0 };                       // y = x²
+    if (level === 2) return { a: Quiz.pick([1, 2, 3, -1, -2]), b: 0, c: 0 };  // y = ax²
+    if (level === 3) return { a: Quiz.pick([1, -1, 2]), b: 0, c: A.nz(-6, 6) }; // y = ax² + c
+    return { a: Quiz.pick([1, -1, 2]), b: A.nz(-6, 6), c: A.randInt(-6, 6) };   // y = ax² + bx + c
+  }
+
+  function show(f) {
+    return 'y = ' + F.poly([[f.a, F.pow('x', 2)], [f.b, 'x'], [f.c, '']]);
+  }
+
+  function valueAt(f, x) { return f.a * x * x + f.b * x + f.c; }
+
+  /* ---------- x を与えて y を求める ---------- */
+  function askY(level) {
+    var f = makeFunc(level);
+    var x = A.nz(-4, 4);
+    var y = valueAt(f, x);
+
+    var wrongs = [];
+    var cands = [
+      valueAt(f, -x),
+      f.a * x + f.b * x + f.c,          // 2乗を忘れた
+      -y,
+      y + Quiz.pick([1, 2, -1, -2])
+    ];
+    Quiz.shuffle(cands).forEach(function (v) {
+      if (wrongs.length < 3 && v !== y && wrongs.indexOf(v) < 0) wrongs.push(v);
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 30) {
+      var v2 = y + Quiz.randInt(-8, 8);
+      if (v2 !== y && wrongs.indexOf(v2) < 0) wrongs.push(v2);
+    }
+
+    return {
+      tag: 'レベル' + level,
+      text: 'グラフ上の点で <b>x = ' + x + '</b> のとき、y の値を求めなさい。',
+      math: show(f),
+      type: 'choice',
+      choices: [String(y)].concat(wrongs.map(String)),
+      correct: 0,
+      hint: '式の x に ' + x + ' をそのまま代入します。' +
+        '<br>' + Graph.parabola({ a: f.a, b: f.b, c: f.c, points: [{ x: x, y: y, label: '?' }] }),
+      explain: 'x = ' + x + ' を代入すると y = ' + f.a + ' × (' + x + ')² ' +
+        (f.b ? (f.b < 0 ? '− ' + Math.abs(f.b) : '+ ' + f.b) + ' × (' + x + ') ' : '') +
+        (f.c ? (f.c < 0 ? '− ' + Math.abs(f.c) : '+ ' + f.c) : '') + ' = ' + y
+    };
+  }
+
+  /* ---------- y を与えて x を求める ---------- */
+  function askX(level) {
+    // 解がきれいに出るよう、先に x を決めてから y を作る
+    var f = makeFunc(Math.min(level, 3));
+    var x0 = A.nz(1, 4);
+    var y = valueAt(f, x0);
+
+    // f.b = 0 のときは ±x0 の 2 つが解になる
+    var roots;
+    if (f.b === 0) {
+      roots = [-x0, x0];
+    } else {
+      // ax² + bx + (c − y) = 0 を解く
+      var D = f.b * f.b - 4 * f.a * (f.c - y);
+      var sq = Math.sqrt(D);
+      var r1 = (-f.b + sq) / (2 * f.a), r2 = (-f.b - sq) / (2 * f.a);
+      roots = (Math.abs(r1 - r2) < 1e-9) ? [r1] : [Math.min(r1, r2), Math.max(r1, r2)];
+    }
+    var label = 'x = ' + roots.map(function (r) { return Math.round(r * 100) / 100; }).join(', ');
+
+    var correct = label;
+    var wrongs = [
+      'x = ' + x0,
+      'x = ' + (-x0),
+      'x = ' + roots.map(function (r) { return Math.round(r * 100) / 100 + 1; }).join(', ')
+    ].filter(function (w) { return w !== correct; });
+
+    var choices = [correct];
+    wrongs.forEach(function (w) { if (choices.length < 4 && choices.indexOf(w) < 0) choices.push(w); });
+    var guard = 0;
+    while (choices.length < 4 && guard++ < 30) {
+      var w2 = 'x = ' + A.nz(-6, 6) + ', ' + A.nz(-6, 6);
+      if (choices.indexOf(w2) < 0) choices.push(w2);
+    }
+
+    return {
+      tag: 'レベル' + level,
+      text: 'グラフ上の点で <b>y = ' + y + '</b> のとき、x の値をすべて求めなさい。',
+      math: show(f),
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: 'y に ' + y + ' を入れて、x の方程式として解きます。答えが 2 つになることに注意。' +
+        '<br>' + Graph.parabola({
+          a: f.a, b: f.b, c: f.c,
+          points: roots.map(function (r) { return { x: r, y: y, label: '?' }; })
+        }),
+      explain: 'y = ' + y + ' を代入して解くと ' + label + ' です。' +
+        (roots.length === 2 ? '放物線と横の直線は 2 点で交わるので、答えは 2 つあります。' : '')
+    };
+  }
+
+  /* ---------- 記述で答える ---------- */
+  function askYInput(level) {
+    var f = makeFunc(level);
+    var x = A.nz(-4, 4);
+    var y = valueAt(f, x);
+    return {
+      tag: '記述',
+      text: '<b>x = ' + x + '</b> のときの y の値を求めなさい。',
+      math: show(f),
+      type: 'input',
+      inputmode: 'text',
+      answer: String(y),
+      placeholder: '数を入力',
+      hint: '式の x に ' + x + ' を代入します。',
+      explain: 'y = ' + y + ' です。'
+    };
+  }
+
+  Quiz.start({
+    title: '二次関数座標クイズ',
+    subtitle: 'x を入れて y を出す。y から x を逆に求める。両方できるようにしよう。',
+    modes: [
+      { id: 'y:1', group: 'x → y', name: 'レベル1　y = x²', desc: '10問' },
+      { id: 'y:2', group: 'x → y', name: 'レベル2　y = ax²', desc: '10問' },
+      { id: 'y:3', group: 'x → y', name: 'レベル3　y = ax² + c', desc: '10問' },
+      { id: 'y:4', group: 'x → y', name: 'レベル4　y = ax² + bx + c', desc: '10問' },
+      { id: 'x:1', group: 'y → x', name: 'レベル1　y = x²', desc: '8問' },
+      { id: 'x:2', group: 'y → x', name: 'レベル2　y = ax²', desc: '8問' },
+      { id: 'x:3', group: 'y → x', name: 'レベル3　y = ax² + c', desc: '8問' },
+      { id: 'i:4', group: '記述', name: '記述で答える', desc: '全レベルまぜて10問' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      var level = Number(p[1]);
+      var out = [];
+      var n = p[0] === 'y' ? 10 : p[0] === 'x' ? 8 : 10;
+      for (var i = 0; i < n; i++) {
+        if (p[0] === 'y') out.push(askY(level));
+        else if (p[0] === 'x') out.push(askX(level));
+        else out.push(askYInput(Quiz.randInt(1, 4)));
+      }
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

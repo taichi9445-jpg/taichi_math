@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学バトルクエスト</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   07. 展開の練習（数学バトルクエスト）
+   スライム → ゴブリン → オーク → ドラゴン → 魔王 の順に、
+   展開の問題を解いて進んでいく。敵の設定は元教材のまま。
+
+   元教材から直した点：
+     ・敵を倒したあとの演出中に次の問題が始まり、答えが表示されないまま
+       先に進んでしまうことがあった。
+       → 演出をやめ、答え合わせ → 次へ、の順番を必ず守るようにした。
+     ・入力欄が2つに分かれていて（x²の係数と定数）、片方だけ埋めても
+       正解になることがあった。
+       → 空欄が残っているうちは採点しない。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  // 元教材の敵データをそのまま引き継ぐ
+  var ENEMIES = [
+    { name: 'スライム', sprite: '👾', speech: 'プルプル...!', kind: 'mono' },
+    { name: 'ゴブリン', sprite: '👹', speech: 'グルルル...!', kind: 'ab' },
+    { name: 'オーク', sprite: '👺', speech: 'ブオォ...!', kind: 'sq' },
+    { name: 'ドラゴン', sprite: '🐉', speech: 'ガオオォ...!', kind: 'df' },
+    { name: '魔王', sprite: '😈', speech: 'フハハハ...!', kind: 'cross' }
+  ];
+
+  function makeItem(kind) {
+    if (kind === 'mono') {
+      var k = A.nz(-6, 6), p = A.nz(1, 6), q = A.nz(-9, 9);
+      var head = k === 1 ? '' : k === -1 ? '-' : String(k);
+      return {
+        question: head + '(' + A.linear(p, q) + ')',
+        answer: F.poly([[k * p, 'x'], [k * q, '']]),
+        hint: 'かっこの外の数を、中のどの項にもかけます。'
+      };
+    }
+    var it = kind === 'ab' ? A.quadraticFromRoots({ lo: -7, hi: 7 })
+      : kind === 'sq' ? A.squareForm({ lo: -7, hi: 7 })
+      : kind === 'df' ? A.diffOfSquares({ hi: 8 })
+      : A.crossForm();
+    return {
+      question: it.factored,
+      answer: it.expanded,
+      coefs: it.coefs,
+      hint: kind === 'sq' ? '(x + a)² = x² + 2ax + a²'
+        : kind === 'df' ? '(x + a)(x − a) = x² − a²'
+        : kind === 'ab' ? '(x + a)(x + b) = x² + (a + b)x + ab'
+        : '前どうし・外どうし・内どうし・後ろどうしを、すべてかけて足します。'
+    };
+  }
+
+  function wrongsFor(item) {
+    var correctPlain = F.plain(item.answer);
+    var out = [];
+    var guard = 0;
+    while (out.length < 3 && guard++ < 80) {
+      var cand;
+      if (item.coefs) {
+        var c = item.coefs;
+        cand = F.poly([
+          [c.x2, F.pow('x', 2)],
+          [c.x1 + Quiz.pick([-2, -1, 1, 2, 0]), 'x'],
+          [c.x0 + Quiz.pick([-3, -1, 1, 3, 0]), '']
+        ]);
+      } else {
+        cand = item.answer.replace(/(-?\d+)/, function (m) {
+          return String(Number(m) + Quiz.pick([-2, -1, 1, 2]));
+        });
+      }
+      if (cand === item.answer) continue;
+      if (M.isEqual(F.plain(cand), correctPlain)) continue;
+      if (out.indexOf(cand) >= 0) continue;
+      out.push(cand);
+    }
+    return out;
+  }
+
+  function battleQuestion(enemy, style) {
+    var item = makeItem(enemy.kind);
+    var head = '<span style="font-size:1.6em">' + enemy.sprite + '</span>　<b>' + enemy.name +
+      '</b> 「' + enemy.speech + '」<br>次の式を展開して こうげき！';
+
+    if (style === 'input') {
+      return {
+        tag: enemy.name,
+        text: head,
+        math: item.question,
+        type: 'input',
+        answer: F.plain(item.answer),
+        answerLabel: item.answer,
+        placeholder: '例： x^2 + 5x + 6',
+        hint: item.hint,
+        explain: '答え： ' + item.answer
+      };
+    }
+    return {
+      tag: enemy.name,
+      text: head,
+      math: item.question,
+      type: 'choice',
+      choices: [item.answer].concat(wrongsFor(item)),
+      correct: 0,
+      hint: item.hint,
+      explain: '答え： ' + item.answer
+    };
+  }
+
+  var modes = [];
+  ENEMIES.forEach(function (e, i) {
+    modes.push({
+      id: 'e' + i + ':choice',
+      group: 'ステージ別',
+      name: e.sprite + ' ' + e.name,
+      desc: '4択で3問'
+    });
+  });
+  modes.push({ id: 'quest:choice', group: '冒険モード', name: '⚔ クエスト（4択）', desc: '5体を順に、全10問' });
+  modes.push({ id: 'quest:input', group: '冒険モード', name: '🔥 クエスト（記述）', desc: '5体を順に、全10問' });
+
+  Quiz.start({
+    title: '数学バトルクエスト',
+    subtitle: '展開の力で、5体の敵を倒していこう。',
+    modes: modes,
+    build: function (id) {
+      var p = id.split(':');
+      var out = [];
+      if (p[0] === 'quest') {
+        ENEMIES.forEach(function (e, i) {
+          var n = i === ENEMIES.length - 1 ? 2 : 2;
+          for (var k = 0; k < n; k++) out.push(battleQuestion(e, p[1]));
+        });
+        return out;
+      }
+      var enemy = ENEMIES[Number(p[0].slice(1))];
+      for (var i = 0; i < 3; i++) out.push(battleQuestion(enemy, p[1]));
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

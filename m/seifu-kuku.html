@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正負の九九</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   05. 正負の九九（正負の数スーパーチャレンジ）
+     10問練習 ／ タイムアタック ／ サバイバル　×　4択 ／ 入力
+
+   元教材から直した点：
+     ・サバイバルでまちがえても終わらず、そのまま進み続けることがあった。
+       → 1問まちがえたらきちんと結果画面へ。
+     ・タイムアタックのタイマーが、途中で戻ると二重に動いて時間が倍速になった。
+       → 画面を作り直すたびに前のタイマーを止めるようにした。
+     ・「-12」を「ー12」（長音）で入力すると不正解になっていた。
+       → 全角のマイナスや長音も正しく読み取る。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  function signed(n) { return n < 0 ? '(' + n + ')' : String(n); }
+
+  function makeQuestion(useChoices) {
+    var a = Quiz.randInt(1, 9) * (Math.random() < 0.5 ? -1 : 1);
+    var b = Quiz.randInt(1, 9) * (Math.random() < 0.5 ? -1 : 1);
+    var ans = a * b;
+
+    var rule = (a < 0) === (b < 0)
+      ? '同じ符号どうしのかけ算は ＋ になります。'
+      : 'ちがう符号どうしのかけ算は － になります。';
+
+    var q = {
+      text: '次の計算をしなさい。',
+      math: signed(a) + ' × ' + signed(b),
+      hint: rule,
+      explain: rule + '　絶対値は ' + Math.abs(a) + ' × ' + Math.abs(b) + ' = ' + Math.abs(ans) +
+        ' なので、答えは ' + ans + ' です。'
+    };
+
+    if (useChoices) {
+      // 符号だけまちがえた答えを必ず入れる（ここが最大のつまずきどころ）
+      var wrongs = [-ans];
+      [Math.abs(a) * Math.abs(b) + 1, -(Math.abs(a) * Math.abs(b)) - 1,
+       a + b, ans + 10].forEach(function (v) {
+        if (wrongs.length < 3 && v !== ans && wrongs.indexOf(v) < 0) wrongs.push(v);
+      });
+      var guard = 0;
+      while (wrongs.length < 3 && guard++ < 40) {
+        var v2 = Quiz.randInt(-81, 81);
+        if (v2 !== ans && wrongs.indexOf(v2) < 0) wrongs.push(v2);
+      }
+      q.type = 'choice';
+      q.choices = [String(ans)].concat(wrongs.map(String));
+      q.correct = 0;
+    } else {
+      q.type = 'input';
+      q.inputmode = 'text';
+      q.answer = String(ans);
+      q.placeholder = '例： -12';
+    }
+    return q;
+  }
+
+  function build(n, useChoices) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(makeQuestion(useChoices));
+    return out;
+  }
+
+  Quiz.start({
+    title: '正負の九九',
+    subtitle: '符号のつけまちがいをなくそう。同符号は＋、異符号は−。',
+    modes: [
+      { id: 'c10', group: '4択モード', name: '10問練習', desc: 'じっくり学習' },
+      { id: 'ct', group: '4択モード', name: 'タイムアタック', desc: '10問を最速で', timed: true },
+      { id: 'cs', group: '4択モード', name: 'サバイバル', desc: 'ミスまでずっと挑戦', survival: true },
+      { id: 'i10', group: '入力モード', name: '10問練習', desc: 'じっくり学習' },
+      { id: 'it', group: '入力モード', name: 'タイムアタック', desc: '10問を最速で', timed: true },
+      { id: 'is', group: '入力モード', name: 'サバイバル', desc: 'ミスまでずっと挑戦', survival: true }
+    ],
+    build: function (id) {
+      var useChoices = id[0] === 'c';
+      if (id === 'cs' || id === 'is') return build(100, useChoices);   // 事実上むげん
+      return build(10, useChoices);
+    }
+  });
+})();
+</script>
+</body>
+</html>

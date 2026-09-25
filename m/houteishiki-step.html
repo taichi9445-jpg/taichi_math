@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数式ステップクイズ</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   17. 1次方程式・不等式（数式ステップクイズ）
+     ① 式の種類：方程式（=） ／ 不等式（>, ≦）
+     ② むずかしさ：初級 ／ 上級
+
+   元教材から直した点：
+     ・不等式で「両辺を負の数でわると不等号の向きが変わる」問題のとき、
+       向きを変えていない選択肢も正解あつかいになっていた。
+       → 不等号の向きまで含めて 1 つの答えとして判定する。
+     ・解が分数になる問題で「3/2」と「1.5」の片方しか正解にならなかった。
+       → 数として同じなら、どちらの書き方でも正解。
+     ・「初級」を選んでも上級の問題が混ざることがあった。
+       → むずかしさごとに数の範囲を分けて作る。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  /* ---------- 1次方程式 ---------- */
+
+  function equation(level) {
+    // 解が整数になるように、先に解を決めてから式を作る
+    var x = A.nz(-9, 9);
+    var a = A.nz(2, level >= 2 ? 9 : 5);
+    var b = A.randInt(-12, 12);
+
+    if (level === 1) {
+      // ax + b = c
+      var c = a * x + b;
+      return {
+        shown: A.linear(a, b) + ' = ' + c,
+        answer: x,
+        steps: '両辺から ' + b + ' を' + (b < 0 ? 'たして' : 'ひいて') + '　' + a + 'x = ' + (c - b) +
+          '　→　両辺を ' + a + ' でわって x = ' + x,
+        hint: '文字を左辺に、数を右辺に集めてから、x の係数でわります。'
+      };
+    }
+
+    // ax + b = dx + e （両辺に文字がある）
+    var d = A.nz(-6, 6);
+    while (d === a) d = A.nz(-6, 6);
+    var e = (a - d) * x + b;
+    return {
+      shown: A.linear(a, b) + ' = ' + A.linear(d, e),
+      answer: x,
+      steps: '文字を左辺、数を右辺に集めると ' + (a - d) + 'x = ' + (e - b) +
+        '　→　両辺を ' + (a - d) + ' でわって x = ' + x,
+      hint: '両辺に文字があるときは、まず文字を片側に集めます。'
+    };
+  }
+
+  /* ---------- 1次不等式 ---------- */
+
+  function inequality(level) {
+    var x = A.nz(-9, 9);
+    var a = A.nz(2, level >= 2 ? 8 : 5);
+    if (level >= 2 && Math.random() < 0.5) a = -a;      // 上級は負の係数も出す
+    var b = A.randInt(-12, 12);
+    var c = a * x + b;
+
+    var op = Quiz.pick(['>', '<', '≧', '≦']);
+    // 両辺を a でわるとき、a が負なら不等号の向きが変わる
+    var flipped = a < 0;
+    var resultOp = flipped ? { '>': '<', '<': '>', '≧': '≦', '≦': '≧' }[op] : op;
+    var answer = 'x ' + resultOp + ' ' + x;
+
+    // 誤答：向きを変え忘れたもの／符号のミス
+    var wrongs = [
+      'x ' + op + ' ' + x,
+      'x ' + resultOp + ' ' + (-x),
+      'x ' + ({ '>': '<', '<': '>', '≧': '≦', '≦': '≧' }[resultOp]) + ' ' + (-x)
+    ].filter(function (w) { return w !== answer; });
+
+    return {
+      shown: A.linear(a, b) + ' ' + op + ' ' + c,
+      answerText: answer,
+      wrongs: wrongs,
+      steps: (flipped
+        ? '両辺を ' + a + '（負の数）でわるので、不等号の向きが変わって '
+        : '両辺を ' + a + ' でわって ') + answer,
+      hint: flipped
+        ? '負の数で両辺をわるときは、不等号の向きが変わります。'
+        : '正の数で両辺をわるときは、不等号の向きはそのままです。'
+    };
+  }
+
+  /* ---------- 出題 ---------- */
+
+  function equationQuestion(level, style) {
+    var it = equation(level);
+    if (style === 'input') {
+      return {
+        tag: '方程式',
+        text: '次の方程式を解きなさい。',
+        math: it.shown,
+        type: 'input',
+        answer: String(it.answer),
+        placeholder: 'x = の右側だけ入力',
+        note: '「x = 3」と書いても「3」だけでも正解です。',
+        hint: it.hint,
+        explain: it.steps
+      };
+    }
+    var choices = ['x = ' + it.answer];
+    Quiz.shuffle([it.answer + 1, it.answer - 1, -it.answer, it.answer * 2]).forEach(function (v) {
+      if (choices.length < 4 && v !== it.answer && choices.indexOf('x = ' + v) < 0) choices.push('x = ' + v);
+    });
+    return {
+      tag: '方程式',
+      text: '次の方程式を解きなさい。',
+      math: it.shown,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: it.hint,
+      explain: it.steps
+    };
+  }
+
+  function inequalityQuestion(level) {
+    var it = inequality(level);
+    var choices = [it.answerText];
+    it.wrongs.forEach(function (w) { if (choices.length < 4 && choices.indexOf(w) < 0) choices.push(w); });
+    var guard = 0;
+    while (choices.length < 4 && guard++ < 20) {
+      var w2 = 'x ' + Quiz.pick(['>', '<', '≧', '≦']) + ' ' + A.nz(-9, 9);
+      if (choices.indexOf(w2) < 0) choices.push(w2);
+    }
+    return {
+      tag: '不等式',
+      text: '次の不等式を解きなさい。',
+      math: it.shown,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: it.hint,
+      explain: it.steps
+    };
+  }
+
+  function build(kind, level, style, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      if (kind === 'eq') out.push(equationQuestion(level, style));
+      else if (kind === 'ineq') out.push(inequalityQuestion(level));
+      else out.push(Math.random() < 0.5 ? equationQuestion(level, style) : inequalityQuestion(level));
+    }
+    return out;
+  }
+
+  Quiz.start({
+    title: '数式ステップクイズ',
+    subtitle: '方程式と不等式。とくに不等号の向きに気をつけよう。',
+    modes: [
+      { id: 'eq:1:choice', group: '方程式（=）', name: '初級　4択', desc: 'ax + b = c（10問）' },
+      { id: 'eq:1:input', group: '方程式（=）', name: '初級　記述', desc: '10問' },
+      { id: 'eq:2:choice', group: '方程式（=）', name: '上級　4択', desc: '両辺に文字（10問）' },
+      { id: 'eq:2:input', group: '方程式（=）', name: '上級　記述', desc: '両辺に文字（10問）' },
+      { id: 'ineq:1:choice', group: '不等式（>, ≦）', name: '初級', desc: '正の係数のみ（10問）' },
+      { id: 'ineq:2:choice', group: '不等式（>, ≦）', name: '上級', desc: '負の係数もあり（10問）' },
+      { id: 'mix:2:choice', group: '総合', name: '総合テスト', desc: '方程式＋不等式（12問）' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      return build(p[0], Number(p[1]), p[2], p[0] === 'mix' ? 12 : 10);
+    }
+  });
+})();
+</script>
+</body>
+</html>

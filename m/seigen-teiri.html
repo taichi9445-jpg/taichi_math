@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正弦定理 穴埋め問題</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/steps.js"></script>
+<script src="../data/seigen-teiri.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   29. 正弦定理（穴埋め問題）
+   5問ぶんの解答手順は元教材からそのまま引き継いでいる。
+
+   元教材から直した点：
+     ・途中式を 2 列に並べる作りだったため、スマホでは右の列が画面外に出て
+       読めず、そこにある空欄も押せなかった。
+       → 1 列にして、長い式は自然に折り返すようにした。
+     ・分数の中の空欄がドラッグ＆ドロップでしか埋められず、
+       指では分母と分子を取りちがえやすかった。
+       → 空欄をタップしてから候補をタップする方式にした。
+     ・候補が正答だけで構成されていて、考えなくても埋まってしまった。
+       → 元データにあった余分な候補を、ひっかけとして残している。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  // 三角形の図をそえる（元教材の triangle データは角度と辺の情報だけだった）
+  Steps.start({
+    title: '正弦定理 穴埋め問題',
+    subtitle: 'a / sin A = b / sin B = c / sin C。手順どおりに埋めていこう。',
+    problems: window.DATA_SEIGEN
+  });
+})();
+</script>
+</body>
+</html>

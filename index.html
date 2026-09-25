@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学Ⅰ デジタル教材</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+  .hero {
+    background: linear-gradient(135deg, #2f6fed 0%, #6f4cd8 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: clamp(22px, 5vw, 38px);
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { margin: 0 0 8px; font-size: clamp(23px, 5.5vw, 34px); line-height: 1.3; }
+  .hero p { margin: 0; opacity: .9; font-size: .96em; }
+
+  .unit { margin-bottom: 26px; }
+  .unit > h2 {
+    font-size: clamp(17px, 3.2vw, 21px);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .unit > h2 .count { font-size: .7em; font-weight: 500; color: var(--ink-soft); }
+  .unit > .lead { color: var(--ink-soft); font-size: .9em; margin: 0 0 12px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: 12px;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    min-height: 96px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--c, var(--brand));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform .1s ease, box-shadow .15s ease;
+  }
+  .item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16,24,40,.06), 0 14px 30px rgba(16,24,40,.12);
+  }
+  .item .no { font-size: .74em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .item .name { font-weight: 700; font-size: 1.02em; line-height: 1.4; }
+  .item .desc { font-size: .84em; color: var(--ink-soft); line-height: 1.5; }
+
+  .u1 { --c: #2f6fed; }
+  .u2 { --c: #10a05a; }
+  .u3 { --c: #e79b16; }
+  .u4 { --c: #d1477a; }
+
+  footer { color: var(--ink-soft); font-size: .84em; text-align: center; padding: 20px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>数学Ⅰ デジタル教材</h1>
+    <p>スマホでも Chromebook でも動きます。やりたいものをタップして始めてください。</p>
+  </div>
+
+  <section class="unit">
+    <h2>式の計算 <span class="count">13教材</span></h2>
+    <p class="lead">文字式のきまりから、展開・因数分解まで。</p>
+    <div class="grid">
+      <a class="item u1" href="m/moji-rule.html"><span class="no">01</span><span class="name">文字式のルール</span><span class="desc">×を省く、数を前に、アルファベット順。書き方のきまりを10問で。</span></a>
+      <a class="item u1" href="m/jisu-keisu.html"><span class="no">02</span><span class="name">次数と係数</span><span class="desc">単項式・多項式・同類項を3レベルで攻略。</span></a>
+      <a class="item u1" href="m/takoushiki.html"><span class="no">03</span><span class="name">多項式の計算</span><span class="desc">選ぶ → 穴埋め → フル計算と、3段階で仕上げる。</span></a>
+      <a class="item u1" href="m/kuku.html"><span class="no">04</span><span class="name">九九の練習</span><span class="desc">フラッシュカード形式。計算の土台をつくる。</span></a>
+      <a class="item u1" href="m/seifu-kuku.html"><span class="no">05</span><span class="name">正負の九九</span><span class="desc">符号つきのかけ算。練習・タイムアタック・サバイバル。</span></a>
+      <a class="item u1" href="m/moji-keisan.html"><span class="no">06</span><span class="name">文字式の計算</span><span class="desc">四則計算と分配法則。数式バトル形式。</span></a>
+      <a class="item u1" href="m/tenkai-quest.html"><span class="no">07</span><span class="name">展開の練習（クエスト）</span><span class="desc">敵を倒しながら展開を進める冒険モード。</span></a>
+      <a class="item u1" href="m/shisu.html"><span class="no">08</span><span class="name">指数法則</span><span class="desc">a<sup>m</sup>×a<sup>n</sup> などの法則を2レベルで。</span></a>
+      <a class="item u1" href="m/tenkai-master.html"><span class="no">09</span><span class="name">展開マスター</span><span class="desc">選択式と穴埋めの2方式。レベル1・2。</span></a>
+      <a class="item u1" href="m/tenkai-koushiki.html"><span class="no">10</span><span class="name">展開の公式</span><span class="desc">公式別に練習してから、ミックスで実戦。</span></a>
+      <a class="item u1" href="m/insu-step.html"><span class="no">11</span><span class="name">因数分解を段階的に学ぶ</span><span class="desc">かけて○・たして△を、手順を追って身につける。</span></a>
+      <a class="item u1" href="m/insu-master.html"><span class="no">12</span><span class="name">因数分解の練習</span><span class="desc">基本3公式＋ミックス＋たすき掛け。</span></a>
+      <a class="item u1" href="m/kyotsu-insu.html"><span class="no">13</span><span class="name">共通因数の練習</span><span class="desc">共通因数を見つけて、くくり出す。</span></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2>実数 <span class="count">5教材</span></h2>
+    <p class="lead">平方根の意味と計算、方程式・不等式。</p>
+    <div class="grid">
+      <a class="item u2" href="m/root-basic.html"><span class="no">14</span><span class="name">ルートの基礎</span><span class="desc">平方根とは何か。根号を外す・値を求める。</span></a>
+      <a class="item u2" href="m/root-alchemist.html"><span class="no">15</span><span class="name">ルートの計算</span><span class="desc">ルート・アルケミスト。素材を集めて計算を極める。</span></a>
+      <a class="item u2" href="m/root-tower.html"><span class="no">16</span><span class="name">ルートの計算全般</span><span class="desc">平方根タワー。9つのフロアを登りきろう。</span></a>
+      <a class="item u2" href="m/houteishiki-step.html"><span class="no">17</span><span class="name">1次方程式・不等式</span><span class="desc">方程式と不等式を、初級・上級で。</span></a>
+      <a class="item u2" href="m/nijihouteishiki.html"><span class="no">18</span><span class="name">2次方程式</span><span class="desc">因数分解・解の公式・実戦ランダムの4モード。</span></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2>2次関数 <span class="count">6教材</span></h2>
+    <p class="lead">グラフの読み取りから、2次不等式まで。</p>
+    <div class="grid">
+      <a class="item u3" href="m/nijikansu-zahyou.html"><span class="no">19</span><span class="name">x＝○のときのyの値</span><span class="desc">代入して座標を求める。グラフのヒントつき。</span></a>
+      <a class="item u3" href="m/heikou-idou.html"><span class="no">20</span><span class="name">2次関数の平行移動</span><span class="desc">上下左右へどう動いたかを読み取る。</span></a>
+      <a class="item u3" href="m/saidai-saishou.html"><span class="no">21</span><span class="name">最大値・最小値</span><span class="desc">定義域つきの最大・最小をグラフで考える。</span></a>
+      <a class="item u3" href="m/kyouyuuten.html"><span class="no">22</span><span class="name">2次関数と共有点</span><span class="desc">x軸との共有点の座標を求める練習。</span></a>
+      <a class="item u3" href="m/futoushiki-imi.html"><span class="no">23</span><span class="name">不等式の意味</span><span class="desc">日本語 ⇄ 不等式を行き来する10問。</span></a>
+      <a class="item u3" href="m/niji-futoushiki.html"><span class="no">24</span><span class="name">2次不等式</span><span class="desc">因数分解の練習から、グラフで解を読むまで。</span></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2>三角比 <span class="count">7教材</span></h2>
+    <p class="lead">直角三角形から正弦定理・面積まで。</p>
+    <div class="grid">
+      <a class="item u4" href="m/sankakuhi-quiz.html"><span class="no">25</span><span class="name">三角比の値</span><span class="desc">三角形の回転から応用まで、4レベル。</span></a>
+      <a class="item u4" href="m/yuumeikaku.html"><span class="no">26</span><span class="name">有名角の三角比の値</span><span class="desc">30°・45°・60°をきちんと覚える。</span></a>
+      <a class="item u4" href="m/sougo-kankei.html"><span class="no">27</span><span class="name">相互関係の計算</span><span class="desc">sin²+cos²=1 などを段階的に。</span></a>
+      <a class="item u4" href="m/menseki.html"><span class="no">28</span><span class="name">面積の計算</span><span class="desc">S=½ab sinC の穴埋め練習。</span></a>
+      <a class="item u4" href="m/seigen-teiri.html"><span class="no">29</span><span class="name">正弦定理</span><span class="desc">正弦定理の式を、穴埋めで組み立てる。</span></a>
+      <a class="item u4" href="m/sankakuhi-zahyou.html"><span class="no">30</span><span class="name">三角比（座標）</span><span class="desc">単位円の座標として三角比をとらえる。</span></a>
+      <a class="item u4" href="m/sankakuhi-value.html"><span class="no">31</span><span class="name">三角比の値（総合）</span><span class="desc">0°〜180°の三角比を総合的に確認。</span></a>
+    </div>
+  </section>
+
+  <footer>数学Ⅰ デジタル教材</footer>
+</div>
+</body>
+</html>

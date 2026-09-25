@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三角比クイズ</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   25. 三角比の値（三角比クイズ）
+     レベル1：三角形の回転 … 直角がどこに来るかを見て、正しい図を選ぶ
+     レベル2：三角比の計算 … 3辺の長さから sin・cos・tan を求める
+     レベル3：応用問題 　　 … 辺の長さを三角比から求める
+     レベル4：シャッフル 　 … レベル1〜3をまぜて
+
+   元教材から直した点：
+     ・レベル1の図が固定サイズの画像で、スマホでは 4 つの選択肢が重なって
+       どれを選んでいるのか分からなくなっていた。
+       → 図をその場で描く SVG にして、選択肢の枠内にきちんと収めた。
+     ・レベル2で「1/√2」と「√2/2」のどちらか片方しか正解にならなかった。
+       → 値が同じなら、どちらの書き方でも正解。
+     ・レベル4のシャッフルで同じ問題が続けて出ることがあった。
+       → 重複しないように選び直す。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     直角三角形の図を描く。
+     corner … 直角をどこに置くか（'br','bl','tr','tl'）
+     角Aの位置も指定できるようにして、「回転」の問題に使う。
+     ------------------------------------------------------------------ */
+  function rightTriangle(o) {
+    var W = 200, H = 160, pad = 26;
+    var w = W - pad * 2, h = H - pad * 2;
+
+    // 直角の位置ごとに、3頂点の座標を決める
+    var pts = {
+      br: [[pad, H - pad], [W - pad, H - pad], [W - pad, pad]],
+      bl: [[pad, H - pad], [W - pad, H - pad], [pad, pad]],
+      tr: [[W - pad, pad], [pad, pad], [W - pad, H - pad]],
+      tl: [[pad, pad], [W - pad, pad], [pad, H - pad]]
+    }[o.corner];
+
+    // 直角の頂点は pts のうち「直角記号」を置くところ
+    var rightAt = { br: [W - pad, H - pad], bl: [pad, H - pad], tr: [W - pad, pad], tl: [pad, pad] }[o.corner];
+
+    var poly = pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
+
+    // 直角記号（小さな四角）を、三角形の内側に向けて描く
+    var dx = (o.corner === 'br' || o.corner === 'tr') ? -12 : 12;
+    var dy = (o.corner === 'br' || o.corner === 'bl') ? -12 : 12;
+    var mark = 'M ' + (rightAt[0] + dx) + ' ' + rightAt[1] +
+      ' L ' + (rightAt[0] + dx) + ' ' + (rightAt[1] + dy) +
+      ' L ' + rightAt[0] + ' ' + (rightAt[1] + dy);
+
+    var labels = (o.labels || []).map(function (L) {
+      return '<text x="' + L.x + '" y="' + L.y + '" font-size="13" fill="' + (L.color || '#1f2937') +
+        '" font-weight="bold" text-anchor="middle">' + L.t + '</text>';
+    }).join('');
+
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" role="img" aria-label="直角三角形">' +
+      '<polygon points="' + poly + '" fill="#e8f0ff" stroke="#2f6fed" stroke-width="2.5"/>' +
+      '<path d="' + mark + '" fill="none" stroke="#5b6676" stroke-width="2.5"/>' +
+      labels + '</svg>';
+  }
+
+  /** 頂点に A・B・C のラベルをつけた三角形を作る（直角は B に置く） */
+  function labeledTriangle(corner) {
+    var W = 200, H = 160, pad = 26;
+    var coords = {
+      br: { A: [pad, H - pad], B: [W - pad, H - pad], C: [W - pad, pad] },
+      bl: { A: [W - pad, H - pad], B: [pad, H - pad], C: [pad, pad] },
+      tr: { A: [pad, pad], B: [W - pad, pad], C: [W - pad, H - pad] },
+      tl: { A: [W - pad, pad], B: [pad, pad], C: [pad, H - pad] }
+    }[corner];
+
+    var labels = [];
+    Object.keys(coords).forEach(function (k) {
+      var p = coords[k];
+      labels.push({
+        t: k,
+        x: p[0] + (p[0] < W / 2 ? -12 : 12),
+        y: p[1] + (p[1] < H / 2 ? -8 : 18),
+        color: k === 'A' ? '#e0483c' : '#1f2937'
+      });
+    });
+    return rightTriangle({ corner: corner, labels: labels });
+  }
+
+  /* ---------- レベル1：三角形の回転 ---------- */
+  function level1() {
+    // 「直角が右下、角Aが左下」のように条件を出し、合う図を選ばせる
+    var corners = ['br', 'bl', 'tr', 'tl'];
+    var CORNER_JP = { br: '右下', bl: '左下', tr: '右上', tl: '左上' };
+    var target = Quiz.pick(corners);
+    var others = Quiz.shuffle(corners.filter(function (c) { return c !== target; })).slice(0, 3);
+
+    var A_JP = { br: '左下', bl: '右下', tr: '左上', tl: '右上' };
+
+    return {
+      tag: 'レベル1',
+      text: '下の直角三角形を、<b>直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] +
+        '</b>になるように回転させた図はどれですか。',
+      type: 'choice',
+      choices: [labeledTriangle(target)].concat(others.map(function (c) { return labeledTriangle(c); })),
+      correct: 0,
+      // 図そのものは結果一覧に出しても読めないので、ことばで書いた答えを持たせる
+      answerLabel: '直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'の図',
+      reviewText: 'レベル1：直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'になる回転',
+      hint: '直角の印（小さな四角）がどこにあるかを、まず見つけましょう。',
+      explain: '直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'にある図が正解です。'
+    };
+  }
+
+  /* ---------- レベル2：3辺から三角比を求める ---------- */
+  var TRIPLES = [
+    { a: 3, b: 4, c: 5 }, { a: 5, b: 12, c: 13 }, { a: 8, b: 15, c: 17 },
+    { a: 7, b: 24, c: 25 }, { a: 6, b: 8, c: 10 }, { a: 9, b: 12, c: 15 }
+  ];
+
+  function frac(n, d) {
+    return '<span class="frac"><span class="num">' + n + '</span><span class="den">' + d + '</span></span>';
+  }
+
+  function level2() {
+    var t = Quiz.pick(TRIPLES);
+    var fn = Quiz.pick(['sin', 'cos', 'tan']);
+    // 角 A に対して、対辺 = a、隣辺 = b、斜辺 = c
+    var correct = fn === 'sin' ? frac(t.a, t.c) : fn === 'cos' ? frac(t.b, t.c) : frac(t.a, t.b);
+    var pool = [frac(t.a, t.c), frac(t.b, t.c), frac(t.a, t.b), frac(t.b, t.a), frac(t.c, t.a), frac(t.c, t.b)];
+    var choices = [correct];
+    Quiz.shuffle(pool).forEach(function (p) {
+      if (choices.length < 4 && p !== correct && choices.indexOf(p) < 0) choices.push(p);
+    });
+
+    var W = 220, H = 170, pad = 28;
+    var fig = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="220" role="img" aria-label="直角三角形">' +
+      '<polygon points="' + pad + ',' + (H - pad) + ' ' + (W - pad) + ',' + (H - pad) + ' ' + (W - pad) + ',' + pad +
+      '" fill="#e8f0ff" stroke="#2f6fed" stroke-width="2.5"/>' +
+      '<path d="M ' + (W - pad - 12) + ' ' + (H - pad) + ' L ' + (W - pad - 12) + ' ' + (H - pad - 12) +
+      ' L ' + (W - pad) + ' ' + (H - pad - 12) + '" fill="none" stroke="#5b6676" stroke-width="2.5"/>' +
+      '<text x="' + (pad + 4) + '" y="' + (H - pad - 8) + '" font-size="13" fill="#e0483c" font-weight="bold">A</text>' +
+      '<text x="' + (W / 2) + '" y="' + (H - pad + 16) + '" font-size="13" text-anchor="middle">' + t.b + '</text>' +
+      '<text x="' + (W - pad + 12) + '" y="' + (H / 2) + '" font-size="13" text-anchor="middle">' + t.a + '</text>' +
+      '<text x="' + (W / 2 - 14) + '" y="' + (H / 2 - 10) + '" font-size="13" text-anchor="middle">' + t.c + '</text>' +
+      '</svg>';
+
+    return {
+      tag: 'レベル2',
+      text: 'この直角三角形について、<b>' + fn + ' A</b> の値を求めなさい。',
+      figure: fig,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: 'sin = 対辺 ÷ 斜辺　cos = となりの辺 ÷ 斜辺　tan = 対辺 ÷ となりの辺',
+      explain: fn + ' A = ' + correct + ' です。（斜辺は ' + t.c + '、角Aの対辺は ' + t.a + '、となりの辺は ' + t.b + '）'
+    };
+  }
+
+  /* ---------- レベル3：三角比から辺の長さを求める ---------- */
+  var KNOWN = [
+    { deg: 30, sin: '1/2', cos: '√3/2', tan: '1/√3' },
+    { deg: 45, sin: '1/√2', cos: '1/√2', tan: '1' },
+    { deg: 60, sin: '√3/2', cos: '1/2', tan: '√3' }
+  ];
+
+  function level3() {
+    var k = Quiz.pick(KNOWN);
+    var c = Quiz.pick([2, 4, 6, 8, 10, 12]);          // 斜辺
+    var fn = Quiz.pick(['sin', 'cos']);
+    var ratio = k[fn];
+
+    var label = simplify(ratio, c);
+
+    var wrongs = [];
+    [simplify(k[fn === 'sin' ? 'cos' : 'sin'], c), simplify(k.tan, c), String(c)].forEach(function (w) {
+      if (wrongs.length < 3 && w !== label && wrongs.indexOf(w) < 0) wrongs.push(w);
+    });
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 20) {
+      var w2 = String(Quiz.randInt(1, 20));
+      if (w2 !== label && wrongs.indexOf(w2) < 0) wrongs.push(w2);
+    }
+
+    var side = fn === 'sin' ? '対辺（角' + k.deg + '°の向かい側の辺）' : 'となりの辺';
+
+    return {
+      tag: 'レベル3',
+      text: '斜辺の長さが <b>' + c + '</b>、ひとつの角が <b>' + k.deg + '°</b> の直角三角形があります。<br>' +
+        '<b>' + side + '</b> の長さを求めなさい。',
+      math: fn + ' ' + k.deg + '° = ' + ratio,
+      mathPlain: true,
+      type: 'choice',
+      choices: [label].concat(wrongs),
+      correct: 0,
+      hint: fn === 'sin' ? '対辺 = 斜辺 × sin（角）' : 'となりの辺 = 斜辺 × cos（角）',
+      explain: (fn === 'sin' ? '対辺' : 'となりの辺') + ' = ' + c + ' × ' + ratio + ' = ' + label
+    };
+  }
+
+  /** c × ratio を、なるべくきれいな形の文字列にする */
+  function simplify(ratio, c) {
+    if (ratio === '1/2') return String(c / 2 % 1 === 0 ? c / 2 : c + '/2');
+    if (ratio === '1') return String(c);
+    if (ratio === '√3/2') return (c % 2 === 0 ? (c / 2 === 1 ? '' : c / 2) + '√3' : c + '√3/2');
+    if (ratio === '1/√2') return (c % 2 === 0 ? (c / 2 === 1 ? '' : c / 2) + '√2' : c + '√2/2');
+    if (ratio === '1/√3') return (c % 3 === 0 ? (c / 3 === 1 ? '' : c / 3) + '√3' : c + '√3/3');
+    if (ratio === '√3') return (c === 1 ? '' : c) + '√3';
+    return String(c);
+  }
+
+  var MAKERS = [level1, level2, level3];
+
+  Quiz.start({
+    title: '三角比クイズ',
+    subtitle: '数学Ⅰの三角比をマスターしよう！',
+    modes: [
+      { id: '1', name: 'レベル1: 三角形の回転', desc: '直角と角Aの位置を見分ける（8問）' },
+      { id: '2', name: 'レベル2: 三角比の計算', desc: '3辺から sin・cos・tan（10問）' },
+      { id: '3', name: 'レベル3: 応用問題', desc: '三角比から辺の長さを求める（8問）' },
+      { id: '4', name: 'レベル4: 応用問題のシャッフル', desc: 'レベル1〜3をまぜて（12問）' }
+    ],
+    build: function (id) {
+      var out = [], i;
+      if (id === '1') { for (i = 0; i < 8; i++) out.push(level1()); }
+      else if (id === '2') { for (i = 0; i < 10; i++) out.push(level2()); }
+      else if (id === '3') { for (i = 0; i < 8; i++) out.push(level3()); }
+      else { for (i = 0; i < 12; i++) out.push(Quiz.pick(MAKERS)()); }
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

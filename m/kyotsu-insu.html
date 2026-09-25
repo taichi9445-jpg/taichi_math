@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>共通因数の練習</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   13. 共通因数の練習
+     4たく レベル1／レベル2、つなげる レベル1／レベル2
+     レベル1：数の共通因数だけ　　レベル2：文字もふくむ共通因数
+
+   元教材から直した点：
+     ・「くくり出しが足りない答え」（例：6x+9 を 3(2x+3) ではなく 1(6x+9)）が
+       正解になってしまうことがあった。
+       → 共通因数を最大まで取り出したものだけを正解にする。
+     ・つなげるモードで、置いた候補が消えて操作できなくなることがあった。
+       → タップ方式にして、いつでも置き直せるようにした。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra, F = Quiz.fmt, M = MathCore;
+
+  /**
+   * 共通因数の問題を1つ作る。
+   * level 1 … k(px + q)          数の共通因数のみ
+   * level 2 … kx(px + q) など    文字もふくむ
+   */
+  function makeItem(level) {
+    var k = A.randInt(2, level === 1 ? 8 : 9);
+    var useVar = level >= 2;
+    var p = A.randInt(1, 6);
+    var q = A.nz(-9, 9);
+
+    // p と q が互いに素になるようにして、くくり残しが出ないようにする
+    var g = A.gcd(p, Math.abs(q));
+    if (g > 1) { p = p / g; q = q / g; }
+    if (p === 0) p = 1;
+
+    var common = (k === 1 ? '' : String(k)) + (useVar ? 'x' : '');
+    var inner = A.linear(p, q);
+    var factored = common + '(' + inner + ')';
+
+    var expanded = useVar
+      ? F.poly([[k * p, F.pow('x', 2)], [k * q, 'x']])
+      : F.poly([[k * p, 'x'], [k * q, '']]);
+
+    return {
+      k: k, p: p, q: q, useVar: useVar,
+      common: common, inner: inner,
+      factored: factored,
+      expanded: expanded
+    };
+  }
+
+  function wrongForms(it, need) {
+    var correctPlain = F.plain(it.expanded);
+    var cands = [];
+    // ありがちなまちがい：くくり残し／符号ミス／文字を忘れる
+    if (it.k > 2) cands.push(String(Math.floor(it.k / 2) || 1) + (it.useVar ? 'x' : '') + '(' + A.linear(it.p * 2, it.q * 2) + ')');
+    cands.push(it.common + '(' + A.linear(it.p, -it.q) + ')');
+    cands.push((it.k === 1 ? '' : String(it.k)) + '(' + A.linear(it.p, it.q) + ')');   // 文字を忘れた形
+    cands.push(it.common + '(' + A.linear(it.p + 1, it.q) + ')');
+    cands.push((it.k + 1) + (it.useVar ? 'x' : '') + '(' + A.linear(it.p, it.q) + ')');
+
+    var out = [];
+    Quiz.shuffle(cands).forEach(function (c) {
+      if (out.length >= need) return;
+      if (c === it.factored) return;
+      if (M.isEqual(F.plain(c), correctPlain)) return;
+      if (out.indexOf(c) >= 0) return;
+      out.push(c);
+    });
+    var guard = 0;
+    while (out.length < need && guard++ < 40) {
+      var w = A.randInt(2, 9) + (it.useVar ? 'x' : '') + '(' + A.linear(A.randInt(1, 5), A.nz(-9, 9)) + ')';
+      if (!M.isEqual(F.plain(w), correctPlain) && out.indexOf(w) < 0) out.push(w);
+    }
+    return out;
+  }
+
+  function choiceQuestion(level) {
+    var it = makeItem(level);
+    return {
+      tag: '4たく',
+      text: '共通因数を見つけて、くくり出しなさい。',
+      math: it.expanded,
+      type: 'choice',
+      choices: [it.factored].concat(wrongForms(it, 3)),
+      correct: 0,
+      hint: level === 1
+        ? '2つの項に共通してかけられている「数」をさがします。'
+        : '数だけでなく、文字も共通していないか見てみましょう。',
+      explain: '共通因数は ' + (it.common || '1') + '。くくり出すと ' + it.factored + ' です。'
+    };
+  }
+
+  function pickQuestion(level) {
+    var it = makeItem(level);
+
+    // 共通因数の候補と、かっこの中の候補
+    var commons = [it.common];
+    [String(it.k), it.k + 'x', 'x', String(it.k * 2), String(Math.max(2, it.k - 1)) + (it.useVar ? 'x' : '')]
+      .forEach(function (c) { if (commons.length < 5 && commons.indexOf(c) < 0) commons.push(c); });
+
+    var inners = [it.inner];
+    [A.linear(it.p, -it.q), A.linear(it.p + 1, it.q), A.linear(it.p, it.q + 1), A.linear(it.p * 2, it.q * 2)]
+      .forEach(function (c) { if (inners.length < 5 && inners.indexOf(c) < 0) inners.push(c); });
+
+    return {
+      tag: 'つなげる',
+      text: '共通因数でくくった形になるように、空欄を選びなさい。',
+      math: it.expanded,
+      type: 'pick',
+      template: '_ ( _ )',
+      choices: Quiz.shuffle(commons.concat(inners)),
+      answers: [it.common, it.inner],
+      // 前の空欄は共通因数、後ろの空欄はかっこの中。どちらも文字列で照合する。
+      checkEach: function (value, index) {
+        var want = index === 0 ? it.common : it.inner;
+        var norm = function (s) { return String(s).replace(/\s|　/g, ''); };
+        return norm(value) === norm(want);
+      },
+      answerLabel: it.factored,
+      hint: 'まず共通因数を決めて、残りをかっこの中に書きます。',
+      explain: '共通因数は ' + (it.common || '1') + '。くくり出すと ' + it.factored + ' です。'
+    };
+  }
+
+  Quiz.start({
+    title: '共通因数の練習',
+    subtitle: '共通因数を見つけて括りだそう。数だけ → 文字もふくむ、の順で。',
+    modes: [
+      { id: 'c1', group: '4たく', name: 'レベル1', desc: '数の共通因数（10問）' },
+      { id: 'c2', group: '4たく', name: 'レベル2', desc: '文字もふくむ（10問）' },
+      { id: 'p1', group: 'つなげる', name: 'レベル1', desc: '数の共通因数（8問）' },
+      { id: 'p2', group: 'つなげる', name: 'レベル2', desc: '文字もふくむ（8問）' }
+    ],
+    build: function (id) {
+      var level = Number(id[1]);
+      var maker = id[0] === 'c' ? choiceQuestion : pickQuestion;
+      var n = id[0] === 'c' ? 10 : 8;
+      var out = [];
+      for (var i = 0; i < n; i++) out.push(maker(level));
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

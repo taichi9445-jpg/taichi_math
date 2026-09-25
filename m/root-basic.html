@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ルートの基礎</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../data/root-tower.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   14. ルートの基礎
+   平方根とは何か・根号を外す・値を求める、の3つにしぼった入門編。
+   問題データは平方根タワーの 1F〜4F をそのまま使っている（元教材と同じ問題）。
+
+   元教材から直した点：
+     ・「平方根を求める」と「根号を外す」の違いが説明されないまま
+       出題され、±の付け忘れが直らなかった。
+       → 各パートの前に、短い確認カードを出すようにした。
+     ・記述で答えるとき「±3」を「+-3」や「3,-3」と書くと不正解になっていた。
+       → 記述パートは選択式にそろえ、判定のぶれをなくした。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var P = window.DATA_ROOT_TOWER.problems;
+
+  var PARTS = [
+    {
+      id: '1',
+      name: '① 平方根を求める（整数）',
+      desc: '2乗すると その数になる数。±を忘れずに。',
+      note: '2乗して 9 になる数は 3 と −3 の 2 つ。だから 9 の平方根は ±3 です。'
+    },
+    {
+      id: '2',
+      name: '② 平方根を求める（ルート使用）',
+      desc: '整数にならないときは √ を使って表す。',
+      note: '7 の平方根は、2乗して 7 になる数。整数では書けないので ±√7 と表します。'
+    },
+    {
+      id: '3',
+      name: '③ 根号を外す',
+      desc: '√ のついた数を、根号なしで表す。',
+      note: '√9 は「2乗して 9 になる正の数」なので 3 です。±ではないことに注意。'
+    },
+    {
+      id: '4',
+      name: '④ 値を求める',
+      desc: '(√2)² のような式の値を求める。',
+      note: '(√a)² = a。√ と 2乗はうち消し合います。'
+    }
+  ];
+
+  function collect(floor) {
+    var pack = P[floor] || {};
+    var out = [];
+    ['beginner', 'intermediate', 'advanced'].forEach(function (d) {
+      (pack[d] || []).forEach(function (p) { out.push(p); });
+    });
+    // 同じ問題が複数の難易度に入っているので、重複を取り除く
+    var seen = {}, uniq = [];
+    out.forEach(function (p) {
+      var k = p.instruction + '|' + p.q;
+      if (seen[k]) return;
+      seen[k] = true;
+      uniq.push(p);
+    });
+    return uniq;
+  }
+
+  function toQuestion(p, note) {
+    return {
+      text: p.instruction,
+      math: p.q,
+      type: 'choice',
+      choices: p.choices.slice(),
+      correct: p.choices.indexOf(p.answer),
+      answerLabel: p.answer,
+      hint: note,
+      explain: note
+    };
+  }
+
+  var modes = PARTS.map(function (part) {
+    return {
+      id: part.id,
+      name: part.name,
+      desc: part.desc + '（' + collect(part.id).length + '問）'
+    };
+  });
+  modes.push({ id: 'all', name: '⑤ 総まとめ', desc: '①〜④からランダムに12問' });
+
+  Quiz.start({
+    title: 'ルートの基礎',
+    subtitle: '平方根とは何か。まずはここをはっきりさせよう。',
+    modes: modes,
+    build: function (id) {
+      if (id === 'all') {
+        var all = [];
+        PARTS.forEach(function (part) {
+          collect(part.id).forEach(function (p) { all.push(toQuestion(p, part.note)); });
+        });
+        return Quiz.shuffle(all).slice(0, 12).filter(function (q) { return q.correct >= 0; });
+      }
+      var part = PARTS.filter(function (x) { return x.id === id; })[0];
+      return collect(id).map(function (p) { return toQuestion(p, part.note); })
+        .filter(function (q) { return q.correct >= 0; });
+    }
+  });
+})();
+</script>
+</body>
+</html>

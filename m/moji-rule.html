@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文字式のルール</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   01. 文字式のルール
+   「×を省く」「数を前に」「アルファベット順」「÷は分数に」といった
+   文字式の書き方のきまりを、10問で確認する。
+
+   元教材から直した点：
+     ・正誤の判定が入力文字列の一致だったため、「2ab」と「2ba」で
+       片方しか正解にならないなど、書き方のゆれで理不尽な不正解が出ていた。
+       → 4択で「書き方」を問う問題と、記述で「値」を問う問題を分け、
+         記述問題は数式として判定するようにした。
+     ・10問目まで進むとスコア表示が固まることがあった。
+       → 出題エンジンで一括管理するようにして解消。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  // ------------------------------------------------------------------
+  // ルールを説明つきで持たせる。問題は毎回この中からランダムに10問。
+  // ------------------------------------------------------------------
+  var ITEMS = [
+    {
+      raw: 'a × b',
+      right: 'ab',
+      wrongs: ['a・b', 'ab×', 'a b ×'],
+      rule: '× は書かずに、文字をならべて書く。'
+    },
+    {
+      raw: '3 × x',
+      right: '3x',
+      wrongs: ['x3', 'x・3', '3・x'],
+      rule: '数は文字より前に書く。'
+    },
+    {
+      raw: 'x × 5',
+      right: '5x',
+      wrongs: ['x5', '5・x', 'x・5'],
+      rule: '数が後ろにあっても、書くときは前に出す。'
+    },
+    {
+      raw: '1 × a',
+      right: 'a',
+      wrongs: ['1a', 'a1', '1・a'],
+      rule: '1 はかけても値が変わらないので書かない。'
+    },
+    {
+      raw: '(-1) × y',
+      right: '-y',
+      wrongs: ['-1y', 'y-1', '-1・y'],
+      rule: '−1 をかけたときは、マイナスだけ書く。'
+    },
+    {
+      raw: 'b × a',
+      right: 'ab',
+      wrongs: ['ba', 'b・a', 'a・b'],
+      rule: '文字はアルファベット順にならべる。'
+    },
+    {
+      raw: 'y × 2 × x',
+      right: '2xy',
+      wrongs: ['2yx', 'xy2', 'y2x'],
+      rule: '数を前に出し、文字はアルファベット順にする。'
+    },
+    {
+      raw: 'a × a',
+      right: 'a<sup>2</sup>',
+      wrongs: ['2a', 'aa', 'a×2'],
+      rule: '同じ文字のかけ算は、指数を使って書く。'
+    },
+    {
+      raw: 'x × x × x',
+      right: 'x<sup>3</sup>',
+      wrongs: ['3x', 'x<sup>2</sup>', 'xxx'],
+      rule: '3個かけたら 3 乗。'
+    },
+    {
+      raw: 'a × a × b',
+      right: 'a<sup>2</sup>b',
+      wrongs: ['ab<sup>2</sup>', '2ab', 'a<sup>2</sup>+b'],
+      rule: '同じ文字だけをまとめて指数にする。'
+    },
+    {
+      raw: 'a ÷ 3',
+      right: '<span class="frac"><span class="num">a</span><span class="den">3</span></span>',
+      wrongs: ['3a', '<span class="frac"><span class="num">3</span><span class="den">a</span></span>', 'a3'],
+      rule: '÷ は分数の形にする。わられる数が分子。'
+    },
+    {
+      raw: 'x ÷ y',
+      right: '<span class="frac"><span class="num">x</span><span class="den">y</span></span>',
+      wrongs: ['xy', '<span class="frac"><span class="num">y</span><span class="den">x</span></span>', 'x−y'],
+      rule: '文字どうしのわり算も分数にする。'
+    },
+    {
+      raw: '2 × (a + b)',
+      right: '2(a + b)',
+      wrongs: ['2a + b', '(a + b)2', '2 + a + b'],
+      rule: 'かっこはそのまま。数はかっこの前に置く。'
+    },
+    {
+      raw: 'a × 3 + b',
+      right: '3a + b',
+      wrongs: ['3(a + b)', 'a3 + b', '3ab'],
+      rule: '＋でつながれた部分は、それぞれ別に整える。'
+    },
+    {
+      raw: '(x + 1) ÷ 2',
+      right: '<span class="frac"><span class="num">x + 1</span><span class="den">2</span></span>',
+      wrongs: ['x + <span class="frac"><span class="num">1</span><span class="den">2</span></span>',
+               '<span class="frac"><span class="num">2</span><span class="den">x + 1</span></span>', '2(x + 1)'],
+      rule: 'かっこ全体を分子にする。'
+    },
+    {
+      raw: '0.1 × a',
+      right: '0.1a',
+      wrongs: ['0.1・a', 'a0.1', '.1a'],
+      rule: '小数のときは 1 と違って、0.1 はそのまま書く。'
+    }
+  ];
+
+  // ------------------------------------------------------------------
+  // 代入して値を求める問題（記述式）。数式として判定するので書き方は自由。
+  // ------------------------------------------------------------------
+  function substitutionQuestion() {
+    var a = Quiz.randInt(2, 6);
+    var b = Quiz.randInt(2, 6);
+    var patterns = [
+      { expr: '3x', calc: 3 * a, show: 'x = ' + a, note: '3 × ' + a },
+      { expr: 'x + 2y', calc: a + 2 * b, show: 'x = ' + a + '、y = ' + b, note: a + ' + 2 × ' + b },
+      { expr: '2ab', calc: 2 * a * b, show: 'a = ' + a + '、b = ' + b, note: '2 × ' + a + ' × ' + b },
+      { expr: 'a<sup>2</sup>', calc: a * a, show: 'a = ' + a, note: a + ' × ' + a },
+      { expr: '5x - y', calc: 5 * a - b, show: 'x = ' + a + '、y = ' + b, note: '5 × ' + a + ' − ' + b }
+    ];
+    var p = Quiz.pick(patterns);
+    return {
+      tag: '代入',
+      text: p.show + ' のとき、次の式の値を求めなさい。',
+      math: p.expr,
+      type: 'input',
+      inputmode: 'numeric',
+      answer: String(p.calc),
+      placeholder: '数を入力',
+      explain: p.note + ' = ' + p.calc + ' です。'
+    };
+  }
+
+  function ruleQuestion(item) {
+    var choices = [item.right].concat(item.wrongs.slice(0, 3));
+    return {
+      tag: '書き方',
+      text: '次の式を、文字式のきまりにしたがって書き直すとどれですか。',
+      math: item.raw,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: item.rule,
+      explain: item.rule
+    };
+  }
+
+  Quiz.start({
+    title: '文字式のルール',
+    subtitle: '×を省く・数を前に・アルファベット順。書き方のきまりをマスターしよう。',
+    modes: [
+      { id: 'rule', name: '書き方の練習', desc: '10問（4択）' },
+      { id: 'sub', name: '代入して値を求める', desc: '8問（記述）' },
+      { id: 'mix', name: '総合', desc: '書き方＋代入を12問' }
+    ],
+    build: function (id) {
+      if (id === 'rule') {
+        return Quiz.shuffle(ITEMS).slice(0, 10).map(ruleQuestion);
+      }
+      if (id === 'sub') {
+        var out = [];
+        for (var i = 0; i < 8; i++) out.push(substitutionQuestion());
+        return out;
+      }
+      var a = Quiz.shuffle(ITEMS).slice(0, 8).map(ruleQuestion);
+      var b = [];
+      for (var j = 0; j < 4; j++) b.push(substitutionQuestion());
+      return Quiz.shuffle(a.concat(b));
+    }
+  });
+})();
+</script>
+</body>
+</html>

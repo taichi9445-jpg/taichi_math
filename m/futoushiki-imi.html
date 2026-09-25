@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>不等式クイズ</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/algebra.js"></script>
+<script src="../assets/graph.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   23. 不等式の意味
+   条件を不等式で表したり、不等式を日本語で言いかえたりする10問。
+
+   元教材から直した点：
+     ・「以上」と「より大きい」の区別を問う問題で、
+       ≧ と > のどちらを選んでも正解になっていた。
+       → 等号を含むかどうかを、選択肢の中で必ず区別して出す。
+     ・「または」の問題で、選択肢が「-2 < x < 5」と「x < -2, x > 5」の
+       2つしかなく、消去法で当てられた。 → 紛らわしい4つを必ず用意する。
+     ・数直線の図が問題ごとに位置がずれていた。 → 図を作る関数を共通化した。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var A = Algebra;
+
+  var WORDS = [
+    { jp: 'より大きい', op: '>', eq: false, dir: 'gt' },
+    { jp: 'より小さい', op: '<', eq: false, dir: 'lt' },
+    { jp: '未満', op: '<', eq: false, dir: 'lt' },
+    { jp: '以上', op: '≧', eq: true, dir: 'gt' },
+    { jp: '以下', op: '≦', eq: true, dir: 'lt' }
+  ];
+
+  /* ---------- ① 日本語 → 不等式（1つの条件） ---------- */
+  function jpToIneq() {
+    var w = Quiz.pick(WORDS);
+    var n = A.nz(-9, 9);
+    var correct = 'x ' + w.op + ' ' + n;
+
+    // 等号の有無・向きを変えたものを必ず誤答に入れる
+    var flipEq = { '>': '≧', '<': '≦', '≧': '>', '≦': '<' }[w.op];
+    var reverse = { '>': '<', '<': '>', '≧': '≦', '≦': '≧' }[w.op];
+    var wrongs = [
+      'x ' + flipEq + ' ' + n,
+      'x ' + reverse + ' ' + n,
+      'x ' + w.op + ' ' + (-n)
+    ].filter(function (s) { return s !== correct; });
+
+    return {
+      tag: '日本語 → 式',
+      text: 'x が <b>' + n + ' ' + w.jp + '</b> とき、これを不等式で表すとどれですか。',
+      type: 'choice',
+      choices: [correct].concat(wrongs.slice(0, 3)),
+      correct: 0,
+      hint: '「以上」「以下」は等号をふくみます（≧ ≦）。「より大きい」「より小さい」「未満」はふくみません（> <）。',
+      explain: correct + ' です。' +
+        (w.eq ? '「' + w.jp + '」なので ' + n + ' もふくみます。' : '「' + w.jp + '」なので ' + n + ' はふくみません。') +
+        '<br>' + Graph.numberLine({
+          lo: Math.min(n - 4, -6), hi: Math.max(n + 4, 6),
+          ranges: [w.dir === 'gt' ? { from: n, to: Math.max(n + 4, 6) } : { from: Math.min(n - 4, -6), to: n }],
+          points: [{ x: n, filled: w.eq }]
+        })
+    };
+  }
+
+  /* ---------- ② 日本語 → 不等式（2つの条件） ---------- */
+  function jpToRange() {
+    var a = A.randInt(-8, 0);
+    var b = a + A.randInt(2, 8);
+    var isAnd = Math.random() < 0.5;
+
+    var correct, wrongs, text;
+    if (isAnd) {
+      // かつ（間）
+      correct = a + ' < x < ' + b;
+      wrongs = [
+        'x < ' + a + '　,　x > ' + b,
+        a + ' ≦ x ≦ ' + b,
+        'x ≦ ' + a + '　,　x ≧ ' + b
+      ];
+      text = 'x が <b>' + a + ' より大きく、' + b + ' より小さい</b>とき、これを不等式で表すとどれですか。';
+    } else {
+      // または（外）
+      correct = 'x < ' + a + '　,　x > ' + b;
+      wrongs = [
+        a + ' < x < ' + b,
+        'x ≦ ' + a + '　,　x ≧ ' + b,
+        a + ' ≦ x ≦ ' + b
+      ];
+      text = 'x が <b>' + a + ' より小さい、または ' + b + ' より大きい</b>とき、これを不等式で表すとどれですか。';
+    }
+
+    return {
+      tag: '日本語 → 式',
+      text: text,
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: isAnd
+        ? '「かつ」は 2 つの数の間。ひとつの不等式にまとめて書けます。'
+        : '「または」は 2 つの範囲に分かれます。まとめて 1 本には書けません。',
+      explain: correct + ' です。' +
+        '<br>' + Graph.numberLine({
+          lo: a - 3, hi: b + 3,
+          ranges: isAnd ? [{ from: a, to: b }] : [{ from: a - 3, to: a }, { from: b, to: b + 3 }],
+          points: [{ x: a, filled: false }, { x: b, filled: false }]
+        })
+    };
+  }
+
+  /* ---------- ③ 不等式 → 日本語 ---------- */
+  function ineqToJp() {
+    var w = Quiz.pick(WORDS);
+    var n = A.nz(-9, 9);
+    var correct = 'x は ' + n + ' ' + w.jp;
+
+    var others = WORDS.filter(function (x) { return x.jp !== w.jp; });
+    var wrongs = Quiz.shuffle(others).slice(0, 3).map(function (x) { return 'x は ' + n + ' ' + x.jp; });
+
+    return {
+      tag: '式 → 日本語',
+      text: '次の不等式を、ことばで正しく言いかえたものはどれですか。',
+      math: 'x ' + w.op + ' ' + n,
+      type: 'choice',
+      choices: [correct].concat(wrongs),
+      correct: 0,
+      hint: '＝ の線がついているか（≧ ≦）で、「以上・以下」か「より大きい・より小さい」かが決まります。',
+      explain: correct + '　が正しい言いかえです。'
+    };
+  }
+
+  /* ---------- ④ あてはまる数はどれか ---------- */
+  function belongs() {
+    var w = Quiz.pick(WORDS);
+    var n = A.nz(-6, 6);
+    var test = function (x) {
+      if (w.op === '>') return x > n;
+      if (w.op === '<') return x < n;
+      if (w.op === '≧') return x >= n;
+      return x <= n;
+    };
+    var ok = [], ng = [];
+    for (var v = n - 4; v <= n + 4; v++) {
+      (test(v) ? ok : ng).push(v);
+    }
+    // 境界の値を必ず選択肢に入れる（等号の理解を問う要）
+    var correct = Quiz.pick(ok);
+    var wrongs = Quiz.shuffle(ng).slice(0, 2);
+    if (ng.indexOf(n) >= 0 && wrongs.indexOf(n) < 0) wrongs[0] = n;
+    var guard = 0;
+    while (wrongs.length < 3 && guard++ < 20) {
+      var c = A.randInt(n - 8, n + 8);
+      if (!test(c) && wrongs.indexOf(c) < 0) wrongs.push(c);
+    }
+
+    return {
+      tag: 'あてはまる数',
+      text: '次の不等式に<b>あてはまる</b>数はどれですか。',
+      math: 'x ' + w.op + ' ' + n,
+      type: 'choice',
+      choices: [String(correct)].concat(wrongs.map(String)),
+      correct: 0,
+      hint: w.eq ? '等号をふくむので、' + n + ' 自身もあてはまります。'
+                 : '等号をふくまないので、' + n + ' 自身はあてはまりません。',
+      explain: correct + ' は x ' + w.op + ' ' + n + ' を満たします。'
+    };
+  }
+
+  var MAKERS = [jpToIneq, jpToRange, ineqToJp, belongs];
+
+  Quiz.start({
+    title: '不等式クイズ',
+    subtitle: '条件を不等式で表したり、不等式を日本語で表現してみよう！',
+    modes: [
+      { id: 'mix', name: '総合（全10問）', desc: '4種類の問題をまぜて出題' },
+      { id: 'a', name: '日本語 → 不等式', desc: '1つの条件（10問）' },
+      { id: 'b', name: 'かつ・または', desc: '範囲の表し方（8問）' },
+      { id: 'c', name: '不等式 → 日本語', desc: '言いかえ（8問）' },
+      { id: 'd', name: 'あてはまる数さがし', desc: '等号の意味を確かめる（8問）' }
+    ],
+    build: function (id) {
+      var out = [], i;
+      if (id === 'mix') {
+        for (i = 0; i < 10; i++) out.push(Quiz.pick(MAKERS)());
+        return out;
+      }
+      var maker = { a: jpToIneq, b: jpToRange, c: ineqToJp, d: belongs }[id];
+      var n = id === 'a' ? 10 : 8;
+      for (i = 0; i < n; i++) out.push(maker());
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

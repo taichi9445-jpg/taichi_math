@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>次数と係数</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   02. 次数と係数（同類項まとめクエスト）
+   レベル1：単項式の次数と係数 ／ レベル2：多項式の次数 ／ レベル3：同類項をまとめる
+
+   元教材から直した点：
+     ・同類項をまとめる問題が文字列の一致で採点されていたため、
+       「3x + 2」と書くべきところを「2 + 3x」と書くと不正解になっていた。
+       → 数式として同値かどうかで判定するので、順番が違っても正解になる。
+     ・係数が 1 や -1 のとき「1x」「-1x」と表示されていた。
+       → 表示を作る部分を共通化して修正。
+     ・レベル3で問題が尽きると次へ進めなくなっていた。
+       → 毎回その場で作るので尽きることがない。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var F = Quiz.fmt;
+  var VARS = ['x', 'y', 'a', 'b'];
+
+  /* ---------- レベル1：単項式の次数と係数 ---------- */
+
+  function level1() {
+    var coef = Quiz.pick([2, 3, 4, 5, -2, -3, -4, 6, -6, 7]);
+    var v = Quiz.pick(VARS);
+    var n = Quiz.randInt(1, 3);
+
+    // もう1文字混ぜることがある（次数は指数の合計になる）
+    var useSecond = Math.random() < 0.4;
+    var v2 = Quiz.pick(VARS.filter(function (x) { return x !== v; }));
+    var m = useSecond ? Quiz.randInt(1, 2) : 0;
+
+    var body = F.pow(v, n) + (useSecond ? F.pow(v2, m) : '');
+    var expr = F.term(coef, body);
+    var degree = n + m;
+
+    var askDegree = Math.random() < 0.5;
+
+    if (askDegree) {
+      var choices = Quiz.uniqueSample(3, function () { return Quiz.randInt(1, 6); },
+        function (x) { return x; }, degree).map(String);
+      return {
+        tag: 'レベル1',
+        text: '次の単項式の<b>次数</b>を答えなさい。',
+        math: expr,
+        type: 'choice',
+        choices: [String(degree)].concat(choices),
+        correct: 0,
+        hint: '次数は、かけあわされている文字の個数（指数の合計）です。',
+        explain: '文字の指数をたすと ' + (useSecond ? n + ' + ' + m + ' = ' + degree : String(degree)) + ' なので、次数は ' + degree + ' です。'
+      };
+    }
+
+    var wrongs = Quiz.uniqueSample(3, function () {
+      return Quiz.pick([coef + 1, coef - 1, -coef, coef * 2, degree]);
+    }, function (x) { return x; }, coef).map(String);
+
+    return {
+      tag: 'レベル1',
+      text: '次の単項式の<b>係数</b>を答えなさい。',
+      math: expr,
+      type: 'choice',
+      choices: [String(coef)].concat(wrongs),
+      correct: 0,
+      hint: '係数は、文字の前についている数のことです。符号もふくめます。',
+      explain: '文字の前の数は ' + coef + ' なので、係数は ' + coef + ' です。'
+    };
+  }
+
+  /* ---------- レベル2：多項式の次数 ---------- */
+
+  function level2() {
+    var v = Quiz.pick(['x', 'a']);
+    var deg = Quiz.randInt(2, 4);
+    var terms = [];
+    terms.push([Quiz.pick([1, 2, 3, -1, -2, 5]), F.pow(v, deg)]);   // 最高次の項
+    var lower = Quiz.shuffle([deg - 1, deg - 2, 0].filter(function (d) { return d >= 0; })).slice(0, 2);
+    lower.forEach(function (d) {
+      terms.push([Quiz.pick([1, 2, 3, 4, -1, -2, -3, 6]), F.pow(v, d)]);
+    });
+    // 表示は次数の高い順に
+    var expr = F.poly(terms);
+
+    var wrongs = Quiz.uniqueSample(3, function () { return Quiz.randInt(0, 6); },
+      function (x) { return x; }, deg).map(String);
+
+    return {
+      tag: 'レベル2',
+      text: '次の多項式の<b>次数</b>を答えなさい。',
+      math: expr,
+      type: 'choice',
+      choices: [String(deg)].concat(wrongs),
+      correct: 0,
+      hint: '多項式の次数は、いちばん次数の高い項の次数です。',
+      explain: 'いちばん次数の高い項は ' + F.term(terms[0][0], terms[0][1]) + ' なので、次数は ' + deg + ' です。'
+    };
+  }
+
+  /* ---------- レベル3：同類項をまとめる ---------- */
+
+  function level3() {
+    var v = Quiz.pick(['x', 'a', 'y']);
+    // ax + bx + c + d の形（同類項が2組）
+    var a = Quiz.randInt(2, 7), b = Quiz.randInt(-6, 6);
+    if (b === 0) b = 3;
+    var c = Quiz.randInt(-8, 8), d = Quiz.randInt(-8, 8);
+    if (c === 0) c = 4;
+    if (d === 0) d = -2;
+
+    var shown = F.term(a, v) + F.signed(c).replace(/\s/g, ' ') +
+      (b < 0 ? ' - ' + F.term(Math.abs(b), v) : ' + ' + F.term(b, v)) +
+      F.signed(d);
+
+    var sumV = a + b, sumC = c + d;
+    var answerHtml = F.poly([[sumV, v], [sumC, '']]);
+    var answerPlain = F.plain(answerHtml);
+
+    return {
+      tag: 'レベル3',
+      text: '次の式の同類項をまとめなさい。',
+      math: shown,
+      type: 'input',
+      answer: answerPlain,
+      answerLabel: answerHtml,
+      placeholder: '例： 5' + v + ' + 3',
+      hint: v + ' がついた項どうし、数だけの項どうしをまとめます。',
+      explain: v + ' の項は ' + a + ' と ' + b + ' で ' + sumV + '、' +
+        '数の項は ' + c + ' と ' + d + ' で ' + sumC + '。よって ' + answerHtml + ' です。'
+    };
+  }
+
+  Quiz.start({
+    title: '次数と係数',
+    subtitle: '単項式・多項式・同類項を、3つのレベルで順にクリアしよう。',
+    modes: [
+      { id: '1', name: 'レベル1：単項式', desc: '次数と係数を読み取る（10問）' },
+      { id: '2', name: 'レベル2：多項式', desc: '多項式の次数（8問）' },
+      { id: '3', name: 'レベル3：同類項', desc: '同類項をまとめる（8問・記述）' },
+      { id: 'mix', name: '総合', desc: '3レベルをまぜて12問' }
+    ],
+    build: function (id) {
+      var out = [], i;
+      if (id === '1') { for (i = 0; i < 10; i++) out.push(level1()); return out; }
+      if (id === '2') { for (i = 0; i < 8; i++) out.push(level2()); return out; }
+      if (id === '3') { for (i = 0; i < 8; i++) out.push(level3()); return out; }
+      for (i = 0; i < 4; i++) { out.push(level1()); out.push(level2()); out.push(level3()); }
+      return Quiz.shuffle(out);
+    }
+  });
+})();
+</script>
+</body>
+</html>

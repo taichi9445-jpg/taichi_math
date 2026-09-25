@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多項式マスター</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   03. 多項式の計算（多項式マスター）
+     モード1：選ぶトレーニング   同類項をまとめて、答えを選ぶ
+     モード2：穴埋めチャレンジ   係数だけを自分で埋める
+     モード3：フル計算マスター   符号もふくめて全部書く
+
+   元教材から直した点：
+     ・モード3の採点が文字列一致で、「-2x+5」と「5-2x」で片方しか通らなかった。
+       → 数式として同値かで判定するので、順番が違っても正解になる。
+     ・引き算のとき、かっこを外す符号の処理をまちがえた表示になることがあった。
+       → 式を作る部分を係数の計算に一本化し、表示は共通の関数で生成する。
+     ・穴埋めで空欄のまま「答え合わせ」を押すと正解になってしまっていた。
+       → 空欄が残っているうちは採点しない。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var F = Quiz.fmt;
+
+  function nz(min, max) {          // 0 以外の整数
+    var v = 0;
+    while (v === 0) v = Quiz.randInt(min, max);
+    return v;
+  }
+
+  /** 2つの多項式と演算（＋ or −）から、問題に必要な材料をまとめて作る */
+  function makePair(hasSquare) {
+    var op = Math.random() < 0.5 ? '+' : '-';
+    var A = {
+      x2: hasSquare ? nz(-4, 5) : 0,
+      x: nz(-6, 7),
+      c: Quiz.randInt(-8, 9)
+    };
+    var B = {
+      x2: hasSquare ? nz(-4, 5) : 0,
+      x: nz(-6, 7),
+      c: Quiz.randInt(-8, 9)
+    };
+    var s = op === '+' ? 1 : -1;
+    var R = { x2: A.x2 + s * B.x2, x: A.x + s * B.x, c: A.c + s * B.c };
+
+    var showA = F.poly([[A.x2, F.pow('x', 2)], [A.x, 'x'], [A.c, '']]);
+    var showB = F.poly([[B.x2, F.pow('x', 2)], [B.x, 'x'], [B.c, '']]);
+    var question = '( ' + showA + ' ) ' + op + ' ( ' + showB + ' )';
+    var answerHtml = F.poly([[R.x2, F.pow('x', 2)], [R.x, 'x'], [R.c, '']]);
+
+    return { op: op, A: A, B: B, R: R, question: question, answerHtml: answerHtml, hasSquare: hasSquare };
+  }
+
+  function explainOf(p) {
+    var s = p.op === '+' ? '' : '引き算なので、うしろのかっこを外すとき符号が全部逆になります。<br>';
+    var sign = p.op === '+' ? 1 : -1;
+    var parts = [];
+    if (p.hasSquare) parts.push('x² の項： ' + p.A.x2 + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.x2) + ' = ' + p.R.x2);
+    parts.push('x の項： ' + p.A.x + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.x) + ' = ' + p.R.x);
+    parts.push('数の項： ' + p.A.c + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.c) + ' = ' + p.R.c);
+    return s + parts.join('<br>');
+  }
+
+  /* ---------- モード1：選ぶトレーニング ---------- */
+
+  function mode1() {
+    var p = makePair(Math.random() < 0.5);
+
+    // ありがちなまちがいを誤答にする（符号ミス・同類項の取りちがえ）
+    var wrongSign = F.poly([
+      [p.A.x2 + p.B.x2, F.pow('x', 2)],
+      [p.A.x + p.B.x, 'x'],
+      [p.A.c - p.B.c, '']
+    ]);
+    var wrongAll = F.poly([
+      [p.R.x2, F.pow('x', 2)],
+      [p.R.x + 1, 'x'],
+      [p.R.c, '']
+    ]);
+    var wrongMix = F.poly([
+      [p.R.x2, F.pow('x', 2)],
+      [p.R.c, 'x'],
+      [p.R.x, '']
+    ]);
+
+    var choices = [p.answerHtml];
+    [wrongSign, wrongAll, wrongMix].forEach(function (w) {
+      if (choices.indexOf(w) < 0) choices.push(w);
+    });
+    // 3つそろわなかったときの予備
+    var guard = 0;
+    while (choices.length < 4 && guard++ < 30) {
+      var w = F.poly([[p.R.x2, F.pow('x', 2)], [p.R.x + Quiz.randInt(-3, 3), 'x'], [p.R.c + Quiz.randInt(-3, 3), '']]);
+      if (choices.indexOf(w) < 0) choices.push(w);
+    }
+
+    return {
+      tag: 'モード1',
+      text: '同じ仲間の項をまとめて、答えを選びなさい。',
+      math: p.question,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: 'x² は x² どうし、x は x どうし、数は数どうしでまとめます。',
+      explain: explainOf(p)
+    };
+  }
+
+  /* ---------- モード2：穴埋めチャレンジ ---------- */
+
+  function mode2() {
+    var p = makePair(true);
+    return {
+      tag: 'モード2',
+      text: '計算して、空欄に係数を入れなさい。（符号もふくめて入力）',
+      math: p.question,
+      type: 'blanks',
+      template: '_ x<sup>2</sup> ＋ _ x ＋ _',
+      answers: [String(p.R.x2), String(p.R.x), String(p.R.c)],
+      inputmode: 'text',
+      answerLabel: p.answerHtml,
+      hint: 'マイナスのときは「-3」のように符号もつけて入れます。',
+      explain: explainOf(p)
+    };
+  }
+
+  /* ---------- モード3：フル計算マスター ---------- */
+
+  function mode3() {
+    var p = makePair(Math.random() < 0.7);
+    return {
+      tag: 'モード3',
+      text: '次の計算をして、答えを書きなさい。',
+      math: p.question,
+      type: 'input',
+      answer: F.plain(p.answerHtml),
+      answerLabel: p.answerHtml,
+      placeholder: '例： 2x^2 - 3x + 1',
+      note: '2乗は「x^2」または「x²」と書けます。書く順番は自由です。',
+      hint: 'まずかっこを外し、それから同類項をまとめます。',
+      explain: explainOf(p)
+    };
+  }
+
+  Quiz.start({
+    title: '多項式マスター',
+    subtitle: '選ぶ → 穴埋め → フル計算。3段階で多項式の計算を仕上げよう。',
+    modes: [
+      { id: '1', name: 'モード1：選ぶトレーニング', desc: '同じ仲間の項をまとめて、答えを選ぼう（10問）' },
+      { id: '2', name: 'モード2：穴埋めチャレンジ', desc: '係数だけを自分で埋めよう（8問）' },
+      { id: '3', name: 'モード3：フル計算マスター', desc: '符号もすべて自分で書こう（8問）' }
+    ],
+    build: function (id) {
+      var out = [], i;
+      if (id === '1') { for (i = 0; i < 10; i++) out.push(mode1()); }
+      else if (id === '2') { for (i = 0; i < 8; i++) out.push(mode2()); }
+      else { for (i = 0; i < 8; i++) out.push(mode3()); }
+      return out;
+    }
+  });
+})();
+</script>
+</body>
+</html>

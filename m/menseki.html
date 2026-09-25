@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三角形の面積 穴埋め問題</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/steps.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   28. 面積の計算（三角形の面積 穴埋め問題）
+   5問の内容（辺の長さ・角度・途中式・選択肢）は元教材のまま。
+
+   元教材から直した点：
+     ・2辺を入れる欄が「8 は左、6 は右」と決め打ちで採点されていて、
+       逆に入れると正しいのに不正解になっていた。
+       → 2辺はどちらの欄に入れても正解にした。
+     ・ドラッグ＆ドロップのため、スマホで欄に落とせず操作不能になっていた。
+       → 空欄をタップ → 候補をタップ、に統一。
+     ・「答えを見る」を押すと入力欄が消えてしまい、確認だけして戻れなかった。
+       → 答えを表示しても欄は残るので、そのまま見比べられる。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  /** 三角形の図。2辺とはさむ角に印をつける。 */
+  function triangle(b, c, angleDeg, labelB, labelC) {
+    var W = 300, H = 210;
+    // 角 A を左下におき、そこから 2 辺をのばす
+    var Ax = 60, Ay = 165;
+    var scale = 110 / Math.max(b, c);
+    var rad = angleDeg * Math.PI / 180;
+    var Bx = Ax + c * scale, By = Ay;
+    var Cx = Ax + b * scale * Math.cos(rad), Cy = Ay - b * scale * Math.sin(rad);
+
+    var arcR = 30;
+    var ax = Ax + arcR, ay = Ay;
+    var bx = Ax + arcR * Math.cos(rad), by = Ay - arcR * Math.sin(rad);
+
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="300" role="img" aria-label="三角形">' +
+      '<polygon points="' + Ax + ',' + Ay + ' ' + Bx.toFixed(1) + ',' + By.toFixed(1) + ' ' +
+        Cx.toFixed(1) + ',' + Cy.toFixed(1) + '" fill="#e8f0ff" stroke="#2f6fed" stroke-width="2.5"/>' +
+      '<path d="M ' + ax + ' ' + ay + ' A ' + arcR + ' ' + arcR + ' 0 0 0 ' +
+        bx.toFixed(1) + ' ' + by.toFixed(1) + '" fill="none" stroke="#e79b16" stroke-width="3"/>' +
+      '<text x="' + (Ax + 36) + '" y="' + (Ay - 12) + '" font-size="13" fill="#c9820c" font-weight="bold">' + angleDeg + '°</text>' +
+      '<text x="' + (Ax - 16) + '" y="' + (Ay + 16) + '" font-size="14" fill="#1f2937" font-weight="bold">A</text>' +
+      '<text x="' + (Bx + 6).toFixed(1) + '" y="' + (By + 16) + '" font-size="14" fill="#1f2937" font-weight="bold">B</text>' +
+      '<text x="' + (Cx - 4).toFixed(1) + '" y="' + (Cy - 8).toFixed(1) + '" font-size="14" fill="#1f2937" font-weight="bold">C</text>' +
+      '<text x="' + ((Ax + Bx) / 2).toFixed(1) + '" y="' + (Ay + 20) + '" font-size="14" fill="#e0483c" text-anchor="middle">' + labelC + '</text>' +
+      '<text x="' + ((Ax + Cx) / 2 - 24).toFixed(1) + '" y="' + ((Ay + Cy) / 2).toFixed(1) + '" font-size="14" fill="#e0483c">' + labelB + '</text>' +
+      '</svg>';
+  }
+
+  var f = function (n, d) { return { frac: [[n], [d]] }; };
+  var blank = function (a) { return { a: a, kind: 'text' }; };
+
+  // 元教材の5問をそのまま。data-answer の内容も一致させている。
+  var problems = [
+    {
+      name: '問題1',
+      given: '2辺が 8 と 6、そのはさむ角が 30° の三角形',
+      figure: triangle(8, 6, 30, '8', '6'),
+      lines: [
+        ['面積 = ', blank('1/2'), ' × ', blank('8|6'), ' × ', blank('8|6'), ' × sin ', blank('30°')],
+        [],
+        ['sin 30° = ', blank('1/2'), ' より'],
+        ['　　 = ', blank('24'), ' × ', blank('1/2')],
+        ['　　 = ', blank('12')]
+      ],
+      extras: ['60°', '48', '1/√2', '√3/2'],
+      hint: '面積 = ½ × （はさむ2辺の積） × sin（その間の角）',
+      summary: 'S = ½ × 8 × 6 × sin30° = 24 × ½ = 12'
+    },
+    {
+      name: '問題2',
+      given: '2辺が 10 と 12、そのはさむ角が 60° の三角形',
+      figure: triangle(10, 12, 60, '10', '12'),
+      lines: [
+        ['面積 = ', blank('1/2'), ' × ', blank('10|12'), ' × ', blank('10|12'), ' × sin ', blank('60°')],
+        [],
+        ['sin 60° = ', blank('√3/2'), ' より'],
+        ['　　 = ', blank('60'), ' × ', blank('√3/2')],
+        ['　　 = ', blank('30√3')]
+      ],
+      extras: ['1/2', '30°', '120'],
+      hint: '面積 = ½ × （はさむ2辺の積） × sin（その間の角）',
+      summary: 'S = ½ × 10 × 12 × sin60° = 60 × (√3/2) = 30√3'
+    },
+    {
+      name: '問題3',
+      given: '2辺が 8 と 6、そのはさむ角が 45° の三角形',
+      figure: triangle(8, 6, 45, '8', '6'),
+      lines: [
+        ['面積 = ', blank('1/2'), ' × ', blank('8|6'), ' × ', blank('8|6'), ' × sin ', blank('45°')],
+        [],
+        ['sin 45° = ', blank('1/√2'), ' より'],
+        ['　　 = ', blank('24'), ' × ', blank('1/√2')],
+        ['　　 = ', blank('24/√2')],
+        ['有理化すると 　 = ', blank('24√2/2')],
+        ['約分すると 　　 = ', blank('12√2')]
+      ],
+      extras: ['1/2', '30°', '12'],
+      hint: '分母にルートが残ったら、有理化してから約分します。',
+      summary: 'S = ½ × 8 × 6 × sin45° = 24 × (1/√2) = 24/√2 = 24√2/2 = 12√2'
+    },
+    {
+      name: '問題4',
+      given: '2辺が 7 と 10√2、そのはさむ角が 30° の三角形',
+      figure: triangle(7, 10, 30, '7', '10√2'),
+      lines: [
+        ['面積 = ', blank('1/2'), ' × ', blank('7|10√2'), ' × ', blank('7|10√2'), ' × sin ', blank('30°')],
+        [],
+        ['sin 30° = ', blank('1/2'), ' より'],
+        ['　　 = ', blank('35√2'), ' × ', blank('1/2')],
+        ['　　 = ', blank('35√2/2')]
+      ],
+      extras: ['45°', '70√2', '√3/2'],
+      hint: 'ルートを含む辺があっても、やることは同じです。',
+      summary: 'S = ½ × 7 × 10√2 × sin30° = 35√2 × ½ = 35√2/2'
+    },
+    {
+      name: '問題5',
+      given: '2辺が 12 と 7、そのはさむ角が 45° の三角形',
+      figure: triangle(12, 7, 45, '12', '7'),
+      lines: [
+        ['面積 = ', blank('1/2'), ' × ', blank('12|7'), ' × ', blank('12|7'), ' × sin ', blank('45°')],
+        [],
+        ['sin 45° = ', blank('1/√2'), ' より'],
+        ['　　 = ', blank('42'), ' × ', blank('1/√2')],
+        ['　　 = ', blank('42/√2')],
+        ['有理化すると 　 = ', blank('42√2/2')],
+        ['約分すると 　　 = ', blank('21√2')]
+      ],
+      extras: ['30°', '84', '√3/2'],
+      hint: '分母にルートが残ったら、有理化してから約分します。',
+      summary: 'S = ½ × 12 × 7 × sin45° = 42 × (1/√2) = 42/√2 = 42√2/2 = 21√2'
+    }
+  ];
+
+  Steps.start({
+    title: '三角形の面積 穴埋め問題',
+    subtitle: 'S = ½ × 2辺の積 × sin（はさむ角）。手順どおりに埋めていこう。',
+    problems: problems
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>指数法則★MASTER</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   08. 指数法則（指数法則★MASTER）
+     Lv.1 … a^m × a^n ／ (a^m)^n ／ (ab)^n
+     Lv.2 … わり算をふくむ、係数つきの式
+     それぞれ「4択」と「つなげる」で練習できる。
+
+   元教材から直した点：
+     ・(a³)² を a⁵ と答えても正解になってしまうことがあった
+       （選択肢の中に正解と同じ値になるものが混ざっていた）。
+       → 選択肢は指数まで含めて重複チェックし、同じ式は入れない。
+     ・「つなげる」で指数を置いたあと消せず、まちがえたらリロードするしかなかった。
+       → 空欄をタップし直せば置き換えられる。
+--------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var F = Quiz.fmt;
+
+  function pow(base, n) {
+    if (n === 1) return base;
+    return base + '<sup>' + n + '</sup>';
+  }
+
+  /* ---------- Lv.1 の3つの法則 ---------- */
+
+  function ruleMultiply(level) {
+    var v = Quiz.pick(['a', 'x', 'y']);
+    var m = Quiz.randInt(2, level >= 2 ? 6 : 4);
+    var n = Quiz.randInt(2, level >= 2 ? 6 : 4);
+    return {
+      q: pow(v, m) + ' × ' + pow(v, n),
+      ansExp: m + n,
+      base: v,
+      wrongExps: [m * n, Math.abs(m - n), m + n + 1, m + n - 1],
+      law: 'a<sup>m</sup> × a<sup>n</sup> = a<sup>m+n</sup>（指数はたす）',
+      explain: '指数をたして ' + m + ' + ' + n + ' = ' + (m + n) + '。答えは ' + pow(v, m + n) + ' です。'
+    };
+  }
+
+  function rulePower(level) {
+    var v = Quiz.pick(['a', 'x', 'y']);
+    var m = Quiz.randInt(2, level >= 2 ? 5 : 4);
+    var n = Quiz.randInt(2, level >= 2 ? 4 : 3);
+    return {
+      q: '(' + pow(v, m) + ')' + '<sup>' + n + '</sup>',
+      ansExp: m * n,
+      base: v,
+      wrongExps: [m + n, m * n + 1, m * n - m, Math.pow(m, n)],
+      law: '(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup>（指数はかける）',
+      explain: '指数をかけて ' + m + ' × ' + n + ' = ' + (m * n) + '。答えは ' + pow(v, m * n) + ' です。'
+    };
+  }
+
+  function ruleDivide(level) {
+    var v = Quiz.pick(['a', 'x']);
+    var n = Quiz.randInt(2, 4);
+    var m = n + Quiz.randInt(1, level >= 2 ? 4 : 2);
+    return {
+      q: pow(v, m) + ' ÷ ' + pow(v, n),
+      ansExp: m - n,
+      base: v,
+      wrongExps: [m + n, m * n, m - n + 1, Math.max(1, m - n - 1)],
+      law: 'a<sup>m</sup> ÷ a<sup>n</sup> = a<sup>m−n</sup>（指数はひく）',
+      explain: '指数をひいて ' + m + ' − ' + n + ' = ' + (m - n) + '。答えは ' + pow(v, m - n) + ' です。'
+    };
+  }
+
+  /** (ab)^n 型 — こちらは係数もかかるので別あつかい */
+  function ruleProductPower() {
+    var k = Quiz.randInt(2, 4);
+    var n = Quiz.randInt(2, 3);
+    var m = Quiz.randInt(1, 3);
+    var correct = Math.pow(k, n) + pow('x', m * n);
+    var wrongs = [
+      (k * n) + pow('x', m * n),
+      Math.pow(k, n) + pow('x', m + n),
+      (k * n) + pow('x', m + n),
+      Math.pow(k, n) + pow('x', m)
+    ];
+    return {
+      isProduct: true,
+      q: '(' + (k === 1 ? '' : k) + pow('x', m) + ')<sup>' + n + '</sup>',
+      correct: correct,
+      wrongs: wrongs,
+      law: '(ab)<sup>n</sup> = a<sup>n</sup>b<sup>n</sup>（係数も n 乗する）',
+      explain: '係数は ' + k + '<sup>' + n + '</sup> = ' + Math.pow(k, n) +
+        '、文字は指数をかけて ' + m + ' × ' + n + ' = ' + (m * n) + '。答えは ' + correct + ' です。'
+    };
+  }
+
+  var LAWS = {
+    mul: ruleMultiply,
+    pow: rulePower,
+    div: ruleDivide
+  };
+
+  function makeItem(kind, level) {
+    if (kind === 'prod') return ruleProductPower();
+    if (kind === 'mix') {
+      var keys = level >= 2 ? ['mul', 'pow', 'div'] : ['mul', 'pow'];
+      if (level >= 2 && Math.random() < 0.25) return ruleProductPower();
+      return LAWS[Quiz.pick(keys)](level);
+    }
+    return LAWS[kind](level);
+  }
+
+  function toChoice(item) {
+    if (item.isProduct) {
+      var cs = [item.correct];
+      item.wrongs.forEach(function (w) { if (cs.length < 4 && cs.indexOf(w) < 0) cs.push(w); });
+      return {
+        text: '次の式を計算しなさい。',
+        math: item.q,
+        type: 'choice',
+        choices: cs,
+        correct: 0,
+        hint: item.law,
+        explain: item.explain
+      };
+    }
+    var correct = item.ansExp === 1 ? item.base : item.base + '<sup>' + item.ansExp + '</sup>';
+    var choices = [correct];
+    Quiz.shuffle(item.wrongExps).forEach(function (e) {
+      if (choices.length >= 4) return;
+      if (e === item.ansExp || e <= 0) return;              // 正解と同じ指数は入れない
+      var s = e === 1 ? item.base : item.base + '<sup>' + e + '</sup>';
+      if (choices.indexOf(s) < 0) choices.push(s);
+    });
+    var guard = 0;
+    while (choices.length < 4 && guard++ < 30) {
+      var e2 = Quiz.randInt(2, 12);
+      if (e2 === item.ansExp) continue;
+      var s2 = item.base + '<sup>' + e2 + '</sup>';
+      if (choices.indexOf(s2) < 0) choices.push(s2);
+    }
+    return {
+      text: '次の式を計算しなさい。',
+      math: item.q,
+      type: 'choice',
+      choices: choices,
+      correct: 0,
+      hint: item.law,
+      explain: item.explain
+    };
+  }
+
+  function toPick(item) {
+    if (item.isProduct) return toChoice(item);   // (ab)^n は4択のまま
+
+    var bank = [String(item.ansExp)];
+    Quiz.shuffle(item.wrongExps).forEach(function (e) {
+      if (bank.length < 6 && e > 0 && bank.indexOf(String(e)) < 0) bank.push(String(e));
+    });
+    var guard = 0;
+    while (bank.length < 5 && guard++ < 30) {
+      var e = Quiz.randInt(1, 12);
+      if (bank.indexOf(String(e)) < 0) bank.push(String(e));
+    }
+
+    return {
+      text: '答えの指数にあてはまる数を選びなさい。',
+      math: item.q,
+      type: 'pick',
+      template: item.base + '<sup>_</sup>',
+      choices: bank,
+      answers: [String(item.ansExp)],
+      answerLabel: item.base + '<sup>' + item.ansExp + '</sup>',
+      hint: item.law,
+      explain: item.explain
+    };
+  }
+
+  function build(kind, level, style, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var item = makeItem(kind, level);
+      out.push(style === 'choice' ? toChoice(item) : toPick(item));
+    }
+    return out;
+  }
+
+  Quiz.start({
+    title: '指数法則★MASTER',
+    subtitle: 'たす・かける・ひく。3つの法則を、まちがえずに使い分けよう。',
+    modes: [
+      { id: 'mul:1:choice', group: '法則ごとに練習', name: 'a<sup>m</sup>×a<sup>n</sup>　4択', desc: '指数はたす（10問）' },
+      { id: 'pow:1:choice', group: '法則ごとに練習', name: '(a<sup>m</sup>)<sup>n</sup>　4択', desc: '指数はかける（10問）' },
+      { id: 'div:1:choice', group: '法則ごとに練習', name: 'a<sup>m</sup>÷a<sup>n</sup>　4択', desc: '指数はひく（10問）' },
+      { id: 'prod:1:choice', group: '法則ごとに練習', name: '(ka<sup>m</sup>)<sup>n</sup>　4択', desc: '係数も n 乗（8問）' },
+      { id: 'mix:1:choice', group: 'Lv.1', name: 'Lv.1　4択', desc: '10問' },
+      { id: 'mix:1:pick', group: 'Lv.1', name: 'Lv.1　つなげる', desc: '10問' },
+      { id: 'mix:2:choice', group: 'Lv.2', name: 'Lv.2　4択', desc: 'わり算・係数つき（10問）' },
+      { id: 'mix:2:pick', group: 'Lv.2', name: 'Lv.2　つなげる', desc: 'わり算・係数つき（10問）' }
+    ],
+    build: function (id) {
+      var p = id.split(':');
+      return build(p[0], Number(p[1]), p[2], p[0] === 'prod' ? 8 : 10);
+    }
+  });
+})();
+</script>
+</body>
+</html>

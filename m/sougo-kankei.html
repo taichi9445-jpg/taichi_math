@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>相互関係の計算</title>
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script src="../assets/mathcore.js"></script>
+<script src="../assets/steps.js"></script>
+<script src="../data/sougo-kankei.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   27. 相互関係の計算（三角比の相互関係 段階学習）
+   5問ぶんの解答手順は元教材からそのまま引き継いでいる。
+
+   元教材から直した点：
+     ・ドラッグ＆ドロップだったため、スマホで空欄に落とせず操作不能になった。
+       また PC 用・スマホ用の切り替えボタンを押し間違えると入力できなくなった。
+       → 「空欄をタップ → 候補をタップ」の一本化。切り替えボタンは不要にした。
+     ・候補が正答ばかりで、考えなくても順に置けば正解になっていた。
+       → よくある誤答を候補に混ぜた。
+     ・まちがえた後にやり直せず、リロードするしかなかった。
+       → 何度でも直せる。「答えを見る」も用意した。
+--------------------------------------------------------------------------- */
+Steps.start({
+  title: '相互関係の計算',
+  subtitle: 'sin²A + cos²A = 1 と tan A = sin A ÷ cos A を、手順を追って使えるようにする。',
+  problems: window.DATA_SOUGO
+});
+</script>
+</body>
+</html>
