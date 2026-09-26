@@ -1,136 +1,1531 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>三角比（座標）</title>
-<link rel="stylesheet" href="../assets/base.css">
-</head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+  <meta charset="UTF-8">
+  <!--
+    30. 三角比（座標）（動径と座標を使って三角比を求める）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../data/sankakuhi-zahyou.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   30. 三角比（座標）
-   角度ごとの座標・三角比のデータは元教材からそのまま引き継いでいる。
-
-   元教材から直した点：
-     ・単位円の図が canvas のアニメーションで、描画が終わる前に次へ進むと
-       図が消えたり残ったりしていた → 静止した SVG に描き直した。
-     ・図がウィンドウ幅に追従せず、スマホで右側が切れていた → 可変にした。
-     ・数学Ⅰでは 0°〜180° しか扱わないのに 360° まで混ざっていた
-       → 範囲を選べるようにした（そのまま全角度でも遊べる）。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var DATA = window.DATA_SANKAKUHI_ZAHYOU;
-  var ANGLES = Object.keys(DATA).map(Number).sort(function (a, b) { return a - b; });
-  var ANGLES_1 = ANGLES.filter(function (a) { return a >= 0 && a <= 180; });
-
-  /* --- 単位円の図を描く --------------------------------------------------- */
-  function circleFigure(angle, label) {
-    var W = 320, H = 320, cx = W / 2, cy = H / 2, R = 110;
-    var rad = angle * Math.PI / 180;
-    var px = cx + R * Math.cos(rad);
-    var py = cy - R * Math.sin(rad);
-
-    // 角を示す扇形
-    var arcR = 34;
-    var large = (angle % 360) > 180 ? 1 : 0;
-    var ax = cx + arcR, ay = cy;
-    var bx = cx + arcR * Math.cos(rad), by = cy - arcR * Math.sin(rad);
-    var arc = (angle % 360 === 0)
-      ? ''
-      : '<path d="M ' + ax + ' ' + ay + ' A ' + arcR + ' ' + arcR + ' 0 ' + large + ' 0 ' +
-        bx.toFixed(1) + ' ' + by.toFixed(1) + '" fill="none" stroke="#e79b16" stroke-width="3"/>';
-
-    return '' +
-      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="320" role="img" aria-label="単位円と角' + angle + '度">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#c9d4e6" stroke-width="2"/>' +
-      '<line x1="' + (cx - R - 26) + '" y1="' + cy + '" x2="' + (cx + R + 26) + '" y2="' + cy + '" stroke="#8896aa" stroke-width="1.5"/>' +
-      '<line x1="' + cx + '" y1="' + (cy + R + 26) + '" x2="' + cx + '" y2="' + (cy - R - 26) + '" stroke="#8896aa" stroke-width="1.5"/>' +
-      '<text x="' + (cx + R + 30) + '" y="' + (cy + 5) + '" font-size="13" fill="#5b6676">x</text>' +
-      '<text x="' + (cx + 6) + '" y="' + (cy - R - 30) + '" font-size="13" fill="#5b6676">y</text>' +
-      arc +
-      '<text x="' + (cx + 42) + '" y="' + (cy - 12) + '" font-size="15" fill="#c9820c" font-weight="bold">' + angle + '°</text>' +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + px.toFixed(1) + '" y2="' + py.toFixed(1) + '" stroke="#2f6fed" stroke-width="3"/>' +
-      '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + px.toFixed(1) + '" y2="' + cy + '" stroke="#d1477a" stroke-width="2" stroke-dasharray="5 4"/>' +
-      '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="6" fill="#2f6fed"/>' +
-      '<text x="' + (px + (Math.cos(rad) >= 0 ? 10 : -34)).toFixed(1) + '" y="' + (py - 10).toFixed(1) + '" font-size="15" fill="#1e4fbc" font-weight="bold">' + (label || 'P') + '</text>' +
-      '</svg>';
-  }
-
-  /* --- 問題を作る --------------------------------------------------------- */
-
-  function coordQuestion(angle) {
-    var d = DATA[angle];
-    var which = Quiz.pick(['x', 'y', 'r']);
-    var name = which === 'r' ? '原点Oから点Pまでの距離 r' : '点Pの ' + which + ' 座標';
-    var choices = d.coordChoices.slice();
-    return {
-      tag: '座標',
-      text: '半径 r の円周上に、角 ' + angle + '° の点 P をとりました。<b>' + name + '</b> を求めなさい。',
-      figure: circleFigure(angle),
-      type: 'choice',
-      choices: choices,
-      correct: choices.indexOf(d[which]),
-      explain: '点Pの座標は ( ' + d.x + ' , ' + d.y + ' )、r = ' + d.r + ' です。'
-    };
-  }
-
-  function trigQuestion(angle) {
-    var d = DATA[angle];
-    var fn = Quiz.pick(['sin', 'cos', 'tan']);
-    var choices = d.trigChoices.map(function (c) { return c.display; });
-    var values = d.trigChoices.map(function (c) { return c.value; });
-    var formula = fn === 'sin' ? 'sin = y / r' : fn === 'cos' ? 'cos = x / r' : 'tan = y / x';
-    return {
-      tag: '三角比',
-      text: '<b>' + fn + ' ' + angle + '°</b> の値を求めなさい。',
-      figure: circleFigure(angle),
-      type: 'choice',
-      choices: choices,
-      correct: values.indexOf(d[fn]),
-      hint: formula + '　（点Pの座標は x = ' + d.x + '、y = ' + d.y + '、r = ' + d.r + '）',
-      explain: formula + ' なので、' + fn + ' ' + angle + '° = ' + d[fn] + ' です。'
-    };
-  }
-
-  function buildList(angles, maker, n) {
-    var out = [];
-    Quiz.shuffle(angles).forEach(function (a) {
-      var q = maker(a);
-      if (q.correct >= 0) out.push(q);   // 正解が選択肢に無い問題は出さない
-    });
-    return out.slice(0, n);
-  }
-
-  Quiz.start({
-    title: '三角比（座標）',
-    subtitle: '三角比を「円周上の点の座標」としてとらえる練習。',
-    modes: [
-      { id: 'c1', group: '数学Ⅰの範囲（0°〜180°）', name: '座標を求める', desc: '点Pの x・y と r（10問）' },
-      { id: 't1', group: '数学Ⅰの範囲（0°〜180°）', name: '三角比の値', desc: 'sin・cos・tan（10問）' },
-      { id: 'm1', group: '数学Ⅰの範囲（0°〜180°）', name: '総合', desc: '座標と三角比をまぜて（12問）' },
-      { id: 'c2', group: '発展（0°〜360°）', name: '座標を求める', desc: '一般角まで（12問）' },
-      { id: 't2', group: '発展（0°〜360°）', name: '三角比の値', desc: '一般角まで（12問）' }
-    ],
-    build: function (id) {
-      if (id === 'c1') return buildList(ANGLES_1, coordQuestion, 10);
-      if (id === 't1') return buildList(ANGLES_1, trigQuestion, 10);
-      if (id === 'c2') return buildList(ANGLES, coordQuestion, 12);
-      if (id === 't2') return buildList(ANGLES, trigQuestion, 12);
-      // 総合：座標と三角比を半分ずつ
-      var a = buildList(ANGLES_1, coordQuestion, 6);
-      var b = buildList(ANGLES_1, trigQuestion, 6);
-      return Quiz.shuffle(a.concat(b));
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三角比クイズ</title>
+  
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 100%;
+      min-height: 100%;
     }
+
+    .container {
+      width: 100%;
+      padding: 8px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffffff;
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #e0e7ff;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .mode-selection-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80%;
+      padding: 20px;
+    }
+
+    .mode-cards {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .mode-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 250px;
+    }
+
+    .mode-card.main-mode {
+      min-width: 320px;
+      padding: 50px 40px;
+    }
+
+    .mode-card.sub-mode {
+      min-width: 200px;
+      padding: 30px 20px;
+      opacity: 0.85;
+    }
+
+    .mode-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      opacity: 1;
+    }
+
+    .mode-card-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .mode-card.main-mode .mode-card-icon {
+      font-size: 80px;
+      margin-bottom: 25px;
+    }
+
+    .mode-card.sub-mode .mode-card-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .mode-card h2 {
+      color: #667eea;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .mode-card.main-mode h2 {
+      font-size: 28px;
+      margin-bottom: 18px;
+    }
+
+    .mode-card.sub-mode h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .mode-card p {
+      color: #6b7280;
+      font-size: 16px;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+    .mode-card.main-mode p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .mode-card.sub-mode p {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .start-btn {
+      background: #667eea;
+      color: #ffffff;
+      border: none;
+      padding: 12px 40px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-card.main-mode .start-btn {
+      padding: 15px 50px;
+      font-size: 20px;
+    }
+
+    .mode-card.sub-mode .start-btn {
+      padding: 10px 30px;
+      font-size: 16px;
+    }
+
+    .start-btn:hover {
+      background: #5568d3;
+      transform: scale(1.05);
+    }
+
+    .back-btn {
+      background: #ffffff;
+      color: #667eea;
+      border: 2px solid #667eea;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: #e0e7ff;
+      transform: translateY(-2px);
+    }
+
+    .problem-selector {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .angle-btn {
+      background: #ffffff;
+      border: 2px solid transparent;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .angle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    .angle-btn.active {
+      border-color: #fbbf24;
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .angle-btn.completed {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding: 0;
+    }
+
+    @media (max-width: 968px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+    }
+
+    .canvas-card {
+      grid-column: 1;
+      grid-row: 1 / 3;
+    }
+
+    .coord-card {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .trig-card {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .canvas-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2px;
+    }
+
+    canvas {
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .coord-drop-zone {
+      min-width: 65px;
+      height: 38px;
+      border: 2px dashed #9ca3af;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      transition: all 0.3s ease;
+      padding: 0 8px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+
+    .coord-drop-zone.filled {
+      border-style: solid;
+      border-color: #3b82f6;
+      background: #dbeafe;
+    }
+
+    .coord-drop-zone.dragging-over {
+      border-color: #667eea;
+      background: #e0e7ff;
+      transform: scale(1.05);
+    }
+
+    .question-section {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .fill-blank {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: 16px;
+      color: #1f2937;
+      justify-content: center;
+    }
+
+    .drop-zone {
+      min-width: 75px;
+      height: 38px;
+      border: 2px dashed #9ca3af;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      transition: all 0.3s ease;
+      padding: 0 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .drop-zone.filled {
+      border-style: solid;
+      border-color: #10b981;
+      background: #d1fae5;
+    }
+
+    .drop-zone.correct {
+      border-style: solid;
+      border-color: #10b981;
+      background: #d1fae5;
+      border-width: 3px;
+    }
+
+    .drop-zone.incorrect {
+      border-style: solid;
+      border-color: #ef4444;
+      background: #fee2e2;
+      border-width: 3px;
+    }
+
+    .drop-zone.dragging-over {
+      border-color: #667eea;
+      background: #e0e7ff;
+      transform: scale(1.05);
+    }
+
+    .drop-zone.selected-target {
+      border-color: #fbbf24;
+      background: #fef3c7;
+      transform: scale(1.05);
+    }
+
+    .choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+      justify-content: center;
+    }
+
+    .choice {
+      background: #667eea;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .choice:hover {
+      background: #5568d3;
+      transform: scale(1.05);
+    }
+
+    .choice.selected-choice {
+      background: #fbbf24;
+      color: #000000;
+      transform: scale(1.1);
+      border: 3px solid #f59e0b;
+    }
+
+    .trig-section {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .trig-question {
+      margin-bottom: 6px;
+    }
+
+    .trig-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .trig-options {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .trig-option {
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      padding: 10px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 17px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+    }
+
+    .trig-option:hover {
+      border-color: #667eea;
+      background: #e0e7ff;
+    }
+
+    .trig-option.selected {
+      background: #10b981;
+      color: #ffffff;
+      border-color: #10b981;
+    }
+
+    .trig-option.correct {
+      background: #10b981;
+      color: #ffffff;
+      border-color: #10b981;
+      border-width: 3px;
+    }
+
+    .trig-option.incorrect {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+      border-width: 3px;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      line-height: 1;
+    }
+
+    .fraction-numerator {
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 2px;
+      font-size: 16px;
+    }
+
+    .fraction-denominator {
+      padding-top: 2px;
+      font-size: 16px;
+    }
+
+    .result {
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .result.correct {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+
+    .result.incorrect {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+    }
+  </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; box-sizing: border-box; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px 16px; box-sizing: border-box; }
+    #mode-selection-screen h1 { color: var(--u-title) !important; font-size: min(2rem, 7vw) !important; margin: 0 0 6px !important; }
+    #mode-selection-screen > p { color: var(--u-sub) !important; font-weight: 700; margin-bottom: 18px !important; }
+    .mode-selection-screen { padding: 8px 0; }
+    .mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; }
+    .mode-card { min-width: 0 !important; padding: 18px 14px !important; box-sizing: border-box; opacity: 1 !important; }
+    .mode-card-icon { font-size: 44px !important; margin-bottom: 6px !important; }
+    .mode-card h2 { color: var(--u-title) !important; font-size: 1.35rem !important; margin: 0 0 6px !important; }
+    .mode-card p { color: var(--u-sub) !important; font-weight: 700; font-size: 1rem !important; margin: 0 0 12px !important; }
+    .mode-done { color: var(--u-ok); font-weight: 800; margin-top: 8px; }
+    #title { color: var(--u-title); font-size: min(2rem, 7vw); white-space: nowrap; margin: 0 0 4px; }
+    .subtitle { color: var(--u-sub); font-weight: 700; font-size: 15px; }
+    .problem-selector { gap: 6px; margin-bottom: 12px; }
+    .angle-btn { border-radius: 999px; border: 3px solid var(--u-line); background: #fff; color: var(--u-ink); padding: 6px 14px; font-size: 16px; }
+    .angle-btn.active { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
+    .angle-btn.completed { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
+    .card { box-shadow: none; border: 3px solid var(--u-line); border-radius: 20px; padding: 12px; }
+    canvas { border-color: var(--u-line); border-radius: 14px; background: #fff; }
+    .section-title { color: var(--u-title-dark); border-bottom-color: var(--u-frame); border-bottom-width: 3px; }
+    .fill-blank { color: var(--u-ink); font-weight: 700; flex-wrap: wrap; }
+    .coord-hint { background: var(--u-soft-blue); color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 12px; padding: 8px 10px; font-size: 13px; font-weight: 700; line-height: 1.6; margin: 6px 0; }
+    .drop-zone { background: #fff; border-radius: 10px; }
+    .choice { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; padding: 8px 16px; font-size: 18px; min-width: 40px; text-align: center; }
+    .choice.selected-choice { background: var(--u-accent); color: #fff; border: none; border-bottom: 4px solid var(--u-accent-dark); }
+    .trig-label { color: var(--u-ink); }
+    .trig-option { background: #fff; border: 3px solid var(--u-line); border-radius: 12px; font-weight: 700; color: var(--u-ink); min-width: 56px; padding: 8px 12px; box-sizing: border-box; }
+    .trig-option.selected { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); color: var(--u-ink); }
+    .trig-option.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
+    .trig-option.incorrect { background: var(--u-ng-soft); border-color: var(--u-ng-line); color: var(--u-ng); }
+    .result { border-radius: 14px; font-size: 15px; }
+    .result.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .result.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .result.info { background: var(--u-soft-blue); color: var(--u-title); border: 2px solid var(--u-soft-blue-line); }
+    .result .next-angle { margin-top: 8px; padding: 10px 18px; }
+    .result-overlay { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 2000; padding: 16px; overflow-y: auto; box-sizing: border-box; }
+    .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
+    .result-emoji { font-size: 2.6em; }
+    .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 4px 0 8px; }
+    .result-score { font-size: 1.3em; font-weight: 800; color: var(--u-title); margin-bottom: 8px; }
+    .result-box p { color: var(--u-ink); font-weight: 700; line-height: 1.7; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .result-nav button { padding: 12px; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    /* 元はせまい画面でも図の枠が 2 列目の左に押しこまれ、図がつぶれて見えなかった */
+    @media (max-width: 968px) {
+      .canvas-card, .coord-card, .trig-card { grid-column: auto; grid-row: auto; }
+    }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .fill-blank { gap: 4px; }
+      .drop-zone { min-width: 58px; padding: 0 6px; }
+      .container { padding: 14px 8px; }
+      .card { padding: 8px; }
+      .trig-option { padding: 6px 8px; min-width: 48px; font-size: 16px; }
+    }
+  
+  </style>
+</head>
+<body class="u-theme">
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+  <div class="container">
+    <div id="mode-selection-screen" class="mode-selection-screen">
+      <h1 style="color: #ffffff; font-size: 32px; margin-bottom: 20px; text-align: center;">三角比の問題</h1>
+      <p style="color: #e0e7ff; font-size: 18px; margin-bottom: 40px; text-align: center;">モードを選択してください</p>
+
+      <div class="mode-cards">
+        <div class="mode-card main-mode" data-mode="basic">
+          <div class="mode-card-icon">📐</div>
+          <h2>基本モード</h2>
+          <p>30度, 45度, 60度<br>120度, 135度, 150度</p>
+          <button class="start-btn">スタート</button>
+        </div>
+
+        <div class="mode-card main-mode" data-mode="intermediate">
+          <div class="mode-card-icon">⭐</div>
+          <h2>ちょい発展モード</h2>
+          <p>0度, 90度, 180度</p>
+          <button class="start-btn">スタート</button>
+        </div>
+
+        <div class="mode-card sub-mode" data-mode="advanced">
+          <div class="mode-card-icon">🚀</div>
+          <h2>超発展モード</h2>
+          <p>210度, 225度, 240度<br>300度, 315度, 330度</p>
+          <button class="start-btn">スタート</button>
+        </div>
+
+        <div class="mode-card sub-mode" data-mode="superadvanced">
+          <div class="mode-card-icon">🌟</div>
+          <h2>超超発展モード</h2>
+          <p>270度, 360度</p>
+          <button class="start-btn">スタート</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="problem-screen" style="display: none;">
+      <h1 id="title">三角比の問題</h1>
+      <p class="subtitle" id="subtitle">動径と座標を使って三角比を求めよう</p>
+
+      <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+        <button id="back-to-menu" class="back-btn">メニューに戻る</button>
+      </div>
+
+      <div class="problem-selector" id="problem-selector">
+        <button class="angle-btn active" data-angle="30">30度</button>
+        <button class="angle-btn" data-angle="45">45度</button>
+        <button class="angle-btn" data-angle="60">60度</button>
+        <button class="angle-btn" data-angle="120">120度</button>
+        <button class="angle-btn" data-angle="135">135度</button>
+        <button class="angle-btn" data-angle="150">150度</button>
+      </div>
+
+      <div class="main-content">
+      <div class="card canvas-card">
+        <div class="canvas-container">
+          <canvas id="canvas" width="600" height="400"></canvas>
+        </div>
+      </div>
+
+      <div class="card coord-card">
+        <div class="question-section">
+          <div class="section-title">座標と動径を求めよう</div>
+
+          <div class="fill-blank">
+            点P の座標: ( <span class="drop-zone" id="coord-x"></span> , <span class="drop-zone" id="coord-y"></span> )
+          </div>
+
+          <div class="fill-blank">
+            動径の長さ r = <span class="drop-zone" id="radius"></span>
+          </div>
+          <!-- 【ブラッシュアップ】考え方のヒント -->
+          <div class="coord-hint">💡 30°・60° の仲間は 1 : √3 : 2（r = 2）、45° の仲間は 1 : 1 : √2（r = √2）の直角三角形で考えよう。0°・90°・180° などは r = 1。</div>
+
+          <div class="choices" id="coord-choices"></div>
+        </div>
+      </div>
+
+      <div class="card trig-card">
+        <div class="trig-section">
+          <div class="section-title">三角比を求めよう</div>
+
+          <div class="trig-question">
+            <div class="trig-label">sin θ =</div>
+            <div class="trig-options" id="sin-options"></div>
+          </div>
+
+          <div class="trig-question">
+            <div class="trig-label">cos θ =</div>
+            <div class="trig-options" id="cos-options"></div>
+          </div>
+
+          <div class="trig-question">
+            <div class="trig-label">tan θ =</div>
+            <div class="trig-options" id="tan-options"></div>
+          </div>
+
+          <div class="result" id="result" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultConfig = {
+      title_text: "三角比の問題",
+      instruction_text: "動径と座標を使って三角比を求めよう"
+    };
+
+    const problems = {
+      0: {
+        x: '1', y: '0', r: '1',
+        sin: '0', cos: '1', tan: '0',
+        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
+        trigChoices: [
+          {display: '√2', value: '√2'},
+          {display: '0', value: '0'},
+          {display: '1/2', value: '1/2'},
+          {display: '1', value: '1'},
+          {display: '-1', value: '-1'},
+          {display: '定義なし', value: 'undefined'}
+        ]
+      },
+      90: {
+        x: '0', y: '1', r: '1',
+        sin: '1', cos: '0', tan: '定義なし',
+        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
+        trigChoices: [
+          {display: '1/2', value: '1/2'},
+          {display: '定義なし', value: '定義なし'},
+          {display: '0', value: '0'},
+          {display: '√2', value: '√2'},
+          {display: '1', value: '1'},
+          {display: '-1', value: '-1'}
+        ]
+      },
+      180: {
+        x: '-1', y: '0', r: '1',
+        sin: '0', cos: '-1', tan: '0',
+        coordChoices: ['0', '1', '-1', '2', '√2', '√3'],
+        trigChoices: [
+          {display: '1/2', value: '1/2'},
+          {display: '0', value: '0'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '1', value: '1'},
+          {display: '定義なし', value: '定義なし'},
+          {display: '-1', value: '-1'}
+        ]
+      },
+      270: {
+        x: '0', y: '-1', r: '1',
+        sin: '-1', cos: '0', tan: '定義なし',
+        coordChoices: ['0', '1', '-1', '2', '-2', '√3'],
+        trigChoices: [
+          {display: '1/2', value: '1/2'},
+          {display: '0', value: '0'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '定義なし', value: '定義なし'},
+          {display: '1', value: '1'},
+          {display: '-1', value: '-1'}
+        ]
+      },
+      360: {
+        x: '1', y: '0', r: '1',
+        sin: '0', cos: '1', tan: '0',
+        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
+        trigChoices: [
+          {display: '-1', value: '-1'},
+          {display: '√2', value: '√2'},
+          {display: '0', value: '0'},
+          {display: '定義なし', value: '定義なし'},
+          {display: '1/2', value: '1/2'},
+          {display: '1', value: '1'}
+        ]
+      },
+      30: {
+        x: '√3', y: '1', r: '2',
+        sin: '1/2', cos: '√3/2', tan: '1/√3',
+        coordChoices: ['√3', '√2', '1', '2', '-1', '3'],
+        trigChoices: [
+          {display: '√3', value: '√3'},
+          {display: '1/√3', value: '1/√3'},
+          {display: '2', value: '2'},
+          {display: '1/2', value: '1/2'},
+          {display: '1', value: '1'},
+          {display: '√3/2', value: '√3/2'}
+        ]
+      },
+      45: {
+        x: '1', y: '1', r: '√2',
+        sin: '1/√2', cos: '1/√2', tan: '1',
+        coordChoices: ['√2', '1', '2', '-1', '√3', '0'],
+        trigChoices: [
+          {display: '√3/2', value: '√3/2'},
+          {display: '1', value: '1'},
+          {display: '1/2', value: '1/2'},
+          {display: '1/√3', value: '1/√3'},
+          {display: '1/√2', value: '1/√2'},
+          {display: '√2', value: '√2'}
+        ]
+      },
+      60: {
+        x: '1', y: '√3', r: '2',
+        sin: '√3/2', cos: '1/2', tan: '√3',
+        coordChoices: ['√3', '√2', '1', '2', '-√3', '3'],
+        trigChoices: [
+          {display: '1', value: '1'},
+          {display: '√3', value: '√3'},
+          {display: '1/√3', value: '1/√3'},
+          {display: '√3/2', value: '√3/2'},
+          {display: '3/2', value: '3/2'},
+          {display: '1/2', value: '1/2'}
+        ]
+      },
+      120: {
+        x: '-1', y: '√3', r: '2',
+        sin: '√3/2', cos: '-1/2', tan: '-√3',
+        coordChoices: ['√3', '1', '2', '-1', '-√3', '0'],
+        trigChoices: [
+          {display: '√3', value: '√3'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '-√3/2', value: '-√3/2'},
+          {display: '1/2', value: '1/2'},
+          {display: '√3/2', value: '√3/2'},
+          {display: '-√3', value: '-√3'}
+        ]
+      },
+      135: {
+        x: '-1', y: '1', r: '√2',
+        sin: '1/√2', cos: '-1/√2', tan: '-1',
+        coordChoices: ['√2', '1', '2', '-1', '-√2', '0'],
+        trigChoices: [
+          {display: '1', value: '1'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '-1', value: '-1'},
+          {display: '1/2', value: '1/2'},
+          {display: '-1/√2', value: '-1/√2'},
+          {display: '1/√2', value: '1/√2'}
+        ]
+      },
+      150: {
+        x: '-√3', y: '1', r: '2',
+        sin: '1/2', cos: '-√3/2', tan: '-1/√3',
+        coordChoices: ['√3', '-√3', '1', '2', '-1', '3'],
+        trigChoices: [
+          {display: '1/√3', value: '1/√3'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '-1/√3', value: '-1/√3'},
+          {display: '1/2', value: '1/2'},
+          {display: '√3/2', value: '√3/2'},
+          {display: '-√3/2', value: '-√3/2'}
+        ]
+      },
+      210: {
+        x: '-√3', y: '-1', r: '2',
+        sin: '-1/2', cos: '-√3/2', tan: '1/√3',
+        coordChoices: ['-√3', '√3', '-1', '2', '1', '0'],
+        trigChoices: [
+          {display: '√3/2', value: '√3/2'},
+          {display: '1/√3', value: '1/√3'},
+          {display: '-1/√3', value: '-1/√3'},
+          {display: '1/2', value: '1/2'},
+          {display: '-√3/2', value: '-√3/2'},
+          {display: '-1/2', value: '-1/2'}
+        ]
+      },
+      225: {
+        x: '-1', y: '-1', r: '√2',
+        sin: '-1/√2', cos: '-1/√2', tan: '1',
+        coordChoices: ['-1', '1', '√2', '2', '-√2', '0'],
+        trigChoices: [
+          {display: '1/2', value: '1/2'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '-1/√2', value: '-1/√2'},
+          {display: '1', value: '1'},
+          {display: '-1', value: '-1'},
+          {display: '1/√2', value: '1/√2'}
+        ]
+      },
+      240: {
+        x: '-1', y: '-√3', r: '2',
+        sin: '-√3/2', cos: '-1/2', tan: '√3',
+        coordChoices: ['-1', '1', '-√3', '√3', '2', '0'],
+        trigChoices: [
+          {display: '1/2', value: '1/2'},
+          {display: '√3', value: '√3'},
+          {display: '-√3', value: '-√3'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '√3/2', value: '√3/2'},
+          {display: '-√3/2', value: '-√3/2'}
+        ]
+      },
+      300: {
+        x: '1', y: '-√3', r: '2',
+        sin: '-√3/2', cos: '1/2', tan: '-√3',
+        coordChoices: ['1', '-1', '-√3', '√3', '2', '0'],
+        trigChoices: [
+          {display: '√3', value: '√3'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '-√3', value: '-√3'},
+          {display: '√3/2', value: '√3/2'},
+          {display: '1/2', value: '1/2'},
+          {display: '-√3/2', value: '-√3/2'}
+        ]
+      },
+      315: {
+        x: '1', y: '-1', r: '√2',
+        sin: '-1/√2', cos: '1/√2', tan: '-1',
+        coordChoices: ['1', '-1', '√2', '-√2', '2', '0'],
+        trigChoices: [
+          {display: '1', value: '1'},
+          {display: '1/2', value: '1/2'},
+          {display: '-1', value: '-1'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '1/√2', value: '1/√2'},
+          {display: '-1/√2', value: '-1/√2'}
+        ]
+      },
+      330: {
+        x: '√3', y: '-1', r: '2',
+        sin: '-1/2', cos: '√3/2', tan: '-1/√3',
+        coordChoices: ['√3', '-√3', '-1', '1', '2', '0'],
+        trigChoices: [
+          {display: '1/√3', value: '1/√3'},
+          {display: '-√3/2', value: '-√3/2'},
+          {display: '1/2', value: '1/2'},
+          {display: '-1/√3', value: '-1/√3'},
+          {display: '-1/2', value: '-1/2'},
+          {display: '√3/2', value: '√3/2'}
+        ]
+      }
+    };
+
+    let currentMode = null;
+    let currentAngle = null;
+    let userAnswers = {
+      coordX: null,
+      coordY: null,
+      radius: null,
+      sin: null,
+      cos: null,
+      tan: null
+    };
+
+    let completedAnglesBasic = new Set();
+    let completedAnglesIntermediate = new Set();
+    let completedAnglesAdvanced = new Set();
+    let completedAnglesSuperadvanced = new Set();
+    let draggedElement = null;
+    let selectedChoice = null;
+    // 【ブラッシュアップ】この角度を解きおえたか・まちがえた角度
+    let solvedNow = false;
+    let missedAngles = new Set();
+
+    const modeAngles = {
+      basic: [30, 45, 60, 120, 135, 150],
+      intermediate: [0, 90, 180],
+      advanced: [210, 225, 240, 300, 315, 330],
+      superadvanced: [270, 360]
+    };
+
+    function drawCoordinateSystem(angle) {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const centerX = 300;
+      let centerY;
+      if (currentMode === 'basic' || currentMode === 'intermediate') {
+        centerY = 300;
+      } else if (currentMode === 'advanced' || currentMode === 'superadvanced') {
+        centerY = 100;
+      } else {
+        centerY = 200;
+      }
+      const scale = 110;
+
+      ctx.clearRect(0, 0, 600, 400);
+
+      ctx.strokeStyle = '#9ca3af';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(20, centerY);
+      ctx.lineTo(580, centerY);
+      ctx.moveTo(centerX, 20);
+      ctx.lineTo(centerX, 380);
+      ctx.stroke();
+
+      animateRadius(ctx, centerX, centerY, scale, angle);
+    }
+
+    function animateRadius(ctx, centerX, centerY, scale, targetAngle) {
+      const myAnim = animateRadius.token = (animateRadius.token || 0) + 1;   // 【ブラッシュアップ】
+      const duration = 1500;
+      const startTime = Date.now();
+      const radiusLength = 2 * scale;
+
+      function animate() {
+        if (animateRadius.token !== myAnim) return;   // 【ブラッシュアップ】別の角度に変えたら止める
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentAnimAngle = targetAngle * progress;
+
+        ctx.clearRect(0, 0, 600, 400);
+
+        ctx.strokeStyle = '#9ca3af';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(20, centerY);
+        ctx.lineTo(580, centerY);
+        ctx.moveTo(centerX, 20);
+        ctx.lineTo(centerX, 380);
+        ctx.stroke();
+        // 【ブラッシュアップ】軸の名前
+        ctx.fillStyle = '#6b7280';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('x', 566, centerY - 8);
+        ctx.fillText('y', centerX + 8, 34);
+        ctx.textAlign = 'right';
+        ctx.fillText('O', centerX - 6, centerY + 20);
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 40, 0, -currentAnimAngle * Math.PI / 180, true);
+        ctx.stroke();
+
+        const radians = -currentAnimAngle * Math.PI / 180;
+        const animEndX = centerX + radiusLength * Math.cos(radians);
+        const animEndY = centerY + radiusLength * Math.sin(radians);
+
+        ctx.strokeStyle = '#9ca3af';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(animEndX, animEndY);
+        ctx.lineTo(animEndX, centerY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(animEndX, animEndY);
+        ctx.lineTo(centerX, animEndY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(animEndX, animEndY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(animEndX, animEndY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1f2937';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('P', animEndX + 12, animEndY - 10);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+
+      animate();
+    }
+
+    function initChoices() {
+      const choicesContainer = document.getElementById('coord-choices');
+      choicesContainer.innerHTML = '';
+
+      const problem = problems[currentAngle];
+      const coordChoices = problem.coordChoices;
+
+      coordChoices.forEach(choice => {
+        const choiceEl = document.createElement('div');
+        choiceEl.className = 'choice';
+        choiceEl.textContent = choice;
+        choiceEl.draggable = true;
+        choiceEl.dataset.value = choice;
+
+        choiceEl.addEventListener('dragstart', (e) => {
+          draggedElement = choiceEl;
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        choiceEl.addEventListener('click', (e) => {
+          if (selectedChoice) {
+            selectedChoice.classList.remove('selected-choice');
+          }
+
+          selectedChoice = choiceEl;
+          choiceEl.classList.add('selected-choice');
+
+          const resultEl = document.getElementById('result');
+          resultEl.style.display = 'block';
+          resultEl.className = 'result info';   // 【ブラッシュアップ】
+          resultEl.textContent = '入れたい空欄をタップしてください';
+        });
+
+        choicesContainer.appendChild(choiceEl);
+      });
+    }
+
+    function initDropZones() {
+      if (initDropZones.done) return;   // 【ブラッシュアップ】一度だけ登録する
+      initDropZones.done = true;
+      const dropZones = document.querySelectorAll('.drop-zone, .coord-drop-zone');
+
+      dropZones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('dragging-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('dragging-over');
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('dragging-over');
+
+          if (draggedElement && !solvedNow) {
+            zone.textContent = draggedElement.dataset.value;
+            zone.classList.add('filled');
+
+            if (zone.id === 'coord-x') {
+              userAnswers.coordX = draggedElement.dataset.value;
+              checkAnswer('coordX', draggedElement.dataset.value, zone);
+            }
+            if (zone.id === 'coord-y') {
+              userAnswers.coordY = draggedElement.dataset.value;
+              checkAnswer('coordY', draggedElement.dataset.value, zone);
+            }
+            if (zone.id === 'radius') {
+              userAnswers.radius = draggedElement.dataset.value;
+              checkAnswer('radius', draggedElement.dataset.value, zone);
+            }
+          }
+        });
+
+        zone.addEventListener('click', () => {
+          if (solvedNow) return;   // 【ブラッシュアップ】解きおえたら変えられない
+          if (selectedChoice && !zone.classList.contains('filled')) {
+            const value = selectedChoice.dataset.value;
+
+            zone.textContent = value;
+            zone.classList.add('filled');
+            selectedChoice.classList.remove('selected-choice');
+
+            if (zone.id === 'coord-x') {
+              userAnswers.coordX = value;
+              checkAnswer('coordX', value, zone);
+            }
+            if (zone.id === 'coord-y') {
+              userAnswers.coordY = value;
+              checkAnswer('coordY', value, zone);
+            }
+            if (zone.id === 'radius') {
+              userAnswers.radius = value;
+              checkAnswer('radius', value, zone);
+            }
+
+            selectedChoice = null;
+          }
+          else if (zone.classList.contains('filled')) {
+            zone.textContent = '';
+            zone.classList.remove('filled', 'correct', 'incorrect');
+
+            if (zone.id === 'coord-x') userAnswers.coordX = null;
+            if (zone.id === 'coord-y') userAnswers.coordY = null;
+            if (zone.id === 'radius') userAnswers.radius = null;
+          }
+        });
+      });
+    }
+
+    function createFractionHTML(text) {
+      if (text.includes('/')) {
+        const parts = text.split('/');
+        let numerator = parts[0];
+        let denominator = parts[1];
+
+        if (numerator.startsWith('-')) {
+          numerator = numerator.substring(1);
+          return `<span style="margin-right: 2px;">-</span><span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
+        }
+
+        return `<span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
+      }
+      return text;
+    }
+
+    function initTrigOptions() {
+      const problem = problems[currentAngle];
+      const trigChoices = problem.trigChoices;
+
+      ['sin', 'cos', 'tan'].forEach(trig => {
+        const container = document.getElementById(`${trig}-options`);
+        container.innerHTML = '';
+
+        trigChoices.forEach((choice, index) => {
+          const option = document.createElement('div');
+          option.className = 'trig-option';
+          option.innerHTML = createFractionHTML(choice.display);
+          option.dataset.value = choice.value;
+
+          option.addEventListener('click', () => {
+            if (solvedNow) return;   // 【ブラッシュアップ】
+            container.querySelectorAll('.trig-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
+            option.classList.add('selected');
+            userAnswers[trig] = choice.value;
+            checkAnswer(trig, choice.value, option);
+          });
+
+          container.appendChild(option);
+        });
+      });
+    }
+
+    function resetProblem() {
+      userAnswers = {
+        coordX: null,
+        coordY: null,
+        radius: null,
+        sin: null,
+        cos: null,
+        tan: null
+      };
+
+      document.querySelectorAll('.drop-zone, .coord-drop-zone').forEach(zone => {
+        zone.textContent = '';
+        zone.classList.remove('filled', 'correct', 'incorrect');
+      });
+
+      document.querySelectorAll('.choice').forEach(choice => {
+        choice.classList.remove('selected-choice');
+      });
+
+      document.querySelectorAll('.trig-option').forEach(opt => {
+        opt.classList.remove('selected', 'correct', 'incorrect');
+      });
+
+      selectedChoice = null;
+      solvedNow = false;   // 【ブラッシュアップ】
+      document.getElementById('result').style.display = 'none';
+    }
+
+    function checkAnswer(type, value, element) {
+      const problem = problems[currentAngle];
+      let isCorrect = false;
+
+      if (type === 'coordX') {
+        isCorrect = value === problem.x;
+      } else if (type === 'coordY') {
+        isCorrect = value === problem.y;
+      } else if (type === 'radius') {
+        isCorrect = value === problem.r;
+      } else if (type === 'sin') {
+        isCorrect = value === problem.sin;
+      } else if (type === 'cos') {
+        isCorrect = value === problem.cos;
+      } else if (type === 'tan') {
+        isCorrect = value === problem.tan;
+      }
+
+      if (!isCorrect) {
+        if (element) {
+          element.classList.remove('correct', 'filled');
+          element.classList.add('incorrect');
+        }
+
+        const resultEl = document.getElementById('result');
+        resultEl.style.display = 'block';
+        resultEl.className = 'result incorrect';
+
+        let label = '';
+        if (type === 'coordX' || type === 'coordY') label = '座標';
+        else if (type === 'radius') label = '動径の長さ r';
+        else label = type + ' θ';
+
+        resultEl.textContent = `ざんねん！${label} がちがいます。もう一度考えてみよう`;
+        missedAngles.add(currentMode + '-' + currentAngle);   // 【ブラッシュアップ】
+
+        // 【ブラッシュアップ】選び直していたら消さない
+        const token = element ? (element._token = (element._token || 0) + 1) : 0;
+        setTimeout(() => {
+          if (element && element._token !== token) return;
+          if (userAnswers[type] !== value) return;
+          resetIncorrectAnswer(type, element);
+        }, 500);
+      } else {
+        if (element) {
+          element.classList.remove('incorrect', 'filled');
+          element.classList.add('correct');
+        }
+        const resultEl = document.getElementById('result');
+        if (resultEl.classList.contains('incorrect') || resultEl.classList.contains('info')) {
+          resultEl.style.display = 'none';
+        }
+        checkAllCorrect();
+      }
+    }
+
+    function resetIncorrectAnswer(type, element) {
+      if (type === 'coordX' || type === 'coordY' || type === 'radius') {
+        if (element) {
+          element.textContent = '';
+          element.classList.remove('filled', 'correct', 'incorrect');
+        }
+
+        if (type === 'coordX') userAnswers.coordX = null;
+        if (type === 'coordY') userAnswers.coordY = null;
+        if (type === 'radius') userAnswers.radius = null;
+      } else {
+        if (element) {
+          element.classList.remove('selected', 'correct', 'incorrect');
+        }
+
+        if (type === 'sin') userAnswers.sin = null;
+        if (type === 'cos') userAnswers.cos = null;
+        if (type === 'tan') userAnswers.tan = null;
+      }
+
+      document.getElementById('result').style.display = 'none';
+    }
+
+    function updateAngleButtons() {
+      let completedAngles;
+      if (currentMode === 'basic') {
+        completedAngles = completedAnglesBasic;
+      } else if (currentMode === 'intermediate') {
+        completedAngles = completedAnglesIntermediate;
+      } else if (currentMode === 'advanced') {
+        completedAngles = completedAnglesAdvanced;
+      } else {
+        completedAngles = completedAnglesSuperadvanced;
+      }
+
+      document.querySelectorAll('.angle-btn').forEach(btn => {
+        const angle = parseInt(btn.dataset.angle);
+        if (completedAngles.has(angle) && angle !== currentAngle) {
+          btn.classList.add('completed');
+        } else {
+          btn.classList.remove('completed');
+        }
+      });
+    }
+
+    function checkAllCorrect() {
+      const problem = problems[currentAngle];
+      const allCorrect =
+        userAnswers.coordX === problem.x &&
+        userAnswers.coordY === problem.y &&
+        userAnswers.radius === problem.r &&
+        userAnswers.sin === problem.sin &&
+        userAnswers.cos === problem.cos &&
+        userAnswers.tan === problem.tan;
+
+      if (allCorrect) {
+        let completedAngles;
+        if (currentMode === 'basic') {
+          completedAngles = completedAnglesBasic;
+        } else if (currentMode === 'intermediate') {
+          completedAngles = completedAnglesIntermediate;
+        } else if (currentMode === 'advanced') {
+          completedAngles = completedAnglesAdvanced;
+        } else {
+          completedAngles = completedAnglesSuperadvanced;
+        }
+
+        completedAngles.add(currentAngle);
+        updateAngleButtons();
+
+        const resultEl = document.getElementById('result');
+        resultEl.style.display = 'block';
+        resultEl.className = 'result correct';
+
+        let totalProblems;
+        if (currentMode === 'intermediate') {
+          totalProblems = 3;
+        } else if (currentMode === 'superadvanced') {
+          totalProblems = 2;
+        } else {
+          totalProblems = 6;
+        }
+
+        solvedNow = true;   // 【ブラッシュアップ】
+        const nextAngle = modeAngles[currentMode].find(a => !completedAngles.has(a));
+        if (completedAngles.size === totalProblems) {
+          resultEl.textContent = 'すばらしい！このモードは全問正解！';
+          setTimeout(showModeResult, 700);
+        } else {
+          resultEl.innerHTML = `正解！すごい！（${completedAngles.size} / ${totalProblems} 問クリア）<br><button class="next-angle" onclick="goAngle(${nextAngle})">次の角度（${nextAngle}°）へ ▶</button>`;
+        }
+      }
+    }
+
+    function startMode(mode) {
+      currentMode = mode;
+      currentAngle = modeAngles[mode][0];
+
+      document.getElementById('mode-selection-screen').style.display = 'none';
+      document.getElementById('problem-screen').style.display = 'block';
+
+      const problemSelector = document.getElementById('problem-selector');
+      problemSelector.innerHTML = '';
+
+      modeAngles[mode].forEach((angle, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'angle-btn' + (index === 0 ? ' active' : '');
+        btn.dataset.angle = angle;
+        btn.textContent = angle + '°';   // 【ブラッシュアップ】
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentAngle = parseInt(btn.dataset.angle);
+          drawCoordinateSystem(currentAngle);
+          resetProblem();
+          initChoices();
+          initTrigOptions();
+          updateAngleButtons();
+        });
+        problemSelector.appendChild(btn);
+      });
+
+      window.scrollTo(0, 0);
+      drawCoordinateSystem(currentAngle);
+      resetProblem();
+      initChoices();
+      initDropZones();
+      initTrigOptions();
+      updateAngleButtons();
+    }
+
+    // 【ブラッシュアップ】結果：まちがえずに解けた角度・次のモード・もう一度・メニュー・ほかの教材
+    const modeOrder = ['basic', 'intermediate', 'advanced', 'superadvanced'];
+    const modeNames = { basic: '基本モード', intermediate: 'ちょい発展モード', advanced: '超発展モード', superadvanced: '超超発展モード' };
+    function completedSetOf(mode) {
+      return { basic: completedAnglesBasic, intermediate: completedAnglesIntermediate, advanced: completedAnglesAdvanced, superadvanced: completedAnglesSuperadvanced }[mode];
+    }
+
+    function goAngle(angle) {
+      const btn = document.querySelector(`.angle-btn[data-angle="${angle}"]`);
+      if (btn) btn.click();
+    }
+
+    function showModeResult() {
+      if (document.getElementById('resultOverlay')) return;
+      const mode = currentMode;
+      const angles = modeAngles[mode];
+      const clean = angles.filter(a => !missedAngles.has(mode + '-' + a)).length;
+      const nextMode = modeOrder[modeOrder.indexOf(mode) + 1];
+      const overlay = document.createElement('div');
+      overlay.className = 'result-overlay';
+      overlay.id = 'resultOverlay';
+      overlay.innerHTML = `
+        <div class="result-box">
+          <div class="result-emoji">${clean === angles.length ? '🎊🎉🎊' : '👍'}</div>
+          <h2>${modeNames[mode]} クリア！</h2>
+          <div class="result-score">まちがえずに解けた角度<br>${clean} / ${angles.length}</div>
+          <p>${clean === angles.length ? 'あなたは三角比のマスターです！' : 'まちがえた角度も、もう一度たしかめてみよう！'}</p>
+          <div class="result-nav">
+            ${nextMode ? `<button class="next" onclick="closeResult(); startMode('${nextMode}');">次は「${modeNames[nextMode]}」へ ▶</button>` : ''}
+            <button class="again" onclick="closeResult(); retryMode('${mode}');">このモードをもう一度</button>
+            <button class="plain" onclick="closeResult(); document.getElementById('back-to-menu').click();">メニューに戻る</button>
+            <a href="../remake.html">ほかの教材をえらぶ</a>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    function closeResult() {
+      const overlay = document.getElementById('resultOverlay');
+      if (overlay) overlay.remove();
+    }
+
+    function retryMode(mode) {
+      completedSetOf(mode).clear();
+      modeAngles[mode].forEach(a => missedAngles.delete(mode + '-' + a));
+      startMode(mode);
+    }
+
+    // 【ブラッシュアップ】メニューでは、クリアしたモードに印をつける
+    function markModeCards() {
+      document.querySelectorAll('.mode-card').forEach(card => {
+        const mode = card.dataset.mode;
+        let mark = card.querySelector('.mode-done');
+        const done = completedSetOf(mode).size === modeAngles[mode].length;
+        if (done && !mark) {
+          mark = document.createElement('div');
+          mark.className = 'mode-done';
+          mark.textContent = '✓ クリア';
+          card.appendChild(mark);
+        }
+        if (!done && mark) mark.remove();
+      });
+    }
+
+    document.getElementById('back-to-menu').addEventListener('click', () => {
+      markModeCards();   // 【ブラッシュアップ】
+      window.scrollTo(0, 0);
+      document.getElementById('problem-screen').style.display = 'none';
+      document.getElementById('mode-selection-screen').style.display = 'flex';
+      currentMode = null;
+      currentAngle = null;
+    });
+
+    document.querySelectorAll('.mode-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const mode = card.dataset.mode;
+        startMode(mode);
+      });
+    });
+
+    async function onConfigChange(config) {
+      document.getElementById('title').textContent = config.title_text || defaultConfig.title_text;
+      document.getElementById('subtitle').textContent = config.instruction_text || defaultConfig.instruction_text;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["title_text", config.title_text || defaultConfig.title_text],
+          ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
+        ])
+      });
+    }
+
+    onConfigChange(window.elementSdk ? window.elementSdk.config : defaultConfig);
+  </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".mode-card": "u-choice",
+    ".start-btn": "u-btn",
+    ".back-btn": "u-btn u-btn-plain",
+    ".next-angle": "u-btn u-btn-blue",
+    ".result-nav .next": "u-btn u-btn-blue",
+    ".result-nav .again": "u-btn",
+    ".result-nav .plain": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
