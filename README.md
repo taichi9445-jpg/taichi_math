@@ -2,6 +2,9 @@
 
 **公開URL：https://taichi9445-jpg.github.io/taichi_math/**
 
+- トップページ（`index.html`）… 先生が GAS・Canva で作った元の教材31本へのリンク集
+- 作り直し版（`remake.html`）… 同じ31本を作り直した試作版。`m/` 以下が各教材
+
 高校数学Ⅰ の教材 31 本を、1 つのサイトにまとめたものです。
 GAS・Canva でバラバラに作られていたものを、素の HTML / CSS / JavaScript で作り直しています。
 
