@@ -30,6 +30,8 @@
         .math-text { font-size: clamp(1.7rem, 7vw, 3rem); font-weight: bold; }
         .explanation-math { font-size: clamp(1.6rem, 6.5vw, 2.5rem); color: #d946ef; font-weight: bold; }
         .alt-math { font-size: clamp(1.4rem, 5.5vw, 2.2rem); }
+        /* 【ブラッシュアップ】解説の中の「書きかえの手順」 */
+        .ex-steps { font-size: clamp(1.15rem, 4.6vw, 1.6rem); color: #334155; background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 8px 12px; margin: 4px 0 8px; text-align: center; }
 
         /* 【ブラッシュアップ】数式がそれでも長いときは、枠からはみ出さず横に動かせるようにする */
         mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
@@ -198,7 +200,7 @@
         <div id="start-screen" class="text-center space-y-8 py-10 relative z-10">
             <div class="text-6xl mb-4 float-icon">✏️</div>
             <h1 class="text-4xl font-extrabold text-blue-600 leading-tight">文字式のルールを<br>マスターしよう！</h1>
-            <p class="text-lg text-slate-500 font-bold">ルール通りに書けるかな？ (全10問)</p>
+            <p class="text-lg text-slate-500 font-bold">ルール通りに書けるかな？ (全<span id="total-count">12</span>問)</p>
             <button onclick="startGame()" class="bubble-btn w-full py-6 bg-orange-400 hover:bg-orange-500 text-white rounded-3xl text-3xl font-black shadow-lg border-orange-600">
                 スタート！
             </button>
@@ -238,7 +240,7 @@
         <!-- 結果画面 -->
         <div id="result-screen" class="hidden text-center space-y-8 py-10 relative z-10">
             <h2 class="text-4xl font-black text-blue-800">けっか発表！</h2>
-            <div class="text-8xl font-black text-orange-500 mb-2"><span id="final-score">0</span><span class="text-3xl text-slate-400"> / 10</span></div>
+            <div class="text-8xl font-black text-orange-500 mb-2"><span id="final-score">0</span><span class="text-3xl text-slate-400"> / <span id="final-total">12</span></span></div>
             <p id="result-comment" class="text-2xl font-bold text-slate-600"></p>
             <!-- 【ブラッシュアップ】ページを読み込み直さずに、その場でもう一度始める -->
             <button onclick="startGame()" class="bubble-btn w-full py-5 bg-slate-200 rounded-3xl text-xl font-bold hover:bg-slate-300 border-slate-400">
@@ -254,70 +256,108 @@
         // 大量の問題バンク（先生の版のまま）
         // 【ブラッシュアップ】値は同じでも書き方がルール違反になっている選択肢には note を付けて、
         //   解説で「なぜダメなのか」を説明するようにした。
+        // 【ブラッシュアップ 2026-09】点検の指摘への対応
+        //   ・意味のない選択肢（5.x など）や、すぐ消せる選択肢（b など）を、よくあるまちがい（b³ など）に替えた
+        //   ・4択の中に正解が2つある問題（7ab と 7ba など）は、2つ目を選択肢から外した（押しても正解あつかいは同じ）
+        //   ・ex：その問題の書きかえの手順（解説に出す）
+        //   ・why：値は同じでもルール違反の選択肢を選んだとき、その場で理由を出す
+        //   ・ルール⑦「×÷がまざる・＋−は残す・( )・小数」を追加
         const ruleLevels = [
             { // ルール①: かけるをはぶく
                 desc: "数字をさきに書いて、記号の \\(\\times\\) をはぶきます。",
                 questions: [
-                    { q: "5 \\times x", a: ["5x"], opts: ["5x", "x5", "x+5", "5.x"] },
-                    { q: "a \\times 8", a: ["8a"], opts: ["8a", "a8", "8+a", "8-a"] },
-                    { q: "12 \\times y", a: ["12y"], opts: ["12y", "y12", "12+y", "y+12"] },
-                    { q: "b \\times 3", a: ["3b"], opts: ["3b", "b3", "3+b", "b"] },
-                    { q: "m \\times 10", a: ["10m"], opts: ["10m", "m10", "10+m", "m"] }
+                    { q: "5 \\times x", a: ["5x"], opts: ["5x", "x5", "x^5", "5+x"], ex: "5 \\times x = 5x",
+                      why: { "x^5": "\\(x^5\\) は \\(x\\) を5回かけること。\\(5 \\times x\\) とはちがいます。" } },
+                    { q: "a \\times 8", a: ["8a"], opts: ["8a", "a8", "8+a", "a^8"], ex: "a \\times 8 = 8 \\times a = 8a",
+                      why: { "a^8": "\\(a^8\\) は \\(a\\) を8回かけること。\\(a \\times 8\\) とはちがいます。" } },
+                    { q: "12 \\times y", a: ["12y"], opts: ["12y", "y12", "12+y", "y^{12}"], ex: "12 \\times y = 12y" },
+                    { q: "b \\times 3", a: ["3b"], opts: ["3b", "b3", "3+b", "b^3"], ex: "b \\times 3 = 3 \\times b = 3b",
+                      why: { "b^3": "\\(b^3\\) は \\(b \\times b \\times b\\) のこと。\\(b \\times 3\\) とはちがいます。" } },
+                    { q: "m \\times 10", a: ["10m"], opts: ["10m", "m10", "10+m", "m^{10}"], ex: "m \\times 10 = 10 \\times m = 10m" }
                 ]
             },
             { // ルール②: アルファベット順
-                desc: "数字をさきに、文字はアルファベット順が一般的です。入れ替わっても正解だよ！",
+                desc: "数字をさきに、文字はアルファベット順に書くのがふつうです。（7ba でもまちがいではないけれど、7ab と書こう）",
                 questions: [
-                    { q: "b \\times a \\times 7", a: ["7ab", "7ba"], opts: ["7ab", "ab7", "7ba", "a7b"] },
-                    { q: "y \\times 3 \\times x", a: ["3xy", "3yx"], opts: ["3xy", "3yx", "xy3", "x3y"] },
-                    { q: "a \\times c \\times 4", a: ["4ac", "4ca"], opts: ["4ac", "4ca", "ac4", "4+ac"] },
-                    { q: "10 \\times z \\times x", a: ["10xz", "10zx"], opts: ["10xz", "10zx", "xz10", "10+xz"] },
-                    { q: "b \\times 5 \\times c", a: ["5bc", "5cb"], opts: ["5bc", "bc5", "5b+c", "5b"] }
+                    { q: "b \\times a \\times 7", a: ["7ab", "7ba"], opts: ["7ab", "ab7", "a7b", "7+ab"], ex: "b \\times a \\times 7 = 7 \\times a \\times b = 7ab" },
+                    { q: "y \\times 3 \\times x", a: ["3xy", "3yx"], opts: ["3xy", "xy3", "x3y", "3x+y"], ex: "y \\times 3 \\times x = 3 \\times x \\times y = 3xy" },
+                    { q: "a \\times c \\times 4", a: ["4ac", "4ca"], opts: ["4ac", "ac4", "a4c", "4+ac"], ex: "a \\times c \\times 4 = 4 \\times a \\times c = 4ac" },
+                    { q: "10 \\times z \\times x", a: ["10xz", "10zx"], opts: ["10xz", "xz10", "x10z", "10x+z"], ex: "10 \\times z \\times x = 10 \\times x \\times z = 10xz" },
+                    { q: "b \\times 5 \\times c", a: ["5bc", "5cb"], opts: ["5bc", "bc5", "5b+c", "5b"], ex: "b \\times 5 \\times c = 5 \\times b \\times c = 5bc" }
                 ]
             },
             { // ルール③: 同じ文字は累乗
                 desc: "同じ文字をかけるときは、右上に小さく「指数（しすう）」を書いてまとめます。",
                 questions: [
-                    { q: "x \\times x \\times 5", a: ["5x^2"], opts: ["5x^2", "x^25", "10x", "x2"] },
-                    { q: "a \\times a \\times a", a: ["a^3"], opts: ["a^3", "3a", "a3", "a^2"] },
-                    { q: "y \\times 2 \\times y", a: ["2y^2"], opts: ["2y^2", "y^22", "4y", "2y"] },
-                    { q: "b \\times b \\times 8 \\times a", a: ["8ab^2", "8b^2a"], opts: ["8ab^2", "8b^2a", "8ab2", "ab^28"] },
-                    { q: "z \\times 3 \\times z \\times z", a: ["3z^3"], opts: ["3z^3", "z^33", "9z", "3z"] }
+                    { q: "x \\times x \\times 5", a: ["5x^2"], opts: ["5x^2", "x^25", "10x", "x2"], ex: "x \\times x \\times 5 = 5 \\times x \\times x = 5x^2",
+                      why: { "10x": "\\(x \\times x\\) は \\(2x\\) ではなく \\(x^2\\)。たし算の \\(x + x = 2x\\) とまぜないように。" } },
+                    { q: "a \\times a \\times a", a: ["a^3"], opts: ["a^3", "3a", "a3", "a^2"], ex: "a \\times a \\times a = a^3",
+                      why: { "3a": "\\(3a\\) は \\(a + a + a\\) のこと。かけ算は \\(a^3\\) です。" } },
+                    { q: "y \\times 2 \\times y", a: ["2y^2"], opts: ["2y^2", "y^22", "4y", "2y"], ex: "y \\times 2 \\times y = 2 \\times y \\times y = 2y^2" },
+                    { q: "b \\times b \\times 8 \\times a", a: ["8ab^2", "8b^2a"], opts: ["8ab^2", "ab^28", "8ab2", "8a^2b^2"], ex: "b \\times b \\times 8 \\times a = 8 \\times a \\times b \\times b = 8ab^2" },
+                    { q: "z \\times 3 \\times z \\times z", a: ["3z^3"], opts: ["3z^3", "z^33", "9z", "3z"], ex: "z \\times 3 \\times z \\times z = 3 \\times z \\times z \\times z = 3z^3" }
                 ]
             },
             { // ルール④: 1の省略
-                desc: "「1」や「-1」をかけるときは、数字の1をはぶいて書きます。",
+                desc: "「1」や「-1」をかけるときは、数字の1をはぶいて書きます。（-1 のときは − だけ残す）",
                 questions: [
-                    { q: "x \\times 1", a: ["x"], opts: ["x", "1x", "x1", "x+1"] },
-                    { q: "(-1) \\times a", a: ["-a"], opts: ["-a", "-1a", "a-1", "1a"] },
-                    { q: "1 \\times y \\times y", a: ["y^2"], opts: ["y^2", "1y^2", "y2", "2y"] },
-                    { q: "(-1) \\times x \\times y", a: ["-xy", "-yx"], opts: ["-xy", "-yx", "-1xy", "xy-1"] },
-                    { q: "b \\times 1 \\times a", a: ["ab", "ba"], opts: ["ab", "1ab", "ab1", "a+b"] }
+                    { q: "x \\times 1", a: ["x"], opts: ["x", "1x", "x1", "x+1"], ex: "x \\times 1 = 1x = x",
+                      why: { "1x": "値は同じですが、1 は書かずに \\(x\\) と書きます。" } },
+                    { q: "(-1) \\times a", a: ["-a"], opts: ["-a", "-1a", "a-1", "1a"], ex: "(-1) \\times a = -1a = -a",
+                      why: { "-1a": "値は同じですが、1 ははぶいて、マイナスだけ残して \\(-a\\) と書きます。" } },
+                    { q: "1 \\times y \\times y", a: ["y^2"], opts: ["y^2", "1y^2", "y2", "2y"], ex: "1 \\times y \\times y = 1y^2 = y^2",
+                      why: { "1y^2": "値は同じですが、1 は書かずに \\(y^2\\) と書きます。" } },
+                    { q: "(-1) \\times x \\times y", a: ["-xy", "-yx"], opts: ["-xy", "-1xy", "xy-1", "-x-y"], ex: "(-1) \\times x \\times y = -1xy = -xy",
+                      why: { "-1xy": "値は同じですが、1 ははぶいて、マイナスだけ残して \\(-xy\\) と書きます。" } },
+                    { q: "b \\times 1 \\times a", a: ["ab", "ba"], opts: ["ab", "1ab", "ab1", "a+b"], ex: "b \\times 1 \\times a = 1 \\times a \\times b = ab",
+                      why: { "1ab": "値は同じですが、1 は書かずに \\(ab\\) と書きます。" } }
                 ]
             },
             { // ルール⑤: マイナスの数字
                 desc: "マイナスのついた数字も、いちばん前に書くのが文字式のマナーです。",
                 questions: [
-                    { q: "(-6) \\times a", a: ["-6a"], opts: ["-6a", "a-6", "-a6", "6a"] },
-                    { q: "x \\times (-3)", a: ["-3x"], opts: ["-3x", "x-3", "3x", "-x3"] },
-                    { q: "b \\times (-9) \\times a", a: ["-9ab", "-9ba"], opts: ["-9ab", "-9ba", "ab-9", "9ab"] },
-                    { q: "(-2) \\times x \\times x", a: ["-2x^2"], opts: ["-2x^2", "-x^22", "-4x", "2x^2"] },
-                    { q: "(-5) \\times z", a: ["-5z"], opts: ["-5z", "z-5", "5z", "-z5"] }
+                    { q: "(-6) \\times a", a: ["-6a"], opts: ["-6a", "a-6", "-a6", "6a"], ex: "(-6) \\times a = -6a",
+                      why: { "a-6": "\\(a-6\\) は「\\(a\\) ひく 6」。かけ算の記号 × は − に変えられません。" } },
+                    { q: "x \\times (-3)", a: ["-3x"], opts: ["-3x", "x-3", "3x", "-x3"], ex: "x \\times (-3) = (-3) \\times x = -3x",
+                      why: { "x-3": "\\(x-3\\) は「\\(x\\) ひく 3」。かけ算の記号 × は − に変えられません。" } },
+                    { q: "b \\times (-9) \\times a", a: ["-9ab", "-9ba"], opts: ["-9ab", "ab(-9)", "ab-9", "9ab"], ex: "b \\times (-9) \\times a = (-9) \\times a \\times b = -9ab" },
+                    { q: "(-2) \\times x \\times x", a: ["-2x^2"], opts: ["-2x^2", "-x^22", "-4x", "2x^2"], ex: "(-2) \\times x \\times x = -2x^2" },
+                    { q: "(-5) \\times z", a: ["-5z"], opts: ["-5z", "z-5", "5z", "-z5"], ex: "(-5) \\times z = -5z" }
                 ]
             },
             { // ルール⑥: わり算は分数
                 desc: "わり算は分数にします。文字は上にのせても、よこに並べても正解です。",
                 questions: [
-                    { q: "a \\div 9", a: ["\\frac{a}{9}", "\\frac{1}{9}a"], opts: ["\\frac{a}{9}", "\\frac{9}{a}", "9a", "a-9"] },
-                    { q: "5x \\div 2", a: ["\\frac{5x}{2}", "\\frac{5}{2}x"], opts: ["\\frac{5x}{2}", "\\frac{2}{5x}", "\\frac{5}{2}x", "2.5x"],
-                      note: "\\(2.5x\\) も値は同じですが、文字式では小数ではなく<b>分数</b>で書くのがルールです。" },
+                    { q: "a \\div 9", a: ["\\frac{a}{9}", "\\frac{1}{9}a"], opts: ["\\frac{a}{9}", "\\frac{9}{a}", "9a", "a-9"], ex: "a \\div 9 = \\frac{a}{9}" },
+                    { q: "5x \\div 2", a: ["\\frac{5x}{2}", "\\frac{5}{2}x"], opts: ["\\frac{5x}{2}", "\\frac{2}{5x}", "\\frac{2}{5}x", "2.5x"],
+                      note: "\\(2.5x\\) も値は同じですが、文字式では小数ではなく<b>分数</b>で書くのがルールです。", ex: "5x \\div 2 = \\frac{5x}{2}",
+                      why: { "2.5x": "値は同じですが、文字式では小数ではなく<b>分数</b>で書きます。" } },
                     { q: "x \\div (-4)", a: ["-\\frac{x}{4}", "-\\frac{1}{4}x"], opts: ["-\\frac{x}{4}", "\\frac{x}{-4}", "-4x", "x-4"],
-                      note: "\\(\\frac{x}{-4}\\) も値は同じですが、マイナスは分母に残さず、<b>分数の前</b>に出して書きます。" },
-                    { q: "3a \\div 7", a: ["\\frac{3a}{7}", "\\frac{3}{7}a"], opts: ["\\frac{3a}{7}", "\\frac{7}{3a}", "\\frac{3}{7}a", "3a-7"] },
-                    { q: "b \\div 5", a: ["\\frac{b}{5}", "\\frac{1}{5}b"], opts: ["\\frac{b}{5}", "\\frac{5}{b}", "5b", "b-5"] }
+                      note: "\\(\\frac{x}{-4}\\) も値は同じですが、マイナスは分母に残さず、<b>分数の前</b>に出して書きます。", ex: "x \\div (-4) = \\frac{x}{-4} = -\\frac{x}{4}",
+                      why: { "\\frac{x}{-4}": "値は同じですが、マイナスは分母に残さず、<b>分数の前</b>に出して書きます。" } },
+                    { q: "3a \\div 7", a: ["\\frac{3a}{7}", "\\frac{3}{7}a"], opts: ["\\frac{3a}{7}", "\\frac{7}{3a}", "\\frac{7}{3}a", "3a-7"], ex: "3a \\div 7 = \\frac{3a}{7}" },
+                    { q: "b \\div 5", a: ["\\frac{b}{5}", "\\frac{1}{5}b"], opts: ["\\frac{b}{5}", "\\frac{5}{b}", "5b", "b-5"], ex: "b \\div 5 = \\frac{b}{5}" }
+                ]
+            },
+            { // 【ブラッシュアップ】ルール⑦: ×÷がまざる・＋−は残す・( )・小数
+                desc: "×÷がまざるときは左から順に。÷ のうしろだけが分母へ。＋・− の記号は、はぶけません。",
+                questions: [
+                    { q: "a \\times b \\div c", a: ["\\frac{ab}{c}"], opts: ["\\frac{ab}{c}", "\\frac{a}{bc}", "abc", "\\frac{c}{ab}"], ex: "a \\times b \\div c = ab \\div c = \\frac{ab}{c}" },
+                    { q: "a \\div b \\times c", a: ["\\frac{ac}{b}"], opts: ["\\frac{ac}{b}", "\\frac{a}{bc}", "\\frac{b}{ac}", "abc"], ex: "a \\div b \\times c = \\frac{a}{b} \\times c = \\frac{ac}{b}",
+                      why: { "\\frac{a}{bc}": "分母に行くのは <b>÷ のすぐうしろ</b>の \\(b\\) だけ。\\(\\times c\\) の \\(c\\) は分子に残ります。" } },
+                    { q: "(a+b) \\times 3", a: ["3(a+b)"], opts: ["3(a+b)", "(a+b)3", "3a+b", "a+b3"], ex: "(a+b) \\times 3 = 3(a+b)",
+                      why: { "3a+b": "3 は \\(a\\) にも \\(b\\) にもかかります。( ) ごとまとめて \\(3(a+b)\\) と書きます。" } },
+                    { q: "x \\times 0.1", a: ["0.1x"], opts: ["0.1x", "0.x", "x0.1", "0.1+x"], ex: "x \\times 0.1 = 0.1x",
+                      why: { "0.x": "1 をはぶけるのは「1」のときだけ。0.1 の 1 ははぶけません。" } },
+                    { q: "a \\times 3 - b \\times 2", a: ["3a-2b"], opts: ["3a-2b", "3ab-2", "a3-b2", "6ab"], ex: "a \\times 3 - b \\times 2 = 3a - 2b",
+                      why: { "6ab": "− の記号ははぶけません。\\(3a\\) と \\(2b\\) を − でつないだまま書きます。" } },
+                    { q: "x \\div 2 + y \\times 5", a: ["\\frac{x}{2}+5y", "5y+\\frac{x}{2}"], opts: ["\\frac{x}{2}+5y", "\\frac{x+5y}{2}", "\\frac{x}{2+5y}", "\\frac{5xy}{2}"], ex: "x \\div 2 + y \\times 5 = \\frac{x}{2} + 5y" }
                 ]
             }
         ];
+        // 【ブラッシュアップ】ルールごとの出題数（①〜⑦）。全部で TOTAL 問
+        const LEVEL_COUNTS = [2, 1, 2, 2, 2, 1, 2];
+        const TOTAL = LEVEL_COUNTS.reduce((s, n) => s + n, 0);
 
         let currentIndex = 0;
         let score = 0;
@@ -382,7 +422,8 @@
         function startGame() {
             gameQuestions = [];
             // ルール順（①〜⑥）に従って10問組み立て
-            const counts = [2, 2, 2, 1, 1, 2];
+            // 【ブラッシュアップ】ルール⑦を足して12問に。まちがいの多い「1の省略」「マイナス」を2問ずつに（元は1問ずつ）
+            const counts = LEVEL_COUNTS;
             counts.forEach((count, levelIdx) => {
                 const pool = shuffle([...ruleLevels[levelIdx].questions]);
                 for(let i=0; i<count; i++) {
@@ -408,7 +449,7 @@
             answered = false;
             document.getElementById('current-q-num').innerText = currentIndex + 1;
             document.getElementById('score-val').innerText = score;
-            document.getElementById('progress-bar').style.width = `${(currentIndex / 10) * 100}%`;
+            document.getElementById('progress-bar').style.width = `${(currentIndex / TOTAL) * 100}%`;
             document.getElementById('try-again-msg').classList.add('hidden');
 
             const qEl = document.getElementById('question-text');
@@ -449,7 +490,8 @@
                 btnElement.classList.add('btn-wrong');
                 btnElement.disabled = true;
                 const hint = document.getElementById('try-again-hint');
-                hint.innerHTML = '💡 ヒント：' + currentQ.levelDesc;
+                // 【ブラッシュアップ】値は同じでもルール違反の選択肢なら、その理由をまず出す
+                hint.innerHTML = (currentQ.why && currentQ.why[selected] ? '⚠️ ' + currentQ.why[selected] + '<br>' : '') + '💡 ヒント：' + currentQ.levelDesc;
                 document.getElementById('try-again-msg').classList.remove('hidden');
                 renderMath([hint]);
             }
@@ -481,6 +523,9 @@
             }
 
             // 【ブラッシュアップ】値は同じでもルール違反の選択肢がある問題は、その理由も出す
+            // 【ブラッシュアップ】その問題の書きかえの手順
+            const exInfo = currentQ.ex ? `<div class="ex-steps" data-tex="${currentQ.ex}">\\( ${currentQ.ex} \\)</div>` : "";
+
             const noteInfo = currentQ.note ? `
                 <div class="bg-yellow-50 p-5 rounded-2xl mt-4 border-2 border-yellow-200 text-yellow-800 font-bold">
                     ⚠️ ${currentQ.note}
@@ -491,6 +536,7 @@
                     <span class="text-4xl">💡</span>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-2xl mb-2 text-blue-600">${currentQ.levelDesc}</p>
+                        ${exInfo}
                         ${extraInfo}
                         ${noteInfo}
                     </div>
@@ -505,7 +551,7 @@
         function goNext() {
             currentIndex++;
             document.getElementById('explanation-screen').classList.add('hidden');
-            if (currentIndex < 10) {
+            if (currentIndex < TOTAL) {
                 document.getElementById('quiz-screen').classList.remove('hidden');
                 showQuestion();
             } else {
@@ -520,8 +566,8 @@
             document.getElementById('final-score').innerText = score;
 
             let comment = "";
-            if (score === 10) comment = "全問正解！文字式のパーフェクトマスターだ！";
-            else if (score >= 8) comment = "すごい！ほとんど一発で正解できたね！";
+            if (score === TOTAL) comment = "全問正解！文字式のパーフェクトマスターだ！";
+            else if (score >= TOTAL - 2) comment = "すごい！ほとんど一発で正解できたね！";
             else comment = "最後までがんばったね！もう一回やって満点を目指そう！";
 
             document.getElementById('result-comment').innerText = comment;

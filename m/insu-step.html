@@ -236,6 +236,11 @@
     .all-complete-card a { color: var(--u-sub) !important; }
     .next-button, .check-btn { padding: 0.75rem 1.6rem; font-size: 1.05rem; }
     .sign-btn { font-size: 1.1rem; }
+    /* 【ブラッシュアップ】まだ出ていないステップは場所もとらない（元は見えないまま場所をとり、タップもできた） */
+    .step-card:not(.visible) { display: none; }
+    .step-hint { color: #b45309; font-weight: 700; font-size: 0.95rem; margin-top: 0.6rem; min-height: 1.2em; }
+    .sum-choice { padding: 0.6rem 1.1rem; font-size: 1.2rem; }
+    .check-line { font-size: 1rem; margin-top: 6px; font-weight: 700; }
   
   </style>
 </head>
@@ -243,7 +248,7 @@
   <div id="app-wrapper" class="h-full w-full overflow-auto" style="background: linear-gradient(135deg, #e0e7ff 0%, #f0e6ff 100%);">
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div class="max-w-2xl mx-auto p-4 sm:p-6">
-      <h1 id="main-title" class="text-2xl sm:text-3xl font-bold text-center mb-6" style="color: #4f46e5;">🧮 因数分解マスター</h1>
+      <h1 id="main-title" class="text-2xl sm:text-3xl font-bold text-center mb-6" style="color: #4f46e5;">🧮 因数分解ステップ学習</h1>
 
       <div class="progress-bar" id="progress-bar"></div>
 
@@ -258,6 +263,8 @@
           <span class="text-lg font-bold text-slate-700">かけていくつ？ たしていくつ？</span>
           <span id="step1-badge" class="success-badge" style="display: none;">✓ クリア</span>
         </div>
+        <!-- 【ブラッシュアップ】何を書くのか -->
+        <div id="step1-note" class="text-sm text-slate-500 mb-3"></div>
         <div class="space-y-4">
           <div class="flex items-center gap-3 flex-wrap">
             <span class="math-text">かけて</span>
@@ -273,6 +280,7 @@
         <!-- 【ブラッシュアップ】Tab キーのないスマホでも答え合わせできるように -->
         <button class="check-btn" onclick="checkStep(1)">こたえ合わせ</button>
         <div class="key-hint">（パソコンは Enter キーや Tab キーでもOK）</div>
+        <div class="step-hint" id="hint1"></div>
       </div>
 
       <div id="step2" class="step-card">
@@ -281,9 +289,10 @@
           <span id="step2-title" class="text-lg font-bold text-slate-700">かけて■になるペアを書き入れよう</span>
           <span id="step2-badge" class="success-badge" style="display: none;">✓ クリア</span>
         </div>
-        <div class="text-sm text-slate-500 mb-3">※ 負の数も考えてね！</div>
+        <div id="sign-guide" class="text-sm text-slate-500 mb-3">※ 負の数も考えてね！</div>
         <div class="pair-row" id="pair-row"></div>
         <button class="check-btn" onclick="checkStep(2)">こたえ合わせ</button>
+        <div class="step-hint" id="hint2"></div>
       </div>
 
       <div id="step3" class="step-card">
@@ -292,12 +301,10 @@
           <span id="step3-title" class="text-lg font-bold text-slate-700">たして■になる2つは？</span>
           <span id="step3-badge" class="success-badge" style="display: none;">✓ クリア</span>
         </div>
-        <div class="flex items-center gap-3 flex-wrap">
-          <input type="text" id="sum-a" class="input-box" maxlength="4" autocomplete="off">
-          <span class="math-text">と</span>
-          <input type="text" id="sum-b" class="input-box" maxlength="4" autocomplete="off">
-        </div>
-        <button class="check-btn" onclick="checkStep(3)">こたえ合わせ</button>
+        <!-- 【ブラッシュアップ】② で見つけた組から選ぶ（元は 2 つの数を打ち直していた） -->
+        <div class="text-sm text-slate-500 mb-3">② で見つけた組から、タップして選ぼう</div>
+        <div class="pair-row" id="sum-choices"></div>
+        <div class="step-hint" id="hint3"></div>
       </div>
 
       <div id="step4" class="step-card">
@@ -310,6 +317,7 @@
         <div id="step4-inputs" class="flex items-center gap-2 flex-wrap"></div>
         <div class="key-hint">符号は「±」を押すと ＋ と − が切りかわるよ（「−」キーでもOK）</div>
         <button class="check-btn" onclick="checkStep(4)">こたえ合わせ</button>
+        <div class="step-hint" id="hint4"></div>
       </div>
 
       <div id="completion" class="completion-card" style="display: none;">
@@ -322,8 +330,8 @@
 
       <div id="all-complete" class="all-complete-card" style="display: none;">
         <div class="text-4xl mb-2">🏆</div>
-        <div class="text-2xl font-bold mb-2">5問すべてクリア！</div>
-        <div class="text-lg mb-4">因数分解マスターになれました！</div>
+        <div class="text-2xl font-bold mb-2">7問すべてクリア！</div>
+        <div class="text-lg mb-4">因数分解の手順が身につきました！</div>
         <button class="next-button" id="restart-button" style="background: linear-gradient(135deg, #f59e0b, #d97706);">もう一度やる（新しい問題）</button>
         <div style="margin-top: 14px;"><a href="../remake.html" style="color: #fff; text-decoration: underline;">ほかの教材をえらぶ</a></div>
       </div>
@@ -332,52 +340,40 @@
 
   <script>
     // 問題パターンをカテゴリ別に分類
+    // 【ブラッシュアップ】（2 回目）元は「ペアが3個以下」などの名前と中身が合っておらず、1 問目に 6 組（12 欄）の問題が
+    //   出ることもあった。ペアの数が少ない順に並べ直し、⑥ 定数が大きい負の数、⑦ 文字 2 種類 を足して 7 問にした。
+    //   式の文字列は数から作る（書きまちがいが起きないように）。答えは node で検算済み。
+    function makeFormula(type, m, a) {
+      const tv = type === 'two_var';
+      let s = 'x²';
+      if (a !== 0) s += (a > 0 ? ' + ' : ' − ') + (Math.abs(a) === 1 ? '' : Math.abs(a)) + (tv ? 'xy' : 'x');
+      s += (m > 0 ? ' + ' : ' − ') + (tv && Math.abs(m) === 1 ? '' : Math.abs(m)) + (tv ? 'y²' : '');
+      return s;
+    }
+    const P = (type, multiply, add, factorA, factorB) => ({ type, formula: makeFormula(type, multiply, add), multiply, add, factorA, factorB });
     const problemCategories = {
-      // ①ペアが3個以下の(x+a)(x+b)形式
-      pair3OrLess: [
-        { type: 'two_factor', formula: 'x² + 5x + 6', multiply: 6, add: 5, factorA: 2, factorB: 3 },
-        { type: 'two_factor', formula: 'x² + 7x + 12', multiply: 12, add: 7, factorA: 3, factorB: 4 },
-        { type: 'two_factor', formula: 'x² − 5x + 6', multiply: 6, add: -5, factorA: -2, factorB: -3 },
-        { type: 'two_factor', formula: 'x² − 8x + 12', multiply: 12, add: -8, factorA: -2, factorB: -6 },
-        { type: 'two_factor', formula: 'x² + 3x + 2', multiply: 2, add: 3, factorA: 1, factorB: 2 },
-        { type: 'two_factor', formula: 'x² − 3x + 2', multiply: 2, add: -3, factorA: -1, factorB: -2 },
-      ],
-      // ②ペアが4個以下の(x+a)(x+b)形式
-      pair4OrLess: [
-        { type: 'two_factor', formula: 'x² + 2x − 3', multiply: -3, add: 2, factorA: -1, factorB: 3 },
-        { type: 'two_factor', formula: 'x² − 2x − 3', multiply: -3, add: -2, factorA: -3, factorB: 1 },
-        { type: 'two_factor', formula: 'x² + 5x − 6', multiply: -6, add: 5, factorA: -1, factorB: 6 },
-        { type: 'two_factor', formula: 'x² − 5x − 6', multiply: -6, add: -5, factorA: -6, factorB: 1 },
-        { type: 'two_factor', formula: 'x² + 6x + 8', multiply: 8, add: 6, factorA: 2, factorB: 4 },
-        { type: 'two_factor', formula: 'x² − 6x + 8', multiply: 8, add: -6, factorA: -2, factorB: -4 },
-      ],
-      // ③(x+a)(x-a)の差の平方
-      difference: [
-        { type: 'difference', formula: 'x² − 9', multiply: -9, add: 0, factorA: -3, factorB: 3 },
-        { type: 'difference', formula: 'x² − 4', multiply: -4, add: 0, factorA: -2, factorB: 2 },
-        { type: 'difference', formula: 'x² − 25', multiply: -25, add: 0, factorA: -5, factorB: 5 },
-        { type: 'difference', formula: 'x² − 16', multiply: -16, add: 0, factorA: -4, factorB: 4 },
-        { type: 'difference', formula: 'x² − 1', multiply: -1, add: 0, factorA: -1, factorB: 1 },
-      ],
-      // ④ペアが5個以上の(x+a)(x+b)形式
-      pair5OrMore: [
-        { type: 'two_factor', formula: 'x² − 7x + 10', multiply: 10, add: -7, factorA: -2, factorB: -5 },
-        { type: 'two_factor', formula: 'x² + 7x + 10', multiply: 10, add: 7, factorA: 2, factorB: 5 },
-        { type: 'two_factor', formula: 'x² + 8x + 12', multiply: 12, add: 8, factorA: 2, factorB: 6 },
-        { type: 'two_factor', formula: 'x² − 8x + 15', multiply: 15, add: -8, factorA: -3, factorB: -5 },
-        { type: 'two_factor', formula: 'x² + 9x + 18', multiply: 18, add: 9, factorA: 3, factorB: 6 },
-      ],
-      // ⑤(x+a)²の完全平方
-      perfectSquare: [
-        { type: 'perfect_square', formula: 'x² + 6x + 9', multiply: 9, add: 6, factorA: 3, factorB: 3 },
-        { type: 'perfect_square', formula: 'x² − 8x + 16', multiply: 16, add: -8, factorA: -4, factorB: -4 },
-        { type: 'perfect_square', formula: 'x² + 4x + 4', multiply: 4, add: 4, factorA: 2, factorB: 2 },
-        { type: 'perfect_square', formula: 'x² − 10x + 25', multiply: 25, add: -10, factorA: -5, factorB: -5 },
-        { type: 'perfect_square', formula: 'x² + 2x + 1', multiply: 1, add: 2, factorA: 1, factorB: 1 },
-      ],
+      // ① ペアが 2 組
+      pair2: [P('two_factor', 2, 3, 1, 2), P('two_factor', 2, -3, -1, -2), P('two_factor', -3, 2, -1, 3), P('two_factor', -3, -2, -3, 1), P('two_factor', 3, 4, 1, 3), P('two_factor', 3, -4, -1, -3)],
+      // ② ペアが 4 組
+      pair4: [P('two_factor', 6, 5, 2, 3), P('two_factor', 6, -5, -2, -3), P('two_factor', -6, 5, -1, 6), P('two_factor', -6, -5, -6, 1), P('two_factor', -6, 1, -2, 3),
+              P('two_factor', 8, 6, 2, 4), P('two_factor', 8, -6, -2, -4), P('two_factor', 10, 7, 2, 5), P('two_factor', 10, -7, -2, -5), P('two_factor', 15, -8, -3, -5)],
+      // ③ (x+a)(x−a) の差の平方
+      difference: [P('difference', -9, 0, -3, 3), P('difference', -4, 0, -2, 2), P('difference', -25, 0, -5, 5), P('difference', -16, 0, -4, 4), P('difference', -1, 0, -1, 1)],
+      // ④ ペアが 6 組
+      pair6: [P('two_factor', 12, 7, 3, 4), P('two_factor', 12, -7, -3, -4), P('two_factor', 12, -8, -2, -6), P('two_factor', 12, 8, 2, 6),
+              P('two_factor', 18, 9, 3, 6), P('two_factor', 18, -9, -3, -6), P('two_factor', 18, -11, -2, -9)],
+      // ⑤ (x+a)² の完全平方
+      perfectSquare: [P('perfect_square', 9, 6, 3, 3), P('perfect_square', 16, -8, -4, -4), P('perfect_square', 4, 4, 2, 2), P('perfect_square', 25, -10, -5, -5), P('perfect_square', 1, 2, 1, 1)],
+      // ⑥ 定数が大きい負の数（符号のちがう組を見つける）
+      bigNegative: [P('two_factor', -12, -1, -4, 3), P('two_factor', -12, 1, -3, 4), P('two_factor', -20, 1, -4, 5), P('two_factor', -20, -1, -5, 4), P('two_factor', -18, 3, -3, 6), P('two_factor', -18, -7, -9, 2)],
+      // ⑦ 文字 2 種類（y² の係数と xy の係数で考える）
+      twoVar: [P('two_var', 6, 5, 2, 3), P('two_var', -6, -1, -3, 2), P('two_var', -8, 2, -2, 4), P('two_var', 12, -7, -3, -4), P('two_var', -12, 1, -3, 4)]
     };
+    const ORDER = ['pair2', 'pair4', 'difference', 'pair6', 'perfectSquare', 'bigNegative', 'twoVar'];
+    const TOTAL = ORDER.length;
 
-    const defaultConfig = { main_title: '🧮 因数分解マスター' };
+    // 【ブラッシュアップ】名前：12「因数分解の練習（因数分解マスター Pro）」とかぶっていた
+    const defaultConfig = { main_title: '🧮 因数分解ステップ学習' };
     let currentProblems = [];
     let currentProblemIndex = 0;
     let currentProblem = null;
@@ -397,19 +393,13 @@
 
     function selectProblems() {
       // 各カテゴリからランダムに1問ずつ選択（指定の順番で出題）
-      const problem1 = problemCategories.pair3OrLess[Math.floor(Math.random() * problemCategories.pair3OrLess.length)];
-      const problem2 = problemCategories.pair4OrLess[Math.floor(Math.random() * problemCategories.pair4OrLess.length)];
-      const problem3 = problemCategories.difference[Math.floor(Math.random() * problemCategories.difference.length)];
-      const problem4 = problemCategories.pair5OrMore[Math.floor(Math.random() * problemCategories.pair5OrMore.length)];
-      const problem5 = problemCategories.perfectSquare[Math.floor(Math.random() * problemCategories.perfectSquare.length)];
-
-      currentProblems = [problem1, problem2, problem3, problem4, problem5];
+      currentProblems = ORDER.map(k => problemCategories[k][Math.floor(Math.random() * problemCategories[k].length)]);
     }
 
     function updateProgressBar() {
       const progressBar = document.getElementById('progress-bar');
       progressBar.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < TOTAL; i++) {
         const dot = document.createElement('div');
         dot.className = 'progress-dot';
         dot.textContent = i + 1;
@@ -440,22 +430,27 @@
       return pairs;
     }
 
+    // 【ブラッシュアップ】数の表示：負の数は数学の「−」で
+    const num = n => (n < 0 ? '−' + Math.abs(n) : String(n));
+    const numP = n => (n < 0 ? '(−' + Math.abs(n) + ')' : String(n));   // 式の中の負の数はかっこつき
+    // 【ブラッシュアップ】まちがえたときの一言を、各ステップの下に出す
+    function setHint(n, msg) { const el = document.getElementById('hint' + n); if (el) el.textContent = msg ? '💡 ' + msg : ''; }
+    function markWrong(els) { els.forEach(el => { el.classList.remove('incorrect'); void el.offsetWidth; el.classList.add('incorrect'); }); }
+    const isGo = e => (e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey && !e.isComposing;
+
     function resetUI() {
-      document.getElementById('multiply-answer').value = '';
-      document.getElementById('multiply-answer').classList.remove('correct', 'incorrect');
+      ['multiply-answer', 'add-answer'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.readOnly = false;
+        el.classList.remove('correct', 'incorrect');
+      });
       document.getElementById('multiply-feedback').textContent = '';
-      document.getElementById('add-answer').value = '';
-      document.getElementById('add-answer').classList.remove('correct', 'incorrect');
       document.getElementById('add-feedback').textContent = '';
       document.getElementById('step1-badge').style.display = 'none';
-
-      document.getElementById('sum-a').value = '';
-      document.getElementById('sum-a').classList.remove('correct', 'incorrect');
-      document.getElementById('sum-b').value = '';
-      document.getElementById('sum-b').classList.remove('correct', 'incorrect');
       document.getElementById('step3-badge').style.display = 'none';
-
       document.getElementById('step4-badge').style.display = 'none';
+      [1, 2, 3, 4].forEach(n => setHint(n, ''));
       document.getElementById('completion').style.display = 'none';
       document.getElementById('all-complete').style.display = 'none';
 
@@ -471,6 +466,7 @@
     function loadProblem() {
       currentProblem = currentProblems[currentProblemIndex];
       resetUI();
+      const tv = currentProblem.type === 'two_var';
 
       const validPairs = getPairsForProduct(currentProblem.multiply);
       const pairRow = document.getElementById('pair-row');
@@ -489,12 +485,22 @@
       }
 
       document.getElementById('problem-text').textContent = currentProblem.formula;
-      document.getElementById('step2-title').textContent = `かけて${currentProblem.multiply}になるペアを書き入れよう`;
-      document.getElementById('step3-title').textContent = `たして${currentProblem.add}になる2つは？`;
+      // 【ブラッシュアップ】ステップ①で何を書くのか、⑦（文字 2 種類）では何を見るのかを書く
+      document.getElementById('step1-note').textContent = tv
+        ? '「かけて」は y² の係数、「たして」は xy の係数を書こう（y は数といっしょに考える）'
+        : '「かけて」は定数項（x のつかない数）、「たして」は x の係数を書こう（符号もいっしょに）';
+      document.getElementById('step2-title').textContent = `かけて${num(currentProblem.multiply)}になるペアを書き入れよう`;
+      // 【ブラッシュアップ】符号の見当をつけるヒント
+      document.getElementById('sign-guide').textContent = currentProblem.multiply > 0
+        ? '※ かけて正 → 2つは同じ符号（＋どうし・−どうし）。負の組も書こう！'
+        : '※ かけて負 → 2つは符号がちがう（＋と−）。';
+      document.getElementById('step3-title').textContent = `かけて${num(currentProblem.multiply)}、たして${num(currentProblem.add)}になる組は？`;
+      document.getElementById('sum-choices').innerHTML = '';
 
       const step4Desc = document.getElementById('step4-description');
       step4Desc.innerHTML = `<span class="math-formula">${currentProblem.formula}</span> を因数分解すると...`;
 
+      const y = tv ? '<span class="math-text math-formula">y</span>' : '';
       const step4Inputs = document.getElementById('step4-inputs');
       if (currentProblem.type === 'perfect_square') {
         step4Inputs.innerHTML = `<span class="math-text math-formula">(x</span>
@@ -505,11 +511,11 @@
       } else {
         step4Inputs.innerHTML = `<span class="math-text math-formula">(x</span>
           <span id="sign1" class="math-text math-formula"></span>
-          <input type="text" id="factor-a" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <input type="text" id="factor-a" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">${y}
           <button type="button" class="sign-btn" onclick="toggleSign('A')">±</button>
           <span class="math-text math-formula">)(x</span>
           <span id="sign2" class="math-text math-formula"></span>
-          <input type="text" id="factor-b" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <input type="text" id="factor-b" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">${y}
           <button type="button" class="sign-btn" onclick="toggleSign('B')">±</button>
           <span class="math-text math-formula">)</span>`;
       }
@@ -519,215 +525,135 @@
       document.getElementById('multiply-answer').focus();
     }
 
+    // 【ブラッシュアップ】（2 回目）
+    //   ・まちがえても入力を消さない（元は 0.5 秒で消えて、何をまちがえたか見返せなかった）。かわりに一言ヒントを出す
+    //   ・③ は ② で見つけた組をタップして選ぶ（元は同じ数を打ち直していた）
+    //   ・キーの受け付けは onkeydown に入れる（元は問題ごとに addEventListener で足していて、同じ処理が重なっていた）
+    let step1Done = false;
     function setupEventListeners(validPairs) {
-      let step1Complete = false;
-      let step2Complete = false;
-      let step3Complete = false;
-      let multiplyCorrect = false;
-      let addCorrect = false;
-      let completedPairs = new Set();
+      step1Done = false;
+      const completedPairs = new Set();
+      const cp = () => currentProblem;
+      const tv = currentProblem.type === 'two_var';
 
       const multiplyInput = document.getElementById('multiply-answer');
       const addInput = document.getElementById('add-answer');
       const multiplyFeedback = document.getElementById('multiply-feedback');
       const addFeedback = document.getElementById('add-feedback');
 
-      multiplyInput.addEventListener('keydown', (e) => {
-        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-          e.preventDefault();
-          const value = parseInt(multiplyInput.value);
-          if (value === currentProblem.multiply) {
-            multiplyInput.classList.add('correct');
-            multiplyFeedback.textContent = '✓';
-            multiplyFeedback.style.color = '#22c55e';
-            multiplyCorrect = true;
-            addInput.focus();
-          } else {
-            multiplyInput.classList.add('incorrect');
-            multiplyFeedback.textContent = '✗';
-            multiplyFeedback.style.color = '#ef4444';
-            setTimeout(() => {
-              multiplyInput.classList.remove('incorrect');
-              multiplyFeedback.textContent = '';
-              multiplyInput.value = '';
-              multiplyInput.focus();
-            }, 500);
+      function judge1(input, fb, target, hint) {
+        if (input.classList.contains('correct')) return true;
+        if (parseInt(input.value) === target) {
+          input.classList.add('correct'); input.readOnly = true;
+          fb.textContent = '✓'; fb.style.color = '#22c55e';
+          return true;
+        }
+        markWrong([input]);
+        fb.textContent = '✗'; fb.style.color = '#ef4444';
+        setHint(1, hint);
+        return false;
+      }
+      const hintM = tv ? 'y² の係数（y² の前の数）はいくつ？ 符号もいっしょに。' : '定数項（x がつかない数）はいくつ？ 符号もいっしょに。';
+      const hintA = currentProblem.type === 'difference' ? 'x の項がない → x の係数は 0。たして 0 だよ。'
+        : tv ? 'xy の係数（xy の前の数）はいくつ？ 符号もいっしょに。' : 'x の係数（x の前の数）はいくつ？ 符号もいっしょに。';
+      window.checkMultiply = () => {
+        if (judge1(multiplyInput, multiplyFeedback, cp().multiply, hintM)) { if (!addInput.classList.contains('correct')) addInput.focus(); finishStep1(); }
+      };
+      window.checkAdd = () => {
+        const okM = judge1(multiplyInput, multiplyFeedback, cp().multiply, hintM);
+        const okA = judge1(addInput, addFeedback, cp().add, hintA);
+        if (!okM) multiplyInput.focus();
+        if (okM && okA) finishStep1();
+      };
+      function finishStep1() {
+        if (step1Done || !multiplyInput.classList.contains('correct') || !addInput.classList.contains('correct')) return;
+        step1Done = true;
+        setHint(1, '');
+        document.getElementById('step1-badge').style.display = 'inline-flex';
+        setTimeout(() => {
+          document.getElementById('step2').classList.add('visible');
+          document.getElementById('pair0-a').focus();
+        }, 300);
+      }
+      multiplyInput.onkeydown = (e) => { if (isGo(e)) { e.preventDefault(); window.checkMultiply(); } };
+      addInput.onkeydown = (e) => { if (isGo(e)) { e.preventDefault(); window.checkAdd(); } };
+
+      // --- ② ペア ---
+      window.checkPair = (index) => {
+        const inputA = document.getElementById(`pair${index}-a`);
+        const inputB = document.getElementById(`pair${index}-b`);
+        if (completedPairs.has(index)) return;
+        const a = parseInt(inputA.value);
+        const b = parseInt(inputB.value);
+        if (isNaN(a) || isNaN(b)) { markWrong([inputA, inputB]); setHint(2, '2つとも数を入れよう。'); return; }
+        let isUsed = false;
+        completedPairs.forEach(i => {
+          const ea = parseInt(document.getElementById(`pair${i}-a`).value), eb = parseInt(document.getElementById(`pair${i}-b`).value);
+          if ((ea === a && eb === b) || (ea === b && eb === a)) isUsed = true;
+        });
+        if (a * b !== cp().multiply) {
+          markWrong([inputA, inputB]);
+          setHint(2, `${numP(a)}×${numP(b)}＝${num(a * b)}。かけて ${num(cp().multiply)} になる組をさがそう。`);
+          return;
+        }
+        if (isUsed) { markWrong([inputA, inputB]); setHint(2, 'その組はもう書いたよ。ほかの組をさがそう。'); return; }
+        inputA.classList.add('correct'); inputB.classList.add('correct');
+        inputA.readOnly = true; inputB.readOnly = true;
+        completedPairs.add(index);
+        setHint(2, '');
+        if (completedPairs.size === validPairs.length) {
+          document.getElementById('step2-badge').style.display = 'inline-flex';
+          buildStep3(validPairs);
+          setTimeout(() => {
+            document.getElementById('step3').classList.add('visible');
+            const first = document.querySelector('#sum-choices button');
+            if (first) first.focus();
+          }, 300);
+        } else {
+          for (let i = 0; i < validPairs.length; i++) {
+            if (!completedPairs.has(i)) { document.getElementById(`pair${i}-a`).focus(); break; }
           }
         }
-      });
-
-      addInput.addEventListener('keydown', (e) => {
-        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-          e.preventDefault();
-          const value = parseInt(addInput.value);
-          if (value === currentProblem.add) {
-            addInput.classList.add('correct');
-            addFeedback.textContent = '✓';
-            addFeedback.style.color = '#22c55e';
-            addCorrect = true;
-            if (multiplyCorrect && addCorrect && !step1Complete) {
-              step1Complete = true;
-              document.getElementById('step1-badge').style.display = 'inline-flex';
-              setTimeout(() => {
-                document.getElementById('step2').classList.add('visible');
-                document.getElementById('pair0-a').focus();
-              }, 400);
-            }
-          } else {
-            addInput.classList.add('incorrect');
-            addFeedback.textContent = '✗';
-            addFeedback.style.color = '#ef4444';
-            setTimeout(() => {
-              addInput.classList.remove('incorrect');
-              addFeedback.textContent = '';
-              addInput.value = '';
-              addInput.focus();
-            }, 500);
-          }
-        }
-      });
-
+      };
       for (let index = 0; index < validPairs.length; index++) {
         const inputA = document.getElementById(`pair${index}-a`);
         const inputB = document.getElementById(`pair${index}-b`);
-
-        inputA.addEventListener('keydown', (e) => {
-          if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-            e.preventDefault();
-            inputB.focus();
-          }
-        });
-
-        inputB.addEventListener('keydown', (e) => {
-          if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-            e.preventDefault();
-            const a = parseInt(inputA.value);
-            const b = parseInt(inputB.value);
-
-            if (isNaN(a) || isNaN(b)) {
-              inputA.classList.add('incorrect');
-              inputB.classList.add('incorrect');
-              setTimeout(() => {
-                inputA.classList.remove('incorrect');
-                inputB.classList.remove('incorrect');
-                inputA.value = '';
-                inputB.value = '';
-                inputA.focus();
-              }, 500);
-              return;
-            }
-
-            const productIsCorrect = (a * b === currentProblem.multiply);
-
-            let isUsed = false;
-            for (let i = 0; i < validPairs.length; i++) {
-              if (completedPairs.has(i)) {
-                const ai = document.getElementById(`pair${i}-a`);
-                const bi = document.getElementById(`pair${i}-b`);
-                if (ai && bi) {
-                  const existingA = parseInt(ai.value);
-                  const existingB = parseInt(bi.value);
-                  if (!isNaN(existingA) && !isNaN(existingB)) {
-                    if ((existingA === a && existingB === b) || (existingA === b && existingB === a)) {
-                      isUsed = true;
-                      break;
-                    }
-                  }
-                }
-              }
-            }
-
-            if (productIsCorrect && !isUsed) {
-              inputA.classList.add('correct');
-              inputB.classList.add('correct');
-              completedPairs.add(index);
-
-              if (completedPairs.size === validPairs.length) {
-                document.getElementById('step2-badge').style.display = 'inline-flex';
-                step2Complete = true;
-                setTimeout(() => {
-                  document.getElementById('step3').classList.add('visible');
-                  document.getElementById('sum-a').focus();
-                }, 400);
-              } else {
-                for (let i = 0; i < validPairs.length; i++) {
-                  if (!completedPairs.has(i)) {
-                    document.getElementById(`pair${i}-a`).focus();
-                    break;
-                  }
-                }
-              }
-            } else {
-              inputA.classList.add('incorrect');
-              inputB.classList.add('incorrect');
-              setTimeout(() => {
-                inputA.classList.remove('incorrect');
-                inputB.classList.remove('incorrect');
-                inputA.value = '';
-                inputB.value = '';
-                inputA.focus();
-              }, 500);
-            }
-          }
-        });
+        inputA.onkeydown = (e) => { if (isGo(e)) { e.preventDefault(); inputB.focus(); } };
+        inputB.onkeydown = (e) => { if (isGo(e)) { e.preventDefault(); window.checkPair(index); } };
       }
 
-      const sumA = document.getElementById('sum-a');
-      const sumB = document.getElementById('sum-b');
-
-      sumA.addEventListener('keydown', (e) => {
-        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-          e.preventDefault();
-          sumB.focus();
-        }
-      });
-
-      sumB.addEventListener('keydown', (e) => {
-        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-          e.preventDefault();
-          const a = parseInt(sumA.value);
-          const b = parseInt(sumB.value);
-
-          if (isNaN(a) || isNaN(b)) {
-            sumA.classList.add('incorrect');
-            sumB.classList.add('incorrect');
-            setTimeout(() => {
-              sumA.classList.remove('incorrect');
-              sumB.classList.remove('incorrect');
-              sumA.value = '';
-              sumB.value = '';
-              sumA.focus();
-            }, 500);
-            return;
-          }
-
-          const isCorrect = (a === currentProblem.factorA && b === currentProblem.factorB) || (a === currentProblem.factorB && b === currentProblem.factorA);
-
-          if (isCorrect) {
-            sumA.classList.add('correct');
-            sumB.classList.add('correct');
-            if (!step3Complete) {
-              step3Complete = true;
+      // --- ③ たして○になる組：② の組から選ぶ ---
+      function buildStep3(pairs) {
+        const box = document.getElementById('sum-choices');
+        box.innerHTML = '';
+        pairs.forEach(([a, b]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'sum-choice u-choice';
+          btn.textContent = `${num(a)} と ${num(b)}`;
+          btn.onclick = () => {
+            if (btn.disabled) return;
+            const ok = (a === cp().factorA && b === cp().factorB) || (a === cp().factorB && b === cp().factorA);
+            if (ok) {
+              btn.classList.add('u-ok');
+              box.querySelectorAll('button').forEach(x => { x.disabled = true; });
+              setHint(3, '');
               document.getElementById('step3-badge').style.display = 'inline-flex';
               setTimeout(() => {
                 document.getElementById('step4').classList.add('visible');
                 document.getElementById('factor-a').focus();
-              }, 400);
+              }, 300);
+            } else {
+              btn.classList.add('u-ng');
+              btn.disabled = true;
+              setHint(3, `${numP(a)}＋${numP(b)}＝${num(a + b)}。たして ${num(cp().add)} になる組は？`);
             }
-          } else {
-            sumA.classList.add('incorrect');
-            sumB.classList.add('incorrect');
-            setTimeout(() => {
-              sumA.classList.remove('incorrect');
-              sumB.classList.remove('incorrect');
-              sumA.value = '';
-              sumB.value = '';
-              sumA.focus();
-            }, 500);
-          }
-        }
-      });
+          };
+          box.appendChild(btn);
+        });
+      }
 
+      // --- ④ 因数分解の答え ---
       const factorA = document.getElementById('factor-a');
       const factorB = document.getElementById('factor-b');
       const sign1 = document.getElementById('sign1');
@@ -738,191 +664,80 @@
           e.preventDefault();
           signStateA = signStateA === '+' ? '−' : '+';
           sign1.textContent = signStateA;
-        } else if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-          if (currentProblem.type === 'perfect_square') {
-            e.preventDefault();
-            checkFactorPerfectSquare();
-          } else if (factorB) {
-            e.preventDefault();
-            factorB.focus();
-          }
+        } else if (isGo(e)) {
+          e.preventDefault();
+          if (currentProblem.type === 'perfect_square') checkFactors();
+          else factorB.focus();
         }
       });
-
       if (factorB) {
         factorB.addEventListener('keydown', (e) => {
           if (e.key === '-' || e.key === '−') {
             e.preventDefault();
             signStateB = signStateB === '+' ? '−' : '+';
             sign2.textContent = signStateB;
-          } else if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          } else if (isGo(e)) {
             e.preventDefault();
             checkFactors();
           }
         });
       }
-
       factorA.addEventListener('input', () => {
         const value = factorA.value;
-        if (/-/.test(value)) signStateA = signStateA === '+' ? '−' : '+';   // 【ブラッシュアップ】
+        if (/-/.test(value)) signStateA = signStateA === '+' ? '−' : '+';   // 【ブラッシュアップ】スマホの「-」でも符号を切りかえる
         const numberOnly = value.replace(/[^0-9]/g, '');
         factorA.value = numberOnly;
-        if (numberOnly === '') {
-          sign1.textContent = '';
-        } else {
-          sign1.textContent = signStateA;
-        }
+        sign1.textContent = (numberOnly === '' && signStateA === '+') ? '' : signStateA;
       });
-
       if (factorB) {
         factorB.addEventListener('input', () => {
           const value = factorB.value;
           if (/-/.test(value)) signStateB = signStateB === '+' ? '−' : '+';   // 【ブラッシュアップ】
           const numberOnly = value.replace(/[^0-9]/g, '');
           factorB.value = numberOnly;
-          if (numberOnly === '') {
-            sign2.textContent = '';
-          } else {
-            sign2.textContent = signStateB;
-          }
+          sign2.textContent = (numberOnly === '' && signStateB === '+') ? '' : signStateB;
         });
       }
 
-      function checkFactorPerfectSquare() {
-        const number = factorA.value.trim();
-
-        if (number === '') {
-          factorA.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorA.value = '';
-            sign1.textContent = '';
-            signStateA = '+';
-            factorA.focus();
-          }, 500);
-          return;
-        }
-
-        const a = parseInt(number);
-        if (isNaN(a)) {
-          factorA.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorA.value = '';
-            sign1.textContent = '';
-            signStateA = '+';
-            factorA.focus();
-          }, 500);
-          return;
-        }
-
-        const signedValue = (signStateA === '−' ? -1 : 1) * a;
-
-        // 【ブラッシュアップ】元は Math.abs で比べていて、符号がちがっても正解になっていた
-        if (signedValue === currentProblem.factorA) {
-          factorA.classList.add('correct');
-          document.getElementById('step4-badge').style.display = 'inline-flex';
-          showCompletion();
-          setTimeout(() => {
-            document.getElementById('next-button').focus();
-          }, 100);
-        } else {
-          factorA.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorA.value = '';
-            sign1.textContent = '';
-            signStateA = '+';
-            factorA.focus();
-          }, 500);
-        }
-      }
-
+      // 【ブラッシュアップ】符号も見る（元の完全平方は Math.abs で比べていて、(x+4)² も (x−4)² も正解になっていた）。
+      //   まちがえても入力は消さずに、ヒントを出す
       function checkFactors() {
-        const numberA = factorA.value.trim();
-        const numberB = factorB.value.trim();
-
-        if (numberA === '' || numberB === '') {
-          factorA.classList.add('incorrect');
-          factorB.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorB.classList.remove('incorrect');
-            factorA.value = '';
-            factorB.value = '';
-            sign1.textContent = '';
-            sign2.textContent = '';
-            signStateA = '+';
-            signStateB = '+';
-            factorA.focus();
-          }, 500);
-          return;
-        }
-
-        const a = parseInt(numberA);
-        const b = parseInt(numberB);
-
-        if (isNaN(a) || isNaN(b)) {
-          factorA.classList.add('incorrect');
-          factorB.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorB.classList.remove('incorrect');
-            factorA.value = '';
-            factorB.value = '';
-            sign1.textContent = '';
-            sign2.textContent = '';
-            signStateA = '+';
-            signStateB = '+';
-            factorA.focus();
-          }, 500);
-          return;
-        }
-
-        const signedA = (signStateA === '−' ? -1 : 1) * a;
-        const signedB = (signStateB === '−' ? -1 : 1) * b;
-
+        const ps = currentProblem.type === 'perfect_square';
+        const els = ps ? [factorA] : [factorA, factorB];
+        if (els.some(el => el.value.trim() === '')) { markWrong(els.filter(el => el.value.trim() === '')); setHint(4, '数を入れよう。符号は「±」ボタンで切りかえるよ。'); return; }
+        const signedA = (signStateA === '−' ? -1 : 1) * parseInt(factorA.value);
+        const signedB = ps ? signedA : (signStateB === '−' ? -1 : 1) * parseInt(factorB.value);
         const isCorrect = (signedA === currentProblem.factorA && signedB === currentProblem.factorB) || (signedA === currentProblem.factorB && signedB === currentProblem.factorA);
-
         if (isCorrect) {
-          factorA.classList.add('correct');
-          factorB.classList.add('correct');
+          els.forEach(el => { el.classList.add('correct'); el.readOnly = true; });
+          setHint(4, '');
           document.getElementById('step4-badge').style.display = 'inline-flex';
           showCompletion();
-          setTimeout(() => {
-            document.getElementById('next-button').focus();
-          }, 100);
+          setTimeout(() => { document.getElementById('next-button').focus(); }, 100);
         } else {
-          factorA.classList.add('incorrect');
-          factorB.classList.add('incorrect');
-          setTimeout(() => {
-            factorA.classList.remove('incorrect');
-            factorB.classList.remove('incorrect');
-            factorA.value = '';
-            factorB.value = '';
-            sign1.textContent = '';
-            sign2.textContent = '';
-            signStateA = '+';
-            signStateB = '+';
-            factorA.focus();
-          }, 500);
+          markWrong(els);
+          setHint(4, ps ? '③ で選んだ数（同じ数が 2 つ）を、符号ごと入れよう。' : '③ で選んだ 2 つの数を、符号ごと入れよう。(x＋a)(x＋b)＝x²＋(a＋b)x＋ab');
         }
       }
+      window.checkFactors = checkFactors;
     }
 
     function formatAnswer() {
-      const factorA = Math.abs(currentProblem.factorA);
-      const factorB = Math.abs(currentProblem.factorB);
-      const signA = currentProblem.factorA > 0 ? '+' : '−';
-      const signB = currentProblem.factorB > 0 ? '+' : '−';
-
-      if (currentProblem.type === 'perfect_square') {
-        return `${currentProblem.formula} = (x ${signA} ${factorA})²`;
-      } else if (currentProblem.type === 'difference') {
-        return `${currentProblem.formula} = (x ${signA} ${factorA})(x ${signB} ${factorB})`;
-      } else {
-        return `${currentProblem.formula} = (x ${signA} ${factorA})(x ${signB} ${factorB})`;
-      }
+      const cp = currentProblem;
+      const y = cp.type === 'two_var' ? 'y' : '';
+      const term = n => (n > 0 ? ' + ' : ' − ') + (Math.abs(n) === 1 && y ? '' : Math.abs(n)) + y;
+      if (cp.type === 'perfect_square') return `${cp.formula} = (x${term(cp.factorA)})²`;
+      // 【ブラッシュアップ】教科書の慣例の並び：差の平方は (x＋a)(x−a)、ほかは定数の小さい順
+      const [p, q] = cp.type === 'difference' ? [Math.max(cp.factorA, cp.factorB), Math.min(cp.factorA, cp.factorB)] : [Math.min(cp.factorA, cp.factorB), Math.max(cp.factorA, cp.factorB)];
+      return `${cp.formula} = (x${term(p)})(x${term(q)})`;
+    }
+    // 【ブラッシュアップ】答えのあとに、確かめ・公式を 1 行
+    function checkLine() {
+      const cp = currentProblem;
+      if (cp.type === 'perfect_square') return '公式 a² ＋ 2ab ＋ b² ＝ (a ＋ b)² の形だね';
+      if (cp.type === 'difference') return '公式 a² − b² ＝ (a ＋ b)(a − b) の形だね（たして 0）';
+      const y = cp.type === 'two_var' ? 'y' : '';
+      return `確かめ：${numP(cp.factorA)}＋${numP(cp.factorB)}＝${num(cp.add)}、${numP(cp.factorA)}×${numP(cp.factorB)}＝${num(cp.multiply)}` + (y ? '（y をつけて展開するともとの式）' : '');
     }
 
     function showCompletion() {
@@ -931,7 +746,8 @@
       const completionAnswer = document.getElementById('completion-answer');
 
       completionText.textContent = '問題' + (currentProblemIndex + 1) + 'をクリア！';
-      completionAnswer.innerHTML = `<span class="math-formula">${formatAnswer()}</span>`;
+      completionAnswer.innerHTML = `<span class="math-formula">${formatAnswer()}</span><div class="check-line"></div>`;
+      completionAnswer.querySelector('.check-line').textContent = checkLine();
       completion.style.display = 'block';
       completion.style.opacity = '0';
       completion.style.transform = 'scale(0.9)';
@@ -945,8 +761,10 @@
     document.addEventListener('click', (e) => {
       if (e.target.id === 'next-button') {
         currentProblemIndex++;
-        if (currentProblemIndex < 5) {
+        if (currentProblemIndex < TOTAL) {
           loadProblem();
+          window.scrollTo(0, 0);
+          document.getElementById('app-wrapper').scrollTop = 0;
         } else {
           document.getElementById('completion').style.display = 'none';
           const allComplete = document.getElementById('all-complete');
@@ -981,25 +799,18 @@
       }
     });
 
-    // 【ブラッシュアップ】「こたえ合わせ」ボタン：そのステップの最後の欄で Enter を押したのと同じことをする
-    function fireKey(el) {
-      if (el) el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-    }
+    // 【ブラッシュアップ】「こたえ合わせ」ボタン（Tab キーのないスマホ用）
     function checkStep(n) {
-      if (n === 1) {
-        const m = document.getElementById('multiply-answer');
-        if (!m.classList.contains('correct')) fireKey(m);
-        if (m.classList.contains('correct')) fireKey(document.getElementById('add-answer'));
-      } else if (n === 2) {
+      if (n === 1) window.checkAdd();
+      else if (n === 2) {
+        let any = false;
         document.querySelectorAll('#pair-row .pair-item').forEach((it, i) => {
           const a = document.getElementById('pair' + i + '-a'), b = document.getElementById('pair' + i + '-b');
-          if (!b.classList.contains('correct') && a.value.trim() !== '' && b.value.trim() !== '') fireKey(b);
+          if (!b.classList.contains('correct') && (a.value.trim() !== '' || b.value.trim() !== '')) { any = true; window.checkPair(i); }
         });
-      } else if (n === 3) {
-        fireKey(document.getElementById('sum-b'));
-      } else {
-        fireKey(document.getElementById('factor-b') || document.getElementById('factor-a'));
+        if (!any) setHint(2, '空いている欄に、かけて ' + num(currentProblem.multiply) + ' になる 2 つの数を入れよう。');
       }
+      else window.checkFactors();
     }
     // 【ブラッシュアップ】符号の「±」ボタン
     function toggleSign(which) {
@@ -1011,12 +822,15 @@
       span.textContent = (input.value !== '' || st === '−') ? st : '';
       input.focus();
     }
-    // 【ブラッシュアップ】全角の数字（「６」）や、いろいろなマイナス記号（− ー）を半角にそろえる
+    // 【ブラッシュアップ】全角の数字（「６」）や、いろいろなマイナス記号（− ー）を半角にそろえる。書き直したら赤い印を消す
     document.addEventListener('input', (e) => {
       const t = e.target;
       if (!t.classList || !t.classList.contains('input-box')) return;
       const v = t.value.replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)).replace(/[−－ー―‐]/g, '-');
       if (v !== t.value) t.value = v;
+      t.classList.remove('incorrect');
+      if (t.id === 'multiply-answer') document.getElementById('multiply-feedback').textContent = '';
+      if (t.id === 'add-answer') document.getElementById('add-feedback').textContent = '';
     }, true);
 
     selectProblems();

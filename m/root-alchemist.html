@@ -229,6 +229,7 @@
     #collection-grid .card-bg { border-width: 2px !important; }
     .clear-nav { display: flex; flex-direction: column; gap: 10px; }
     .clear-nav a { color: var(--u-sub); font-weight: 700; }
+    .rad { border-top: 2px solid currentColor; padding: 1px 1px 0; margin-left: 1px; }   /* 【ブラッシュアップ】√ の横線（括線） */
     /* スマホ：左右に分けていた「問題」と「選択肢」を上下に並べる */
     @media (max-width: 640px) {
       #game-screen > .flex-1 { flex-direction: column; }
@@ -341,7 +342,7 @@
         <div class="mb-4">
           <input type="text" id="player-name-input"
                  class="w-full bg-purple-900/30 border border-purple-500/50 rounded-lg px-3 py-2 text-white text-center text-lg focus:outline-none focus:border-purple-400"
-                 placeholder="名前を入力..." maxlength="10">
+                 placeholder="名前（なくてもOK）" maxlength="10">
         </div>
         <button id="start-adventure-btn" class="w-full py-3 magic-border rounded-lg text-white font-bold text-base hover:brightness-110 transition-all">
           開始！ ⚔️
@@ -368,9 +369,9 @@
             </div>
           </div>
           <div class="flex gap-1">
-            <button id="collection-btn" class="flex-1 px-0.5 py-0.5 bg-purple-600/50 hover:bg-purple-600 rounded text-white text-xs font-bold transition-all">📚</button>
-            <button id="menu-btn" class="flex-1 px-0.5 py-0.5 bg-gray-600/50 hover:bg-gray-600 rounded text-white text-xs font-bold transition-all">💚</button>
-            <button id="back-btn" class="flex-1 px-0.5 py-0.5 bg-blue-600/50 hover:bg-blue-600 rounded text-white text-xs font-bold transition-all">戻</button>
+            <button id="collection-btn" class="flex-1 px-0.5 py-0.5 bg-purple-600/50 hover:bg-purple-600 rounded text-white text-xs font-bold transition-all">📚図鑑</button>
+            <button id="menu-btn" class="flex-1 px-0.5 py-0.5 bg-gray-600/50 hover:bg-gray-600 rounded text-white text-xs font-bold transition-all">💚回復</button>
+            <button id="back-btn" class="flex-1 px-0.5 py-0.5 bg-blue-600/50 hover:bg-blue-600 rounded text-white text-xs font-bold transition-all">↩戻る</button>
           </div>
         </div>
       </div>
@@ -423,7 +424,7 @@
         <h2 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
           冒険完了！
         </h2>
-        <p class="text-white text-lg mb-1"><span id="clear-name">勇者</span>のお疲れ！</p>
+        <p class="text-white text-lg mb-1"><span id="clear-name">勇者</span>、おつかれさま！</p>
         <div class="bg-purple-900/30 rounded-lg p-3 mb-4 text-sm">
           <p class="text-gray-400 mb-1">最高称号</p>
           <p id="final-title" class="text-lg text-yellow-400 font-bold">実数の賢者</p>
@@ -456,14 +457,15 @@
       { level: 1, name: 'ルートの迷子', emoji: '🌀' },
       { level: 3, name: '平方根の見習い', emoji: '📚' },
       { level: 5, name: '計算修行者', emoji: '🧘' },
-      { level: 8, name: '理化の騎士', emoji: '⚔️' },
+      { level: 8, name: '有理化の騎士', emoji: '⚔️' },   // 【ブラッシュアップ】誤字
       { level: 12, name: '展開の魔術師', emoji: '🔮' },
       { level: 15, name: '実数の賢者', emoji: '👑' }
     ];
 
     const monsters = {
-      '平方根スライム': { emoji: '🟢', stage: 1, desc: '基本的な平方根' },
-      '±ゴースト': { emoji: '👻', stage: 2, desc: '正負両方の根' },
+      // 【ブラッシュアップ】説明を中身に合わせた（± は 1 章、√ は正のほうだけ が 2 章）
+      '平方根スライム': { emoji: '🟢', stage: 1, desc: '正と負の平方根（±）' },
+      '±ゴースト': { emoji: '👻', stage: 2, desc: '√ は正のほうだけ' },
       '根号ゴーレム': { emoji: '🗿', stage: 3, desc: '√の計算' },
       '簡略化フェアリー': { emoji: '🧚', stage: 4, desc: '複雑な根号を整える' },
       '合成ドラゴン': { emoji: '🐉', stage: 5, desc: '同類項を合わせる' },
@@ -530,7 +532,8 @@
           { q: '2√5 - 3√5 を計算せよ', choices: shuffleArray(['-√5', '√5', '-√10', '5']), answer: '-√5' }
         ]},
         6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
-          { q: '√3(4√2 + 2) を展開せよ', choices: shuffleArray(['4√6 + 2√3', '4√3 + 2√3', '4 + 2', '4√6 + 2']), answer: '4√6 + 2√3' }
+          { q: '√3(4√2 + 2) を展開せよ', choices: shuffleArray(['4√6 + 2√3', '4√3 + 2√3', '4 + 2', '4√6 + 2']), answer: '4√6 + 2√3' },
+          { q: '(√5 - √3)(√5 + √3) を展開せよ', choices: shuffleArray(['2', '8', '√2', '2 - 2√15']), answer: '2' }   // 【ブラッシュアップ】追加
         ]},
         7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
           { q: '<div class="frac"><span>2</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['√2', '<div class="frac"><span>2√2</span><span>2</span></div>', '<div class="frac"><span>1</span><span>√2</span></div>', '2']), answer: '√2' }
@@ -551,10 +554,12 @@
         ]},
         4: { name: '計算の試練', monster: '根号ゴーレム', questions: [
           { q: '√3 × √6 を計算せよ', choices: shuffleArray(['3√2', '√18', '√9', '2√3']), answer: '3√2' },
-          { q: '<div class="frac"><span>√125</span><span>√5</span></div> を計算せよ', choices: shuffleArray(['5', '√25', '√5', '√100']), answer: '5' }
+          { q: '<div class="frac"><span>√125</span><span>√5</span></div> を計算せよ', choices: shuffleArray(['5', '√25', '√5', '√100']), answer: '5' },
+          { q: '√6 × √15 を計算せよ', choices: shuffleArray(['3√10', '√90', '9√10', '√21']), answer: '3√10' }   // 【ブラッシュアップ】追加
         ]},
         5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
-          { q: '√12 + √3 を計算せよ', choices: shuffleArray(['3√3', '2√3', '√3', '√15']), answer: '3√3' }
+          { q: '√12 + √3 を計算せよ', choices: shuffleArray(['3√3', '2√3', '√3', '√15']), answer: '3√3' },
+          { q: '√12 - √3 + √27 を計算せよ', choices: shuffleArray(['4√3', '6√3', '2√3', '√36']), answer: '4√3' }   // 【ブラッシュアップ】追加
         ]},
         6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
           { q: '(√2 + 1)² を展開せよ', choices: shuffleArray(['3 + 2√2', '2 + 1', '2 + 2√2', '3 + √2']), answer: '3 + 2√2' },
@@ -562,7 +567,8 @@
         ]},
         7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
           { q: '<div class="frac"><span>4</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['2√2', '<div class="frac"><span>4√2</span><span>2</span></div>', '<div class="frac"><span>2</span><span>√2</span></div>', '4']), answer: '2√2' },
-          { q: '<div class="frac"><span>6</span><span>√3</span></div> を有理化せよ', choices: shuffleArray(['2√3', '<div class="frac"><span>6√3</span><span>3</span></div>', '<div class="frac"><span>2</span><span>√3</span></div>', '6']), answer: '2√3' }
+          { q: '<div class="frac"><span>6</span><span>√3</span></div> を有理化せよ', choices: shuffleArray(['2√3', '<div class="frac"><span>6√3</span><span>3</span></div>', '<div class="frac"><span>2</span><span>√3</span></div>', '6']), answer: '2√3' },
+          { q: '<div class="frac"><span>1</span><span>√3 - 1</span></div> を有理化せよ', choices: shuffleArray(['<div class="frac"><span>√3 + 1</span><span>2</span></div>', '√3 + 1', '<div class="frac"><span>√3 - 1</span><span>2</span></div>', '<div class="frac"><span>√3 + 1</span><span>4</span></div>']), answer: '<div class="frac"><span>√3 + 1</span><span>2</span></div>' }   // 【ブラッシュアップ】追加
         ]}
       },
       4: {
@@ -574,13 +580,14 @@
           { q: '√25 の値を求めよ', choices: shuffleArray(['5', '±5', '10', '2.5']), answer: '5' },
           { q: '(√13)² を計算せよ', choices: shuffleArray(['13', '√169', '26', '6.5']), answer: '13' }
         ]},
-        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+        3: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [   // 【ブラッシュアップ】名前と中身を合わせた
           { q: '√72 を簡単にせよ', choices: shuffleArray(['6√2', '√36', '√2', '36']), answer: '6√2' },
           { q: '√75 を簡単にせよ', choices: shuffleArray(['5√3', '√25', '√3', '25']), answer: '5√3' }
         ]},
-        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+        4: { name: '計算の試練', monster: '根号ゴーレム', questions: [   // 【ブラッシュアップ】名前と中身を合わせた
           { q: '√2 × √32 を計算せよ', choices: shuffleArray(['8', '√64', '4√2', '√34']), answer: '8' },
-          { q: '√3 × √27 を計算せよ', choices: shuffleArray(['9', '√81', '3√3', '√30']), answer: '9' }
+          { q: '√3 × √27 を計算せよ', choices: shuffleArray(['9', '√81', '3√3', '√30']), answer: '9' },
+          { q: '√24 ÷ √3 を計算せよ', choices: shuffleArray(['2√2', '√8', '√21', '8']), answer: '2√2' }   // 【ブラッシュアップ】追加
         ]},
         5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
           { q: '3√12 - √3 を計算せよ', choices: shuffleArray(['5√3', '2√3', '√3', '3']), answer: '5√3' },
@@ -588,7 +595,8 @@
         ]},
         6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
           { q: '(√3 + 2)² を展開せよ', choices: shuffleArray(['7 + 4√3', '3 + 4', '3 + 4√3', '7 + 2√3']), answer: '7 + 4√3' },
-          { q: '(2√2 + 1)(2√2 - 1) を展開せよ', choices: shuffleArray(['6', '7', '5', '8']), answer: '7' }
+          { q: '(2√2 + 1)(2√2 - 1) を展開せよ', choices: shuffleArray(['6', '7', '5', '8']), answer: '7' },
+          { q: '(√3 + √2)² を展開せよ', choices: shuffleArray(['5 + 2√6', '5', '5 + √6', '3 + 2√6']), answer: '5 + 2√6' }   // 【ブラッシュアップ】追加
         ]},
         7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
           { q: '<div class="frac"><span>8</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['4√2', '<div class="frac"><span>8√2</span><span>2</span></div>', '<div class="frac"><span>4</span><span>√2</span></div>', '8']), answer: '4√2' },
@@ -604,11 +612,11 @@
           { q: '√36 の値を求めよ', choices: shuffleArray(['6', '±6', '12', '3']), answer: '6' },
           { q: '(√15)² を計算せよ', choices: shuffleArray(['15', '√225', '30', '7.5']), answer: '15' }
         ]},
-        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+        3: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [   // 【ブラッシュアップ】名前と中身を合わせた
           { q: '√108 を簡単にせよ', choices: shuffleArray(['6√3', '√36', '√3', '36']), answer: '6√3' },
           { q: '√128 を簡単にせよ', choices: shuffleArray(['8√2', '√64', '√2', '64']), answer: '8√2' }
         ]},
-        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+        4: { name: '計算の試練', monster: '根号ゴーレム', questions: [   // 【ブラッシュアップ】名前と中身を合わせた
           { q: '2√3 × √6 を計算せよ', choices: shuffleArray(['6√2', '√18', '2√9', '√36']), answer: '6√2' },
           { q: '<div class="frac"><span>3√125</span><span>√5</span></div> を計算せよ', choices: shuffleArray(['15', '3√25', '√625', '√125']), answer: '15' }
         ]},
@@ -660,7 +668,7 @@
       messageHistory.forEach((msg) => {
         const div = document.createElement('div');
         div.className = 'message-item ' + msg.type;
-        div.innerHTML = msg.text;
+        div.innerHTML = fmtMath(msg.text);   // 【ブラッシュアップ】
         area.appendChild(div);
       });
       area.scrollTop = area.scrollHeight;
@@ -678,7 +686,7 @@
       choices.forEach((choice, index) => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
-        btn.innerHTML = `${String.fromCharCode(65 + index)}. ${choice}`;
+        btn.innerHTML = String.fromCharCode(65 + index) + '. ' + fmtMath(choice);   // 【ブラッシュアップ】
 
         btn.onclick = () => {
           Array.from(choiceArea.querySelectorAll('button')).forEach(b => b.disabled = true);
@@ -704,6 +712,7 @@
       let newLevel = playerData.level;
       let leveledUp = false;
       let newTitle = playerData.title;
+      const oldTitle = playerData.title;   // 【ブラッシュアップ】
 
       while (newExp >= 100) {
         newExp -= 100;
@@ -726,6 +735,9 @@
 
       if (leveledUp) {
         document.getElementById('new-level').textContent = newLevel;
+        // 【ブラッシュアップ】称号が変わったら見せる（元は欄はあるのに出てこなかった）
+        document.getElementById('new-title').textContent = newTitle;
+        document.getElementById('new-title-text').classList.toggle('hidden', newTitle === oldTitle);
         document.getElementById('levelup-modal').classList.remove('hidden');
       }
     }
@@ -792,7 +804,7 @@
         currentQuestion = 0;
         wrongAnswerCount = 0;
 
-        addMessage(`${playerData.player_name}、かえり！`, 'story');
+        addMessage(`${playerData.player_name}、おかえり！`, 'story');   // 【ブラッシュアップ】誤字
         await delayMs(800);
         startStage(currentStage);
       }
@@ -803,7 +815,7 @@
     let flow = 0;
     function delayMs(ms) {
       const f = flow;
-      return new Promise(r => setTimeout(() => { if (f === flow) r(); }, ms));
+      return new Promise(r => setTimeout(() => { if (f === flow) r(); }, Math.round(ms * 0.45)));   // 【ブラッシュアップ】演出の待ち時間を半分以下に
     }
 
     async function createNewGame(name) {
@@ -869,12 +881,62 @@
       askQuestion();
     }
 
+    // 【ブラッシュアップ】この問題でまちがえた選択肢（選び直しのときは出さない）
+    let excluded = [];
+
     function askQuestion() {
       const stage = stagesByDifficulty[selectedDifficulty][currentStage];
       const question = stage.questions[currentQuestion];
+      excluded = [];
+      // 【ブラッシュアップ】まちがえた回数を問題ごとに 0 に戻す。元は章ごとにしか戻らず、
+      //   2 問目は 1 回まちがえただけで答えが出たり、いきなり「最後のチャンス」になったりした。
+      wrongAnswerCount = 0;
 
       addMessage(question.q, 'problem');
       showChoices(question.choices, (selected) => checkAnswer(selected, question));
+    }
+
+    // 【ブラッシュアップ】選び直し：問題文は出し直さず、まちがえた選択肢を除いて出す
+    function retryChoices(question) {
+      showChoices(question.choices.filter(c => !excluded.includes(c)), (selected) => checkAnswer(selected, question));
+    }
+
+    // 【ブラッシュアップ】まちがえたときの一言ヒント（問題の種類から決める）
+    function hintFor(q) {
+      if (/平方根を求めよ/.test(q)) return '2乗してその数になる数は、正と負の 2 つ（±）あるよ。';
+      if (/の値を求めよ/.test(q)) return '√a は「a の正の平方根」。± はつかないよ。';
+      if (/\)² を計算せよ/.test(q)) return '(√a)² = a だよ。';
+      if (/有理化/.test(q)) return '分母と分子に同じ数をかけて、分母の √ を消そう。分母が √a+b なら √a−b をかける（和と差の積）。';
+      if (/展開/.test(q)) return '分配法則や、(a+b)²=a²+2ab+b²、(a+b)(a−b)=a²−b² を使おう。';
+      if (/簡単にせよ/.test(q)) return '√ の中を「平方数×○」に分けて、平方数を外に出そう（例：√12=√(4×3)=2√3）。';
+      if (/frac|÷/.test(q)) return '√a÷√b=√(a÷b)。√ の中どうしでわろう。';
+      if (/×/.test(q)) return '√a×√b=√(ab)。かけたあと、√ の中を簡単にできないか確かめよう。';
+      return '√ の中を簡単にしてそろえてから、係数どうしをたし引きしよう。';
+    }
+
+    // 【ブラッシュアップ】表示用：半角の - を数学の − に、√ のあとの数に横線（括線）を引く（採点は元の文字列で行う）
+    function fmtMath(html) {
+      return ('>' + html + '<').replace(/>([^<]*)</g, (m, t) => '>' + t.replace(/ - /g, ' − ').replace(/(^|[^0-9A-Za-z])-(?=[0-9√(])/g, '$1−').replace(/√(\d+)/g, '√<span class="rad">$1</span>') + '<').slice(1, -1);
+    }
+
+    // 【ブラッシュアップ】次の問題・次の章へ（正解のときと、答えを見せたときで同じ動き）
+    async function goNext() {
+      currentQuestion++;
+      const stage = stagesByDifficulty[selectedDifficulty][currentStage];
+      if (currentQuestion >= stage.questions.length) {
+        await delayMs(500);
+        addMessage('🎉 ' + stage.monster + 'を倒した！', 'story');
+        await clearStage(currentStage);
+        await delayMs(800);
+        if (currentStage < 7) {
+          startStage(currentStage + 1);
+        } else {
+          showClearScreen();
+        }
+      } else {
+        await delayMs(800);
+        askQuestion();
+      }
     }
 
     async function checkAnswer(answer, question) {
@@ -885,9 +947,10 @@
       // 【ブラッシュアップ】元は √25（＝5）のように「値は同じだけど、まだ簡単にできる形」を選んでも
       //   不正解になり HP が減っていた。「おしい」と伝えて、もう一度選ばせる。
       if (!isCorrect && sameValue(answer, question.answer)) {
+        excluded.push(answer);
         addMessage('🤏 おしい！値は同じだけど、もっと簡単な形にできるよ', 'answer-result close');
         await delayMs(900);
-        showChoices(question.choices.filter(c => c !== answer), (selected) => checkAnswer(selected, question));
+        retryChoices(question);
         return;
       }
 
@@ -899,62 +962,22 @@
 
         addMessage('✨ 正解！', 'answer-result');
         await addExp(30);
-
-        currentQuestion++;
-
-        const stage = stagesByDifficulty[selectedDifficulty][currentStage];
-        if (currentQuestion >= stage.questions.length) {
-          await delayMs(500);
-          addMessage(`🎉 ${stage.monster}を倒した！`, 'story');
-          await clearStage(currentStage);
-
-          await delayMs(800);
-
-          if (currentStage < 7) {
-            startStage(currentStage + 1);
-          } else {
-            showClearScreen();
-          }
-        } else {
-          await delayMs(800);
-          askQuestion();
-        }
+        await goNext();
       } else {
         await window.dataSdk.update(playerData);
         wrongAnswerCount++;
+        excluded.push(answer);
 
-        if (wrongAnswerCount === 1) {
-          addMessage('❌ 不正解...もう一度！', 'answer-result wrong');
+        // 【ブラッシュアップ】元は同じ問題・同じ選択肢を出し直すだけだった。まちがえた選択肢を除き、一言ヒントを出す
+        if (wrongAnswerCount <= 2) {
+          addMessage((wrongAnswerCount === 1 ? '❌ 不正解...もう一度！' : '⚠️ 最後のチャンス！') + '<br>💡 ' + hintFor(question.q), 'answer-result wrong');
           await takeDamage(15);
           await delayMs(800);
-          askQuestion();
-        } else if (wrongAnswerCount === 2) {
-          addMessage('⚠️ 最後のチャンス！', 'answer-result wrong');
-          await takeDamage(15);
-          await delayMs(800);
-          askQuestion();
+          retryChoices(question);
         } else {
-          addMessage(`📍 正解は「${question.answer}」`, 'answer-result wrong');
+          addMessage('📍 正解は「' + question.answer + '」<br>💡 ' + hintFor(question.q), 'answer-result wrong');
           await takeDamage(15);
-          currentQuestion++;
-
-          const stage = stagesByDifficulty[selectedDifficulty][currentStage];
-          if (currentQuestion >= stage.questions.length) {
-            await delayMs(500);
-            addMessage(`🎉 ${stage.monster}を倒した！`, 'story');
-            await clearStage(currentStage);
-
-            await delayMs(800);
-
-            if (currentStage < 7) {
-              startStage(currentStage + 1);
-            } else {
-              showClearScreen();
-            }
-          } else {
-            await delayMs(800);
-            askQuestion();
-          }
+          await goNext();
         }
 
         if (playerData.hp <= 0) {
@@ -990,20 +1013,21 @@
     });
 
     document.getElementById('difficulty-confirm-btn').onclick = () => {
+      // 【ブラッシュアップ】前に使った名前があれば入れておく（打ち直さなくてよい）
+      const nameInput = document.getElementById('player-name-input');
+      if (!nameInput.value && playerData && playerData.player_name) nameInput.value = playerData.player_name;
       showScreen('name-screen');
     };
 
     document.getElementById('start-adventure-btn').onclick = () => {
       const name = document.getElementById('player-name-input').value.trim();
-      if (name) {
-        createNewGame(name);
-      }
+      createNewGame(name || '勇者');   // 【ブラッシュアップ】名前は入れなくても始められる
     };
 
     document.getElementById('player-name-input').onkeypress = (e) => {
       if (e.key === 'Enter') {
         const name = e.target.value.trim();
-        if (name) createNewGame(name);
+        createNewGame(name || '勇者');   // 【ブラッシュアップ】
       }
     };
 

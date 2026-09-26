@@ -339,7 +339,15 @@
     .back-btn { font-weight: 700; padding: 8px 14px; }
     .feedback { border: 3px solid transparent; border-radius: 20px; }
     .completion-nav a { color: var(--u-sub); }
-    @media (max-width: 600px) { .container { padding: 16px 12px; } }
+    /* 【ブラッシュアップ】スコアを1行に・正誤の表示を問題のすぐ下に・まちがえた問題の一覧 */
+    .score-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-weight: 700; }
+    .card .feedback { margin: 0 0 14px; padding: 10px 12px; font-size: 1.25rem; }
+    .card .feedback .celebration { font-size: 2rem; margin: 0; }
+    .missed-box { margin: 12px 0 0; padding: 12px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 18px; color: var(--u-ink); font-weight: 700; }
+    .missed-box:empty { display: none; }
+    .missed-title { color: var(--u-title); margin-bottom: 6px; }
+    .missed-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 1.2rem; }
+    @media (max-width: 600px) { .container { padding: 16px 12px; } .card .feedback { font-size: 1.1rem; } }
   
   </style>
 </head>
@@ -403,6 +411,17 @@
                     <div class="level-name">チャンピオン</div>
                     <div class="level-character">👑</div>
                 </button>
+                <!-- 【ブラッシュアップ】高校の計算（因数分解・約分・平方根）につなぐ練習を追加 -->
+                <button class="level-btn" onclick="startLevel(10, 'random')">
+                    <div class="level-number">🔁</div>
+                    <div class="level-name">逆九九（□×7＝56）</div>
+                    <div class="level-character">🧩</div>
+                </button>
+                <button class="level-btn" onclick="startLevel(11, 'random')">
+                    <div class="level-number">x²</div>
+                    <div class="level-name">11〜19 の 2 乗</div>
+                    <div class="level-character">🏔️</div>
+                </button>
             </div>
         </div>
 
@@ -435,26 +454,26 @@
                 </div>
             </div>
 
-            <div class="score">
-                <div>問題: <span id="question-progress">1</span> / <span id="total-questions">9</span></div>
-                <div>正解数: <span id="correct-count">0</span> / 挑戦数: <span id="total-count">0</span></div>
-                <div>正解率: <span id="accuracy">0</span>%</div>
-                <div>⏱️ 時間: <span id="timer">00:00</span></div>
+            <!-- 【ブラッシュアップ】4 行あったスコアを 1 行に（スマホで問題と入力欄が下に押し出されていた） -->
+            <div class="score score-line">
+                <span>問題 <span id="question-progress">1</span>/<span id="total-questions">9</span></span>
+                <span>正解 <span id="correct-count">0</span>/<span id="total-count">0</span>（<span id="accuracy">0</span>%）</span>
+                <span>⏱️ <span id="timer">00:00</span></span>
             </div>
 
             <div class="card">
-                <div id="chant" class="hidden" style="font-size: 1.5rem; color: #666; margin-bottom: 15px; font-style: italic;"></div>
+                <div id="chant" class="hidden" style="font-size: 1.5rem; color: #666; margin-bottom: 15px;"></div>
                 <div class="question" id="question">1 × 1 = ?</div>
+                <!-- 【ブラッシュアップ】正誤と正しい答えは、問題のすぐ下に出す（元はカードの下で、スマホではキーボードにかくれた） -->
+                <div id="feedback" class="feedback hidden"></div>
                 <div>
-                    <input type="number" id="answer-input" class="answer-input" placeholder="?" min="0" max="81">
+                    <input type="number" id="answer-input" class="answer-input" placeholder="?" min="0" max="400" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go">
                 </div>
                 <div>
                     <button class="submit-btn" id="submit-btn" onclick="checkAnswer()">こたえる！</button>
                     <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">つぎの問題</button>
                 </div>
             </div>
-
-            <div id="feedback" class="feedback hidden"></div>
         </div>
 
         <!-- 完了画面 -->
@@ -466,8 +485,11 @@
                 <div style="font-size: 1.5rem; margin-bottom: 15px;">きみは本当にすばらしい！</div>
                 <div id="completion-stats" style="font-size: 1.2rem; color: #4a5568;"></div>
             </div>
+            <!-- 【ブラッシュアップ】まちがえた問題の一覧 -->
+            <div id="missed-box" class="missed-box"></div>
             <!-- 【ブラッシュアップ】「つぎのだん」と「ほかの教材」を選べるようにした -->
             <div class="completion-nav" style="margin-top: 30px;">
+                <button class="submit-btn" id="retry-missed-btn" onclick="retryMissed()">まちがえた問題だけもう一度</button>
                 <button class="submit-btn" id="next-level-btn" onclick="goNextLevel()">つぎのだんへ ▶</button>
                 <button class="submit-btn" onclick="restartLevel()">もういちどちょうせん</button>
                 <button class="next-btn" onclick="backToLevelSelect()">べつのレベルにちょうせん</button>
@@ -498,7 +520,9 @@
             7: { name: '7のだん', character: '🐅' },
             8: { name: '8のだん', character: '🦖' },
             9: { name: '9のだん', character: '🤖' },
-            0: { name: 'チャンピオン', character: '👑' }
+            0: { name: 'チャンピオン', character: '👑' },
+            10: { name: '逆九九', character: '🧩' },          // 【ブラッシュアップ】
+            11: { name: '11〜19の2乗', character: '🏔️' }     // 【ブラッシュアップ】
         };
 
         const celebrations = ['🎉', '⭐', '🌟', '✨', '🎊', '🏆', '👏', '🎈'];
@@ -547,15 +571,16 @@
             document.getElementById('mode-title').textContent = `${levelData[level].name} - モードをえらぼう！`;
         }
 
-        function startLevel(level, mode) {
+        function startLevel(level, mode, customQueue) {
             currentLevel = level;
             currentMode = mode;
             correctCount = 0;
             totalCount = 0;
             currentQuestionIndex = 0;
+            missed = [];   // 【ブラッシュアップ】
 
-            // 問題キューを生成
-            generateQuestionQueue();
+            // 問題キューを生成（【ブラッシュアップ】「まちがえた問題だけもう一度」のときは、その問題）
+            if (customQueue) questionQueue = customQueue; else generateQuestionQueue();
 
             // 画面を切り替え
             document.getElementById('level-select').classList.add('hidden');
@@ -568,7 +593,7 @@
             document.getElementById('current-level-name').textContent = levelData[level].name;
 
             // 問題数を更新
-            const totalQuestions = currentLevel === 0 ? 81 : 9;
+            const totalQuestions = questionQueue.length;   // 【ブラッシュアップ】レベルによって問題数がちがうので、実際の数を出す
             document.getElementById('total-questions').textContent = totalQuestions;
 
             // タイマー開始
@@ -580,6 +605,26 @@
 
         function generateQuestionQueue() {
             questionQueue = [];
+
+            // 【ブラッシュアップ】逆九九：□ × 7 = 56 の □ をこたえる（2〜9 の段から 20 問）
+            if (currentLevel === 10) {
+                const pairs = [];
+                for (let a = 2; a <= 9; a++) for (let b = 2; b <= 9; b++) pairs.push([a, b]);
+                for (let i = pairs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pairs[i], pairs[j]] = [pairs[j], pairs[i]]; }
+                pairs.slice(0, 20).forEach(([a, b]) => {
+                    const left = Math.random() < 0.5;
+                    questionQueue.push({ num1: a, num2: b, answer: a,
+                        text: left ? `□ × ${b} = ${a * b}` : `${b} × □ = ${a * b}`,
+                        label: left ? `${a} × ${b} = ${a * b}` : `${b} × ${a} = ${a * b}` });
+                });
+                return;
+            }
+            // 【ブラッシュアップ】11〜19 の 2 乗（平方根や因数分解でよく使う）
+            if (currentLevel === 11) {
+                for (let n = 11; n <= 19; n++) questionQueue.push({ num1: n, num2: n, answer: n * n, text: `${n}² = ?`, label: `${n}² = ${n * n}` });
+                for (let i = questionQueue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [questionQueue[i], questionQueue[j]] = [questionQueue[j], questionQueue[i]]; }
+                return;
+            }
 
             if (currentLevel === 0) {
                 // チャンピオンレベル：81問すべて
@@ -646,9 +691,16 @@
             startLevel(currentLevel, currentMode);
         }
 
+        // 【ブラッシュアップ】まちがえた問題だけもう一度
+        function retryMissed() {
+            const q = missed.map(m => ({ num1: m.num1, num2: m.num2, answer: m.answer, text: m.text, label: m.label }));
+            for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; }
+            startLevel(currentLevel, currentMode, q);
+        }
+
         // 【ブラッシュアップ】つぎのだんへ（9のだんのつぎはチャンピオン）
         function goNextLevel() {
-            if (currentLevel === 0) { backToLevelSelect(); return; }
+            if (currentLevel === 0 || currentLevel >= 10) { backToLevelSelect(); return; }
             if (currentLevel === 9) startLevel(0, 'random');
             else startLevel(currentLevel + 1, currentMode);
         }
@@ -662,7 +714,9 @@
 
             currentQuestion = questionQueue[currentQuestionIndex];
 
-            document.getElementById('question').textContent = `${currentQuestion.num1} × ${currentQuestion.num2} = ?`;
+            // 【ブラッシュアップ】逆九九・2 乗は問題の文を持っている
+            document.getElementById('question').textContent = currentQuestion.text || `${currentQuestion.num1} × ${currentQuestion.num2} = ?`;
+            document.getElementById('total-questions').textContent = questionQueue.length;
             document.getElementById('answer-input').value = '';
             document.getElementById('answer-input').focus();
 
@@ -710,7 +764,7 @@
                     <div style="font-size: 2.5rem; margin-bottom: 20px;">🏆 チャンピオン！ 🏆</div>
                     <div style="font-size: 2rem; margin-bottom: 15px;">きみは九九マスター！</div>
                     <div style="font-size: 1.8rem; margin-bottom: 15px;">すごい！すごい！すごい！</div>
-                    <div style="font-size: 1.5rem; margin-bottom: 15px;">81問ぜんぶせいかい！</div>
+                    <div style="font-size: 1.5rem; margin-bottom: 15px;">${missed.length === 0 ? '81問ぜんぶ一発でせいかい！' : '81問さいごまでやりきった！'}</div>
                     <div style="font-size: 1.3rem; color: #4a5568;">
                         かかった時間: ${timeStr}<br>
                         正解率: ${accuracy}%<br>
@@ -736,7 +790,13 @@
             // 【ブラッシュアップ】つぎのだんのボタンの文字
             const nb = document.getElementById('next-level-btn');
             nb.textContent = currentLevel === 9 ? 'チャンピオンにちょうせん ▶' : 'つぎのだんへ ▶';
-            nb.style.display = currentLevel === 0 ? 'none' : '';
+            nb.style.display = (currentLevel === 0 || currentLevel >= 10) ? 'none' : '';
+            // 【ブラッシュアップ】まちがえた問題の一覧と「まちがえた問題だけもう一度」
+            const missBox = document.getElementById('missed-box');
+            missBox.innerHTML = missed.length
+                ? '<div class="missed-title">まちがえた問題（おぼえなおそう）</div><div class="missed-list">' + missed.map(q => '<span>' + q.label + '</span>').join('') + '</div>'
+                : '🎯 ぜんぶ一発でせいかい！';
+            document.getElementById('retry-missed-btn').style.display = missed.length ? '' : 'none';
             document.getElementById('completion-message').innerHTML = completionMessage;
         }
 
@@ -765,6 +825,8 @@
                 document.getElementById('submit-btn').classList.add('hidden');
                 document.getElementById('next-btn').classList.remove('hidden');
                 lastCorrectAt = Date.now();
+                // 【ブラッシュアップ】正解したら少し待って自動で次へ（元は毎回「つぎの問題」を押す必要があった）
+                autoNextTimer = setTimeout(() => { lastCorrectAt = 0; nextQuestion(); }, 800);
             } else {
                 const tryAgain = tryAgainMessages[Math.floor(Math.random() * tryAgainMessages.length)];
                 feedbackDiv.innerHTML = `
@@ -772,6 +834,14 @@
                     <div>せいかいは ${currentQuestion.answer} だよ！</div>
                 `;
                 feedbackDiv.className = 'feedback incorrect';
+
+                // 【ブラッシュアップ】まちがえた問題は、さいごにもう一度出す（1 問につき 1 回）。完了画面の一覧にも出す
+                const qLabel = currentQuestion.label || `${currentQuestion.num1} × ${currentQuestion.num2} = ${currentQuestion.answer}`;
+                if (!currentQuestion.retry) {
+                    questionQueue.push(Object.assign({}, currentQuestion, { retry: true, label: qLabel }));
+                    document.getElementById('total-questions').textContent = questionQueue.length;
+                }
+                if (!missed.some(q => q.label === qLabel)) missed.push(Object.assign({}, currentQuestion, { label: qLabel }));
 
                 // 間違えた場合は再挑戦できるようにボタンを残す
                 document.getElementById('answer-input').value = '';
@@ -783,8 +853,12 @@
         }
 
         let lastCorrectAt = 0;
+        let autoNextTimer = null;
+        let missed = [];   // 【ブラッシュアップ】まちがえた問題（完了画面に出す・もう一度に使う）
         function nextQuestion() {
             if (Date.now() - lastCorrectAt < 400) return;   // 【ブラッシュアップ】2 度押しよけ
+            if (!document.getElementById('submit-btn').classList.contains('hidden')) return;   // 【ブラッシュアップ】まだ答えていないときは進まない
+            clearTimeout(autoNextTimer);
             currentQuestionIndex++;
             generateQuestion();
         }
@@ -796,6 +870,9 @@
             const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
             document.getElementById('accuracy').textContent = accuracy;
         }
+
+        // 【ブラッシュアップ】「こたえる！」「つぎの問題」を押しても入力欄からフォーカスを外さない（スマホでキーボードが閉じないように）
+        ['submit-btn', 'next-btn'].forEach(id => document.getElementById(id).addEventListener('mousedown', (e) => e.preventDefault()));
 
         // エンターキーで回答
         document.getElementById('answer-input').addEventListener('keypress', function(e) {

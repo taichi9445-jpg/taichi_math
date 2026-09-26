@@ -375,13 +375,17 @@
     .progress { color: var(--u-ink); }
     .question-card { background: #f8fafc; border: 3px solid var(--u-line); box-shadow: none; border-radius: 24px; margin-bottom: 12px; }
     .question { color: var(--u-ink); font-weight: 800; font-size: 1.3em; }
-    .option { font-size: 1.25em; font-weight: 700; width: 100%; font-family: 'Times New Roman', 'M PLUS Rounded 1c', serif; }
+    .option { font-size: 1.25em; font-weight: 700; width: 100%; }
+    /* 【ブラッシュアップ】式の中の文字は斜体・数字は立体、書体は数式用（日本語はふつうの書体） */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; }
+    .m i { font-style: italic; padding-right: 0.04em; }
+
     .option:disabled { cursor: default; }
     .option.incorrect { animation: none; }
     .fraction { font-size: 0.85em; line-height: 1.15; }
     .fraction .numerator { border-bottom-color: currentColor; }
     .answer-line { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .answer-label { font-family: 'Times New Roman', serif; font-size: 1.3em; font-weight: 700; color: var(--u-ink); white-space: nowrap; }
+    .answer-label { font-size: 1.2em; font-weight: 700; color: var(--u-ink); white-space: nowrap; }
     #answerInput { margin-bottom: 0; }
     .input-feedback { border-radius: 14px; margin: 10px 0; }
     .input-feedback:empty { display: none; }
@@ -394,7 +398,7 @@
     .hint-box { margin-top: 12px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.9; text-align: left; }
     .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
     .hint-row { text-align: center; margin-top: 14px; }
-    .hint-button { background: #fff; border: 2px solid var(--u-line); border-radius: 999px; padding: 8px 18px; font-weight: 700; color: var(--u-sub); cursor: pointer; font-family: inherit; font-size: 0.95rem; }
+    .hint-button { padding: 8px 18px !important; font-size: 0.95rem; border-radius: 999px !important; }
     .explain-box { margin-top: 14px; background: #fff; border: 3px dashed var(--u-line); color: var(--u-ink); border-radius: 16px; padding: 12px 14px; font-weight: 700; line-height: 1.9; text-align: left; }
     .explain-box.ok { background: var(--u-ok-soft); border: 3px solid var(--u-ok-line); }
     .explain-title { font-size: 1.15em; margin-bottom: 4px; }
@@ -631,6 +635,47 @@
              options: ["2", "1", "4", "8"], correct: 0}
         ];
 
+        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・f など）は斜体、数字は立体、書体は問題の式と同じ数式用。
+        //   選択肢・ヒント・解説の中の英数字のまとまりを <span class="m"> で包み、文字を <i> にする（日本語はふつうの書体のまま）
+        const MATH_RUN = /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*[A-Za-z0-9][A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .hint-tag, .no-math, script, style, .katex')) continue;
+                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    text.split(/([A-Za-z]+)/).forEach((part, k) => {
+                        if (!part) return;
+                        if (k % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                        else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        // 画面が書きかわるたびに、指定した場所の式を整える
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
         let currentMode = '';
         let currentQuestions = [];
         let currentQuestionIndex = 0;
@@ -1086,6 +1131,7 @@
         // 初期表示
         document.querySelectorAll('.pool-count').forEach(e => e.textContent = problemPool.length);   // 【ブラッシュアップ】
         showModeSelection();
+        watchMath(['#question', '#options', '#hintArea', '#explainArea', '#answerLabel', '#inputFeedback']);   // 【ブラッシュアップ】
     </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
@@ -1098,6 +1144,7 @@
     ".option.correct": "u-ok",
     ".option.incorrect": "u-ng",
     ".next-btn": "u-btn u-btn-blue",
+    ".hint-button": "u-btn u-btn-plain",
     "#answerInput": "u-input",
     "#submitBtn": "u-btn",
     "#showAnswerBtn": "u-btn u-btn-plain",

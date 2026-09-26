@@ -344,10 +344,13 @@
     .score { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); border: 3px dashed #fde68a; border-radius: 16px; font-weight: 800; padding: 10px; }
     .problem-area { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
     .problem-text { color: var(--u-ink); font-weight: 800; text-align: center; font-size: 1.4em; }
-    .problem-diagram { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; padding: 10px; }
-    .problem-diagram svg { max-width: 100%; height: auto; max-height: 230px; }
-    .choice { display: flex; align-items: center; justify-content: center; min-height: 64px; font-size: 1.25em; }
+    .problem-text .xv { color: #dc2626; font-family: serif; font-size: 1.15em; }
+    .problem-diagram { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; padding: 6px; margin: 12px 0 0; }
+    .problem-diagram svg { display: block; margin: 0 auto; width: 100%; max-width: 300px; height: auto; }
+    .choice { display: flex; align-items: center; justify-content: center; min-height: 64px; font-size: 1.35em; width: 100%; font-family: inherit; }
+    .choice:disabled { cursor: default; }
     .feedback-message { border-radius: 16px; }
+    .feedback-message .why { margin-top: 8px; background: #fff; color: var(--u-ink); border-radius: 12px; padding: 8px 12px; text-align: left; line-height: 1.9; font-size: 0.95em; }
     .feedback-correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
     .feedback-incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
     .hint-section { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-left-width: 2px; border-radius: 16px; color: var(--u-title); }
@@ -356,6 +359,9 @@
     .triangle-diagram svg { max-width: 100%; height: auto; background: #fff; border-radius: 12px; }
     .hint-formula { color: var(--u-ink); font-weight: 700; line-height: 1.9; text-align: center; }
     .hint-formula .f { display: inline-block; white-space: nowrap; margin: 0 6px; }
+    .rt { white-space: nowrap; }
+    .rt-in { border-top: 2px solid currentColor; padding: 0 1px; margin-left: 1px; }
+    .btn-primary:disabled { opacity: 0.45; cursor: default; }
     .result-modal { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 1000; padding: 16px; overflow-y: auto; box-sizing: border-box; }
     .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
     .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 0 0 8px; }
@@ -368,11 +374,16 @@
     @media (max-width: 600px) {
       body { padding: 8px; }
       .container { padding: 16px 12px; }
+      .header { margin-bottom: 12px; }
       .problem-area { padding: 16px 10px; }
-      .level-selector { align-items: stretch; }
-      .level-btn { width: 100%; }
+      /* 【ブラッシュアップ】スマホ：レベルは 2 列の小さいボタン、進み具合と正解数は 1 行にして、問題を上のほうに出す */
+      .level-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+      .level-btn { width: 100%; padding: 8px 6px; font-size: 0.85em; }
+      .mode-selector { margin-bottom: 10px; }
+      .mode-btn { padding: 6px 12px; font-size: 0.85em; }
+      .progress, .score { display: inline-block; width: calc(50% - 4px); box-sizing: border-box; margin: 0 0 10px; padding: 6px 4px; font-size: 0.9em; vertical-align: top; }
       .choices { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .choice { padding: 8px; }
+      .choice { padding: 8px; font-size: 1.2em; }
       .controls { align-items: stretch; }
     }
   
@@ -385,7 +396,7 @@
     <h1>三角比練習問題</h1>
     <p>レベルを選んで三角比の値を求めよう！</p>
    </header>
-   <div class="level-selector"><button class="level-btn active" onclick="selectLevel(0)">レベル0: 有名角の辺の比</button> <button class="level-btn" onclick="selectLevel(1)">レベル1: 鋭角の三角比</button> <button class="level-btn" onclick="selectLevel(2)">レベル2: 鈍角・特殊角の三角比</button> <button class="level-btn" onclick="selectLevel(3)">レベル3: 全ての三角比</button>
+   <div class="level-selector"><button class="level-btn active" onclick="selectLevel(0)">レベル0: 有名角の辺の比</button> <button class="level-btn" onclick="selectLevel(1)">レベル1: 鋭角の三角比</button> <button class="level-btn" onclick="selectLevel(2)">レベル2: 鈍角・0°・90°・180°</button> <button class="level-btn" onclick="selectLevel(3)">レベル3: 全部まぜて</button> <button class="level-btn" onclick="selectLevel(4)">レベル4: 180°−θ・角を求める</button>
    </div>
    <div class="mode-selector"><button class="mode-btn active" onclick="selectMode('sequential')">順番モード</button> <button class="mode-btn" onclick="selectMode('random')">ランダムモード</button>
    </div>
@@ -400,500 +411,30 @@
     <div class="choices" id="choices"></div>
     <div id="feedbackMessage"></div>
     <div class="hint-section" id="hintSection" style="display: none;"><button class="hint-btn" onclick="toggleHint()">ヒントを見る</button>
-     <div class="hint-content" id="hintContent">
-      <h4>有名角の直角三角形</h4>
-      <div class="triangle-diagram">
-       <svg width="500" height="220" viewbox="0 0 500 220"><!-- 30°, 60°, 90° triangle --> <g transform="translate(20, 20)">
-         <polygon points="20,140 180,140 180,80" fill="none" stroke="#4299e1" stroke-width="2" />
-         <text x="100" y="180" text-anchor="middle" font-size="12">
-          30°-60°-90°三角形
-         </text>
-         <text x="190" y="110" font-size="10">
-          1
-         </text>
-         <text x="95" y="155" font-size="10">
-          √3
-         </text>
-         <text x="95" y="90" font-size="10">
-          2
-         </text>
-         <text x="35" y="130" font-size="10">
-          30°
-         </text>
-         <text x="165" y="95" font-size="10">
-          60°
-         </text>
-         <text x="190" y="130" font-size="10">
-          90°
-         </text>
-         <path d="M 175,140 L 175,135 L 180,135" stroke="#666" stroke-width="2" fill="none" />
-        </g> <!-- 45°, 45°, 90° triangle --> <g transform="translate(250, 20)">
-         <polygon points="20,140 140,140 140,20" fill="none" stroke="#38a169" stroke-width="2" />
-         <text x="80" y="180" text-anchor="middle" font-size="12">
-          45°-45°-90°三角形
-         </text>
-         <text x="150" y="85" font-size="10">
-          1
-         </text>
-         <text x="75" y="155" font-size="10">
-          1
-         </text>
-         <text x="75" y="75" font-size="10">
-          √2
-         </text>
-         <text x="35" y="140" font-size="10">
-          45°
-         </text>
-         <text x="115" y="45" font-size="10">
-          45°
-         </text>
-         <text x="150" y="140" font-size="10">
-          90°
-         </text>
-         <path d="M 130,140 L 130,130 L 140,130" stroke="#666" stroke-width="3" fill="none" />
-        </g>
-       </svg>
-      </div>
-     </div>
+     <div class="hint-content" id="hintContent"></div>
     </div>
    </div>
    <div class="controls"><button class="btn btn-retry" id="retryBtn" onclick="retryProblem()">もう一度挑戦</button> <button class="btn btn-primary" onclick="nextProblem()">次の問題</button>
    </div>
   </div>
   <script>
+        // 【ブラッシュアップ】問題・判定・ヒントを作り直した本体。元の「レベル・順番／ランダムモード・ヒント」の流れはそのまま。
+        //   ・レベル0：三角形を角度どおりにかき、角の印をつけた。1, √3, 2 そのままの問題に加えて、大きさを変えた三角形
+        //              （斜辺 6 の 30° の三角形の底辺 など）を追加。元の 5 問目と 6 問目は同じ問題だったので 1 つにした
+        //   ・レベル3：レベル1・2 をまぜて出す（元は順番モードだと sin → cos → tan の順が決まっていた）
+        //   ・レベル4（新しく追加）：180° − θ・90° − θ の関係と、三角比の値から角 θ を求める問題
+        //   ・正解したら「なぜその値か」を一言、まちがえたら「えらんだ値が何なのか」を一言。
+        //     まちがえた選択肢は押せなくなり、そのままえらび直せる（元は 1 秒後に自動でやり直しになり、同じ選択肢もまた押せた）
         let currentLevel = 0;
         let currentMode = 'sequential';
         let currentProblemIndex = 0;
         let correctAnswers = 0;
         let totalAnswered = 0;
-        let currentAnswer = null;
         let answered = false;
-        let shuffledIndices = [];
-        let shufflePosition = 0;
-        // 【ブラッシュアップ】選択肢の並び・一発正解・正解したか・古いタイマーの取り消し
-        let order = [0, 1, 2, 3];
-        let missedThis = false;
         let solved = false;
-        let flow = 0;
-
-        const problems = {
-            0: [ // レベル0: 有名角の直角三角形の辺の比（9問）
-                // 30°-60°-90°三角形（3問）
-                {
-                    question: "下の図で、辺 a の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 170,140 170,80" fill="none" stroke="#4299e1" stroke-width="3"/>
-                        <text x="70" y="135" font-size="16">30°</text>
-                        <text x="105" y="95" font-size="18" fill="red">a</text>
-                        <text x="180" y="110" font-size="18">1</text>
-                        <text x="105" y="155" font-size="18">√3</text>
-                        <path d="M 160,140 L 160,130 L 170,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["1", "√2", "√3", "2"],
-                    correct: 3
-                },
-                {
-                    question: "下の図で、辺 b の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 170,140 170,80" fill="none" stroke="#4299e1" stroke-width="3"/>
-                        <text x="70" y="135" font-size="16">30°</text>
-                        <text x="105" y="95" font-size="18">2</text>
-                        <text x="180" y="110" font-size="18" fill="red">b</text>
-                        <text x="105" y="155" font-size="18">√3</text>
-                        <path d="M 160,140 L 160,130 L 170,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√3", "2"],
-                    correct: 1
-                },
-                {
-                    question: "下の図で、辺 c の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 170,140 170,80" fill="none" stroke="#4299e1" stroke-width="3"/>
-                        <text x="70" y="135" font-size="16">30°</text>
-                        <text x="105" y="95" font-size="18">2</text>
-                        <text x="180" y="110" font-size="18">1</text>
-                        <text x="105" y="155" font-size="18" fill="red">c</text>
-                        <path d="M 160,140 L 160,130 L 170,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√3", "2"],
-                    correct: 2
-                },
-                // 45°-45°-90°三角形（3問）
-                {
-                    question: "下の図で、辺 a の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 140,140 140,40" fill="none" stroke="#38a169" stroke-width="3"/>
-                        <text x="60" y="135" font-size="16">45°</text>
-                        <text x="65" y="75" font-size="18" fill="red">a</text>
-                        <text x="150" y="90" font-size="18">1</text>
-                        <text x="85" y="155" font-size="18">1</text>
-                        <path d="M 130,140 L 130,130 L 140,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["1", "√2", "√3", "2"],
-                    correct: 1
-                },
-                {
-                    question: "下の図で、辺 b の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 140,140 140,40" fill="none" stroke="#38a169" stroke-width="3"/>
-                        <text x="60" y="135" font-size="16">45°</text>
-                        <text x="65" y="75" font-size="18">√2</text>
-                        <text x="150" y="90" font-size="18" fill="red">b</text>
-                        <text x="85" y="155" font-size="18">1</text>
-                        <path d="M 130,140 L 130,130 L 140,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√2", "2"],
-                    correct: 1
-                },
-                {
-                    question: "下の図で、辺 c の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="40,140 140,140 140,40" fill="none" stroke="#38a169" stroke-width="3"/>
-                        <text x="60" y="135" font-size="16">45°</text>
-                        <text x="65" y="75" font-size="18">√2</text>
-                        <text x="150" y="90" font-size="18">1</text>
-                        <text x="90" y="155" font-size="18" fill="red">c</text>
-                        <path d="M 130,140 L 130,130 L 140,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√2", "2"],
-                    correct: 1
-                },
-                // 60°-30°-90°三角形（3問）
-                {
-                    question: "下の図で、辺 c の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="100,170 160,170 160,40" fill="none" stroke="#e53e3e" stroke-width="3"/>
-                        <text x="110" y="165" font-size="16">60°</text>
-                        <text x="115" y="95" font-size="18" fill="red">c</text>
-                        <text x="170" y="105" font-size="18">√3</text>
-                        <text x="125" y="185" font-size="18">1</text>
-                        <path d="M 150,170 L 150,160 L 160,160" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["1", "√2", "√3", "2"],
-                    correct: 3
-                },
-                {
-                    question: "下の図で、辺 b の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="100,170 160,170 160,40" fill="none" stroke="#e53e3e" stroke-width="3"/>
-                        <text x="110" y="165" font-size="16">60°</text>
-                        <text x="115" y="95" font-size="18">2</text>
-                        <text x="170" y="105" font-size="18" fill="red">b</text>
-                        <text x="125" y="185" font-size="18">1</text>
-                        <path d="M 150,170 L 150,160 L 160,160" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√3", "2"],
-                    correct: 2
-                },
-                {
-                    question: "下の図で、辺 a の長さは？",
-                    diagram: `<svg width="100%" height="200" viewBox="0 0 400 200">
-                        <polygon points="100,170 160,170 160,40" fill="none" stroke="#e53e3e" stroke-width="3"/>
-                        <text x="110" y="165" font-size="16">60°</text>
-                        <text x="115" y="95" font-size="18">2</text>
-                        <text x="170" y="105" font-size="18">√3</text>
-                        <text x="130" y="185" font-size="18" fill="red">a</text>
-                        <path d="M 150,170 L 150,160 L 160,160" stroke="#666" stroke-width="3" fill="none"/>
-                    </svg>`,
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "√3", "2"],
-                    correct: 1
-                }
-            ],
-            1: [ // レベル1: 鋭角の三角比（9問）
-                // 30°の三角比
-                {
-                    question: "sin 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 0
-                },
-                {
-                    question: "cos 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "tan 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "√3", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                // 45°の三角比
-                {
-                    question: "sin 45°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "cos 45°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "tan 45°の値は？",
-                    choices: ["1", "√3", "√2", "2"],
-                    correct: 0
-                },
-                // 60°の三角比
-                {
-                    question: "sin 60°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "cos 60°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 0
-                },
-                {
-                    question: "tan 60°の値は？",
-                    choices: ["1", "√3", "√2", "2"],
-                    correct: 1
-                }
-            ],
-            2: [ // レベル2: 鈍角・特殊角の三角比（18問）
-                // 120°の三角比
-                {
-                    question: "sin 120°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "cos 120°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 2
-                },
-                {
-                    question: "tan 120°の値は？",
-                    choices: ["√3", "− √3", "1", "− 1"],
-                    correct: 1
-                },
-                // 135°の三角比
-                {
-                    question: "sin 135°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "0"],
-                    correct: 0
-                },
-                {
-                    question: "cos 135°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "0"],
-                    correct: 1
-                },
-                {
-                    question: "tan 135°の値は？",
-                    choices: ["1", "− 1", "√2", "− √2"],
-                    correct: 1
-                },
-                // 150°の三角比
-                {
-                    question: "sin 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 3
-                },
-                {
-                    question: "tan 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                // 0°の三角比
-                {
-                    question: "sin 0°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 0°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "tan 0°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 0
-                },
-                // 90°の三角比
-                {
-                    question: "sin 90°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "cos 90°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "tan 90°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 3
-                },
-                // 180°の三角比
-                {
-                    question: "sin 180°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 180°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 2
-                },
-                {
-                    question: "tan 180°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 0
-                }
-            ],
-            3: [ // レベル3: 全ての三角比（レベル1とレベル2を合わせた27問）
-                // 30°の三角比
-                {
-                    question: "sin 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 0
-                },
-                {
-                    question: "cos 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "tan 30°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "√3", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                // 45°の三角比
-                {
-                    question: "sin 45°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "cos 45°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "tan 45°の値は？",
-                    choices: ["1", "√3", "√2", "2"],
-                    correct: 0
-                },
-                // 60°の三角比
-                {
-                    question: "sin 60°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 2
-                },
-                {
-                    question: "cos 60°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "1"],
-                    correct: 0
-                },
-                {
-                    question: "tan 60°の値は？",
-                    choices: ["1", "√3", "√2", "2"],
-                    correct: 1
-                },
-                // 120°の三角比
-                {
-                    question: "sin 120°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "cos 120°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 2
-                },
-                {
-                    question: "tan 120°の値は？",
-                    choices: ["√3", "− √3", "1", "− 1"],
-                    correct: 1
-                },
-                // 135°の三角比
-                {
-                    question: "sin 135°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "0"],
-                    correct: 0
-                },
-                {
-                    question: "cos 135°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "0"],
-                    correct: 1
-                },
-                {
-                    question: "tan 135°の値は？",
-                    choices: ["1", "− 1", "√2", "− √2"],
-                    correct: 1
-                },
-                // 150°の三角比
-                {
-                    question: "sin 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>√3</span><span class='denominator'>2</span></span>"],
-                    correct: 3
-                },
-                {
-                    question: "tan 150°の値は？",
-                    choices: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>√3</span></span>", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "− <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                // 0°の三角比
-                {
-                    question: "sin 0°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 0°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "tan 0°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 0
-                },
-                // 90°の三角比
-                {
-                    question: "sin 90°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>√2</span></span>"],
-                    correct: 1
-                },
-                {
-                    question: "cos 90°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "tan 90°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 3
-                },
-                // 180°の三角比
-                {
-                    question: "sin 180°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 0
-                },
-                {
-                    question: "cos 180°の値は？",
-                    choices: ["0", "1", "− 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>"],
-                    correct: 2
-                },
-                {
-                    question: "tan 180°の値は？",
-                    choices: ["0", "1", "− 1", "定義されない"],
-                    correct: 0
-                }
-            ]
-        };
+        let missedThis = false;   // この問題でまちがえたか（一発正解だけを点にする）
+        let order = [0, 1, 2, 3];
+        let playList = [];        // このレベルで出す問題の順番
 
         function shuffleArray(array) {
             const shuffled = [...array];
@@ -904,543 +445,210 @@
             return shuffled;
         }
 
-        function initializeShuffledIndices() {
-            const totalProblems = problems[currentLevel].length;
-            const indices = Array.from({length: totalProblems}, (_, i) => i);
-            shuffledIndices = shuffleArray(indices);
-            shufflePosition = 0;
+        // ---------- 数式の表示：「1/2」→ 縦の分数、「√3」→ 上に線、「−」は前に ----------
+        function rtHTML(s) { return String(s).replace(/√(\d+)/g, '<span class="rt">√<span class="rt-in">$1</span></span>'); }
+        function mathHTML(s) {
+            return String(s).split(', ').map(part => {
+                let sign = '';
+                if (part[0] === '−') { sign = '− '; part = part.slice(1); }
+                const m = part.match(/^([^/\s]+)\/([^/\s]+)$/);
+                if (m) return sign + '<span class="fraction"><span class="numerator">' + rtHTML(m[1]) + '</span><span class="denominator">' + rtHTML(m[2]) + '</span></span>';
+                return sign + rtHTML(part);
+            }).join(', ');
+        }
+        // 値を数にする（まちがえたときの一言を作るのに使う）
+        function valueOf(s) {
+            if (s === '定義されない') return NaN;
+            let t = String(s).replace(/−/g, '-').replace(/(\d)√(\d+)/g, '$1*Math.sqrt($2)').replace(/√(\d+)/g, 'Math.sqrt($1)');
+            const m = t.match(/^(-?)([^/]+)\/(.+)$/);
+            try { return m ? (m[1] ? -1 : 1) * Function('return ' + m[2])() / Function('return ' + m[3])() : Function('return ' + t)(); } catch (e) { return NaN; }
         }
 
-        function selectLevel(level) {
-            currentLevel = level;
-            currentProblemIndex = 0;
-            correctAnswers = 0;
-            totalAnswered = 0;
-
-            // Initialize shuffled indices for random mode
-            initializeShuffledIndices();
-
-            // Update active button
-            document.querySelectorAll('.level-btn').forEach((btn, index) => {
-                btn.classList.toggle('active', index === level);
+        // ---------- 直角三角形の図（#25 と同じかき方）：V = 左下の角、R = 直角（右下）、T = 上 ----------
+        function triSVG(o) {
+            const w = o.w || 260, h = o.h || 200, pad = o.pad || 44;
+            const P = { V: [0, 0], R: [o.p, 0], T: [o.p, o.q] };
+            const maxx = o.p, maxy = o.q;
+            const s = Math.min((w - 2 * pad) / maxx, (h - 2 * pad) / maxy);
+            const ox = (w - maxx * s) / 2, oy = (h - maxy * s) / 2;
+            const S = {};
+            Object.keys(P).forEach(k => { S[k] = [ox + P[k][0] * s, oy + (maxy - P[k][1]) * s]; });
+            const unit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
+            const f = v => v.toFixed(1);
+            let out = '<svg class="tri" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" role="img" aria-label="直角三角形">';
+            out += '<polygon points="' + ['V', 'R', 'T'].map(k => f(S[k][0]) + ',' + f(S[k][1])).join(' ') + '" fill="#eff6ff" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>';
+            const u1 = unit(S.R, S.V), u2 = unit(S.R, S.T), m = 12;
+            out += '<path d="M ' + f(S.R[0] + u1[0] * m) + ' ' + f(S.R[1] + u1[1] * m) + ' L ' + f(S.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(S.R[1] + (u1[1] + u2[1]) * m) + ' L ' + f(S.R[0] + u2[0] * m) + ' ' + f(S.R[1] + u2[1] * m) + '" fill="none" stroke="#475569" stroke-width="2"/>';
+            // 角の印と角度
+            const a1 = unit(S.V, S.R), a2 = unit(S.V, S.T), r = 26;
+            out += '<path d="M ' + f(S.V[0] + a1[0] * r) + ' ' + f(S.V[1] + a1[1] * r) + ' A ' + r + ' ' + r + ' 0 0 0 ' + f(S.V[0] + a2[0] * r) + ' ' + f(S.V[1] + a2[1] * r) + '" fill="none" stroke="#ea580c" stroke-width="2.5"/>';
+            const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
+            const half = Math.acos(a1[0] * a2[0] + a1[1] * a2[1]) / 2;
+            const dd = Math.max(44, Math.min(90, 15 / Math.tan(half)));
+            out += '<text x="' + f(S.V[0] + bis[0] * dd) + '" y="' + f(S.V[1] + bis[1] * dd) + '" font-size="16" font-weight="bold" fill="#ea580c" text-anchor="middle" dominant-baseline="central">' + o.deg + '°</text>';
+            // 辺の長さ（辺の中点から外向き）。o.ask の辺は赤い x
+            [['VR', 'V', 'R', 'T'], ['RT', 'R', 'T', 'V'], ['VT', 'V', 'T', 'R']].forEach(([key, a, b, c]) => {
+                const t = o.ask === key ? 'x' : o.sides[key];
+                if (!t) return;
+                const mx = (S[a][0] + S[b][0]) / 2, my = (S[a][1] + S[b][1]) / 2;
+                let n = unit(S[a], S[b]); n = [-n[1], n[0]];
+                if ((S[c][0] - mx) * n[0] + (S[c][1] - my) * n[1] > 0) n = [-n[0], -n[1]];
+                const tw = 12 * String(t).length;
+                const dist = 13 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 11;
+                out += '<text x="' + f(mx + n[0] * dist) + '" y="' + f(my + n[1] * dist) + '" font-size="21" font-weight="bold" text-anchor="middle" dominant-baseline="central"' +
+                    (o.ask === key ? ' fill="#dc2626" font-style="italic" font-family="serif"' : ' fill="#4b2c20"') + '>' + t + '</text>';
             });
-
-            // Show/hide hint section
-            const hintSection = document.getElementById('hintSection');
-            hintSection.style.display = level > 0 ? 'block' : 'none';
-
-            loadProblem();
-            updateDisplay();
+            return out + '</svg>';
         }
 
-        function selectMode(mode) {
-            currentMode = mode;
-            currentProblemIndex = 0;
-            // 【ブラッシュアップ】元はモードを変えても正解数が前のまま残っていた
-            correctAnswers = 0;
-            totalAnswered = 0;
-            initializeShuffledIndices();
+        // ---------- 問題データ ----------
+        // レベル0：有名角の直角三角形の辺の比。sides = 底辺 VR・高さ RT・斜辺 VT の長さ、ask = 求める辺
+        const RATIO = { 30: ['√3', '1', '2'], 45: ['1', '1', '√2'], 60: ['1', '√3', '2'] };
+        const SHAPE = { 30: [Math.sqrt(3), 1], 45: [1, 1], 60: [1, Math.sqrt(3)] };
+        const SIDE_NAME = { VR: '底辺', RT: '高さ', VT: '斜辺' };
+        const L0 = [
+            { deg: 30, sides: { VR: '√3', RT: '1', VT: '2' }, ask: 'VT', choices: ['1', '√2', '√3', '2'] },
+            { deg: 30, sides: { VR: '√3', RT: '1', VT: '2' }, ask: 'RT', choices: ['1/2', '1', '√3', '2'] },
+            { deg: 30, sides: { VR: '√3', RT: '1', VT: '2' }, ask: 'VR', choices: ['1/2', '1', '√3', '2'] },
+            { deg: 30, sides: { VR: '3√3', RT: '3', VT: '6' }, ask: 'RT', choices: ['3', '3√3', '2√3', '12'], k: '3' },
+            { deg: 30, sides: { VR: '3√3', RT: '3', VT: '6' }, ask: 'VR', choices: ['3√3', '3', '6√3', '2√3'], k: '3' },
+            { deg: 45, sides: { VR: '1', RT: '1', VT: '√2' }, ask: 'VT', choices: ['1', '√2', '√3', '2'] },
+            { deg: 45, sides: { VR: '1', RT: '1', VT: '√2' }, ask: 'RT', choices: ['1/2', '1', '√2', '2'] },
+            { deg: 45, sides: { VR: '4', RT: '4', VT: '4√2' }, ask: 'VT', choices: ['4√2', '8', '2√2', '4√3'], k: '4' },
+            { deg: 45, sides: { VR: '3√2', RT: '3√2', VT: '6' }, ask: 'VR', choices: ['3√2', '6√2', '3', '2√3'], k: '3√2' },
+            { deg: 60, sides: { VR: '1', RT: '√3', VT: '2' }, ask: 'VT', choices: ['1', '√2', '√3', '2'] },
+            { deg: 60, sides: { VR: '1', RT: '√3', VT: '2' }, ask: 'RT', choices: ['1/2', '1', '√3', '2'] },
+            { deg: 60, sides: { VR: '5', RT: '5√3', VT: '10' }, ask: 'VT', choices: ['10', '5√3', '5√2', '5/2'], k: '5' },
+            { deg: 60, sides: { VR: '4', RT: '4√3', VT: '8' }, ask: 'RT', choices: ['4√3', '4', '8√3', '16'], k: '4' }
+        ];
+        // レベル1・2：三角比の値（元の問題と同じ選択肢）
+        const VALUES = {
+            sin: { 0: '0', 30: '1/2', 45: '1/√2', 60: '√3/2', 90: '1', 120: '√3/2', 135: '1/√2', 150: '1/2', 180: '0' },
+            cos: { 0: '1', 30: '√3/2', 45: '1/√2', 60: '1/2', 90: '0', 120: '−1/2', 135: '−1/√2', 150: '−√3/2', 180: '−1' },
+            tan: { 0: '0', 30: '1/√3', 45: '1', 60: '√3', 90: '定義されない', 120: '−√3', 135: '−1', 150: '−1/√3', 180: '0' }
+        };
+        const L1 = [
+            ['sin', 30, ['1/2', '1/√2', '√3/2', '1']], ['cos', 30, ['1/2', '1/√2', '√3/2', '1']], ['tan', 30, ['1/√3', '√3', '1/2', '√3/2']],
+            ['sin', 45, ['1/2', '√3/2', '1/√2', '1']], ['cos', 45, ['1/2', '√3/2', '1/√2', '1']], ['tan', 45, ['1', '√3', '√2', '2']],
+            ['sin', 60, ['1/2', '1/√2', '√3/2', '1']], ['cos', 60, ['1/2', '1/√2', '√3/2', '1']], ['tan', 60, ['1', '√3', '√2', '2']]
+        ];
+        const L2 = [
+            ['sin', 120, ['1/2', '√3/2', '−1/2', '−√3/2']], ['cos', 120, ['1/2', '√3/2', '−1/2', '−√3/2']], ['tan', 120, ['√3', '−√3', '1', '−1']],
+            ['sin', 135, ['1/√2', '−1/√2', '1/2', '0']], ['cos', 135, ['1/√2', '−1/√2', '1/2', '0']], ['tan', 135, ['1', '−1', '√2', '−√2']],
+            ['sin', 150, ['1/2', '√3/2', '−1/2', '−√3/2']], ['cos', 150, ['1/2', '√3/2', '−1/2', '−√3/2']], ['tan', 150, ['1/√3', '−1/√3', '1/2', '−1/2']],
+            ['sin', 0, ['0', '1', '−1', '1/2']], ['cos', 0, ['0', '1', '−1', '1/2']], ['tan', 0, ['0', '1', '−1', '定義されない']],
+            ['sin', 90, ['0', '1', '−1', '1/√2']], ['cos', 90, ['0', '1', '−1', '1/2']], ['tan', 90, ['0', '1', '−1', '定義されない']],
+            ['sin', 180, ['0', '1', '−1', '1/2']], ['cos', 180, ['0', '1', '−1', '1/2']], ['tan', 180, ['0', '1', '−1', '定義されない']]
+        ];
+        // 点 P の座標（半径 r の半円の上）
+        const POINT = { 0: ['1', '0', '1'], 30: ['√3', '1', '2'], 45: ['1', '1', '√2'], 60: ['1', '√3', '2'], 90: ['0', '1', '1'], 120: ['−1', '√3', '2'], 135: ['−1', '1', '√2'], 150: ['−√3', '1', '2'], 180: ['−1', '0', '1'] };
+        // レベル4：180° − θ・90° − θ と、値から角を求める問題（0° ≦ θ ≦ 180°）
+        const L4 = [
+            { q: 'sin 150° と等しいものは？', choices: ['sin 30°', '−sin 30°', 'cos 30°', '−cos 30°'], correct: 0,
+              exp: 'sin(180° − θ) = sin θ。sin 150° = sin(180° − 30°) = sin 30°',
+              why: ['', '符号に注意。150° の点は y > 0 なので sin 150° は正だよ。', 'cos 30° = √3/2。sin 150° = 1/2 とはちがう値だよ。', 'cos は 180° − θ で符号が変わるけど、sin は変わらないよ。'], hint: '180° − θ の点は、θ の点と y 軸について対称。y 座標（sin）はそのまま、x 座標（cos）は符号が変わるよ。', deg: 150 },
+            { q: 'cos 120° と等しいものは？', choices: ['−cos 60°', 'cos 60°', 'sin 60°', '−sin 60°'], correct: 0,
+              exp: 'cos(180° − θ) = −cos θ。cos 120° = cos(180° − 60°) = −cos 60°',
+              why: ['', '120° の点は x < 0 なので、cos 120° は負だよ。', 'sin 60° = √3/2。cos 120° = −1/2 とはちがう値だよ。', '−sin 60° = −√3/2。cos 120° = −1/2 だよ。'], hint: '180° − θ の点は、θ の点と y 軸について対称。x 座標（cos）は符号が変わるよ。', deg: 120 },
+            { q: 'tan 135° と等しいものは？', choices: ['−tan 45°', 'tan 45°', '1/tan 45°', 'sin 45°'], correct: 0,
+              exp: 'tan(180° − θ) = −tan θ。tan 135° = tan(180° − 45°) = −tan 45°',
+              why: ['', '135° の点は x < 0、y > 0 なので tan 135° = y/x は負だよ。', '1/tan 45° = 1。tan 135° は負の値だよ。', 'sin 45° = 1/√2。tan 135° = −1 だよ。'], hint: 'tan = y/x。180° − θ にすると x だけ符号が変わるよ。', deg: 135 },
+            { q: 'sin(90° − 30°) と等しいものは？', choices: ['cos 30°', 'sin 30°', '−cos 30°', 'tan 30°'], correct: 0,
+              exp: 'sin(90° − θ) = cos θ。sin 60° = cos 30° = √3/2',
+              why: ['', 'sin 30° = 1/2、sin(90° − 30°) = sin 60° = √3/2。ちがう値だよ。', '90° − 30° = 60° は鋭角なので、sin 60° は正の値だよ。', 'tan 30° = 1/√3。sin 60° = √3/2 とはちがうよ。'], hint: '直角三角形で、90° − θ の角から見ると、対辺と隣辺が入れかわるよ。' },
+            { q: 'cos 70° を 45° 以下の角の三角比で表すと？', choices: ['sin 20°', 'cos 20°', '−sin 20°', 'sin 70°'], correct: 0,
+              exp: 'cos(90° − θ) = sin θ。cos 70° = cos(90° − 20°) = sin 20°',
+              why: ['', 'cos 20° = sin 70°。cos(90° − θ) は sin θ にかわるよ。', '70° は鋭角なので cos 70° は正。マイナスはつかないよ。', '45° 以下の角で表そう。70° = 90° − 20° だよ。'], hint: '70° = 90° − 20°。cos(90° − θ) は何になるかな？' },
+            { q: 'sin θ = 1/2（0° ≦ θ ≦ 180°）を満たす θ は？', choices: ['30°, 150°', '30°', '60°, 120°', '150°'], correct: 0,
+              exp: '半径 2 の半円の上で y 座標が 1 の点は 2 つ。θ = 30°, 150°',
+              why: ['', 'もう 1 つある。sin(180° − 30°) = sin 30° なので、150° も答えだよ。', 'sin 60° = sin 120° = √3/2。1/2 ではないよ。', 'もう 1 つある。y 座標が 1 の点は、30° の点もそうだよ。'], hint: 'sin θ = y/r。半径 2 の半円の上で、y 座標が 1 になる点はいくつある？', deg: 30, deg2: 150 },
+            { q: 'cos θ = −1/√2（0° ≦ θ ≦ 180°）を満たす θ は？', choices: ['135°', '45°', '45°, 135°', '120°'], correct: 0,
+              exp: 'cos θ = x/r。半径 √2 の半円の上で x 座標が −1 の点は 1 つ。θ = 135°',
+              why: ['', 'cos 45° = 1/√2（正）。−1/√2 は x < 0 の点だよ。', 'x 座標が −1 の点は 1 つだけ。cos 45° は正の値だよ。', 'cos 120° = −1/2。−1/√2 ではないよ。'], hint: 'cos θ = x/r。x 座標が負の点は、90° より大きい角のところにあるよ。' },
+            { q: 'tan θ = −√3（0° ≦ θ ≦ 180°）を満たす θ は？', choices: ['120°', '60°', '150°', '135°'], correct: 0,
+              exp: 'tan θ = y/x = √3/(−1)。点 P(−1, √3) なので θ = 120°',
+              why: ['', 'tan 60° = √3（正）。−√3 は x < 0 の点だよ。', 'tan 150° = −1/√3。−√3 ではないよ。', 'tan 135° = −1。−√3 ではないよ。'], hint: 'tan θ = y/x が負になるのは、x が負（90° < θ < 180°）のとき。tan 60° = √3 を思い出そう。' },
+            { q: 'cos θ = 1/2（0° ≦ θ ≦ 180°）を満たす θ は？', choices: ['60°', '30°', '60°, 120°', '120°'], correct: 0,
+              exp: 'cos θ = x/r。半径 2 の半円の上で x 座標が 1 の点は 1 つ。θ = 60°',
+              why: ['', 'cos 30° = √3/2。1/2 ではないよ。', 'cos 120° = −1/2（負）。x 座標が 1 の点は 1 つだけだよ。', 'cos 120° = −1/2。符号がちがうよ。'], hint: 'cos θ = x/r。x 座標が 1（正）の点は、半円の上に何個ある？' },
+            { q: 'sin θ = 1（0° ≦ θ ≦ 180°）を満たす θ は？', choices: ['90°', '0°', '180°', '0°, 180°'], correct: 0,
+              exp: 'sin θ = y/r = 1 となるのは、点 P が半円のいちばん上 (0, 1) のとき。θ = 90°',
+              why: ['', 'sin 0° = 0。0° の点 (1, 0) の y 座標は 0 だよ。', 'sin 180° = 0。180° の点 (−1, 0) の y 座標は 0 だよ。', 'sin 0° = sin 180° = 0。sin θ = 1 になるのは 90° だけだよ。'], hint: '半径 1 の半円の上で、y 座標が 1 の点はどこかな？' }
+        ];
 
-            // Update active button
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.includes(mode === 'sequential' ? '順番' : 'ランダム'));
-            });
-
-            loadProblem();
-            updateDisplay();
+        const LEVEL_SIZE = [L0.length, L1.length, L2.length, L1.length + L2.length, L4.length];
+        function levelList(level) {
+            if (level === 0) return L0.map((d, i) => ({ kind: 0, i }));
+            if (level === 1) return L1.map((d, i) => ({ kind: 1, i }));
+            if (level === 2) return L2.map((d, i) => ({ kind: 2, i }));
+            if (level === 3) return shuffleArray(L1.map((d, i) => ({ kind: 1, i })).concat(L2.map((d, i) => ({ kind: 2, i }))));   // いつもまぜる
+            return L4.map((d, i) => ({ kind: 4, i }));
         }
 
-        function loadProblem() {
-            flow++; solved = false; missedThis = false;   // 【ブラッシュアップ】
-            answered = false;
-            currentAnswer = null;
-
-            // Clear feedback message
-            document.getElementById('feedbackMessage').innerHTML = '';
-
-            let problemIndex;
-            if (currentMode === 'sequential') {
-                problemIndex = currentProblemIndex % problems[currentLevel].length;
-            } else {
-                // Use shuffled indices for random mode
-                problemIndex = shuffledIndices[shufflePosition];
+        // 1 問ぶんの表示データ：question, figure, choices, correct, exp, why[], hint
+        function makeProblem(item) {
+            if (item.kind === 0) {
+                const d = L0[item.i];
+                const ans = d.sides[d.ask];
+                const r = RATIO[d.deg].join(' : ');
+                const why = d.choices.map(c => {
+                    if (c === ans) return '';
+                    const other = Object.keys(d.sides).find(k => k !== d.ask && d.sides[k] === c);
+                    if (other) return c + ' は' + SIDE_NAME[other] + 'の長さだよ。x は' + SIDE_NAME[d.ask] + '。';
+                    return d.deg + '° の直角三角形は 底辺 : 高さ : 斜辺 = ' + r + '。' + (d.k ? '比の 1 にあたる長さが ' + d.k + ' だよ。' : '');
+                });
+                const [p, q] = SHAPE[d.deg];
+                return {
+                    question: '下の図で、' + SIDE_NAME[d.ask] + ' <i class="xv">x</i> の長さは？',
+                    figure: triSVG({ deg: d.deg, p, q, sides: d.sides, ask: d.ask }),
+                    choices: d.choices, correct: d.choices.indexOf(ans),
+                    exp: d.deg + '° の直角三角形は 底辺 : 高さ : 斜辺 = ' + r + '。' + (d.k ? 'この三角形は各辺が ' + d.k + ' 倍なので、' : '') + 'x = ' + mathHTML(ans),
+                    why,
+                    hint: '<h4>' + d.deg + '° の直角三角形の辺の比</h4><div class="triangle-diagram">' + triSVG({ deg: d.deg, p, q, sides: { VR: RATIO[d.deg][0], RT: RATIO[d.deg][1], VT: RATIO[d.deg][2] } }) + '</div>' +
+                        '<div class="hint-formula">底辺 : 高さ : 斜辺 = ' + r + '</div>'
+                };
             }
-
-            const problem = problems[currentLevel][problemIndex];
-
-            const problemTextElement = document.getElementById('problemText');
-            problemTextElement.innerHTML = problem.question;
-
-            // Add diagram for level 0
-            if (currentLevel === 0 && problem.diagram) {
-                const diagramDiv = document.createElement('div');
-                diagramDiv.className = 'problem-diagram';
-                diagramDiv.innerHTML = problem.diagram;
-                problemTextElement.appendChild(diagramDiv);
-                const svg = diagramDiv.querySelector('svg');   // 【ブラッシュアップ】
-                if (svg) {
-                    const b = svg.getBBox();
-                    svg.setAttribute('viewBox', `${b.x - 24} ${b.y - 16} ${b.width + 48} ${b.height + 32}`);
-                    svg.removeAttribute('height');
-                    svg.style.width = '100%';
-                    svg.style.maxWidth = '300px';
-                }
+            if (item.kind === 1 || item.kind === 2) {
+                const [fn, deg, choices] = (item.kind === 1 ? L1 : L2)[item.i];
+                const ans = VALUES[fn][deg];
+                const [px, py, pr] = POINT[deg];
+                const why = choices.map(c => {
+                    if (c === ans) return '';
+                    if (c === '定義されない') return 'tan ' + deg + '° = y/x = ' + py + '/' + px + ' は計算できるよ。';
+                    if (ans === '定義されない') return 'tan 90° は x = 0 で割ることになるので、値は定義されないよ。';
+                    const v = valueOf(c), a = valueOf(ans);
+                    const same = ['sin', 'cos', 'tan'].filter(g => g !== fn && VALUES[g][deg] !== '定義されない' && Math.abs(valueOf(VALUES[g][deg]) - v) < 1e-9);
+                    if (Math.abs(v + a) < 1e-9 && a !== 0) return '符号に注意。' + deg + '° の点 P(' + px + ', ' + py + ') は ' + (valueOf(px) < 0 ? 'x < 0' : 'x > 0') + '、y ' + (valueOf(py) > 0 ? '> 0' : '= 0') + ' だよ。';
+                    if (same.length) return mathHTML(c) + ' は ' + same.map(g => g + ' ' + deg + '°').join('・') + ' の値だよ。';
+                    return deg + '° の点 P(' + px + ', ' + py + ')、半径 ' + pr + ' で考えよう。';
+                });
+                const acute = deg === 30 || deg === 45 || deg === 60;
+                const part = { sin: [py, pr, 'y', 'r', '高さ', '斜辺'], cos: [px, pr, 'x', 'r', '底辺', '斜辺'], tan: [py, px, 'y', 'x', '高さ', '底辺'] }[fn];
+                const exp = acute ?
+                    deg + '° の直角三角形（底辺 : 高さ : 斜辺 = ' + RATIO[deg].join(' : ') + '）で、' + fn + ' ' + deg + '° = ' + part[4] + '/' + part[5] + ' = ' + mathHTML(part[0] + '/' + part[1]) + (part[0] + '/' + part[1] !== ans ? ' = ' + mathHTML(ans) : '') :
+                    (ans === '定義されない' ? 'P(0, 1) なので x = 0。tan 90° = y/x は 0 で割ることになり、定義されない。' :
+                        'P(' + px + ', ' + py + ')、r = ' + pr + ' なので、' + fn + ' ' + deg + '° = ' + part[2] + '/' + part[3] + ' = ' + mathHTML(part[0] + '/' + part[1]) + (part[0] + '/' + part[1] !== ans ? ' = ' + mathHTML(ans) : ''));
+                return { question: fn + ' ' + deg + '° の値は？', figure: '', choices, correct: choices.indexOf(ans), exp, why, hint: hintFor(deg) };
             }
-
-            const choicesContainer = document.getElementById('choices');
-            choicesContainer.innerHTML = '';
-
-            order = problem.choices.map((_, i) => i);
-            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-            order.forEach((orig, index) => {
-                const choiceElement = document.createElement('div');
-                choiceElement.className = 'choice';
-                choiceElement.innerHTML = problem.choices[orig];
-                choiceElement.onclick = () => selectChoice(index, order.indexOf(problem.correct));
-                choicesContainer.appendChild(choiceElement);
-            });
-
-            // Update hint content based on current problem
-            updateHintContent(problem.question);
-
-            // Hide hint content
-            document.getElementById('hintContent').style.display = 'none';
-            const hintBtn = document.querySelector('.hint-btn');
-            if (hintBtn) hintBtn.textContent = 'ヒントを見る';
-
-            // Hide retry button
-            document.getElementById('retryBtn').style.display = 'none';
-
-            // Update next button appearance
-            updateNextButton();
+            const d = L4[item.i];
+            return {
+                question: d.q.replace(/(−?[√\d]+\/[√\d]+)/g, m => mathHTML(m)), figure: '', choices: d.choices, correct: d.correct, exp: d.exp.replace(/(−?[√\d]+\/[√\d]+)/g, m => mathHTML(m)),
+                why: d.why.map(w => w.replace(/(−?[√\d]+\/[√\d]+)/g, m => mathHTML(m))),
+                hint: '<div class="hint-formula">' + d.hint + '</div>' + (d.deg ? '<div class="triangle-diagram">' + hintSemicircle(d.deg, POINT[d.deg]) + '</div>' : '')
+            };
         }
-
-        function selectChoice(selectedIndex, correctIndex) {
-            if (answered) return;
-
-            answered = true;
-            currentAnswer = correctIndex;
-
-            const choices = document.querySelectorAll('.choice');
-            const feedbackMessage = document.getElementById('feedbackMessage');
-
-            if (selectedIndex === correctIndex) {
-                choices[selectedIndex].classList.add('correct');
-                solved = true;
-                totalAnswered++;
-                if (!missedThis) correctAnswers++;   // 【ブラッシュアップ】一発正解だけ
-
-                // Show praise message
-                const praiseMessages = [
-                    '🎉 正解！素晴らしい！',
-                    '✨ その調子！完璧です！',
-                    '🌟 大正解！よくできました！',
-                    '👏 すごい！正解です！',
-                    '💯 パーフェクト！',
-                    '🎊 見事！正解です！',
-                    '⭐ 素晴らしい理解力！',
-                    '🏆 完璧な答えです！'
-                ];
-                const randomPraise = praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
-                feedbackMessage.innerHTML = `<div class="feedback-message feedback-correct">${randomPraise}</div>`;
-            } else {
-                choices[selectedIndex].classList.add('incorrect');
-                missedThis = true;   // 【ブラッシュアップ】
-                // 正解は緑色にしない（問題文の要求通り）
-
-                // Show encouragement message
-                const encouragementMessages = [
-                    '💪 もう一度挑戦してみよう！',
-                    '📚 ヒントを見て考えてみよう！',
-                    '🤔 惜しい！もう一度トライ！',
-                    '✏️ 落ち着いて考えてみよう！'
-                ];
-                const randomEncouragement = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
-                feedbackMessage.innerHTML = `<div class="feedback-message feedback-incorrect">${randomEncouragement}</div>`;
-
-                // Auto-reset after 1 second
-                const myFlow = flow;   // 【ブラッシュアップ】別の問題に移っていたら何もしない
-                setTimeout(() => {
-                    if (myFlow === flow) retryProblem();
-                }, 1000);
-            }
-
-            // Update next button appearance
-            updateNextButton();
-            updateDisplay();
-        }
-
-        function retryProblem() {
-            // Reset the current problem without changing the problem index
-            answered = false;
-            currentAnswer = null;
-
-            const choices = document.querySelectorAll('.choice');
-            choices.forEach(choice => {
-                choice.classList.remove('correct', 'incorrect');
-            });
-
-            // Clear feedback message
-            document.getElementById('feedbackMessage').innerHTML = '';
-
-            // Hide retry button
-            document.getElementById('retryBtn').style.display = 'none';
-        }
-
-        function nextProblem() {
-            // 【ブラッシュアップ】正解するまで次へ進めない
-            if (!answered || !solved) {
-                return;
-            }
-            if (document.getElementById('resultModal')) return;
-
-            currentProblemIndex++;
-            if (currentMode === 'random') shufflePosition++;
-
-            // 【ブラッシュアップ】全問おわったら結果を出す
-            if (currentProblemIndex >= problems[currentLevel].length) {
-                updateDisplay();
-                showResult();
-                return;
-            }
-
-            loadProblem();
-            updateDisplay();
-        }
-
-        // 【ブラッシュアップ】結果：次のレベル・同じレベル・モードを変えて・ほかの教材（元はレベル2→3へ進むボタンがなく、数秒で勝手に閉じていた）
-        function showResult() {
-            const n = problems[currentLevel].length;
-            const perfect = correctAnswers === n;
-            const perfectMessages = [
-                '有名角の直角三角形を完全にマスターしました！三角比の基礎が完璧に身についています！',
-                '鋭角の三角比を完璧に理解していますね！この調子で頑張りましょう！',
-                '鈍角・特殊角の三角比まで完全制覇！あなたは真の三角比マスターです！',
-                '全ての三角比を完全制覇！あなたは三角比の絶対王者です！'
-            ];
-            const completionMessages = [
-                '有名角の直角三角形の辺の比を練習しました。まちがえた問題をもう一度たしかめよう！',
-                '鋭角の三角比を練習しました。30°・45°・60°の三角形を思いうかべよう！',
-                '鈍角・特殊角の三角比を練習しました。半円の上の点の座標で考えよう！',
-                '全ての三角比を学習しました！一発正解をふやして、三角比マスターをめざそう！'
-            ];
-            const other = currentMode === 'random' ? 'sequential' : 'random';
-            const modal = document.createElement('div');
-            modal.className = 'result-modal';
-            modal.id = 'resultModal';
-            modal.innerHTML = `
-                <div class="result-box">
-                    <h2>${perfect ? '🎊 全問一発正解！' : '🎉 レベル' + currentLevel + ' 完了！'}</h2>
-                    ${perfect ? '<div class="result-emoji">🎯💯🎯</div>' : ''}
-                    <div class="result-score">一発正解 ${correctAnswers} / ${n} 問</div>
-                    <p>${(perfect ? perfectMessages : completionMessages)[currentLevel]}</p>
-                    <div class="result-nav">
-                        ${currentLevel < 3 ? `<button class="next" onclick="closeResult(); selectLevel(${currentLevel + 1});">次のレベル（レベル${currentLevel + 1}）へ ▶</button>` : ''}
-                        <button class="again" onclick="closeResult(); selectLevel(currentLevel);">同じレベルでもう一度</button>
-                        <button class="mode" onclick="closeResult(); selectMode('${other}');">${other === 'random' ? 'ランダムモード' : '順番モード'}でもう一度</button>
-                        <a href="../remake.html">ほかの教材をえらぶ</a>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal);
-        }
-
-        function closeResult() {
-            const modal = document.getElementById('resultModal');
-            if (modal) modal.remove();
-            window.scrollTo(0, 0);
-        }
-
-        // Add keyboard event listener for Enter key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && answered) {
-                const choices = document.querySelectorAll('.choice');
-                const hasCorrect = Array.from(choices).some(choice => choice.classList.contains('correct'));
-                if (hasCorrect) {
-                    nextProblem();
-                }
-            }
-        });
-
-        function showRandomModeCompletion() {
-            const levelNames = ['レベル0', 'レベル1', 'レベル2', 'レベル3'];
-            const totalProblems = problems[currentLevel].length;
-            const isPerfectScore = correctAnswers === totalProblems;
-
-            // Create celebration modal
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 1000;
-            `;
-
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: ${isPerfectScore ? 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)' : 'white'};
-                padding: 40px;
-                border-radius: 20px;
-                text-align: center;
-                max-width: 500px;
-                margin: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            `;
-
-            const scoreDisplay = isPerfectScore ? `
-                <div style="font-size: 3em; margin: 20px 0; animation: bounce 1s infinite;">
-                    🎯💯🎯
-                </div>
-                <style>
-                    @keyframes bounce {
-                        0%, 100% { transform: translateY(0); }
-                        50% { transform: translateY(-10px); }
-                    }
-                </style>
-            ` : '';
-
-            const perfectMessage = isPerfectScore
-                ? `<h2 style="color: #d69e2e; margin-bottom: 20px; font-size: 2em;">🎊 全問正解！完璧です！🎊</h2>
-                   <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 30px; color: #2d3748;">
-                   ${levelNames[currentLevel]}のランダムモード、全${totalProblems}問を完璧に解きました！<br>
-                   あなたの三角比の理解力は素晴らしい！真のマスターです！✨
-                   </p>`
-                : `<h2 style="color: #4299e1; margin-bottom: 20px; font-size: 2em;">🎉 お疲れ様でした！</h2>
-                   <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 30px; color: #2d3748;">
-                   ${levelNames[currentLevel]}のランダムモード、全${totalProblems}問を解きました！<br>
-                   正解数: ${correctAnswers} / ${totalProblems}<br>
-                   よく頑張りました！この調子で練習を続けましょう！💪
-                   </p>`;
-
-            content.innerHTML = `
-                ${perfectMessage}
-                ${scoreDisplay}
-                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 30px;">
-                    <button onclick="retryRandomMode(); this.parentElement.parentElement.parentElement.remove();" style="
-                        background: #38a169;
-                        color: white;
-                        border: none;
-                        padding: 15px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#2f855a'" onmouseout="this.style.background='#38a169'">
-                        もう一度チャレンジ
-                    </button>
-                    <button onclick="selectMode('sequential'); this.parentElement.parentElement.parentElement.remove();" style="
-                        background: #4299e1;
-                        color: white;
-                        border: none;
-                        padding: 15px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#3182ce'" onmouseout="this.style.background='#4299e1'">
-                        順番モードへ
-                    </button>
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                        background: #718096;
-                        color: white;
-                        border: none;
-                        padding: 15px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#4a5568'" onmouseout="this.style.background='#718096'">
-                        閉じる
-                    </button>
-                </div>
-            `;
-
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-        }
-
-        function retryRandomMode() {
-            correctAnswers = 0;
-            totalAnswered = 0;
-            currentProblemIndex = 0;
-            initializeShuffledIndices();
-            loadProblem();
-            updateDisplay();
-        }
-
-        function showLevelCompletion(isPerfectScore) {
-            const levelNames = ['レベル0', 'レベル1', 'レベル2', 'レベル3'];
-
-            // Different messages for perfect score vs completion
-            const perfectMessages = [
-                '🎉✨ 完璧です！全問正解！有名角の直角三角形を完全にマスターしました！あなたの理解力は素晴らしい！三角比の基礎が完璧に身についています！',
-                '🌟🏆 驚異的！全問正解！鋭角の三角比を完璧に理解していますね！あなたの数学の才能は本物です！この調子で頑張りましょう！',
-                '🏆👑 圧倒的！全問正解！鈍角・特殊角の三角比まで完全制覇！あなたは真の三角比マスターです！数学の天才と言っても過言ではありません！',
-                '👑✨ 究極の完璧！全問正解！全ての三角比を完全制覇！あなたは三角比の絶対王者です！この知識は一生の宝物になるでしょう！'
-            ];
-
-            const completionMessages = [
-                '🎉 素晴らしい！有名角の直角三角形をマスターしました！三角比の基礎がしっかり身についていますね！',
-                '🌟 お見事です！鋭角の三角比を完璧に理解していますね！数学の才能が光っています！',
-                '🏆 驚異的です！鈍角・特殊角の三角比まで完全制覇！あなたは三角比のエキスパートです！',
-                '👑 素晴らしい！全ての三角比を学習しました！あなたは三角比マスターへの道を歩んでいます！'
-            ];
-
-            const messages = isPerfectScore ? perfectMessages : completionMessages;
-            const titleEmoji = isPerfectScore ? '🎊 全問正解！' : '';
-
-            // Create celebration modal
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 1000;
-            `;
-
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: ${isPerfectScore ? 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)' : 'white'};
-                padding: 40px;
-                border-radius: 20px;
-                text-align: center;
-                max-width: 500px;
-                margin: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            `;
-
-            const scoreDisplay = isPerfectScore ? `
-                <div style="font-size: 3em; margin: 20px 0; animation: bounce 1s infinite;">
-                    🎯💯🎯
-                </div>
-                <style>
-                    @keyframes bounce {
-                        0%, 100% { transform: translateY(0); }
-                        50% { transform: translateY(-10px); }
-                    }
-                </style>
-            ` : '';
-
-            const nextLevelBtn = currentLevel < 2 ? `
-                <button onclick="selectLevel(${currentLevel + 1}); this.parentElement.parentElement.remove();" style="
-                    background: #38a169;
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 25px;
-                    font-size: 1.1em;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#2f855a'" onmouseout="this.style.background='#38a169'">
-                    ${levelNames[currentLevel + 1]}へ進む
-                </button>
-            ` : '';
-
-            const randomModeBtn = `
-                <button onclick="selectMode('random'); this.parentElement.parentElement.parentElement.remove();" style="
-                    background: #d69e2e;
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 25px;
-                    font-size: 1.1em;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#b7791f'" onmouseout="this.style.background='#d69e2e'">
-                    ランダムモードへ
-                </button>
-            `;
-
-            content.innerHTML = `
-                <h2 style="color: #4299e1; margin-bottom: 20px; font-size: 2em;">${titleEmoji} ${levelNames[currentLevel]}完了！</h2>
-                ${scoreDisplay}
-                <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 30px; color: #2d3748;">${messages[currentLevel]}</p>
-                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                    ${nextLevelBtn}
-                    ${randomModeBtn}
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                        background: #4299e1;
-                        color: white;
-                        border: none;
-                        padding: 15px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        font-weight: bold;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='#3182ce'" onmouseout="this.style.background='#4299e1'">
-                        続ける
-                    </button>
-                </div>
-            `;
-
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-
-            // Auto-remove after 8 seconds for perfect score, 5 seconds otherwise
-            setTimeout(() => {
-                if (modal.parentElement) {
-                    modal.remove();
-                }
-            }, isPerfectScore ? 8000 : 5000);
-        }
-
-
-
-        // 【ブラッシュアップ】新しいヒント
-        function updateHintContent(question) {
-            if (currentLevel === 0) return;
-            const m = question.match(/(sin|cos|tan)\s*(\d+)°/);
-            if (!m) return;
-            const deg = Number(m[2]);
-            const hintContent = document.getElementById('hintContent');
+        // 数値 → 分数表示の中の「−1/2」などを正しく出すため、choices は mathHTML で表示する
+        function hintFor(deg) {
             const fr = (a, b) => `<span class='fraction'><span class='numerator'>${a}</span><span class='denominator'>${b}</span></span>`;
             if (deg === 30 || deg === 45 || deg === 60) {
-                const sides = { 30: ['√3', '1', '2'], 45: ['1', '1', '√2'], 60: ['1', '√3', '2'] }[deg];
-                hintContent.innerHTML = `
-                    <h4>${deg}° の直角三角形</h4>
-                    <div class="triangle-diagram">${hintTriangle(deg, sides)}</div>
+                const t = RATIO[deg];
+                return `<h4>${deg}° の直角三角形</h4>
+                    <div class="triangle-diagram">${triSVG({ deg, p: SHAPE[deg][0], q: SHAPE[deg][1], sides: { VR: t[0], RT: t[1], VT: t[2] } })}</div>
                     <div class="hint-formula"><span class="f">sin = ${fr('高さ', '斜辺')}</span><span class="f">cos = ${fr('底辺', '斜辺')}</span><span class="f">tan = ${fr('高さ', '底辺')}</span></div>`;
-            } else {
-                const pts = { 0: ['1', '0', '1'], 90: ['0', '1', '1'], 180: ['−1', '0', '1'], 120: ['−1', '√3', '2'], 135: ['−1', '1', '√2'], 150: ['−√3', '1', '2'] }[deg];
-                if (!pts) return;
-                hintContent.innerHTML = `
-                    <h4>半径 r の半円の上の点 P で考える（${deg}°）</h4>
-                    <div class="triangle-diagram">${hintSemicircle(deg, pts)}</div>
-                    <div class="hint-formula"><span class="f">sin = ${fr('y', 'r')}</span><span class="f">cos = ${fr('x', 'r')}</span><span class="f">tan = ${fr('y', 'x')}</span>${deg === 90 ? '<br>x = 0 のとき、tan は 0 でわることになるので…？' : ''}</div>`;
             }
-        }
-
-        // 直角三角形（左下の角が deg°、右下が直角）。sides = [底辺, 高さ, 斜辺]
-        function hintTriangle(deg, sides) {
-            const t = deg * Math.PI / 180, H = 170;
-            const ax = 40, ay = 185, bx = ax + H * Math.cos(t), cy = ay - H * Math.sin(t);
-            const mx = (ax + bx) / 2, my = (ay + cy) / 2;
-            return `<svg width="300" height="210" viewBox="0 0 300 210">
-                <polygon points="${ax},${ay} ${bx},${ay} ${bx},${cy}" fill="#eff6ff" stroke="#2563eb" stroke-width="3"/>
-                <path d="M ${bx - 12},${ay} L ${bx - 12},${ay - 12} L ${bx},${ay - 12}" stroke="#666" stroke-width="2" fill="none"/>
-                <path d="M ${ax + 30},${ay} A 30 30 0 0 0 ${ax + 30 * Math.cos(t)},${ay - 30 * Math.sin(t)}" stroke="#ea580c" stroke-width="2" fill="none"/>
-                <text x="${ax + 36}" y="${ay - 8}" font-size="15" fill="#ea580c" font-weight="bold">${deg}°</text>
-                <text x="${mx}" y="${ay + 20}" font-size="18" text-anchor="middle" font-weight="bold">${sides[0]}</text>
-                <text x="${bx + 10}" y="${(ay + cy) / 2 + 6}" font-size="18" font-weight="bold">${sides[1]}</text>
-                <text x="${mx - 16 * Math.sin(t) - 6}" y="${my - 16 * Math.cos(t)}" font-size="18" text-anchor="middle" font-weight="bold">${sides[2]}</text>
-            </svg>`;
+            return `<h4>半径 r の半円の上の点 P で考える（${deg}°）</h4>
+                <div class="triangle-diagram">${hintSemicircle(deg, POINT[deg])}</div>
+                <div class="hint-formula"><span class="f">sin = ${fr('y', 'r')}</span><span class="f">cos = ${fr('x', 'r')}</span><span class="f">tan = ${fr('y', 'x')}</span>${deg === 90 ? '<br>x = 0 のとき、tan は 0 でわることになるので…？' : ''}</div>`;
         }
 
         // 半径 r の半円と、角 deg° の点 P(x, y)。pts = [x, y, r]
@@ -1449,21 +657,21 @@
             const px = ox + R * Math.cos(t), py = oy - R * Math.sin(t);
             const onAxis = deg === 0 || deg === 90 || deg === 180;
             // 点 P の名前：左側の点は左へ、90° は右へ、0° は点の上へ
-            const lx = deg === 0 ? px : deg === 90 ? px + 10 : px - 8;
-            const ly = deg === 90 ? py - 6 : py - 12;
+            const lx = deg === 0 ? px : deg === 90 ? px + 12 : px - 8;
+            const ly = deg === 90 ? py + 6 : py - 12;
             const anchor = deg === 90 ? 'start' : 'end';
-            // r の文字：線 OP の外側（x 軸の上の線なら上側）
+            // r の文字：線 OP の外側（x 軸の上の線なら下側）
             let nx = Math.sin(t), ny = Math.cos(t);
-            if (deg === 0) { nx = 0; ny = -1; }
-            const rx = (ox + px) / 2 + 10 * nx, ry = (oy + py) / 2 + 10 * ny + (ny > 0 ? 10 : 0);
+            if (deg === 0) { nx = 0; ny = 1; }
+            const rx = (ox + px) / 2 + 10 * nx, ry = (oy + py) / 2 + 10 * ny + (ny > 0 ? 12 : 0);
             const rAnchor = nx > 0.3 ? 'start' : 'middle';
-            const degY = deg === 0 ? oy + 20 : oy - 8;
+            const degY = deg === 0 ? oy - 10 : oy - 8;
             const arcEnd = `${ox + 26 * Math.cos(t)},${oy - 26 * Math.sin(t)}`;
             return `<svg width="340" height="190" viewBox="-40 0 340 190">
                 <line x1="15" y1="${oy}" x2="290" y2="${oy}" stroke="#94a3b8" stroke-width="2"/>
                 <line x1="${ox}" y1="175" x2="${ox}" y2="12" stroke="#94a3b8" stroke-width="2"/>
                 <text x="285" y="${oy + 18}" font-size="14" text-anchor="end">x</text>
-                <text x="${ox + 8}" y="22" font-size="14">y</text>
+                <text x="${ox - 8}" y="22" font-size="14" text-anchor="end">y</text>
                 <text x="${ox - 6}" y="${oy + 18}" font-size="14" text-anchor="end">O</text>
                 <path d="M ${ox - R},${oy} A ${R} ${R} 0 0 1 ${ox + R},${oy}" stroke="#2563eb" stroke-width="2" fill="none" stroke-dasharray="5 4"/>
                 ${onAxis ? '' : `<line x1="${px}" y1="${py}" x2="${px}" y2="${oy}" stroke="#16a34a" stroke-width="2" stroke-dasharray="4 3"/>`}
@@ -1476,106 +684,140 @@
             </svg>`;
         }
 
-        function updateHintContentOld(question) {
-            if (currentLevel === 0) return; // Level 0 uses static hint
-
-            const hintContent = document.getElementById('hintContent');
-            let triangleType = '';
-            let triangleSvg = '';
-
-            if (question.includes('30°')) {
-                triangleType = '30°-60°-90°三角形';
-                triangleSvg = `<svg width="300" height="220" viewBox="0 0 300 220">
-                    <g transform="translate(20, 20)">
-                        <polygon points="20,140 180,140 180,80" fill="none" stroke="#4299e1" stroke-width="2"/>
-                        <text x="100" y="180" text-anchor="middle" font-size="12">30°-60°-90°三角形</text>
-                        <text x="190" y="110" font-size="10">1</text>
-                        <text x="95" y="155" font-size="10">√3</text>
-                        <text x="95" y="90" font-size="10">2</text>
-                        <text x="35" y="130" font-size="10">30°</text>
-                        <text x="190" y="130" font-size="10">90°</text>
-                        <path d="M 175,140 L 175,135 L 180,135" stroke="#666" stroke-width="2" fill="none"/>
-                    </g>
-                </svg>`;
-            } else if (question.includes('45°')) {
-                triangleType = '45°-45°-90°三角形';
-                triangleSvg = `<svg width="300" height="220" viewBox="0 0 300 220">
-                    <g transform="translate(20, 20)">
-                        <polygon points="20,140 140,140 140,20" fill="none" stroke="#38a169" stroke-width="2"/>
-                        <text x="80" y="180" text-anchor="middle" font-size="12">45°-45°-90°三角形</text>
-                        <text x="150" y="85" font-size="10">1</text>
-                        <text x="75" y="155" font-size="10">1</text>
-                        <text x="75" y="75" font-size="10">√2</text>
-                        <text x="35" y="140" font-size="10">45°</text>
-                        <text x="150" y="140" font-size="10">90°</text>
-                        <path d="M 130,140 L 130,130 L 140,130" stroke="#666" stroke-width="3" fill="none"/>
-                    </g>
-                </svg>`;
-            } else if (question.includes('60°')) {
-                triangleType = '60°-30°-90°三角形';
-                triangleSvg = `<svg width="300" height="220" viewBox="0 0 300 220">
-                    <g transform="translate(20, 20)">
-                        <polygon points="100,170 160,170 160,40" fill="none" stroke="#e53e3e" stroke-width="2"/>
-                        <text x="130" y="200" text-anchor="middle" font-size="12">60°-30°-90°三角形</text>
-                        <text x="170" y="105" font-size="10">√3</text>
-                        <text x="125" y="185" font-size="10">1</text>
-                        <text x="125" y="100" font-size="10">2</text>
-                        <text x="110" y="165" font-size="10">60°</text>
-                        <text x="145" y="55" font-size="10">30°</text>
-                        <text x="170" y="165" font-size="10">90°</text>
-                        <path d="M 150,170 L 150,160 L 160,160" stroke="#666" stroke-width="3" fill="none"/>
-                    </g>
-                </svg>`;
-            }
-
-            if (triangleType) {
-                hintContent.innerHTML = `
-                    <h4>${triangleType}</h4>
-                    <div class="triangle-diagram">
-                        ${triangleSvg}
-                    </div>
-                `;
-            }
+        // ---------- 画面の流れ ----------
+        function selectLevel(level) {
+            currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach((btn, index) => btn.classList.toggle('active', index === level));
+            restart();
         }
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.includes(mode === 'sequential' ? '順番' : 'ランダム')));
+            restart();
+        }
+        function restart() {
+            currentProblemIndex = 0;
+            correctAnswers = 0;
+            totalAnswered = 0;
+            playList = levelList(currentLevel);
+            if (currentMode === 'random') playList = shuffleArray(playList);
+            loadProblem();
+            updateDisplay();
+        }
+        let current = null;
+        function loadProblem() {
+            answered = false; solved = false; missedThis = false;
+            current = makeProblem(playList[currentProblemIndex]);
+            document.getElementById('feedbackMessage').innerHTML = '';
+            const pt = document.getElementById('problemText');
+            pt.innerHTML = current.question + (current.figure ? '<div class="problem-diagram">' + current.figure + '</div>' : '');
+            const box = document.getElementById('choices');
+            box.innerHTML = '';
+            order = current.choices.map((_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+            order.forEach((orig, index) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'choice';
+                b.innerHTML = mathHTML(current.choices[orig]);
+                b.onclick = () => selectChoice(index);
+                box.appendChild(b);
+            });
+            document.getElementById('hintContent').innerHTML = current.hint;
+            document.getElementById('hintContent').style.display = 'none';
+            document.getElementById('hintSection').style.display = 'block';
+            const hintBtn = document.querySelector('.hint-btn');
+            if (hintBtn) hintBtn.textContent = 'ヒントを見る';
+            document.getElementById('retryBtn').style.display = 'none';
+            updateNextButton();
+        }
+        function selectChoice(index) {
+            if (answered) return;
+            const orig = order[index];
+            const buttons = document.querySelectorAll('.choice');
+            const fb = document.getElementById('feedbackMessage');
+            if (orig === current.correct) {
+                answered = true; solved = true;
+                buttons[index].classList.add('correct');
+                totalAnswered++;
+                if (!missedThis) correctAnswers++;
+                const praise = ['🎉 正解！', '✨ その調子！', '🌟 大正解！', '👏 正解です！'][Math.floor(Math.random() * 4)];
+                fb.innerHTML = '<div class="feedback-message feedback-correct">' + praise + '<div class="why">💡 ' + current.exp + '</div></div>';
+            } else {
+                missedThis = true;
+                buttons[index].classList.add('incorrect');
+                buttons[index].disabled = true;
+                fb.innerHTML = '<div class="feedback-message feedback-incorrect">🤔 ちがいます。のこりからえらび直そう！<div class="why">💡 ' + current.why[orig] + '</div></div>';
+            }
+            updateNextButton();
+            updateDisplay();
+        }
+        function retryProblem() { }   // 使わなくなった（まちがえたあとも、そのままえらび直せる）
+
+        function nextProblem() {
+            if (!solved) return;   // 正解するまで次へ進めない
+            if (document.getElementById('resultModal')) return;
+            currentProblemIndex++;
+            if (currentProblemIndex >= playList.length) { updateDisplay(); showResult(); return; }
+            loadProblem();
+            updateDisplay();
+            document.getElementById('problemText').scrollIntoView({ block: 'nearest' });
+        }
+
+        // 結果：次のレベル・同じレベル・モードを変えて・ほかの教材
+        function showResult() {
+            const n = playList.length;
+            const perfect = correctAnswers === n;
+            const names = ['有名角の直角三角形の辺の比', '鋭角の三角比', '鈍角・0°・90°・180° の三角比', '0°〜180° の三角比', '180° − θ・90° − θ と、値から角を求める問題'];
+            const other = currentMode === 'random' ? 'sequential' : 'random';
+            const modal = document.createElement('div');
+            modal.className = 'result-modal';
+            modal.id = 'resultModal';
+            modal.innerHTML = `
+                <div class="result-box">
+                    <h2>${perfect ? '🎊 全問一発正解！' : '🎉 レベル' + currentLevel + ' 完了！'}</h2>
+                    ${perfect ? '<div class="result-emoji">🎯💯🎯</div>' : ''}
+                    <div class="result-score">一発正解 ${correctAnswers} / ${n} 問</div>
+                    <p>${names[currentLevel]}を${perfect ? '完全にマスターしました！' : '練習しました。まちがえた問題をもう一度たしかめよう！'}</p>
+                    <div class="result-nav">
+                        ${currentLevel < 4 ? `<button class="next" onclick="closeResult(); selectLevel(${currentLevel + 1});">次のレベル（レベル${currentLevel + 1}）へ ▶</button>` : ''}
+                        <button class="again" onclick="closeResult(); selectLevel(currentLevel);">同じレベルでもう一度</button>
+                        <button class="mode" onclick="closeResult(); selectMode('${other}');">${other === 'random' ? 'ランダムモード' : '順番モード'}でもう一度</button>
+                        <a href="../remake.html">ほかの教材をえらぶ</a>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+        function closeResult() {
+            const modal = document.getElementById('resultModal');
+            if (modal) modal.remove();
+            window.scrollTo(0, 0);
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && solved) nextProblem();
+        });
 
         function toggleHint() {
             const hintContent = document.getElementById('hintContent');
             const hintBtn = document.querySelector('.hint-btn');
-
-            if (hintContent.style.display === 'none') {
-                hintContent.style.display = 'block';
-                hintBtn.textContent = 'ヒントを隠す';
-            } else {
-                hintContent.style.display = 'none';
-                hintBtn.textContent = 'ヒントを見る';
-            }
+            const open = hintContent.style.display === 'none';
+            hintContent.style.display = open ? 'block' : 'none';
+            hintBtn.textContent = open ? 'ヒントを隠す' : 'ヒントを見る';
         }
-
         function updateNextButton() {
             const nextBtn = document.querySelector('.btn-primary');
-            if (solved) {
-                nextBtn.style.opacity = '1';
-                nextBtn.style.cursor = 'pointer';
-                nextBtn.style.background = '#4299e1';
-            } else {
-                nextBtn.style.opacity = '0.5';
-                nextBtn.style.cursor = 'not-allowed';
-                nextBtn.style.background = '#a0aec0';
-            }
+            nextBtn.disabled = !solved;
         }
-
         function updateDisplay() {
-            const n = problems[currentLevel].length;
-            const progressText = `問題 ${Math.min(currentProblemIndex + 1, n)} / ${n}`;
-
-            document.getElementById('progress').textContent = progressText;
-            document.getElementById('score').textContent = `一発正解: ${correctAnswers} / ${totalAnswered}`;
+            const n = playList.length;
+            document.getElementById('progress').textContent = '問題 ' + Math.min(currentProblemIndex + 1, n) + ' / ' + n;
+            document.getElementById('score').textContent = '一発正解: ' + correctAnswers + ' / ' + totalAnswered;
         }
 
-        // Initialize
-        initializeShuffledIndices();
-        loadProblem();
-        updateDisplay();
+        // 初期化
+        restart();
+
     </script>
  <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける

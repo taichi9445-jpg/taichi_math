@@ -160,6 +160,15 @@
     #result-comment { color: var(--u-ink) !important; }
     #hint-panel { background: var(--u-soft-blue) !important; border-color: var(--u-soft-blue-line) !important; }
     #hint-panel .text-indigo-600 { color: var(--u-title) !important; }
+    /* 【ブラッシュアップ】問題の種類・こたえ方をえらぶ段、まちがえたときのヒント */
+    .select-row { margin-bottom: 14px; }
+    .select-label { font-weight: 800; color: var(--u-sub); font-size: .95rem; margin-bottom: 6px; }
+    #feedback { height: auto !important; min-height: 5rem; }
+    #feedback .hint-line { display: block; margin-top: 6px; font-size: 1.05rem; line-height: 1.6; color: var(--u-title); font-weight: 800; }
+    #feedback .answer-line { display: block; margin-top: 6px; font-size: 1.3rem; color: var(--u-ink); font-weight: 900; }
+    .problem-text sup { font-size: .55em; }
+    #hint-pow { flex-basis: 100%; }
+    .choice-btn:disabled { opacity: .55; }
   
     </style>
 </head>
@@ -181,6 +190,27 @@
                 <ruby>正負<rt>せいふ</rt></ruby>の<ruby>数<rt>すう</rt></ruby><br>スーパーチャレンジ！
             </h1>
             
+            <!-- 【ブラッシュアップ】先に「問題の種類」と「こたえ方」をえらぶ。
+                 元はこたえ方のボタンがモードのボタンの下にあり、気づく前に始めてしまうことがあった。
+                 問題の種類は、元の「かけ算（2つ）」に、3つのかけ算・わり算・累乗（(−3)² と −3²）を加えた -->
+            <div class="select-row">
+                <div class="select-label"><ruby>問題<rt>もんだい</rt></ruby></div>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button id="kind-select-mul2" onclick="setProblemKind('mul2')" class="px-3 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md">×（2つ）</button>
+                    <button id="kind-select-mul3" onclick="setProblemKind('mul3')" class="px-3 py-2 rounded-xl font-bold bg-gray-200 text-gray-600">×（3つ）</button>
+                    <button id="kind-select-div" onclick="setProblemKind('div')" class="px-3 py-2 rounded-xl font-bold bg-gray-200 text-gray-600">÷</button>
+                    <button id="kind-select-pow" onclick="setProblemKind('pow')" class="px-3 py-2 rounded-xl font-bold bg-gray-200 text-gray-600"><ruby>累乗<rt>るいじょう</rt></ruby></button>
+                    <button id="kind-select-mix" onclick="setProblemKind('mix')" class="px-3 py-2 rounded-xl font-bold bg-gray-200 text-gray-600">ミックス</button>
+                </div>
+            </div>
+            <div class="select-row">
+                <div class="select-label">こたえ<ruby>方<rt>かた</rt></ruby></div>
+                <div class="flex justify-center gap-4">
+                    <button id="type-select-1" onclick="setInputType(1)" class="px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md">4<ruby>択<rt>たく</rt></ruby>モード</button>
+                    <button id="type-select-2" onclick="setInputType(2)" class="px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600"><ruby>入力<rt>にゅうりょく</rt></ruby>モード</button>
+                </div>
+            </div>
+
             <div class="space-y-4 mb-8 text-left">
                 <button onclick="setupGame('practice')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
                     <span class="text-2xl font-black text-gray-700">🟢 10<ruby>問練習<rt>もんれんしゅう</rt></ruby></span>
@@ -188,7 +218,7 @@
                 </button>
                 <button onclick="setupGame('timeattack')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
                     <span class="text-2xl font-black text-gray-700">🟡 タイムアタック</span>
-                    <span class="text-sm font-bold text-gray-400">10<ruby>問<rt>もん</rt></ruby>を<ruby>最速<rt>さいそく</rt></ruby>で！</span>
+                    <span class="text-sm font-bold text-gray-400">10<ruby>問<rt>もん</rt></ruby>を<ruby>最速<rt>さいそく</rt></ruby>で！ミスは＋3<ruby>秒<rt>びょう</rt></ruby></span>
                 </button>
                 <button onclick="setupGame('survival')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
                     <span class="text-2xl font-black text-gray-700">🔴 サバイバル</span>
@@ -196,10 +226,7 @@
                 </button>
             </div>
 
-            <div class="flex justify-center gap-4">
-                <button id="type-select-1" onclick="setInputType(1)" class="px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md">4<ruby>択<rt>たく</rt></ruby>モード</button>
-                <button id="type-select-2" onclick="setInputType(2)" class="px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600"><ruby>入力<rt>にゅうりょく</rt></ruby>モード</button>
-            </div>
+            <!-- 【ブラッシュアップ】「こたえ方」はモードのボタンの上に移した -->
         </div>
 
         <!-- クイズ画面 -->
@@ -219,7 +246,7 @@
             <div id="choice-container" class="grid grid-cols-2 gap-4"></div>
 
             <div id="input-container" class="hidden">
-                <input type="number" id="answer-input" class="w-full max-w-xs text-5xl p-4 text-center border-8 border-indigo-100 rounded-3xl mb-4 focus:outline-none focus:border-indigo-400 text-indigo-600 font-black" placeholder="?">
+                <input type="number" id="answer-input" enterkeyhint="done" class="w-full max-w-xs text-5xl p-4 text-center border-8 border-indigo-100 rounded-3xl mb-4 focus:outline-none focus:border-indigo-400 text-indigo-600 font-black" placeholder="?">
                 <br>
                 <button id="input-submit-btn" onclick="handleAnswer(parseInt(document.getElementById('answer-input').value), null)" class="w-full max-w-xs bg-indigo-500 text-white font-black py-4 rounded-2xl text-3xl btn-push shadow-indigo-700">できた！</button>
             </div>
@@ -249,9 +276,11 @@
         <div id="hint-panel" class="mt-8 p-4 bg-indigo-50 rounded-3xl border-4 border-dashed border-indigo-200">
             <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm md:text-lg text-indigo-600 font-black">
                 <span>(+)×(+)=(+)</span>
-                <span>(+)×(-)=(-)</span>
-                <span>(-)×(+)=(-)</span>
-                <span>(-)×(-)=(+)</span>
+                <span>(+)×(−)=(−)</span>
+                <span>(−)×(+)=(−)</span>
+                <span>(−)×(−)=(+)</span>
+                <!-- 【ブラッシュアップ】累乗のときだけ出す -->
+                <span id="hint-pow" class="hidden">(−3)<sup>2</sup>＝(−3)×(−3)＝9　／　−3<sup>2</sup>＝−(3×3)＝−9</span>
             </div>
         </div>
     </div>
@@ -278,6 +307,68 @@
 
         const encourageMsg = ["どんまい！もういっかい！", "おしい！つぎはあたるよ！", "あきらめないで！", "もういちど考えてみよう！"];
 
+        // 【ブラッシュアップ】ここから：問題の種類・よくあるまちがいの選択肢・ヒント
+
+        let problemKind = 'mul2';     // mul2：かけ算（2つ） mul3：かけ算（3つ） div：わり算 pow：累乗 mix：ミックス
+        let currentProblem = null;
+        let missTotal = 0;            // この回のまちがいの合計（タイムアタックでは 1 回 +3 秒）
+        const PENALTY_SEC = 3;
+
+        function setProblemKind(kind) {
+            problemKind = kind;
+            ['mul2', 'mul3', 'div', 'pow', 'mix'].forEach(k => {
+                document.getElementById('kind-select-' + k).className = k === kind
+                    ? 'px-3 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md'
+                    : 'px-3 py-2 rounded-xl font-bold bg-gray-200 text-gray-600';
+            });
+            // 累乗のときだけ、(−3)² と −3² のちがいを符号ルールの下に出す
+            document.getElementById('hint-pow').classList.toggle('hidden', !(kind === 'pow' || kind === 'mix'));
+        }
+
+        const minus = (n) => String(n).replace('-', '−');          // マイナスは「−」で表示
+        const paren = (n) => (n < 0 ? `(${minus(n)})` : minus(n));   // 負の数はかっこをつける
+
+        function makeProblem(kind) {
+            const nums = [-9, -8, -7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8, 9];
+            const small = [-5, -4, -3, -2, 2, 3, 4, 5];
+            const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            if (kind === 'mix') kind = pick(['mul2', 'mul2', 'mul3', 'div', 'pow']);
+            const negCount = (arr) => arr.filter(n => n < 0).length;
+            const signWord = (k) => (k % 2 === 1 ? 'マイナス' : 'プラス');
+            if (kind === 'mul3') {
+                const a = pick(small), b = pick(small), c = pick(small);
+                const ans = a * b * c, k = negCount([a, b, c]);
+                return { kind, answer: ans, html: `${paren(a)} × ${paren(b)} × ${paren(c)}`,
+                    traps: [-ans, a * b + c, -(a * b + c)],
+                    hint: `マイナスが ${k} 個 → 答えは${signWord(k)}。大きさは ${Math.abs(a)}×${Math.abs(b)}×${Math.abs(c)}＝${Math.abs(ans)}` };
+            }
+            if (kind === 'div') {
+                const b = pick(nums), q = pick(nums), a = b * q, k = negCount([a, b]);
+                const near = q + (q > 0 ? 1 : -1);
+                return { kind, answer: q, html: `${paren(a)} ÷ ${paren(b)}`,
+                    traps: [-q, near, -near],
+                    hint: `わり算も符号のきまりは同じ。マイナスが ${k} 個 → 答えは${signWord(k)}。大きさは ${Math.abs(a)}÷${Math.abs(b)}＝${Math.abs(q)}` };
+            }
+            if (kind === 'pow') {
+                const a = pick([2, 3, 4, 5]);
+                const n = a === 2 ? pick([2, 3, 4]) : a === 3 ? pick([2, 3]) : 2;
+                const withParen = Math.random() < 0.6;       // (−a)ⁿ と −aⁿ
+                const val = Math.pow(a, n);
+                const ans = withParen ? (n % 2 === 0 ? val : -val) : -val;
+                const times = Array(n).fill(withParen ? `(−${a})` : `${a}`).join('×');
+                return { kind, answer: ans, html: withParen ? `(−${a})<sup>${n}</sup>` : `−${a}<sup>${n}</sup>`,
+                    traps: [-ans, withParen ? -a * n : a * n, withParen ? a * n : -a * n],
+                    hint: withParen
+                        ? `(−${a})<sup>${n}</sup> ＝ ${times}。マイナスが ${n} 個 → ${signWord(n)}で、答えは ${minus(ans)}`
+                        : `−${a}<sup>${n}</sup> は ${a} だけを ${n} 回かけて、最後に − をつける：−(${times})＝${minus(ans)}` };
+            }
+            const a = pick(nums), b = pick(nums), ans = a * b, k = negCount([a, b]);
+            return { kind: 'mul2', answer: ans, html: `${paren(a)} × ${paren(b)}`,
+                traps: [-ans, a + b, -(a + b)],       // 符号をまちがえる・たし算の符号のきまりとまぜてしまう
+                hint: `マイナスが ${k} 個 → 答えは${signWord(k)}。大きさは ${Math.abs(a)}×${Math.abs(b)}＝${Math.abs(ans)}` };
+        }
+        // 【ブラッシュアップ】ここまで
+
         function setInputType(type) {
             inputType = type;
             document.getElementById('type-select-1').className = type === 1 ? 'px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md' : 'px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600';
@@ -294,6 +385,9 @@
             screens.game.classList.remove('hidden');
             screens.result.classList.add('hidden');
             homeBtnContainer.classList.remove('hidden'); 
+            missTotal = 0;
+            // 【ブラッシュアップ】「じっくり学習」の練習モードでは、赤いタイマーを出さない
+            document.getElementById('timer-display').style.visibility = mode === 'practice' ? 'hidden' : 'visible';
 
             if (mode === 'survival') {
                 document.getElementById('game-info-left').innerHTML = "🔥 サバイバル";
@@ -328,13 +422,10 @@
 
             updateStatusUI();
 
-            const nums = [-9, -8, -7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8, 9];
-            const a = nums[Math.floor(Math.random() * nums.length)];
-            const b = nums[Math.floor(Math.random() * nums.length)];
-            currentAnswer = a * b;
-
-            const format = (n) => n < 0 ? `(${n})` : n;
-            document.getElementById('problem-display').innerText = `${format(a)} × ${format(b)}`;
+            // 【ブラッシュアップ】えらんだ種類の問題を作る（元はかけ算2つだけ）。マイナスは「−」で表示
+            currentProblem = makeProblem(problemKind);
+            currentAnswer = currentProblem.answer;
+            document.getElementById('problem-display').innerHTML = currentProblem.html;
             document.getElementById('feedback').innerText = "";
             document.getElementById('answer-input').value = "";
             isWaiting = false;
@@ -368,8 +459,11 @@
         function generateChoices() {
             const choices = new Set([currentAnswer]);
             choices.add(currentAnswer * -1);
+            // 【ブラッシュアップ】元は残り2つが問題と関係のない数（0 のこともあった）。よくあるまちがいを入れる
+            currentProblem.traps.forEach(t => { if (choices.size < 4 && t !== 0) choices.add(t); });
             while(choices.size < 4) {
-                choices.add((Math.floor(Math.random() * 18) - 9) * (Math.floor(Math.random() * 9) + 1));
+                const r = (Math.floor(Math.random() * 18) - 9) * (Math.floor(Math.random() * 9) + 1);
+                if (r !== 0) choices.add(r);   // 【ブラッシュアップ】0 は出さない
             }
             const arr = Array.from(choices).sort(() => Math.random() - 0.5);
             
@@ -378,7 +472,7 @@
             arr.forEach(val => {
                 const btn = document.createElement('button');
                 btn.className = "choice-btn btn-push bg-white text-4xl font-black py-6 rounded-3xl text-indigo-700 shadow-indigo-100 border-4 border-indigo-100";
-                btn.innerText = val;
+                btn.innerText = minus(val);   // 【ブラッシュアップ】マイナスは「−」
                 btn.onclick = (e) => handleAnswer(val, e.target);
                 container.appendChild(btn);
             });
@@ -394,10 +488,9 @@
                 isWaiting = true;
                 if (missThisQuestion === 0) score++;
                 if (targetElement) targetElement.classList.add('choice-selected-correct');
-                if (inputType === 2) {
-                    document.getElementById('answer-input').disabled = true;
-                    document.getElementById('input-submit-btn').disabled = true;
-                }
+                // 【ブラッシュアップ】元はここで入力欄と「できた！」を使えなくしていた。
+                //   するとスマホのキーボードが閉じ、次の問題で自動では開かない（iPhone）。
+                //   次の問題までの間は isWaiting で受け付けないので、使えなくしなくてよい
 
                 fb.innerHTML = `<span class="text-green-600 pop-in animate-bounce">★ <ruby>正解<rt>せいかい</rt></ruby>！ ★</span>`;
                 setTimeout(nextQuestion, 800);
@@ -405,18 +498,23 @@
                 if (gameMode === 'survival') {
                     isWaiting = true;
                     if (targetElement) targetElement.classList.add('choice-selected-wrong');
-                    fb.innerHTML = `<span class="text-red-500 text-2xl">× まちがい！<ruby>終了<rt>しゅうりょう</rt></ruby>！</span>`;
-                    setTimeout(endGame, 1000);
+                    fb.innerHTML = `<span class="text-red-500 text-2xl">× まちがい！<ruby>終了<rt>しゅうりょう</rt></ruby>！</span>`
+                        + `<span class="answer-line"><ruby>正解<rt>せいかい</rt></ruby>は ${currentProblem.html} ＝ ${minus(currentAnswer)}</span>`
+                        + `<span class="hint-line">💡 ${currentProblem.hint}</span>`;   // 【ブラッシュアップ】正しい答えとわけを見せる
+                    setTimeout(endGame, 3500);
                 } else {
                     missThisQuestion++;
                     if (targetElement) {
                         targetElement.classList.add('choice-selected-wrong');
-                        setTimeout(() => {
-                            targetElement.classList.remove('choice-selected-wrong');
-                        }, 1000);
+                        targetElement.disabled = true;   // 【ブラッシュアップ】元は1秒で元に戻り、同じまちがいを何度でも押せた
                     }
                     const msg = encourageMsg[Math.floor(Math.random() * encourageMsg.length)];
-                    fb.innerHTML = `<span class="text-rose-500 text-2xl">${msg}</span>`;
+                    // 【ブラッシュアップ】はげましだけでなく、符号の数え方のヒントを出す。タイムアタックはミス1回で +3 秒
+                    //   （元はミスしても何もなく、4つを急いで押すのがいちばん速かった）
+                    missTotal++;
+                    let penaltyMsg = '';
+                    if (gameMode === 'timeattack') { startTime -= PENALTY_SEC * 1000; penaltyMsg = ` ＋${PENALTY_SEC}秒`; }
+                    fb.innerHTML = `<span class="text-rose-500 text-2xl">${msg}${penaltyMsg}</span><span class="hint-line">💡 ${currentProblem.hint}</span>`;
                     
                     if (inputType === 2) {
                         document.getElementById('answer-input').value = "";
@@ -440,12 +538,12 @@
             if (gameMode === 'survival') {
                 title.innerHTML = "サバイバル<ruby>終了<rt>しゅうりょう</rt></ruby>！";
                 stats.innerText = `${questionCount - 1}問`;
-                comment.innerHTML = `${finalTime}秒 いきのこったよ！`;
+                comment.innerHTML = `${finalTime}秒 いきのこったよ！<br><span style="font-size:.9em">さいごの<ruby>問題<rt>もんだい</rt></ruby> ${currentProblem.html} ＝ ${minus(currentAnswer)}</span>`;
                 emoji.innerText = "🔥";
             } else if (gameMode === 'timeattack') {
                 title.innerHTML = "タイムアタック<ruby>完了<rt>かんりょう</rt></ruby>！";
                 stats.innerText = `${finalTime}秒`;
-                comment.innerHTML = `10<ruby>問<rt>もん</rt></ruby>とくのに かかった<ruby>時間<rt>じかん</rt></ruby>だよ！`;
+                comment.innerHTML = `10<ruby>問<rt>もん</rt></ruby>とくのに かかった<ruby>時間<rt>じかん</rt></ruby>だよ！<br>ミス ${missTotal}<ruby>回<rt>かい</rt></ruby>（1<ruby>回<rt>かい</rt></ruby>につき ＋${PENALTY_SEC}<ruby>秒<rt>びょう</rt></ruby>）`;   // 【ブラッシュアップ】
                 emoji.innerText = "⏱️";
             } else {
                 title.innerHTML = "10<ruby>問練習終了<rt>もんれんしゅうしゅうりょう</rt></ruby>！";
@@ -468,6 +566,8 @@
             homeBtnContainer.classList.add('hidden');
         }
 
+        // 【ブラッシュアップ】「できた！」を押しても入力欄からフォーカスを外さない（スマホでキーボードが閉じないように）
+        document.getElementById('input-submit-btn').addEventListener('mousedown', (e) => e.preventDefault());
         document.getElementById('answer-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleAnswer(parseInt(e.target.value), null);
         });
@@ -480,6 +580,8 @@
     "#start-screen .mode-card": "u-choice",
     "[id^=\"type-select\"]:is(.bg-indigo-600)": "u-btn u-btn-blue",
     "[id^=\"type-select\"]:is(.bg-gray-200)": "u-btn u-btn-plain",
+    "[id^=\"kind-select\"]:is(.bg-indigo-600)": "u-btn u-btn-blue",
+    "[id^=\"kind-select\"]:is(.bg-gray-200)": "u-btn u-btn-plain",
     "#home-btn-container button": "u-btn u-btn-plain",
     "#game-screen > .w-full.bg-gray-200": "u-progress",
     ".choice-btn": "u-choice",

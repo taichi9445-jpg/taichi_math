@@ -607,6 +607,9 @@
       .lfrac .drop-zone { min-width: 44px; }
       .rev-angle { padding: 5px 9px; font-size: 15px; }
     }
+    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
+    .mf { font-family: var(--u-math-font); font-style: normal; }
+    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
   
   </style>
 </head>
@@ -1026,15 +1029,25 @@
       return SEMI_MODES.includes(mode) ? { cx: 300, cy: 322, R: 215, semi: true } : { cx: 300, cy: 200, R: 150, semi: false };
     }
     function label(ctx, text, x, y, color, align, size) {
-      ctx.font = `bold ${size || 24}px "M PLUS Rounded 1c", sans-serif`;
-      const w = ctx.measureText(text).width;
+      // 【ブラッシュアップ】文字（x, y, O, P, r, θ）は斜体、数字・記号はまっすぐ（数式の書体）に分けてかく
+      size = Math.round((size || 24) * 1.1);
+      const parts = String(text).match(/[A-Za-zθ]|[^A-Za-zθ]+/g) || [];
+      const fontOf = p => (/^[A-Za-zθ]$/.test(p) ? 'italic ' : '') + 'bold ' + size + 'px "Times New Roman", serif';
+      const ws = parts.map(p => { ctx.font = fontOf(p); return ctx.measureText(p).width; });
+      const w = ws.reduce((a, b) => a + b, 0);
       align = align || 'center';
-      if (align === 'center') x = Math.min(Math.max(x, w / 2 + 4), 596 - w / 2);
-      if (align === 'left') x = Math.min(x, 596 - w);
-      if (align === 'right') x = Math.max(x, w + 4);
-      ctx.textAlign = align; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round'; ctx.strokeText(text, x, y);
-      ctx.fillStyle = color || '#334155'; ctx.fillText(text, x, y);
+      let left = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+      left = Math.min(Math.max(left, 4), 596 - w);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      [true, false].forEach(back => {
+        let l = left;
+        parts.forEach((p, i) => {
+          ctx.font = fontOf(p);
+          if (back) { ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.strokeText(p, l, y); }
+          else { ctx.fillStyle = color || '#334155'; ctx.fillText(p, l, y); }
+          l += ws[i];
+        });
+      });
     }
     function arrowLine(ctx, x1, y1, x2, y2) {
       ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
@@ -1783,6 +1796,58 @@
 
     onConfigChange(window.elementSdk ? window.elementSdk.config : defaultConfig);
   </script>
+<script>
+  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
+  (function () {
+    const SCOPE = '.fill-blank, .coord-hint, .trig-label, .trig-option, #coord-choices .choice, .theta-now, .rev-q, #rev-hint, .mode-card p, .step-note, .rev-angle, .result';   // 数式として書きかえる場所
+    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
+    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
+    function wrapRun(s) {
+      const span = document.createElement('span');
+      span.className = 'mf';
+      s.split(/(sin|cos|tan)/).forEach((part, i) => {
+        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
+        part.split(/([A-Za-zθ])/).forEach((q, j) => {
+          if (!q) return;
+          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
+          else span.appendChild(document.createTextNode(q));
+        });
+      });
+      return span;
+    }
+    function run() {
+      document.querySelectorAll(SCOPE).forEach(el => {
+        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) list.push(w.currentNode);
+        list.forEach(n => {
+          const p = n.parentElement;
+          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
+          const t = n.nodeValue;
+          if (!/[0-9A-Za-zθ√]/.test(t)) return;
+          const frag = document.createDocumentFragment();
+          let last = 0, m;
+          RUN.lastIndex = 0;
+          while ((m = RUN.exec(t))) {
+            if (!m[0].length) { RUN.lastIndex++; continue; }
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            frag.appendChild(wrapRun(m[0]));
+            last = m.index + m[0].length;
+          }
+          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+          n.parentNode.replaceChild(frag, n);
+        });
+      });
+    }
+    let pending = false;
+    new MutationObserver(() => {
+      if (pending) return;
+      pending = true;
+      setTimeout(() => { pending = false; run(); }, 0);
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    run();
+  })();
+</script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
   PortTheme.map({

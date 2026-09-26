@@ -13,6 +13,8 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2次関数の平行移動クイズ</title>
+    <!-- 【ブラッシュアップ】ヒントのグラフは共通部品で描く（原点 O・x・y・目盛り・頂点の座標） -->
+    <script src="../assets/graph.js"></script>
     <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
        本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
        同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
@@ -55,27 +57,38 @@
     .container > .text-center p { color: var(--u-sub); font-weight: 700; }
     .container .bg-white.shadow-md, .container .bg-white.shadow-lg { background: #f8fafc !important; border: 3px solid var(--u-line); box-shadow: none !important; border-radius: 24px !important; }
     #translation-problem { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; border-radius: 20px !important; }
+    #original-function, #transformed-function { font-family: 'Times New Roman', serif !important; }
     #original-function { color: var(--u-title) !important; }
     #transformed-function { color: #dc2626 !important; }
     #question-text { color: var(--u-title-dark) !important; }
-    .set-btn.ring-4 { box-shadow: 0 0 0 4px rgba(251,146,60,0.45) !important; }
-    .choice-btn { text-align: left; padding: 16px 18px; }
-    .choice-btn span:first-child { color: var(--u-accent-text) !important; }
+    .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; margin: 0 auto; }
+    .set-row .set-btn { font-size: 15px; padding: 10px 6px; }
+    .set-btn.ring-4 { box-shadow: 0 0 0 4px rgba(251,146,60,0.55) !important; }
+    .choice-btn { text-align: left; padding: 14px 18px; font-family: 'Times New Roman', 'M PLUS Rounded 1c', serif; font-size: 1.15rem; }
+    .choice-btn span:first-child { color: var(--u-accent-text) !important; font-family: var(--u-font); }
+    .choice-sub { display: block; font-size: .8rem; color: var(--u-sub); font-family: var(--u-font); margin-top: 2px; }
     #level-badge { background: var(--u-soft-yellow) !important; color: var(--u-soft-yellow-text) !important; }
     #hint-section { background: var(--u-soft-blue) !important; border: 2px solid var(--u-soft-blue-line) !important; border-radius: 20px; }
-    #hint-section h3, #hint-text { color: var(--u-title) !important; }
-    #hint-section svg { width: 100%; max-width: 400px; height: auto; }
+    #hint-section h3, #hint-text { color: var(--u-title-dark) !important; }
+    #hint-graph { background: #fff; border-radius: 16px; padding: 6px; text-align: center; }
+    #hint-section .bg-white { padding: 6px !important; }
+    .hint-legend { font-size: .85rem; color: var(--u-sub); font-weight: 700; margin-top: 4px; }
     #correct-result { background: var(--u-ok-soft) !important; border: 3px solid var(--u-ok-line) !important; border-radius: 20px; }
+    #explanation { line-height: 1.8; }
     #wrong-result { background: var(--u-ng-soft) !important; border: 3px solid var(--u-ng-line) !important; border-radius: 20px; }
+    #wrong-explanation { color: var(--u-ink) !important; font-weight: 700; line-height: 1.7; }
     #hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
     #completion-modal > div { max-width: 28rem; }
     #completion-modal h2 { color: var(--u-title) !important; }
     #completion-modal a { display: block; margin-top: 10px; color: var(--u-sub); font-weight: 700; }
+    .rule-box p { line-height: 1.8; }
     @media (max-width: 640px) {
       .container.max-w-4xl { padding: 8px; }
       .container .bg-white.shadow-lg { padding: 16px 12px !important; }
       #translation-problem { padding: 14px 10px !important; }
-      .choice-btn { padding: 14px 12px; font-size: 1.1rem; }
+      .choice-btn { padding: 12px 12px; font-size: 1.05rem; }
+      #hint-section { padding: 10px !important; }
+      #original-function, #transformed-function { font-size: 1.35rem !important; }
     }
   
   </style>
@@ -93,13 +106,12 @@
         <div class="bg-white rounded-lg shadow-md p-4 mb-6">
             <div class="text-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800 mb-3">問題セット選択</h3>
-                <div class="flex justify-center space-x-4">
-                    <button id="set1-btn" class="set-btn bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 ring-4 ring-green-400">
-                        セット1: 基本編
-                    </button>
-                    <button id="set2-btn" class="set-btn bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                        セット2: 基本編
-                    </button>
+                <!-- 【ブラッシュアップ】セット3・4 を足した。元は 2 つとも「基本編」という名前だった -->
+                <div class="set-row">
+                    <button id="set1-btn" class="set-btn bg-blue-500 text-white font-medium py-2 px-4 rounded-lg">セット1：上下・左右</button>
+                    <button id="set2-btn" class="set-btn bg-blue-500 text-white font-medium py-2 px-4 rounded-lg">セット2：数を変えて</button>
+                    <button id="set3-btn" class="set-btn bg-blue-500 text-white font-medium py-2 px-4 rounded-lg">セット3：頂点と軸</button>
+                    <button id="set4-btn" class="set-btn bg-blue-500 text-white font-medium py-2 px-4 rounded-lg">セット4：発展</button>
                 </div>
                 <p class="text-sm text-gray-600 mt-2">現在の問題セット: <span id="current-set-display" class="font-semibold text-indigo-600">セット1</span></p>
             </div>
@@ -132,10 +144,10 @@
                 </div>
                 <!-- 平行移動問題 -->
                 <div id="translation-problem" class="bg-gray-50 rounded-lg p-6 mb-6">
-                    <p class="text-lg text-gray-700 mb-2">元の関数：</p>
-                    <p class="text-2xl font-mono font-bold text-blue-600" id="original-function">y = x²</p>
-                    <p class="text-lg text-gray-700 mt-4 mb-2">変換後の関数：</p>
-                    <p class="text-2xl font-mono font-bold text-red-600" id="transformed-function">y = (x-2)² + 3</p>
+                    <p class="text-lg text-gray-700 mb-2" id="lbl-original">元の関数：</p>
+                    <p class="text-2xl font-bold text-blue-600" id="original-function">y = x²</p>
+                    <p class="text-lg text-gray-700 mt-4 mb-2" id="lbl-transformed">平行移動したあとの関数：</p>
+                    <p class="text-2xl font-bold text-red-600" id="transformed-function"></p>
                 </div>
 
                 <p class="text-lg font-medium text-gray-800" id="question-text">この変換は、元の関数をどのように平行移動したものですか？</p>
@@ -150,44 +162,11 @@
 
             <!-- ヒント表示 -->
             <div id="hint-section" class="hidden mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-yellow-800 mb-4">💡 ヒント：グラフの移動を見てみよう！</h3>
+                <h3 class="text-lg font-semibold text-yellow-800 mb-4">💡 グラフで確かめよう</h3>
                 <div class="bg-white rounded-lg p-4 mb-4">
-                    <svg width="400" height="300" viewBox="0 0 400 300" class="mx-auto">
-                        <!-- グリッド -->
-                        <defs>
-                            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="1"/>
-                            </pattern>
-                        </defs>
-                        <rect width="400" height="300" fill="url(#grid)" />
-
-                        <!-- 軸 -->
-                        <line x1="200" y1="0" x2="200" y2="300" stroke="#6b7280" stroke-width="2"/>
-                        <line x1="0" y1="200" x2="400" y2="200" stroke="#6b7280" stroke-width="2"/>
-
-                        <!-- 軸ラベル -->
-                        <text x="390" y="195" fill="#6b7280" font-size="14">x</text>
-                        <text x="205" y="15" fill="#6b7280" font-size="14">y</text>
-
-                        <!-- 元のグラフ -->
-                        <path id="original-graph" d="M 140 240 Q 200 160 260 240" fill="none" stroke="#3b82f6" stroke-width="3" class="parabola"/>
-                        <text id="original-label" x="270" y="235" fill="#3b82f6" font-weight="bold" font-size="14">元のグラフ</text>
-
-                        <!-- 変換後のグラフ -->
-                        <path id="transformed-graph" d="M 140 240 Q 200 160 260 240" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="5,5" class="parabola"/>
-                        <text id="transformed-label" x="270" y="255" fill="#ef4444" font-weight="bold" font-size="14">変換後</text>
-
-                        <!-- 移動の矢印 -->
-                        <g id="movement-arrow" class="hidden">
-                            <defs>
-                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                                    <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
-                                </marker>
-                            </defs>
-                            <line id="arrow-line" x1="200" y1="150" x2="240" y2="110" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
-                            <text id="arrow-text" x="245" y="105" fill="#10b981" font-weight="bold" font-size="12">移動</text>
-                        </g>
-                    </svg>
+                    <!-- 【ブラッシュアップ】ここに graph.js の図を入れる -->
+                    <div id="hint-graph"></div>
+                    <div class="hint-legend" id="hint-legend">点線：元のグラフ ／ 実線：平行移動したグラフ ／ 緑の矢印：頂点の動き</div>
                 </div>
                 <p class="text-yellow-700" id="hint-text">ヒントが表示されます</p>
             </div>
@@ -257,7 +236,7 @@
                         🚀 次のセットに挑戦
                     </button>
                     <button id="restart-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-                        🔄 別の問題に挑戦
+                        🔄 同じセットをもう一度
                     </button>
                     <button id="close-modal-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
                         閉じる
@@ -270,375 +249,1034 @@
         <!-- 解説 -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 平行移動のルール</h3>
-            <div class="space-y-2 text-gray-700">
-                <p><strong>y = (x - a)² + b</strong> の形の場合：</p>
-                <p>• <strong>x方向：</strong> (x - a) → 右にa移動、(x + a) → 左にa移動</p>
-                <p>• <strong>y方向：</strong> + b → 上にb移動、- b → 下にb移動</p>
+            <!-- 【ブラッシュアップ】教科書と同じ記号にした（元は y = (x - a)² + b で、a を横の移動に使っていた） -->
+            <div class="space-y-2 text-gray-700 rule-box">
+                <p><strong>y = a(x − p)² + q</strong> のグラフは、<strong>y = ax²</strong> のグラフを</p>
+                <p>• <strong>x軸方向に p</strong>、<strong>y軸方向に q</strong> だけ平行移動した放物線</p>
+                <p>• 頂点 <strong>(p, q)</strong>、軸 <strong>x = p</strong></p>
+                <p>• (x − 2)² → p = 2（右へ 2）、(x + 1)² = (x − (−1))² → p = −1（左へ 1）</p>
             </div>
         </div>
     </div>
 
     <script>
+
         const allProblems = {
-            set1: [
-                // 段階1: y軸方向のみ（3問）
-                {
-                    original: "y = x²",
-                    transformed: "y = x² + 3",
-                    choices: ["上に3", "下に3", "右に3", "左に3"],
-                    correct: 0,
-                    explanation: "+3はy軸方向に上に3の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = x² - 2",
-                    choices: ["上に2", "下に2", "右に2", "左に2"],
-                    correct: 1,
-                    explanation: "-2はy軸方向に下に2の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = x² + 5",
-                    choices: ["下に5", "上に5", "右に5", "左に5"],
-                    correct: 1,
-                    explanation: "+5はy軸方向に上に5の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                // 段階2: x軸方向のみ（3問）
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-2)²",
-                    choices: ["左に2", "右に2", "上に2", "下に2"],
-                    correct: 1,
-                    explanation: "(x-2)はx軸方向に右に2の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x+1)²",
-                    choices: ["右に1", "左に1", "上に1", "下に1"],
-                    correct: 1,
-                    explanation: "(x+1)はx軸方向に左に1の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-3)²",
-                    choices: ["左に3", "右に3", "上に3", "下に3"],
-                    correct: 1,
-                    explanation: "(x-3)はx軸方向に右に3の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                // 段階3: 2方向の移動（4問）
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-2)² + 3",
-                    choices: ["右に2、上に3", "左に2、上に3", "右に2、下に3", "左に2、下に3"],
-                    correct: 0,
-                    explanation: "(x-2)は右に2、+3は上に3の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x+1)² - 2",
-                    choices: ["右に1、下に2", "左に1、下に2", "右に1、上に2", "左に1、上に2"],
-                    correct: 1,
-                    explanation: "(x+1)は左に1、-2は下に2の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-1)² + 4",
-                    choices: ["左に1、上に4", "右に1、上に4", "左に1、下に4", "右に1、下に4"],
-                    correct: 1,
-                    explanation: "(x-1)は右に1、+4は上に4の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x+2)² - 1",
-                    choices: ["右に2、上に1", "左に2、下に1", "右に2、下に1", "左に2、上に1"],
-                    correct: 1,
-                    explanation: "(x+2)は左に2、-1は下に1の移動を表します。",
-                    level: "基礎",
-                    type: "translation"
-                }
-            ],
-            set2: [
-                // 段階1: y軸方向のみ（2問）- 数字を変更
-                {
-                    original: "y = x²",
-                    transformed: "y = x² + 4",
-                    choices: ["上に4", "下に4", "右に4", "左に4"],
-                    correct: 0,
-                    explanation: "+4はy軸方向に上に4の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = x² - 3",
-                    choices: ["上に3", "下に3", "右に3", "左に3"],
-                    correct: 1,
-                    explanation: "-3はy軸方向に下に3の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                },
-                // 段階2: x軸方向のみ（2問）- 数字を変更
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-4)²",
-                    choices: ["左に4", "右に4", "上に4", "下に4"],
-                    correct: 1,
-                    explanation: "(x-4)はx軸方向に右に4の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x+3)²",
-                    choices: ["右に3", "左に3", "上に3", "下に3"],
-                    correct: 1,
-                    explanation: "(x+3)はx軸方向に左に3の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                },
-                // 段階3: 2方向の移動（2問）- 数字を変更
-                {
-                    original: "y = x²",
-                    transformed: "y = (x-3)² + 2",
-                    choices: ["右に3、上に2", "左に3、上に2", "右に3、下に2", "左に3、下に2"],
-                    correct: 0,
-                    explanation: "(x-3)は右に3、+2は上に2の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                },
-                {
-                    original: "y = x²",
-                    transformed: "y = (x+2)² - 4",
-                    choices: ["右に2、下に4", "左に2、下に4", "右に2、上に4", "左に2、上に4"],
-                    correct: 1,
-                    explanation: "(x+2)は左に2、-4は下に4の移動を表します。",
-                    level: "基本",
-                    type: "translation"
-                }
-            ]
+         "set1": [
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 0,
+           "q": 3,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": 3
+           },
+           "original": "y = x²",
+           "transformed": "y = x² + 3",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "上に3|y軸方向に 3",
+            "下に3|y軸方向に −3",
+            "右に3|x軸方向に 3",
+            "左に3|x軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "最後の + 3 は頂点の y 座標。上へ 3 だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 3 は上下の移動だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 3 は上下の移動だよ"
+           ],
+           "explanation": "+ 3 は y軸方向に 3（上に 3）の移動。頂点は (0, 0) → (0, 3)、軸は x = 0 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 0,
+           "q": -2,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": -2
+           },
+           "original": "y = x²",
+           "transformed": "y = x² − 2",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "下に2|y軸方向に −2",
+            "上に2|y軸方向に 2",
+            "右に2|x軸方向に 2",
+            "左に2|x軸方向に −2"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "最後の − 2 は頂点の y 座標。下へ 2 だよ",
+            "かっこの中は x のまま（左右には動いていない）。− 2 は上下の移動だよ",
+            "かっこの中は x のまま（左右には動いていない）。− 2 は上下の移動だよ"
+           ],
+           "explanation": "− 2 は y軸方向に −2（下に 2）の移動。頂点は (0, 0) → (0, −2)、軸は x = 0 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 0,
+           "q": 5,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": 5
+           },
+           "original": "y = x²",
+           "transformed": "y = x² + 5",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "上に5|y軸方向に 5",
+            "下に5|y軸方向に −5",
+            "右に5|x軸方向に 5",
+            "左に5|x軸方向に −5"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "最後の + 5 は頂点の y 座標。上へ 5 だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 5 は上下の移動だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 5 は上下の移動だよ"
+           ],
+           "explanation": "+ 5 は y軸方向に 5（上に 5）の移動。頂点は (0, 0) → (0, 5)、軸は x = 0 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 2,
+           "q": 0,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -4,
+            "c": 4
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 2)²",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に2|x軸方向に 2",
+            "左に2|x軸方向に −2",
+            "上に2|y軸方向に 2",
+            "下に2|y軸方向に −2"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 2) は x = 2 のとき 0 になるので、頂点の x 座標は 2。右へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "(x − 2) は左右の移動。上下の移動ではないよ",
+            "(x − 2) は左右の移動。上下の移動ではないよ"
+           ],
+           "explanation": "(x − 2) は x軸方向に 2（右に 2）の移動。頂点は (0, 0) → (2, 0)、軸は x = 2 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": -1,
+           "q": 0,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 2,
+            "c": 1
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 1)²",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に1|x軸方向に −1",
+            "右に1|x軸方向に 1",
+            "上に1|y軸方向に 1",
+            "下に1|y軸方向に −1"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 1) は x = −1 のとき 0 になるので、頂点の x 座標は −1。左へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "(x + 1) は左右の移動。上下の移動ではないよ",
+            "(x + 1) は左右の移動。上下の移動ではないよ"
+           ],
+           "explanation": "(x + 1) は x軸方向に −1（左に 1）の移動。頂点は (0, 0) → (−1, 0)、軸は x = −1 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 3,
+           "q": 0,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -6,
+            "c": 9
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 3)²",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に3|x軸方向に 3",
+            "左に3|x軸方向に −3",
+            "上に3|y軸方向に 3",
+            "下に3|y軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 3) は x = 3 のとき 0 になるので、頂点の x 座標は 3。右へ 3 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "(x − 3) は左右の移動。上下の移動ではないよ",
+            "(x − 3) は左右の移動。上下の移動ではないよ"
+           ],
+           "explanation": "(x − 3) は x軸方向に 3（右に 3）の移動。頂点は (0, 0) → (3, 0)、軸は x = 3 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 2,
+           "q": 3,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -4,
+            "c": 7
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 2)² + 3",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に2、上に3|x軸方向に 2、y軸方向に 3",
+            "左に2、上に3|x軸方向に −2、y軸方向に 3",
+            "右に2、下に3|x軸方向に 2、y軸方向に −3",
+            "左に2、下に3|x軸方向に −2、y軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 2) は x = 2 のとき 0 になるので、頂点の x 座標は 2。右へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の + 3 は頂点の y 座標。上へ 3 だよ",
+            "(x − 2) は x = 2 のとき 0 になるので、頂点の x 座標は 2。右へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x − 2) は x軸方向に 2（右に 2）、+ 3 は y軸方向に 3（上に 3）の移動。頂点は (0, 0) → (2, 3)、軸は x = 2 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": -1,
+           "q": -2,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 2,
+            "c": -1
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 1)² − 2",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に1、下に2|x軸方向に −1、y軸方向に −2",
+            "右に1、下に2|x軸方向に 1、y軸方向に −2",
+            "左に1、上に2|x軸方向に −1、y軸方向に 2",
+            "右に1、上に2|x軸方向に 1、y軸方向に 2"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 1) は x = −1 のとき 0 になるので、頂点の x 座標は −1。左へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の − 2 は頂点の y 座標。下へ 2 だよ",
+            "(x + 1) は x = −1 のとき 0 になるので、頂点の x 座標は −1。左へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x + 1) は x軸方向に −1（左に 1）、− 2 は y軸方向に −2（下に 2）の移動。頂点は (0, 0) → (−1, −2)、軸は x = −1 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": 1,
+           "q": 4,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -2,
+            "c": 5
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 1)² + 4",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に1、上に4|x軸方向に 1、y軸方向に 4",
+            "左に1、上に4|x軸方向に −1、y軸方向に 4",
+            "右に1、下に4|x軸方向に 1、y軸方向に −4",
+            "左に1、下に4|x軸方向に −1、y軸方向に −4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 1) は x = 1 のとき 0 になるので、頂点の x 座標は 1。右へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の + 4 は頂点の y 座標。上へ 4 だよ",
+            "(x − 1) は x = 1 のとき 0 になるので、頂点の x 座標は 1。右へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x − 1) は x軸方向に 1（右に 1）、+ 4 は y軸方向に 4（上に 4）の移動。頂点は (0, 0) → (1, 4)、軸は x = 1 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基礎",
+           "a": 1,
+           "p": -2,
+           "q": -1,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 4,
+            "c": 3
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 2)² − 1",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に2、下に1|x軸方向に −2、y軸方向に −1",
+            "右に2、下に1|x軸方向に 2、y軸方向に −1",
+            "左に2、上に1|x軸方向に −2、y軸方向に 1",
+            "右に2、上に1|x軸方向に 2、y軸方向に 1"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の − 1 は頂点の y 座標。下へ 1 だよ",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x + 2) は x軸方向に −2（左に 2）、− 1 は y軸方向に −1（下に 1）の移動。頂点は (0, 0) → (−2, −1)、軸は x = −2 になる。"
+          }
+         ],
+         "set2": [
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": 0,
+           "q": 4,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": 4
+           },
+           "original": "y = x²",
+           "transformed": "y = x² + 4",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "上に4|y軸方向に 4",
+            "下に4|y軸方向に −4",
+            "右に4|x軸方向に 4",
+            "左に4|x軸方向に −4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "最後の + 4 は頂点の y 座標。上へ 4 だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 4 は上下の移動だよ",
+            "かっこの中は x のまま（左右には動いていない）。+ 4 は上下の移動だよ"
+           ],
+           "explanation": "+ 4 は y軸方向に 4（上に 4）の移動。頂点は (0, 0) → (0, 4)、軸は x = 0 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": 0,
+           "q": -3,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": -3
+           },
+           "original": "y = x²",
+           "transformed": "y = x² − 3",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "下に3|y軸方向に −3",
+            "上に3|y軸方向に 3",
+            "右に3|x軸方向に 3",
+            "左に3|x軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "最後の − 3 は頂点の y 座標。下へ 3 だよ",
+            "かっこの中は x のまま（左右には動いていない）。− 3 は上下の移動だよ",
+            "かっこの中は x のまま（左右には動いていない）。− 3 は上下の移動だよ"
+           ],
+           "explanation": "− 3 は y軸方向に −3（下に 3）の移動。頂点は (0, 0) → (0, −3)、軸は x = 0 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": 4,
+           "q": 0,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -8,
+            "c": 16
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 4)²",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に4|x軸方向に 4",
+            "左に4|x軸方向に −4",
+            "上に4|y軸方向に 4",
+            "下に4|y軸方向に −4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 4) は x = 4 のとき 0 になるので、頂点の x 座標は 4。右へ 4 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "(x − 4) は左右の移動。上下の移動ではないよ",
+            "(x − 4) は左右の移動。上下の移動ではないよ"
+           ],
+           "explanation": "(x − 4) は x軸方向に 4（右に 4）の移動。頂点は (0, 0) → (4, 0)、軸は x = 4 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": -3,
+           "q": 0,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 6,
+            "c": 9
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 3)²",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に3|x軸方向に −3",
+            "右に3|x軸方向に 3",
+            "上に3|y軸方向に 3",
+            "下に3|y軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 3) は x = −3 のとき 0 になるので、頂点の x 座標は −3。左へ 3 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "(x + 3) は左右の移動。上下の移動ではないよ",
+            "(x + 3) は左右の移動。上下の移動ではないよ"
+           ],
+           "explanation": "(x + 3) は x軸方向に −3（左に 3）の移動。頂点は (0, 0) → (−3, 0)、軸は x = −3 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": 3,
+           "q": 2,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -6,
+            "c": 11
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 3)² + 2",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "右に3、上に2|x軸方向に 3、y軸方向に 2",
+            "左に3、上に2|x軸方向に −3、y軸方向に 2",
+            "右に3、下に2|x軸方向に 3、y軸方向に −2",
+            "左に3、下に2|x軸方向に −3、y軸方向に −2"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 3) は x = 3 のとき 0 になるので、頂点の x 座標は 3。右へ 3 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の + 2 は頂点の y 座標。上へ 2 だよ",
+            "(x − 3) は x = 3 のとき 0 になるので、頂点の x 座標は 3。右へ 3 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x − 3) は x軸方向に 3（右に 3）、+ 2 は y軸方向に 2（上に 2）の移動。頂点は (0, 0) → (3, 2)、軸は x = 3 になる。"
+          },
+          {
+           "type": "translation",
+           "level": "基本",
+           "a": 1,
+           "p": -2,
+           "q": -4,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 4,
+            "c": 0
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 2)² − 4",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に2、下に4|x軸方向に −2、y軸方向に −4",
+            "右に2、下に4|x軸方向に 2、y軸方向に −4",
+            "左に2、上に4|x軸方向に −2、y軸方向に 4",
+            "右に2、上に4|x軸方向に 2、y軸方向に 4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の − 4 は頂点の y 座標。下へ 4 だよ",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x + 2) は x軸方向に −2（左に 2）、− 4 は y軸方向に −4（下に 4）の移動。頂点は (0, 0) → (−2, −4)、軸は x = −2 になる。"
+          }
+         ],
+         "set3": [
+          {
+           "type": "vertex",
+           "level": "頂点と軸",
+           "a": 1,
+           "p": 2,
+           "q": 3,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -4,
+            "c": 7
+           },
+           "original": "y = x²",
+           "transformed": "y = (x − 2)² + 3",
+           "question": "この放物線の頂点と軸は？",
+           "choices": [
+            "頂点 (2, 3)|軸 x = 2",
+            "頂点 (−2, 3)|軸 x = −2",
+            "頂点 (2, −3)|軸 x = 2",
+            "頂点 (2, 3)|軸 y = 3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 2) は x = 2 のとき 0。頂点の x 座標は 2 だよ（符号が逆）",
+            "最後の + 3 がそのまま頂点の y 座標。3 だよ",
+            "軸は頂点を通る「たての直線」。式は x = 2 だよ"
+           ],
+           "explanation": "y = (x − 2)² + 3 は y = x² を x軸方向に 2、y軸方向に 3 平行移動した放物線。頂点 (2, 3)、軸 x = 2。"
+          },
+          {
+           "type": "vertex",
+           "level": "頂点と軸",
+           "a": 1,
+           "p": -1,
+           "q": 4,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 2,
+            "c": 5
+           },
+           "original": "y = x²",
+           "transformed": "y = (x + 1)² + 4",
+           "question": "この放物線の頂点と軸は？",
+           "choices": [
+            "頂点 (−1, 4)|軸 x = −1",
+            "頂点 (1, 4)|軸 x = 1",
+            "頂点 (−1, −4)|軸 x = −1",
+            "頂点 (−1, 4)|軸 y = 4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 1) は x = −1 のとき 0。頂点の x 座標は −1 だよ（符号が逆）",
+            "最後の + 4 がそのまま頂点の y 座標。4 だよ",
+            "軸は頂点を通る「たての直線」。式は x = −1 だよ"
+           ],
+           "explanation": "y = (x + 1)² + 4 は y = x² を x軸方向に −1、y軸方向に 4 平行移動した放物線。頂点 (−1, 4)、軸 x = −1。"
+          },
+          {
+           "type": "translation",
+           "level": "頂点と軸",
+           "a": 2,
+           "p": -1,
+           "q": -4,
+           "orig": {
+            "a": 2,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 2,
+            "b": 4,
+            "c": -2
+           },
+           "original": "y = 2x²",
+           "transformed": "y = 2(x + 1)² − 4",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に1、下に4|x軸方向に −1、y軸方向に −4",
+            "右に1、下に4|x軸方向に 1、y軸方向に −4",
+            "左に1、上に4|x軸方向に −1、y軸方向に 4",
+            "右に1、上に4|x軸方向に 1、y軸方向に 4"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 1) は x = −1 のとき 0 になるので、頂点の x 座標は −1。左へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の − 4 は頂点の y 座標。下へ 4 だよ",
+            "(x + 1) は x = −1 のとき 0 になるので、頂点の x 座標は −1。左へ 1 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x + 1) は x軸方向に −1（左に 1）、− 4 は y軸方向に −4（下に 4）の移動。頂点は (0, 0) → (−1, −4)、軸は x = −1 になる。"
+          },
+          {
+           "type": "vertex",
+           "level": "頂点と軸",
+           "a": 2,
+           "p": 1,
+           "q": -3,
+           "orig": {
+            "a": 2,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 2,
+            "b": -4,
+            "c": -1
+           },
+           "original": "y = 2x²",
+           "transformed": "y = 2(x − 1)² − 3",
+           "question": "この放物線の頂点と軸は？",
+           "choices": [
+            "頂点 (1, −3)|軸 x = 1",
+            "頂点 (−1, −3)|軸 x = −1",
+            "頂点 (1, 3)|軸 x = 1",
+            "頂点 (1, −3)|軸 y = −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 1) は x = 1 のとき 0。頂点の x 座標は 1 だよ（符号が逆）",
+            "最後の − 3 がそのまま頂点の y 座標。−3 だよ",
+            "軸は頂点を通る「たての直線」。式は x = 1 だよ"
+           ],
+           "explanation": "y = 2(x − 1)² − 3 は y = 2x² を x軸方向に 1、y軸方向に −3 平行移動した放物線。頂点 (1, −3)、軸 x = 1。"
+          },
+          {
+           "type": "translation",
+           "level": "頂点と軸",
+           "a": -1,
+           "p": -2,
+           "q": 3,
+           "orig": {
+            "a": -1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": -1,
+            "b": -4,
+            "c": -1
+           },
+           "original": "y = −x²",
+           "transformed": "y = −(x + 2)² + 3",
+           "question": "この放物線は、元の関数のグラフをどのように平行移動したものですか？",
+           "choices": [
+            "左に2、上に3|x軸方向に −2、y軸方向に 3",
+            "右に2、上に3|x軸方向に 2、y軸方向に 3",
+            "左に2、下に3|x軸方向に −2、y軸方向に −3",
+            "右に2、下に3|x軸方向に 2、y軸方向に −3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）",
+            "最後の + 3 は頂点の y 座標。上へ 3 だよ",
+            "(x + 2) は x = −2 のとき 0 になるので、頂点の x 座標は −2。左へ 2 だよ（かっこの中の符号と、動く向きは逆に見える）"
+           ],
+           "explanation": "(x + 2) は x軸方向に −2（左に 2）、+ 3 は y軸方向に 3（上に 3）の移動。頂点は (0, 0) → (−2, 3)、軸は x = −2 になる。"
+          },
+          {
+           "type": "vertex",
+           "level": "頂点と軸",
+           "a": -1,
+           "p": 3,
+           "q": 2,
+           "orig": {
+            "a": -1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": -1,
+            "b": 6,
+            "c": -7
+           },
+           "original": "y = −x²",
+           "transformed": "y = −(x − 3)² + 2",
+           "question": "この放物線の頂点と軸は？",
+           "choices": [
+            "頂点 (3, 2)|軸 x = 3",
+            "頂点 (−3, 2)|軸 x = −3",
+            "頂点 (3, −2)|軸 x = 3",
+            "頂点 (3, 2)|軸 y = 2"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "(x − 3) は x = 3 のとき 0。頂点の x 座標は 3 だよ（符号が逆）",
+            "最後の + 2 がそのまま頂点の y 座標。2 だよ",
+            "軸は頂点を通る「たての直線」。式は x = 3 だよ"
+           ],
+           "explanation": "y = −(x − 3)² + 2 は y = −x² を x軸方向に 3、y軸方向に 2 平行移動した放物線。頂点 (3, 2)、軸 x = 3。"
+          }
+         ],
+         "set4": [
+          {
+           "type": "equation",
+           "level": "発展",
+           "a": 1,
+           "p": 3,
+           "q": -2,
+           "orig": {
+            "a": 1,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": -6,
+            "c": 7
+           },
+           "original": "y = x²",
+           "transformed": "x軸方向に 3、y軸方向に −2",
+           "question": "元の関数のグラフを、このように平行移動した放物線の式は？",
+           "choices": [
+            "y = (x − 3)² − 2",
+            "y = (x + 3)² − 2",
+            "y = (x − 3)² + 2",
+            "y = (x + 2)² + 3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x軸方向に 3 移動すると、x を x − 3 におきかえる。かっこの中は (x − 3) だよ",
+            "y軸方向に −2 移動すると、最後に −2 をたす。− 2 だよ",
+            "x軸方向の移動はかっこの中、y軸方向の移動は最後の数。入れかわっているよ"
+           ],
+           "explanation": "y = x² の x を x − 3 に、y を y + 2 におきかえて、y = (x − 3)² − 2。頂点は (3, −2)。"
+          },
+          {
+           "type": "equation",
+           "level": "発展",
+           "a": 2,
+           "p": -1,
+           "q": 4,
+           "orig": {
+            "a": 2,
+            "b": 0,
+            "c": 0
+           },
+           "moved": {
+            "a": 2,
+            "b": 4,
+            "c": 6
+           },
+           "original": "y = 2x²",
+           "transformed": "x軸方向に −1、y軸方向に 4",
+           "question": "元の関数のグラフを、このように平行移動した放物線の式は？",
+           "choices": [
+            "y = 2(x + 1)² + 4",
+            "y = 2(x − 1)² + 4",
+            "y = 2(x + 1)² − 4",
+            "y = 2(x − 4)² − 1"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x軸方向に −1 移動すると、x を x + 1 におきかえる。かっこの中は (x + 1) だよ",
+            "y軸方向に 4 移動すると、最後に 4 をたす。+ 4 だよ",
+            "x軸方向の移動はかっこの中、y軸方向の移動は最後の数。入れかわっているよ"
+           ],
+           "explanation": "y = 2x² の x を x + 1 に、y を y − 4 におきかえて、y = 2(x + 1)² + 4。頂点は (−1, 4)。"
+          },
+          {
+           "type": "complete",
+           "level": "発展",
+           "a": 1,
+           "p": 2,
+           "q": -3,
+           "orig": null,
+           "moved": {
+            "a": 1,
+            "b": -4,
+            "c": 1
+           },
+           "original": "y = x² − 4x + 1",
+           "transformed": "",
+           "question": "y = (x − p)² + q の形にすると？（平方完成）",
+           "choices": [
+            "y = (x − 2)² − 3|頂点 (2, −3)",
+            "y = (x + 2)² − 3|頂点 (−2, −3)",
+            "y = (x − 2)² + 1|頂点 (2, 1)",
+            "y = (x − 2)² + 5|頂点 (2, 5)"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x の係数 −4 の半分は −2。x² − 4x = (x − 2)² − 4 だよ",
+            "(x − 2)² = x² − 4x + 4。ふえた 4 をひいておこう",
+            "ふえた 4 は「ひく」。たすのではないよ"
+           ],
+           "explanation": "y = x² − 4x + 1<br>= (x − 2)² − 4 + 1<br>= (x − 2)² − 3<br>頂点 (2, −3)、軸 x = 2。"
+          },
+          {
+           "type": "complete",
+           "level": "発展",
+           "a": 1,
+           "p": -3,
+           "q": -4,
+           "orig": null,
+           "moved": {
+            "a": 1,
+            "b": 6,
+            "c": 5
+           },
+           "original": "y = x² + 6x + 5",
+           "transformed": "",
+           "question": "y = (x − p)² + q の形にすると？（平方完成）",
+           "choices": [
+            "y = (x + 3)² − 4|頂点 (−3, −4)",
+            "y = (x − 3)² − 4|頂点 (3, −4)",
+            "y = (x + 3)² + 5|頂点 (−3, 5)",
+            "y = (x + 3)² + 14|頂点 (−3, 14)"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x の係数 6 の半分は 3。x² + 6x = (x + 3)² − 9 だよ",
+            "(x + 3)² = x² + 6x + 9。ふえた 9 をひいておこう",
+            "ふえた 9 は「ひく」。たすのではないよ"
+           ],
+           "explanation": "y = x² + 6x + 5<br>= (x + 3)² − 9 + 5<br>= (x + 3)² − 4<br>頂点 (−3, −4)、軸 x = −3。"
+          },
+          {
+           "type": "complete",
+           "level": "発展",
+           "a": 1,
+           "p": 1,
+           "q": 3,
+           "orig": null,
+           "moved": {
+            "a": 1,
+            "b": -2,
+            "c": 4
+           },
+           "original": "y = x² − 2x + 4",
+           "transformed": "",
+           "question": "y = (x − p)² + q の形にすると？（平方完成）",
+           "choices": [
+            "y = (x − 1)² + 3|頂点 (1, 3)",
+            "y = (x + 1)² + 3|頂点 (−1, 3)",
+            "y = (x − 1)² + 4|頂点 (1, 4)",
+            "y = (x − 1)² + 5|頂点 (1, 5)"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x の係数 −2 の半分は −1。x² − 2x = (x − 1)² − 1 だよ",
+            "(x − 1)² = x² − 2x + 1。ふえた 1 をひいておこう",
+            "ふえた 1 は「ひく」。たすのではないよ"
+           ],
+           "explanation": "y = x² − 2x + 4<br>= (x − 1)² − 1 + 4<br>= (x − 1)² + 3<br>頂点 (1, 3)、軸 x = 1。"
+          },
+          {
+           "type": "general",
+           "level": "発展",
+           "a": 1,
+           "p": 1,
+           "q": 2,
+           "orig": {
+            "a": 1,
+            "b": 2,
+            "c": 0
+           },
+           "moved": {
+            "a": 1,
+            "b": 0,
+            "c": 1
+           },
+           "original": "y = x² + 2x",
+           "transformed": "x軸方向に 1、y軸方向に 2",
+           "question": "元の関数のグラフを、このように平行移動した放物線の式は？",
+           "choices": [
+            "y = x² + 1",
+            "y = x² + 4x + 5",
+            "y = x² − 3",
+            "y = x² + 3"
+           ],
+           "correct": 0,
+           "whys": [
+            "",
+            "x軸方向に 1 移動すると、x を x − 1 におきかえるよ",
+            "y軸方向に 2 移動すると、最後に 2 をたすよ（y を y − 2 におきかえる）",
+            "x を「すべて」おきかえる。2x の x も x − 1 にするよ"
+           ],
+           "explanation": "x を x − 1、y を y − 2 におきかえる。<br>y − 2 = (x − 1)² + 2(x − 1)<br>y = x² + 1"
+          }
+         ]
         };
+        const SET_NAMES = { 1: 'セット1：上下・左右', 2: 'セット2：数を変えて', 3: 'セット3：頂点と軸', 4: 'セット4：発展' };
+        const SET_COUNT = 4;
 
         let currentSet = 1;
         let problems = allProblems.set1;
-
         let currentProblem = 0;
         let correctCount = 0;
         let wrongCount = 0;
         let totalCount = 0;
         let answered = false;
         let completedProblems = new Set();
-        let order = [0, 1, 2, 3];          // 【ブラッシュアップ】選択肢を並べる順番（問題ごとにまぜる）
-        let missedProblems = new Set();    // 【ブラッシュアップ】一度まちがえた問題
+        let missedProblems = new Set();    // 一度まちがえた問題
+        let order = [0, 1, 2, 3];          // 選択肢を並べる順番（問題ごとにまぜる）
 
-        const praises = [
-            "素晴らしい！正解です！",
-            "完璧です！よくできました！",
-            "すごい！その調子です！",
-            "お見事！正解です！",
-            "やったね！大正解！",
-            "素晴らしい理解力です！",
-            "パーフェクト！",
-            "天才的な答えです！"
-        ];
-
-        const perfectPraises = [
-            "🌟 完璧です！全問正解おめでとうございます！🌟",
-            "🎉 素晴らしい！あなたは真の天才です！🎉",
-            "✨ 驚異的な成績です！完璧な理解力ですね！✨",
-            "🏆 圧倒的な実力！全問正解は見事です！🏆",
-            "🎊 信じられない！パーフェクトスコアです！🎊"
-        ];
+        const praises = ["素晴らしい！正解です！", "完璧です！よくできました！", "すごい！その調子です！", "お見事！正解です！", "やったね！大正解！"];
 
         function selectSet(set) {
             currentSet = set;
             currentProblem = 0;
-            correctCount = 0;
-            wrongCount = 0;
-            totalCount = 0;
+            correctCount = 0; wrongCount = 0; totalCount = 0;
             completedProblems.clear();
             missedProblems.clear();
-
-            // 問題を順序通りに設定
-            problems = allProblems[`set${set}`];
-
-            // セット表示を更新
-            document.getElementById('current-set-display').textContent = `セット${set}`;
-
-            // セットボタンのスタイル更新
-            document.querySelectorAll('.set-btn').forEach(btn => {
-                btn.classList.remove('ring-4', 'ring-indigo-400');
-            });
-            document.getElementById(`set${set}-btn`).classList.add('ring-4', 'ring-indigo-400');
-
-            // スコアリセット
-            document.getElementById('correct-count').textContent = '0';
-            document.getElementById('wrong-count').textContent = '0';
-            document.getElementById('total-count').textContent = '0';
-
+            problems = allProblems['set' + set];
+            document.getElementById('current-set-display').textContent = SET_NAMES[set];
+            document.querySelectorAll('.set-btn').forEach(btn => btn.classList.remove('ring-4', 'ring-indigo-400', 'ring-green-400'));
+            document.getElementById('set' + set + '-btn').classList.add('ring-4', 'ring-indigo-400');
+            updateScore();
             loadProblem();
         }
 
-        function getGraphData(problem) {
-            // 問題に応じてグラフの座標を計算
-            const transformed = problem.transformed;
-
-            // SVGの座標系：中心が(200, 200)、1単位 = 20px
-            // 元のグラフは常に y = x² (頂点が軸から36px上)
-            const centerX = 200;
-            const centerY = 200 - 36; // グラフを軸から36px上に配置
-            const scale = 20; // 1単位 = 20px
-
-            // 元のグラフ y = x² の座標（頂点が原点）- 開き具合を狭く、先端を伸ばす
-            const originalPath = `M ${centerX - 1.5*scale} ${centerY + 4.5*scale - 10} Q ${centerX} ${centerY - 10} ${centerX + 1.5*scale} ${centerY + 4.5*scale - 10}`;
-
-            // x方向の移動量を計算（数学座標）
-            let xMove = 0;
-            if (transformed.includes('(x-1)')) xMove = 1;   // 右に1
-            else if (transformed.includes('(x-2)')) xMove = 2;   // 右に2
-            else if (transformed.includes('(x-3)')) xMove = 3;   // 右に3
-            else if (transformed.includes('(x-4)')) xMove = 4;   // 右に4
-            else if (transformed.includes('(x+1)')) xMove = -1;  // 左に1
-            else if (transformed.includes('(x+2)')) xMove = -2;  // 左に2
-            else if (transformed.includes('(x+3)')) xMove = -3;  // 左に3
-
-            // y方向の移動量を計算（数学座標）
-            let yMove = 0;
-            if (transformed.includes('+ 1')) yMove = 1;   // 上に1
-            else if (transformed.includes('+ 2')) yMove = 2;   // 上に2
-            else if (transformed.includes('+ 3')) yMove = 3;   // 上に3
-            else if (transformed.includes('+ 4')) yMove = 4;   // 上に4
-            else if (transformed.includes('+ 5')) yMove = 5;   // 上に5
-            else if (transformed.includes('- 1')) yMove = -1;  // 下に1
-            else if (transformed.includes('- 2')) yMove = -2;  // 下に2
-            else if (transformed.includes('- 3')) yMove = -3;  // 下に3
-            else if (transformed.includes('- 4')) yMove = -4;  // 下に4
-
-            // SVG座標系に変換（yは反転）
-            const xShift = xMove * scale;
-            const yShift = -yMove * scale; // SVGではy軸が下向きなので反転
-
-            // 変換後のグラフの座標を計算
-            const newCenterX = centerX + xShift;
-            const newCenterY = centerY + yShift;
-
-            const transformedPath = `M ${newCenterX - 1.5*scale} ${newCenterY + 4.5*scale - 10} Q ${newCenterX} ${newCenterY - 10} ${newCenterX + 1.5*scale} ${newCenterY + 4.5*scale - 10}`;
-
-            // 矢印の位置（頂点から頂点へ）- 38px下に移動
-            const arrowStart = { x: centerX, y: centerY + 38 };
-            const arrowEnd = { x: newCenterX, y: newCenterY + 38 };
-
-            return { originalPath, transformedPath, arrowStart, arrowEnd };
-        }
-
-        function showHint() {
-            const problem = problems[currentProblem];
-            const hintSection = document.getElementById('hint-section');
-            const hintText = document.getElementById('hint-text');
-
-            hintSection.classList.remove('hidden');
-
-            // 平行移動のグラフを表示
-            const graphData = getGraphData(problem);
-            document.getElementById('original-graph').setAttribute('d', graphData.originalPath);
-            document.getElementById('transformed-graph').setAttribute('d', graphData.transformedPath);
-
-            // グラフラベルの位置を調整（グラフの右端から5px横に配置）
-            const originalLabelX = 200 + 1.5 * 20 + 5; // 元のグラフの右端から5px
-            const transformedLabelX = graphData.arrowEnd.x + 1.5 * 20 + 5; // 変換後グラフの右端から5px
-            const originalLabelY = (200 - 36) + 4.5 * 20 - 10 + 5; // 元のグラフの下端付近
-            const transformedLabelY = graphData.arrowEnd.y - 36 + 4.5 * 20 - 10 + 5; // 変換後グラフの下端付近
-
-            document.getElementById('original-label').setAttribute('x', originalLabelX);
-            document.getElementById('original-label').setAttribute('y', originalLabelY);
-            document.getElementById('transformed-label').setAttribute('x', transformedLabelX);
-            document.getElementById('transformed-label').setAttribute('y', transformedLabelY);
-
-            // 矢印を表示
-            setTimeout(() => {
-                const arrow = document.getElementById('movement-arrow');
-                const arrowLine = document.getElementById('arrow-line');
-                const arrowText = document.getElementById('arrow-text');
-
-                arrowLine.setAttribute('x1', graphData.arrowStart.x);
-                arrowLine.setAttribute('y1', graphData.arrowStart.y);
-                arrowLine.setAttribute('x2', graphData.arrowEnd.x);
-                arrowLine.setAttribute('y2', graphData.arrowEnd.y);
-
-                // 矢印の中点付近にテキストを配置（先端から少し離す、5px右にずらす）
-                const midX = (graphData.arrowStart.x + graphData.arrowEnd.x) / 2 + 5;
-                const midY = (graphData.arrowStart.y + graphData.arrowEnd.y) / 2 - 15;
-                arrowText.setAttribute('x', midX);
-                arrowText.setAttribute('y', midY);
-
-                arrow.classList.remove('hidden');
-            }, 500);
-
-            // ヒントテキスト
-            let hintMessage = "";
-            if (problem.transformed.includes('+ ')) {
-                hintMessage += "プラス(+)があるので上に移動します。";
-            } else if (problem.transformed.includes('- ')) {
-                hintMessage += "マイナス(-)があるので下に移動します。";
-            }
-
-            if (problem.transformed.includes('(x-')) {
-                hintMessage += " (x-a)の形なので右に移動します。";
-            } else if (problem.transformed.includes('(x+')) {
-                hintMessage += " (x+a)の形なので左に移動します。";
-            }
-
-            hintText.textContent = hintMessage;
+        function updateScore() {
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+            document.getElementById('total-count').textContent = totalCount;
         }
 
         function loadProblem() {
             const problem = problems[currentProblem];
-            document.getElementById('question-number').textContent = currentProblem + 1;
+            document.getElementById('question-number').textContent = (currentProblem + 1) + ' / ' + problems.length;
+            document.getElementById('level-text').textContent = problem.level;
 
-            // レベル表示の更新
-            const levelBadge = document.getElementById('level-badge');
-            const levelText = document.getElementById('level-text');
-            levelText.textContent = problem.level;
-
-            if (problem.level === '基礎') {
-                levelBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 bg-green-100 text-green-800';
-            } else {
-                levelBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 bg-blue-100 text-blue-800';
-            }
-
-            document.getElementById('original-function').textContent = problem.original;
-            document.getElementById('transformed-function').textContent = problem.transformed;
-            document.getElementById('question-text').textContent = 'この変換は、元の関数をどのように平行移動したものですか？';
+            // 問題の式（元の関数・変換後）。問題の種類ごとに見出しを変える
+            const lblO = { translation: '元の関数：', vertex: '放物線：', equation: '元の関数：', complete: '関数：', general: '元の関数：' }[problem.type];
+            const lblT = { translation: '平行移動したあとの関数：', vertex: '', equation: '平行移動：', complete: '', general: '平行移動：' }[problem.type];
+            document.getElementById('lbl-original').textContent = lblO;
+            document.getElementById('original-function').textContent = problem.type === 'vertex' ? problem.transformed : problem.original;
+            document.getElementById('lbl-transformed').textContent = lblT;
+            document.getElementById('lbl-transformed').style.display = lblT ? '' : 'none';
+            document.getElementById('transformed-function').textContent = problem.type === 'vertex' ? '' : problem.transformed;
+            document.getElementById('transformed-function').style.display = lblT ? '' : 'none';
+            document.getElementById('question-text').textContent = problem.question;
 
             order = [0, 1, 2, 3];
             for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
             for (let i = 0; i < 4; i++) {
-                document.getElementById(`choice-${i}`).textContent = problem.choices[order[i]];
+                const parts = problem.choices[order[i]].split('|');
+                const el = document.getElementById('choice-' + i);
+                el.innerHTML = '';
+                el.appendChild(document.createTextNode(parts[0]));
+                if (parts[1]) { const s = document.createElement('small'); s.className = 'choice-sub'; s.textContent = parts[1]; el.appendChild(s); }
             }
 
-            // リセット
             document.getElementById('result').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
             document.getElementById('retry-btn').classList.add('hidden');
             document.getElementById('hint-section').classList.add('hidden');
-            document.getElementById('movement-arrow').classList.add('hidden');
             document.querySelectorAll('.choice-btn').forEach(btn => {
                 btn.classList.remove('ring-4', 'ring-green-400', 'ring-red-400', 'bg-green-200', 'bg-red-200');
                 btn.disabled = false;
@@ -648,138 +1286,149 @@
 
         function showResult(selectedChoice) {
             if (answered) return;
-            answered = true;
-
             const problem = problems[currentProblem];
-            const isCorrect = order[selectedChoice] === problem.correct;
-
-            // 選択肢のスタイル更新
-            document.querySelectorAll('.choice-btn').forEach((btn, index) => {
-                btn.disabled = true;
-                if (isCorrect && order[index] === problem.correct) {
-                    btn.classList.add('ring-4', 'ring-green-400', 'bg-green-200');
-                } else if (index === selectedChoice && !isCorrect) {
-                    btn.classList.add('ring-4', 'ring-red-400', 'bg-red-200');
-                }
-            });
-
-            // 結果表示
+            const pick = order[selectedChoice];
+            const isCorrect = pick === problem.correct;
+            const btns = document.querySelectorAll('.choice-btn');
             document.getElementById('result').classList.remove('hidden');
 
             if (isCorrect) {
+                answered = true;
+                btns.forEach((btn, index) => {
+                    btn.disabled = true;
+                    if (index === selectedChoice) btn.classList.add('ring-4', 'ring-green-400', 'bg-green-200');
+                });
                 if (!completedProblems.has(currentProblem)) {
-                    // 【ブラッシュアップ】元はまちがえたあとに正解すると、問題数が 2 回数えられ、正解にも数えられていた
                     if (!missedProblems.has(currentProblem)) { correctCount++; totalCount++; }
                     completedProblems.add(currentProblem);
                 }
-
                 document.getElementById('correct-result').classList.remove('hidden');
                 document.getElementById('wrong-result').classList.add('hidden');
-
-                // 全問正解チェック
-                let randomPraise;
-                if (wrongCount === 0 && completedProblems.size === problems.length) {
-                    // 全問正解の場合は特別な褒め言葉
-                    randomPraise = perfectPraises[Math.floor(Math.random() * perfectPraises.length)];
-                } else {
-                    // 通常の褒め言葉
-                    randomPraise = praises[Math.floor(Math.random() * praises.length)];
-                }
-                document.getElementById('praise-text').textContent = randomPraise;
-                document.getElementById('explanation').textContent = problem.explanation;
-
-                // 次の問題ボタン表示
+                document.getElementById('praise-text').textContent = praises[Math.floor(Math.random() * praises.length)];
+                document.getElementById('explanation').innerHTML = problem.explanation;
+                document.getElementById('next-btn').textContent = completedProblems.size === problems.length ? '結果を見る →' : '次の問題 →';
                 document.getElementById('next-btn').classList.remove('hidden');
-
-                // 全問題完了チェック
-                if (completedProblems.size === problems.length) {
-                    setTimeout(() => {
-                        showCompletionModal();
-                    }, 2000);
-                }
+                showHint(true);   // 正解したら、グラフで動きを確かめる
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } else {
+                // まちがえた選択肢だけ使えなくして、理由を出す（そのまま選び直せる）
+                btns[selectedChoice].disabled = true;
+                btns[selectedChoice].classList.add('ring-4', 'ring-red-400', 'bg-red-200');
                 document.getElementById('wrong-result').classList.remove('hidden');
                 document.getElementById('correct-result').classList.add('hidden');
-                // 間違えた時は正解を表示しない
-                document.getElementById('wrong-explanation').textContent = "もう一度考えてみましょう！ヒントボタンを押すと参考になります。";
-
-                // リトライボタン表示
-                document.getElementById('retry-btn').classList.remove('hidden');
-
+                document.getElementById('wrong-explanation').textContent = problem.whys[pick] || 'もう一度考えてみましょう！';
                 if (!completedProblems.has(currentProblem) && !missedProblems.has(currentProblem)) {
-                    wrongCount++;
-                    totalCount++;
+                    wrongCount++; totalCount++;
                     missedProblems.add(currentProblem);
                 }
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-
-            // スコア更新
-            document.getElementById('correct-count').textContent = correctCount;
-            document.getElementById('wrong-count').textContent = wrongCount;
-            document.getElementById('total-count').textContent = totalCount;
+            updateScore();
         }
 
         function retryProblem() {
-            // 結果をリセットして再挑戦
             document.getElementById('result').classList.add('hidden');
             document.getElementById('retry-btn').classList.add('hidden');
-            document.querySelectorAll('.choice-btn').forEach(btn => {
-                btn.classList.remove('ring-4', 'ring-green-400', 'ring-red-400', 'bg-green-200', 'bg-red-200');
-                btn.disabled = false;
-            });
-            answered = false;
         }
 
         function nextProblem() {
-            // 【ブラッシュアップ】元は最後の問題のあと 1 問目に戻っていた
             if (completedProblems.size === problems.length) { showCompletionModal(); return; }
             currentProblem = (currentProblem + 1) % problems.length;
             loadProblem();
+            document.getElementById('question-number').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- ヒント：graph.js で移動後のグラフを描き、元のグラフ（点線）・頂点・移動の矢印を重ねる ---
+        function showHint(afterAnswer) {
+            const problem = problems[currentProblem];
+            const hintSection = document.getElementById('hint-section');
+            hintSection.classList.remove('hidden');
+            const box = document.getElementById('hint-graph');
+            // 頂点・式を答える問題は、答える前にグラフを見せると答えがわかってしまうので、答えたあとに見せる
+            const graphNow = afterAnswer === true || problem.type === 'translation';
+            box.style.display = graphNow ? '' : 'none';
+            const m = problem.moved, o = problem.orig;
+            const v1 = { x: -m.b / (2 * m.a), y: m.c - m.b * m.b / (4 * m.a) };
+            const v0 = o ? { x: -o.b / (2 * o.a), y: o.c - o.b * o.b / (4 * o.a) } : null;
+            // 移動後の頂点の左右 2.5 と、元の頂点が入る範囲（広げすぎると縦に長くなって見にくい）
+            const lo = Math.min(v1.x - 2.5, v0 ? v0.x - 1 : v1.x), hi = Math.max(v1.x + 2.5, v0 ? v0.x + 1 : v1.x);
+            let svg = window.Graph ? Graph.parabola({ a: m.a, b: m.b, c: m.c, xmin: lo, xmax: hi, markVertex: true }) : '';
+            box.innerHTML = addOriginal(svg, o, v0, v1, m.a);
+            const s = box.querySelector('svg');
+            if (s) { s.removeAttribute('width'); s.style.width = '100%'; s.style.maxWidth = '440px'; s.style.height = 'auto'; }
+
+            let hint = '';
+            if (problem.type === 'complete') hint = 'x の係数の半分を使って (x + □)² をつくり、ふえた分をひこう。グラフの頂点が (p, q) だよ';
+            else if (problem.type === 'vertex') hint = 'y = a(x − p)² + q の頂点は (p, q)、軸は x = p。かっこの中が 0 になる x が頂点の x 座標';
+            else if (!graphNow) hint = 'x軸方向に p 移動 → x を x − p におきかえる。y軸方向に q 移動 → y を y − q におきかえる（最後に q をたす）';
+            else hint = '点線が元のグラフ、実線が平行移動したグラフ。頂点がどこからどこへ動いたかを見よう。y = a(x − p)² + q は x軸方向に p、y軸方向に q の移動';
+            document.getElementById('hint-text').textContent = hint;
+            document.getElementById('hint-legend').style.display = o && graphNow ? '' : 'none';
+        }
+
+        // graph.js の図から座標の変換を読みとり、元のグラフ（点線）・頂点の座標・矢印を足す
+        function addOriginal(svg, o, v0, v1, a) {
+            const xt = [...svg.matchAll(/<text x="([\d.]+)" y="[\d.]+" font-size="10" fill="#8896aa" text-anchor="middle">(-?\d+)<\/text>/g)].map(r => [+r[2], +r[1]]);
+            const yt = [...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" font-size="10" fill="#8896aa" text-anchor="end">(-?\d+)<\/text>/g)].map(r => [+r[2], +r[1] - 3.5]);
+            if (xt.length < 2 || yt.length < 2) return svg;
+            const kx = (xt[1][1] - xt[0][1]) / (xt[1][0] - xt[0][0]), sx = (x) => xt[0][1] + (x - xt[0][0]) * kx;
+            const ky = (yt[1][1] - yt[0][1]) / (yt[1][0] - yt[0][0]), sy = (y) => yt[0][1] + (y - yt[0][0]) * ky;
+            const top = 26, bottom = 274;   // graph.js の描く範囲（上下のすきま 26）
+            const lab = (v) => '(' + fmt(v.x) + ', ' + fmt(v.y) + ')';
+            let add = '<defs><marker id="mv-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#10a05a"/></marker></defs>';
+            if (o) {
+                let d = '', first = true;
+                const lo = (xt[0][1] - 26) / -kx + xt[0][0], hi = lo + (360 - 52) / kx;
+                for (let i = 0; i <= 160; i++) {
+                    const x = lo + (hi - lo) * i / 160, y = o.a * x * x + o.b * x + o.c, Y = sy(y);
+                    if (Y < top || Y > bottom) { first = true; continue; }
+                    d += (first ? 'M ' : 'L ') + sx(x).toFixed(1) + ' ' + Y.toFixed(1) + ' ';
+                    first = false;
+                }
+                add += '<path d="' + d + '" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-dasharray="6,5"/>';
+                add += '<circle cx="' + sx(v0.x).toFixed(1) + '" cy="' + sy(v0.y).toFixed(1) + '" r="4.5" fill="#94a3b8"/>';
+                if (Math.abs(v0.x - v1.x) + Math.abs(v0.y - v1.y) > 0.5) {
+                    add += '<line x1="' + sx(v0.x).toFixed(1) + '" y1="' + sy(v0.y).toFixed(1) + '" x2="' + sx(v1.x).toFixed(1) + '" y2="' + sy(v1.y).toFixed(1) +
+                        '" stroke="#10a05a" stroke-width="2.5" marker-end="url(#mv-arrow)"/>';
+                }
+                if (v0.x !== 0 || v0.y !== 0) add += textAt(sx(v0.x), sy(v0.y), lab(v0), '#64748b', a);
+            }
+            add += textAt(sx(v1.x), sy(v1.y), lab(v1), '#b45309', a);
+            // 軸 x = p（点線）
+            add += '<line x1="' + sx(v1.x).toFixed(1) + '" y1="' + top + '" x2="' + sx(v1.x).toFixed(1) + '" y2="' + bottom + '" stroke="#e79b16" stroke-width="1.2" stroke-dasharray="3,4"/>';
+            add += '<text x="' + (sx(v1.x) + 4).toFixed(1) + '" y="' + (a > 0 ? top + 10 : bottom - 4) + '" font-size="11" fill="#b45309" stroke="#fff" stroke-width="3" paint-order="stroke">軸 x = ' + fmt(v1.x) + '</text>';
+            return svg.replace('</svg>', add + '</svg>');
+        }
+        function fmt(n) { n = Math.round(n * 100) / 100; return n < 0 ? '−' + Math.abs(n) : String(n); }
+        // 頂点の座標：下に凸なら頂点の下、上に凸なら上に書く（白いふちどりで線と重なっても読める）
+        function textAt(X, Y, t, color, a) {
+            const y = a > 0 ? Y + 18 : Y - 10;
+            return '<text x="' + (X + 6).toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="bold" fill="' + color + '" stroke="#fff" stroke-width="3" paint-order="stroke">' + t + '</text>';
         }
 
         function showCompletionModal() {
             const modal = document.getElementById('completion-modal');
             const nextSetBtn = document.getElementById('next-set-btn');
-            const completionMessage = document.getElementById('completion-message');
-            const completionPraise = document.getElementById('completion-praise');
-
-            if (currentSet === 1) {
-                completionMessage.textContent = 'セット1をクリアしました！（一発正解 ' + correctCount + ' / ' + problems.length + '）';
-                completionPraise.textContent = 'あなたは基本の平行移動をマスターしました！';
+            document.getElementById('completion-message').textContent = SET_NAMES[currentSet] + ' をクリアしました！（一発正解 ' + correctCount + ' / ' + problems.length + '）';
+            document.getElementById('completion-praise').textContent = currentSet < SET_COUNT ? '次のセットにも挑戦しよう！' : 'あなたは2次関数の平行移動の達人です！';
+            if (currentSet < SET_COUNT) {
                 nextSetBtn.classList.remove('hidden');
-                nextSetBtn.textContent = '🚀 セット2に挑戦（基本編）';
+                nextSetBtn.textContent = '🚀 ' + SET_NAMES[currentSet + 1] + ' に挑戦';
             } else {
-                completionMessage.textContent = '全セットクリア！（一発正解 ' + correctCount + ' / ' + problems.length + '）';
-                completionPraise.textContent = 'あなたは2次関数の平行移動の達人です！';
                 nextSetBtn.classList.add('hidden');
             }
-
             modal.classList.remove('hidden');
         }
 
         function restartQuiz() {
-            // 現在のセットで問題セットを最初から開始
-            problems = allProblems[`set${currentSet}`];
-            currentProblem = 0;
-            correctCount = 0;
-            wrongCount = 0;
-            totalCount = 0;
-            completedProblems.clear();
-            missedProblems.clear();
             document.getElementById('completion-modal').classList.add('hidden');
-
-            // スコアリセット
-            document.getElementById('correct-count').textContent = '0';
-            document.getElementById('wrong-count').textContent = '0';
-            document.getElementById('total-count').textContent = '0';
-
-            loadProblem();
+            selectSet(currentSet);
         }
 
         function nextSet() {
-            if (currentSet < 2) {
-                selectSet(currentSet + 1);
+            if (currentSet < SET_COUNT) {
                 document.getElementById('completion-modal').classList.add('hidden');
+                selectSet(currentSet + 1);
             }
         }
 
@@ -794,7 +1443,7 @@
 
         document.getElementById('next-btn').addEventListener('click', nextProblem);
         document.getElementById('retry-btn').addEventListener('click', retryProblem);
-        document.getElementById('hint-btn').addEventListener('click', showHint);
+        document.getElementById('hint-btn').addEventListener('click', () => showHint(false));   // 【ブラッシュアップ】
         document.getElementById('restart-btn').addEventListener('click', restartQuiz);
         document.getElementById('next-set-btn').addEventListener('click', nextSet);
         document.getElementById('close-modal-btn').addEventListener('click', closeModal);
@@ -802,6 +1451,8 @@
         // セット選択ボタン
         document.getElementById('set1-btn').addEventListener('click', () => selectSet(1));
         document.getElementById('set2-btn').addEventListener('click', () => selectSet(2));
+        document.getElementById('set3-btn').addEventListener('click', () => selectSet(3));   // 【ブラッシュアップ】
+        document.getElementById('set4-btn').addEventListener('click', () => selectSet(4));
 
         // 初期化
         selectSet(1);

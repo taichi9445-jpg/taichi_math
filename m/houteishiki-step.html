@@ -83,7 +83,81 @@ function getQuizData(type, level) {
     { type: "inequality", level: "advanced", problem: "5x + 2 ≦ 8x - 10", steps: ["5x - 8x ≦ -10 - 2", "-3x ≦ -12", "x ≧ 4"], isMinusDivide: true },
     { type: "inequality", level: "advanced", problem: "2x + 11 > 7x - 4", steps: ["2x - 7x > -4 - 11", "-5x > -15", "x < 3"], isMinusDivide: true },
     { type: "inequality", level: "advanced", problem: "x + 5 < 5x - 11", steps: ["x - 5x < -11 - 5", "-4x < -16", "x > 4"], isMinusDivide: true },
-    { type: "inequality", level: "advanced", problem: "3x + 14 ≧ 8x - 1", steps: ["3x - 8x ≧ -1 - 14", "-5x ≧ -15", "x ≦ 3"], isMinusDivide: true }
+    { type: "inequality", level: "advanced", problem: "3x + 14 ≧ 8x - 1", steps: ["3x - 8x ≧ -1 - 14", "-5x ≧ -15", "x ≦ 3"], isMinusDivide: true },
+
+    // --- 【ブラッシュアップ】方程式・発展（かっこ・分数・小数・答えが分数） ---
+    { type: "equation", level: "challenge", problem: "3(x - 2) = x + 4", steps: ["3x - 6 = x + 4", "2x = 10", "x = 5"], isMinusDivide: false,
+      guides: ["① かっこをはずす", "② 移項して整理する", "③ 答えをえらぶ"],
+      wrongs: [[["3x - 2 = x + 4", "3 は -2 にもかけるよ。3 × (-2) = -6"], ["3x + 6 = x + 4", "3 × (-2) = -6。符号に注意しよう"]],
+               [["4x = 10", "右辺の x を左辺へ移項すると -x。3x - x = 2x だよ"], ["2x = -2", "-6 を右辺へ移項すると +6。4 + 6 = 10 だよ"]],
+               [["x = 1/5", "2x = 10 は両辺を 2 でわる。x = 10 ÷ 2 だよ（わる順番が逆）"], ["x = 20", "両辺を 2 で「わる」よ。かけるのではない"]]] },
+    { type: "equation", level: "challenge", problem: "(x - 1)/2 = (x + 2)/3", steps: ["3(x - 1) = 2(x + 2)", "3x - 3 = 2x + 4", "x = 7"], isMinusDivide: false,
+      guides: ["① 両辺に 6（分母の最小公倍数）をかける", "② かっこをはずす", "③ 移項して答えをえらぶ"],
+      wrongs: [[["3(x - 1) = x + 2", "右辺にも 6 をかけるよ。6 × (x + 2)/3 = 2(x + 2)"], ["2(x - 1) = 3(x + 2)", "6 × (x - 1)/2 = 3(x - 1)。かける数が逆になっているよ"]],
+               [["3x - 1 = 2x + 2", "かっこの中のすべての項にかける。3 × (-1) = -3、2 × 2 = 4"], ["3x - 3 = 2x + 2", "2(x + 2) = 2x + 4 だよ"]],
+               [["x = 1", "-3 を右辺へ移項すると +3。x = 4 + 3 = 7 だよ"], ["x = -7", "3x - 2x = x、4 + 3 = 7。符号を見直そう"]]] },
+    { type: "equation", level: "challenge", problem: "4x + 3 = x + 5", steps: ["4x - x = 5 - 3", "3x = 2", "x = 2/3"], isMinusDivide: false,
+      guides: ["① 移項する", "② 計算した結果をえらぶ", "③ 答えをえらぶ（分数になるよ）"],
+      wrongs: [[["4x + x = 5 - 3", "右辺の +x を左辺へ移項すると -x になるよ"], ["4x - x = 5 + 3", "左辺の +3 を右辺へ移項すると -3 になるよ"]],
+               [["5x = 2", "4x - x = 3x だよ"], ["3x = 8", "5 - 3 = 2 だよ"]],
+               [["x = 3/2", "x = 2 ÷ 3 = 2/3。分子と分母が逆になっているよ"], ["x = 6", "両辺を 3 で「わる」よ。かけるのではない"]]] },
+    { type: "equation", level: "challenge", problem: "x/2 + 1 = x/3 + 2", steps: ["3x + 6 = 2x + 12", "3x - 2x = 12 - 6", "x = 6"], isMinusDivide: false,
+      guides: ["① 両辺に 6 をかける", "② 移項する", "③ 答えをえらぶ"],
+      wrongs: [[["3x + 1 = 2x + 2", "1 や 2 にも 6 をかけるよ。すべての項にかける"], ["2x + 6 = 3x + 12", "6 × x/2 = 3x、6 × x/3 = 2x。逆になっているよ"]],
+               [["3x + 2x = 12 - 6", "右辺の +2x を左辺へ移項すると -2x になるよ"], ["3x - 2x = 12 + 6", "左辺の +6 を右辺へ移項すると -6 になるよ"]],
+               [["x = 18", "12 - 6 = 6 だよ"], ["x = -6", "3x - 2x = x、12 - 6 = 6。符号を見直そう"]]] },
+    { type: "equation", level: "challenge", problem: "0.3x + 1.2 = 0.5x", steps: ["3x + 12 = 5x", "-2x = -12", "x = 6"], isMinusDivide: true,
+      guides: ["① 両辺を 10 倍して小数をなくす", "② 移項して整理する", "③ 答えをえらぶ"],
+      wrongs: [[["3x + 1.2 = 5x", "1.2 にも 10 をかけるよ。すべての項にかける"], ["3x + 120 = 5x", "1.2 × 10 = 12 だよ"]],
+               [["2x = -12", "3x - 5x = -2x。x の係数の符号に注意"], ["-2x = 12", "+12 を右辺へ移項すると -12 になるよ"]],
+               [["x = -6", "(-12) ÷ (-2) = 6。負 ÷ 負 は正だよ"], ["x = 1/6", "-2x = -12 は両辺を -2 でわる。x = (-12) ÷ (-2) だよ"]]] },
+    { type: "equation", level: "challenge", problem: "2(x + 3) = 5x - 3", steps: ["2x + 6 = 5x - 3", "-3x = -9", "x = 3"], isMinusDivide: true,
+      guides: ["① かっこをはずす", "② 移項して整理する", "③ 答えをえらぶ"],
+      wrongs: [[["2x + 3 = 5x - 3", "2 は 3 にもかけるよ。2 × 3 = 6"], ["x + 6 = 5x - 3", "2 × x = 2x だよ"]],
+               [["3x = -9", "2x - 5x = -3x。x の係数の符号に注意"], ["-3x = -3", "+6 を右辺へ移項すると -6。-3 - 6 = -9 だよ"]],
+               [["x = -3", "(-9) ÷ (-3) = 3。負 ÷ 負 は正だよ"], ["x = 1/3", "両辺を -3 でわる。x = (-9) ÷ (-3) だよ（わる順番が逆）"]]] },
+    { type: "equation", level: "challenge", problem: "5 - 2(x - 1) = 3x + 2", steps: ["5 - 2x + 2 = 3x + 2", "-5x = -5", "x = 1"], isMinusDivide: true,
+      guides: ["① かっこをはずす（-2 をかける）", "② 移項して整理する", "③ 答えをえらぶ"],
+      wrongs: [[["5 - 2x - 2 = 3x + 2", "-2 × (-1) = +2。負 × 負 は正だよ"], ["5 - 2x - 1 = 3x + 2", "かっこの中の -1 にも -2 をかける。-2 × (-1) = +2"]],
+               [["-x = -5", "-2x - 3x = -5x だよ"], ["-5x = 5", "左辺の 5 + 2 = 7 を右辺へ移項すると -7。2 - 7 = -5 だよ"]],
+               [["x = -1", "(-5) ÷ (-5) = 1。負 ÷ 負 は正だよ"], ["x = 25", "両辺を -5 で「わる」よ。かけるのではない"]]] },
+
+    // --- 【ブラッシュアップ】不等式・発展（かっこ・分数・小数・答えが分数・連立不等式・絶対値） ---
+    { type: "inequality", level: "challenge", problem: "3(x - 2) > x + 4", steps: ["3x - 6 > x + 4", "2x > 10", "x > 5"], isMinusDivide: false,
+      guides: ["① かっこをはずす", "② 移項して整理する", "③ 答えをえらぶ（向きに注意）"],
+      wrongs: [[["3x - 2 > x + 4", "3 は -2 にもかけるよ。3 × (-2) = -6"], ["3x - 6 < x + 4", "かっこをはずしても不等号の向きは変わらないよ"]],
+               [["4x > 10", "右辺の x を左辺へ移項すると -x。3x - x = 2x だよ"], ["2x > -2", "-6 を右辺へ移項すると +6。4 + 6 = 10 だよ"]],
+               [["x < 5", "正の数（2）でわるときは、不等号の向きは変わらないよ"], ["x > 20", "両辺を 2 で「わる」よ。かけるのではない"]]] },
+    { type: "inequality", level: "challenge", problem: "5x - 2 > 2x + 3", steps: ["5x - 2x > 3 + 2", "3x > 5", "x > 5/3"], isMinusDivide: false,
+      guides: ["① 移項する", "② 計算した結果をえらぶ", "③ 答えをえらぶ（分数になるよ）"],
+      wrongs: [[["5x + 2x > 3 + 2", "右辺の +2x を左辺へ移項すると -2x になるよ"], ["5x - 2x < 3 + 2", "移項しても不等号の向きは変わらないよ"]],
+               [["7x > 5", "5x - 2x = 3x だよ"], ["3x > 1", "-2 を右辺へ移項すると +2。3 + 2 = 5 だよ"]],
+               [["x > 3/5", "x > 5 ÷ 3 = 5/3。分子と分母が逆になっているよ"], ["x < 5/3", "正の数（3）でわるときは、不等号の向きは変わらないよ"]]] },
+    { type: "inequality", level: "challenge", lead: "連立不等式", problem: "2x - 1 > 3 , x + 2 ≦ 7", steps: ["x > 2", "x ≦ 5", "2 < x ≦ 5"], isMinusDivide: false,
+      guides: ["① 1 つ目の 2x - 1 > 3 を解く", "② 2 つ目の x + 2 ≦ 7 を解く", "③ 両方をみたす範囲をえらぶ"],
+      wrongs: [[["x > 1", "-1 を右辺へ移項すると +1。2x > 4 なので x > 2 だよ"], ["x < 2", "正の数（2）でわるときは、不等号の向きは変わらないよ"]],
+               [["x ≦ 9", "+2 を右辺へ移項すると -2。7 - 2 = 5 だよ"], ["x ≧ 5", "移項しても不等号の向きは変わらないよ"]],
+               [["2 ≦ x ≦ 5", "x > 2 は 2 をふくまないよ。2 < x ≦ 5（数直線では 2 は ○）"], ["x ≦ 5", "連立不等式は両方をみたす範囲。x > 2 も必要だよ"]]] },
+    { type: "inequality", level: "challenge", lead: "絶対値をふくむ不等式", problem: "|x - 2| < 3", steps: ["-3 < x - 2 < 3", "-3 + 2 < x < 3 + 2", "-1 < x < 5"], isMinusDivide: false,
+      guides: ["① 絶対値をはずす（|A| < 3 のとき -3 < A < 3）", "② 各辺に 2 をたす", "③ 答えをえらぶ"],
+      wrongs: [[["x - 2 < 3", "|A| < 3 は「0 からのきょりが 3 より小さい」。-3 < A < 3 と両側になるよ"], ["x - 2 < -3 , 3 < x - 2", "それは |A| > 3 のとき。|A| < 3 は -3 < A < 3 だよ"]],
+               [["-3 - 2 < x < 3 - 2", "-2 を消すには、各辺に 2 を「たす」よ"], ["-3 + 2 < x < 3 - 2", "すべての辺に同じ数（+2）をたすよ"]],
+               [["1 < x < 5", "-3 + 2 = -1 だよ"], ["-5 < x < 5", "-3 + 2 = -1、3 + 2 = 5 だよ"]]] },
+    { type: "inequality", level: "challenge", problem: "(x - 1)/2 ≦ (2x + 1)/3", steps: ["3(x - 1) ≦ 2(2x + 1)", "-x ≦ 5", "x ≧ -5"], isMinusDivide: true,
+      guides: ["① 両辺に 6 をかける（正の数なので向きはそのまま）", "② かっこをはずし、移項して整理する", "③ 答えをえらぶ（向きに注意）"],
+      wrongs: [[["3(x - 1) ≦ 2x + 1", "右辺にも 6 をかけるよ。6 × (2x + 1)/3 = 2(2x + 1)"], ["2(x - 1) ≦ 3(2x + 1)", "6 × (x - 1)/2 = 3(x - 1)。かける数が逆になっているよ"]],
+               [["x ≦ 5", "3x - 4x = -x。x の係数の符号に注意"], ["-x ≦ -1", "3x - 3 ≦ 4x + 2 の -3 を右辺へ移項すると +3。2 + 3 = 5 だよ"]],
+               [["x ≦ -5", "負の数（-1）でわると、不等号の向きが逆になるよ！"], ["x ≧ 5", "5 ÷ (-1) = -5。符号に注意"]]] },
+    { type: "inequality", level: "challenge", problem: "0.2x - 1 < 0.5x + 0.8", steps: ["2x - 10 < 5x + 8", "-3x < 18", "x > -6"], isMinusDivide: true,
+      guides: ["① 両辺を 10 倍して小数をなくす", "② 移項して整理する", "③ 答えをえらぶ（向きに注意）"],
+      wrongs: [[["2x - 1 < 5x + 0.8", "すべての項に 10 をかけるよ。-1 × 10 = -10、0.8 × 10 = 8"], ["2x - 10 < 5x + 0.8", "0.8 にも 10 をかけるよ。0.8 × 10 = 8"]],
+               [["3x < 18", "2x - 5x = -3x。x の係数の符号に注意"], ["-3x < -2", "-10 を右辺へ移項すると +10。8 + 10 = 18 だよ"]],
+               [["x < -6", "負の数（-3）でわると、不等号の向きが逆になるよ！"], ["x > 6", "18 ÷ (-3) = -6。符号に注意"]]] },
+    { type: "inequality", level: "challenge", lead: "連立不等式", problem: "3x + 1 < 7 , -2x + 3 ≦ 9", steps: ["x < 2", "x ≧ -3", "-3 ≦ x < 2"], isMinusDivide: true,
+      guides: ["① 1 つ目の 3x + 1 < 7 を解く", "② 2 つ目の -2x + 3 ≦ 9 を解く（向きに注意）", "③ 両方をみたす範囲をえらぶ"],
+      wrongs: [[["x < 8/3", "+1 を右辺へ移項すると -1。3x < 6 なので x < 2 だよ"], ["x > 2", "正の数（3）でわるときは、不等号の向きは変わらないよ"]],
+               [["x ≦ -3", "-2x ≦ 6 を負の数（-2）でわると、向きが逆になるよ！"], ["x ≧ 3", "6 ÷ (-2) = -3。符号に注意"]],
+               [["-3 < x < 2", "x ≧ -3 は -3 をふくむよ。-3 ≦ x < 2（数直線では -3 は ●）"], ["x < 2", "連立不等式は両方をみたす範囲。x ≧ -3 も必要だよ"]]] }
   ];
 
   // 通常問題とマイナス割り問題に分離してそれぞれシャッフル
@@ -111,6 +185,8 @@ function getQuizData(type, level) {
   <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定を、ページに直接書く -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>数式ステップ学習クイズ</title>
+  <!-- 【ブラッシュアップ】不等式の答えを数直線で見せるための共通部品 -->
+  <script src="../assets/graph.js"></script>
   <style>
     :root {
       --bg-color: #f0faff;
@@ -334,10 +410,24 @@ function getQuizData(type, level) {
     /* 【ブラッシュアップ】 */
     .port-back { max-width: 700px; }
     .locked .option-btn { pointer-events: none; }
-    .option-btn:disabled { opacity: .4; }
+    .option-btn:disabled { opacity: .55; }
     .result-nav { display: flex; flex-direction: column; gap: 12px; }
     .result-nav .btn-start { margin-top: 0; }
     .result-nav a { color: #7f8c8d; }
+    .btn-grid.three { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    /* 式は教科書と同じ書体（x は斜体、マイナスは「−」） */
+    .math { font-family: 'Times New Roman', serif; }
+    .math i { font-style: italic; padding: 0 .12em; }
+    .problem-lead { display: block; font-size: 15px; color: #a16207; font-weight: 700; margin-bottom: 4px; font-family: inherit; }
+    .answer-line { padding: 2px 8px; text-align: center; }
+    .answer-line.guide { font-size: 17px; font-weight: 700; }
+    .feedback { font-size: 17px; line-height: 1.6; text-align: left; }
+    .feedback .why-head { display: block; font-size: 15px; opacity: .85; }
+    .numline { border-radius: 16px; padding: 10px 12px 4px; margin-bottom: 16px; text-align: center; }
+    .numline-title { font-weight: 700; font-size: 16px; }
+    .numline svg { width: 100%; max-width: 440px; height: auto; display: block; margin: 0 auto; }
+    .btn-next-q { width: 100%; margin: 4px 0 8px; font-size: 20px; padding: 14px; }
+    .score { font-size: min(40px, 10vw); }
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
     @media (max-width: 640px) {
@@ -347,13 +437,14 @@ function getQuizData(type, level) {
       .menu-group { padding: 12px; }
       .menu-group label { font-size: 17px; }
       button { font-size: 19px; }
+      .btn-grid.three button { font-size: 17px; padding: 12px 4px; }
       .btn-start { font-size: 21px; }
-      .problem-box { font-size: min(30px, 8.4vw); padding: 16px 8px; margin-bottom: 16px; }
-      .answer-area { padding: 12px 8px; min-height: 0; margin-bottom: 16px; }
-      .answer-line { font-size: min(24px, 6.6vw); min-height: 44px; }
-      .answer-line.guide { font-size: min(17px, 4.6vw); }   /* 案内文は小さめにして 1 行に収める */
-      .option-btn { font-size: min(24px, 6.6vw); padding: 16px 14px; text-align: center; }
-      .feedback { font-size: 18px; margin-bottom: 12px; }
+      .problem-box { font-size: min(30px, 7.6vw); padding: 14px 8px; margin-bottom: 14px; }
+      .answer-area { padding: 12px 8px; min-height: 0; margin-bottom: 14px; }
+      .answer-line { font-size: min(24px, 6.2vw); min-height: 44px; }
+      .answer-line.guide { font-size: min(16px, 4.2vw); }   /* 案内文は小さめにして 1 行に収める */
+      .option-btn { font-size: min(24px, 6.2vw); padding: 14px 10px; text-align: center; }
+      .feedback { font-size: 16px; margin-bottom: 12px; }
     }
   </style>
     <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
@@ -369,12 +460,16 @@ function getQuizData(type, level) {
     .options-title { color: var(--u-sub); }
     .answer-area { border-color: var(--u-line); }
     .answer-line { color: var(--u-ink); }
+    .answer-line.guide { color: #a3a3a3; }
+    .answer-line.done { color: var(--u-title-dark); background: var(--u-soft-blue); border-style: solid; border-color: var(--u-soft-blue-line); }
     .feedback { border-radius: 14px; }
     .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .feedback.wrong { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .feedback.wrong { background: var(--u-ng-soft); color: #b91c1c; border: 3px solid var(--u-ng-line); }
     .result-box h2 { white-space: nowrap; font-size: min(2rem, 7.5vw); }
     .result-box p { color: var(--u-ink); font-weight: 700; }
     .score { color: var(--u-accent-text); }
+    .numline { background: #fff; border: 3px solid var(--u-soft-blue-line); color: var(--u-ink); }
+    .numline-title { color: var(--u-title-dark); }
   
     </style>
 </head>
@@ -399,9 +494,11 @@ function getQuizData(type, level) {
 
     <div class="menu-group">
       <label>② むずかしさをえらぼう！</label>
-      <div class="btn-grid">
+      <!-- 【ブラッシュアップ】「発展」（かっこ・分数・小数・連立不等式・絶対値）を足した -->
+      <div class="btn-grid three">
         <button type="button" id="lvl-basic" class="btn-toggle active" onclick="selectLevel('basic')">初級</button>
         <button type="button" id="lvl-adv" class="btn-toggle" onclick="selectLevel('advanced')">上級</button>
+        <button type="button" id="lvl-chal" class="btn-toggle" onclick="selectLevel('challenge')">発展</button>
       </div>
     </div>
 
@@ -412,7 +509,8 @@ function getQuizData(type, level) {
     <div class="progress-bar">もんだい <span id="current-q-num">1</span> / 5</div>
     
     <div class="problem-box">
-      <span id="problem-text"></span>
+      <span id="problem-lead" class="problem-lead hidden"></span>
+      <span id="problem-text" class="math"></span>
     </div>
 
     <div class="options-title">ただしい式をえらんで、ノートをかんせいさせよう！</div>
@@ -424,6 +522,10 @@ function getQuizData(type, level) {
 
     <div id="feedback-message" class="feedback hidden"></div>
 
+    <!-- 【ブラッシュアップ】不等式は答えを数直線で見せる。見終わったら自分で次へ進む -->
+    <div id="numline" class="numline hidden"></div>
+    <button id="btn-next-q" class="btn-next-q hidden" onclick="nextQuestion()">次の問題へ ▶</button>
+
     <div class="options-area" id="options-area"></div>
   </div>
 
@@ -431,8 +533,9 @@ function getQuizData(type, level) {
     <div class="result-box">
       <h2>🎉 おめでとう！ 🎉</h2>
       <p>5問すべてのステップ変形をクリアしたよ！</p>
-      <div class="score">GREAT!</div>
-      <!-- 【ブラッシュアップ】同じ設定でもう一度・えらび直す・ほかの教材 を選べるようにした -->
+      <!-- 【ブラッシュアップ】元はいつも「GREAT!」だった。一発で正解できたステップの数を出す -->
+      <div class="score" id="result-score">GREAT!</div>
+      <p id="result-msg"></p>
       <div class="result-nav">
         <button class="btn-start" onclick="document.getElementById('result-screen').classList.add('hidden'); startQuiz();">同じ設定でもう一度</button>
         <button class="btn-toggle" onclick="backToMenu()">式の種類・むずかしさをえらび直す</button>
@@ -448,7 +551,10 @@ function getQuizData(type, level) {
   let quizQuestions = [];
   let currentQuestionIndex = 0;
   let currentStepIndex = 0;
-  let waiting = false;   // 【ブラッシュアップ】正解のあと、次に進むまでの間は受け付けない
+  // 【ブラッシュアップ】正解のあと、次に進むまでの間は受け付けない／一発で正解できたステップを数える
+  let waiting = false;
+  let stepMissed = false, cleanSteps = 0, stepTotal = 0;
+  let currentOptions = [];
 
   function selectType(type) {
     selectedType = type;
@@ -460,8 +566,8 @@ function getQuizData(type, level) {
     selectedLevel = level;
     document.getElementById('lvl-basic').classList.toggle('active', level === 'basic');
     document.getElementById('lvl-adv').classList.toggle('active', level === 'advanced');
+    document.getElementById('lvl-chal').classList.toggle('active', level === 'challenge');   // 【ブラッシュアップ】
   }
-
   function startQuiz() {
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('spacer').classList.add('hidden');
@@ -472,95 +578,174 @@ function getQuizData(type, level) {
       .withSuccessHandler(function(questions) {
         quizQuestions = questions;
         currentQuestionIndex = 0;
+        cleanSteps = 0; stepTotal = 0;   // 【ブラッシュアップ】
         showQuestion();
       })
       .getQuizData(selectedType, selectedLevel);
   }
 
+  // 【ブラッシュアップ】式を教科書の書き方で表示する（マイナスは「−」、x は斜体）
+  function mathHTML(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/-/g, '−').replace(/x/g, '<i>x</i>');
+  }
+
   function showQuestion() {
     currentStepIndex = 0;
     document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
-    
+
     let q = quizQuestions[currentQuestionIndex];
-    document.getElementById('problem-text').innerText = q.problem;
-    
-    var guides = ["① つぎの変形（移項）をえらぶ", "② 計算した結果をえらぶ", "③ 答えをえらぶ"];
-    for(var i=0; i<3; i++) {
+    document.getElementById('problem-text').innerHTML = mathHTML(q.problem);
+    const lead = document.getElementById('problem-lead');
+    lead.textContent = q.lead || '';
+    lead.classList.toggle('hidden', !q.lead);
+
+    // 【ブラッシュアップ】発展の問題は、問題ごとの案内を使う
+    var guides = q.guides || ["① つぎの変形（移項）をえらぶ", "② 計算した結果をえらぶ",
+      q.type === 'inequality' ? "③ 答えをえらぶ（不等号の向きに注意）" : "③ 答えをえらぶ"];
+    for (var i = 0; i < 3; i++) {
       var line = document.getElementById('line-' + i);
-      line.innerText = guides[i];
-      line.style.color = "#a2a2a2";
-      line.classList.add('guide');
+      line.innerHTML = mathText(guides[i]);
+      line.className = 'answer-line guide';
     }
-    
+
+    document.getElementById('numline').classList.add('hidden');
+    document.getElementById('btn-next-q').classList.add('hidden');
+    document.getElementById('options-area').classList.remove('hidden');
     hideFeedback();
     makeOptions();
   }
 
   function makeOptions() {
     let q = quizQuestions[currentQuestionIndex];
-    let correctValue = q.steps[currentStepIndex];
-    let dummies = generateDummies(correctValue, currentStepIndex, q.type);
-    
-    // 確実に「正解1個」＋「ダミー2個」の配列にする
-    let options = [correctValue].concat(dummies);
+    // 正解 1 個 ＋ まちがい 2 個（まちがいには「なぜちがうか」がついている）
+    let options = [{ t: q.steps[currentStepIndex], ok: true }].concat(makeWrongs(q, currentStepIndex));
     options = shuffleArray(options);
-    
+    currentOptions = options;
+    stepMissed = false;
+
     let optionsArea = document.getElementById('options-area');
     optionsArea.innerHTML = '';
     optionsArea.classList.remove('locked');
     waiting = false;
-    
+
     options.forEach(function(opt) {
       let btn = document.createElement('button');
-      btn.className = 'option-btn';
-      btn.innerText = opt;
+      btn.className = 'option-btn math';
+      btn.innerHTML = mathHTML(opt.t);
       btn.onclick = function() { checkAnswer(opt, btn); };
       optionsArea.appendChild(btn);
     });
   }
 
-  function checkAnswer(selectedOpt, btn) {
-    // 【ブラッシュアップ】元は正解を続けて押すと、次のステップで「ちがう」と出たり、1 問とばしたりした
+  function checkAnswer(opt, btn) {
+    // 元は正解を続けて押すと、次のステップで「ちがう」と出たり、1 問とばしたりした
     if (waiting) return;
     let q = quizQuestions[currentQuestionIndex];
-    let correctOpt = q.steps[currentStepIndex];
-    
-    if (selectedOpt === correctOpt) {
+
+    if (opt.ok) {
       waiting = true;
+      stepTotal++;
+      if (!stepMissed) cleanSteps++;
       document.getElementById('options-area').classList.add('locked');
-      showFeedback(true, "せいかい！その調子！ ✨");
-      
+      showFeedback(true, okMessage(q, currentStepIndex));
+
       let line = document.getElementById('line-' + currentStepIndex);
-      line.innerText = correctOpt;
-      line.style.color = "#ff1744";
-      line.classList.remove('guide');
-      
+      line.innerHTML = mathHTML(opt.t);
+      line.className = 'answer-line done math';
+
       currentStepIndex++;
-      
+
       if (currentStepIndex > 2) {
-        setTimeout(function() {
-          currentQuestionIndex++;
-          if (currentQuestionIndex < quizQuestions.length) {
-            showQuestion();
-          } else {
-            showResult();
-          }
-        }, 1000);
+        setTimeout(finishQuestion, 500);
       } else {
         setTimeout(function() {
           hideFeedback();
           makeOptions();
-        }, 600);
+        }, 700);
       }
     } else {
+      // 【ブラッシュアップ】元は「ちがう式があるよ」だけだった。選んだ式のどこがちがうかを出す
+      stepMissed = true;
       if (btn) btn.disabled = true;
-      showFeedback(false, "ちがう式があるよ。もういちど見てみよう！ 🤔");
+      showFeedback(false, '<span class="why-head">✖ その式はちがうよ</span>' + mathText(opt.why || 'もういちど見てみよう！'));
     }
+  }
+
+  // 理由の文の中の式も「−」で表示する（日本語はそのまま）
+  function mathText(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/(^|[^0-9A-Za-z)])-(?=[0-9x(])/g, '$1−');
+  }
+
+  function okMessage(q, step) {
+    if (step === 2 && q.type === 'inequality' && q.isMinusDivide && !/,/.test(q.problem) && !/\|/.test(q.problem)) {
+      return 'せいかい！ 負の数でわったので、不等号の向きを逆にしたね ✨';
+    }
+    return 'せいかい！その調子！ ✨';
+  }
+
+  // 1 問できたら：不等式は数直線を見せ、「次の問題へ」ボタンで進む
+  function finishQuestion() {
+    let q = quizQuestions[currentQuestionIndex];
+    showFeedback(true, 'できた！ 答えは ' + mathHTML(q.steps[2]));
+    document.getElementById('options-area').classList.add('hidden');
+    const nl = document.getElementById('numline');
+    if (q.type === 'inequality' && window.Graph) {
+      const g = numberLineFor(q.steps[2]);
+      if (g) {
+        nl.innerHTML = '<div class="numline-title">数直線で表すと（● はふくむ、○ はふくまない）</div>' + g;
+        nl.classList.remove('hidden');
+      }
+    }
+    const nb = document.getElementById('btn-next-q');
+    nb.textContent = currentQuestionIndex + 1 < quizQuestions.length ? '次の問題へ ▶' : '結果を見る ▶';
+    nb.classList.remove('hidden');
+    nb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizQuestions.length) {
+      showQuestion();
+      document.getElementById('quiz-screen').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      showResult();
+    }
+  }
+
+  // 答えの式（x > 5、-3 ≦ x < 2 など）から数直線を作る
+  function numVal(s) {
+    const m = String(s).match(/^(-?\d+(?:\.\d+)?)(?:\/(\d+))?$/);
+    if (!m) return NaN;
+    return m[2] ? Number(m[1]) / Number(m[2]) : Number(m[1]);
+  }
+  function numberLineFor(ans) {
+    const s = String(ans).replace(/\s+/g, '');
+    let m = s.match(/^x(<|>|≦|≧)(.+)$/);
+    const pts = [], ranges = [];
+    let lo, hi;
+    if (m) {
+      const v = numVal(m[2]);
+      if (!isFinite(v)) return '';
+      lo = Math.floor(v) - 4; hi = Math.ceil(v) + 4;
+      const filled = m[1] === '≦' || m[1] === '≧';
+      if (m[1] === '>' || m[1] === '≧') ranges.push({ from: v, to: hi }); else ranges.push({ from: lo, to: v });
+      pts.push({ x: v, filled: filled });
+    } else {
+      m = s.match(/^(.+?)(<|≦)x(<|≦)(.+)$/);
+      if (!m) return '';
+      const a = numVal(m[1]), b = numVal(m[4]);
+      if (!isFinite(a) || !isFinite(b)) return '';
+      lo = Math.floor(a) - 3; hi = Math.ceil(b) + 3;
+      ranges.push({ from: a, to: b });
+      pts.push({ x: a, filled: m[2] === '≦' }, { x: b, filled: m[3] === '≦' });
+    }
+    return Graph.numberLine({ lo: lo, hi: hi, ranges: ranges, points: pts });
   }
 
   function showFeedback(isCorrect, message) {
     let fb = document.getElementById('feedback-message');
-    fb.innerText = message;
+    fb.innerHTML = message;   // 【ブラッシュアップ】式を「−」・斜体で出すため HTML で入れる（中身はこのページで作った文だけ）
     fb.className = "feedback " + (isCorrect ? "correct" : "wrong");
   }
   
@@ -569,6 +754,11 @@ function getQuizData(type, level) {
   }
 
   function showResult() {
+    // 【ブラッシュアップ】一発で正解できたステップの数
+    document.getElementById('result-score').textContent = '一発正解 ' + cleanSteps + ' / ' + stepTotal;
+    document.getElementById('result-msg').textContent = cleanSteps === stepTotal
+      ? 'ぜんぶ一発で正解！ 完ぺきです。'
+      : (cleanSteps >= stepTotal * 0.8 ? 'よくできました。まちがえたステップの理由をもう一度たしかめよう。' : '理由を読みながら、同じ設定でもう一度やってみよう。');
     document.getElementById('quiz-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.remove('hidden');
   }
@@ -590,79 +780,94 @@ function getQuizData(type, level) {
     return arr;
   }
 
-  function generateDummies(correct, step, type) {
-    let dummies = [];
-    if (step === 0) {
-      if (correct.indexOf('+') !== -1) { dummies.push(correct.replace('+', '-')); }
-      else if (correct.indexOf('-') !== -1) { dummies.push(correct.replace('-', '+')); }
-      if (type === 'inequality') { dummies.push(invertInEquality(correct)); }
-    } 
-    else if (step === 1) {
-      var parts = correct.split('=');
-      var sign = '=';
-      if(parts.length < 2) {
-        var signs = ['>', '<', '≧', '≦'];
-        for(var i=0; i<signs.length; i++) {
-          if(correct.indexOf(signs[i]) !== -1) {
-            parts = correct.split(signs[i]); sign = signs[i]; break;
-          }
-        }
-      }
-      if (parts.length === 2) {
-        var left = parts[0].trim();
-        var num = parseInt(parts[1].trim(), 10);
-        dummies.push(left + " " + sign + " " + (num + 2));
-        dummies.push(left + " " + sign + " " + (num - 2));
-        dummies.push(left + " " + sign + " " + (num * -1));
-      }
-    } 
-    else if (step === 2) {
-      var parts = correct.split('=');
-      var sign = '=';
-      if(parts.length < 2) {
-        var signs = ['>', '<', '≧', '≦'];
-        for(var i=0; i<signs.length; i++) {
-          if(correct.indexOf(signs[i]) !== -1) {
-            parts = correct.split(signs[i]); sign = signs[i]; break;
-          }
-        }
-      }
-      if (parts.length === 2) {
-        var left = parts[0].trim();
-        var num = parseInt(parts[1].trim(), 10);
-        dummies.push(left + " " + sign + " " + (num * -1));
-        dummies.push(left + " " + sign + " " + (num + 1));
-        dummies.push(left + " " + sign + " " + (num - 1));
-        if (type === 'inequality') {
-          // 【ブラッシュアップ】「不等号の向きを変え忘れた式」はいちばん大事なひっかけなので先頭に置く。
-          //   元は 4 番目に入れていたため、最後に 2 個に絞るところで毎回切り捨てられ、一度も出ていなかった。
-          dummies.unshift(left + " " + invertSign(sign) + " " + num);
-        }
-      }
+  // 【ブラッシュアップ】まちがいの選択肢を理由つきで作る。
+  //   発展の問題はデータに書いた wrongs を使い、初級・上級は問題の式から「よくあるまちがい」を作る。
+  function makeWrongs(q, step) {
+    let list = [];
+    if (q.wrongs) {
+      list = q.wrongs[step].map(function(w) { return { t: w[0], ok: false, why: w[1] }; });
+    } else {
+      list = autoWrongs(q, step);
     }
-    
-    // 重複と「正解と同じ文字列」を完全にカット
-    var uniqueDummies = [];
-    dummies.forEach(function(d) {
-      if(uniqueDummies.indexOf(d) === -1 && d !== correct) { uniqueDummies.push(d); }
-    });
-
-    // 万が一足りない場合の安全な予備ひっかけ(確実に文字数やパターンを合わせる)
-    if (uniqueDummies.length < 2) {
-      uniqueDummies.push(correct + " + 2");
-    }
-    if (uniqueDummies.length < 2) {
-      uniqueDummies.push(correct + " - 2");
-    }
-
-    // 必ず2個だけを返却する
-    return uniqueDummies.slice(0, 2);
+    // 正解と同じ式・重なりを除いて 2 個にする
+    const seen = [q.steps[step]], out = [];
+    list.forEach(function(w) { if (seen.indexOf(w.t) < 0 && out.length < 2) { seen.push(w.t); out.push(w); } });
+    return out;
   }
 
-  // 【ブラッシュアップ】元は '>' を '<' にしたあと、すぐその '<' を '>' に戻してしまい、
-  //   向きが変わらないまま（＝正解と同じ式）になっていた。記号を 1 つずつ入れかえる。
-  function invertInEquality(text) {
-    return text.replace(/[<>≦≧]/, (s) => invertSign(s));
+  // 「ax + b」の形の式を読む（例：「5x - 4」→ {a: 5, b: -4}、「x + 10」→ {a: 1, b: 10}）
+  function readSide(s) {
+    let a = 0, b = 0;
+    s.replace(/\s+/g, '').replace(/-/g, '+-').split('+').filter(Boolean).forEach(function(t) {
+      if (t.indexOf('x') >= 0) { const k = t.replace('x', ''); a += k === '' ? 1 : (k === '-' ? -1 : Number(k)); }
+      else b += Number(t);
+    });
+    return { a: a, b: b };
+  }
+  function xs(k) { return k === 1 ? 'x' : (k === -1 ? '-x' : k + 'x'); }
+  function sgn(n) { return (n > 0 ? '+' : '-') + Math.abs(n); }
+  function sgnx(k) { return (k > 0 ? '+' : '-') + xs(Math.abs(k)); }
+  function frac(n, d) {
+    if (d < 0) { n = -n; d = -d; }
+    const g = (function gcd(p, r) { return r ? gcd(r, p % r) : Math.abs(p); })(n, d);
+    n /= g; d /= g;
+    return d === 1 ? String(n) : n + '/' + d;
+  }
+
+  function autoWrongs(q, step) {
+    const m = q.problem.match(/^(.*?)\s*(=|>|<|≧|≦)\s*(.*)$/);
+    const op = m[2], L = readSide(m[1]), R = readSide(m[3]);
+    const ineq = op !== '=';
+    const A = L.a - R.a, B = R.b - L.b;
+    const adv = R.a !== 0;
+    const minus = (n) => (n > 0 ? '-' : '+') + ' ' + Math.abs(n);   // 移項したあとの符号
+    const plus = (n) => (n > 0 ? '+' : '-') + ' ' + Math.abs(n);    // 符号を変え忘れたとき
+    const leftX = adv ? xs(L.a) + ' ' + minus(R.a).replace(/\d+$/, (d) => xs(Number(d))) : xs(L.a);
+    const leftXbad = adv ? xs(L.a) + ' ' + plus(R.a).replace(/\d+$/, (d) => xs(Number(d))) : xs(L.a);
+    const w = [];
+
+    if (step === 0) {
+      const signC = { t: leftX + ' ' + op + ' ' + R.b + ' ' + plus(L.b), ok: false,
+        why: '左辺の ' + sgn(L.b) + ' を右辺へ移項すると ' + sgn(-L.b) + ' になるよ。移項するときは符号を変える' };
+      const signX = { t: leftXbad + ' ' + op + ' ' + R.b + ' ' + minus(L.b), ok: false,
+        why: '右辺の ' + sgnx(R.a) + ' を左辺へ移項すると ' + sgnx(-R.a) + ' になるよ。移項するときは符号を変える' };
+      const keep = { t: xs(L.a) + ' ' + plus(L.b) + ' ' + op + ' ' + R.b + ' ' + minus(L.b), ok: false,
+        why: '移項した ' + sgn(L.b) + ' は、左辺からは消えるよ（両辺から同じ数をひく・たすのと同じ）' };
+      const dir = { t: q.steps[0].replace(/[<>≦≧]/, invertSign), ok: false,
+        why: '移項しても不等号の向きは変わらないよ。向きが変わるのは、負の数をかけたりわったりしたときだけ' };
+      if (!adv) w.push(signC, ineq ? dir : keep);
+      else if (!ineq) w.push(signX, signC);
+      else w.push(dir, Math.random() < 0.5 ? signX : signC);
+    } else if (step === 1) {
+      const expr = R.b + ' ' + minus(L.b);
+      w.push({ t: xs(A) + ' ' + op + ' ' + (R.b + L.b), ok: false,
+        why: '右辺の計算：' + expr + ' = ' + B + ' だよ' });
+      if (adv) {
+        w.push({ t: xs(-A) + ' ' + op + ' ' + B, ok: false,
+          why: 'x の係数：' + L.a + ' ' + minus(R.a) + ' = ' + A + '。符号に注意しよう' });
+      } else {
+        w.push({ t: xs(A) + ' ' + op + ' ' + (-B), ok: false,
+          why: '右辺の計算：' + expr + ' = ' + B + '。符号に注意しよう' });
+      }
+    } else {
+      const V = B / A;
+      const inv = frac(A, B);
+      const invWhy = xs(A) + ' ' + op + ' ' + B + ' は両辺を ' + A + ' でわる。x ' + op + ' ' + B + ' ÷ ' + (A < 0 ? '(' + A + ')' : A) + ' だよ（わる順番が逆）';
+      if (!ineq) {
+        if (A < 0) w.push({ t: 'x = ' + (-V), ok: false, why: B + ' ÷ (' + A + ') = ' + V + '。' + (B < 0 ? '負 ÷ 負 は正' : '正 ÷ 負 は負') + 'だよ' });
+        else w.push({ t: 'x = ' + (A * B), ok: false, why: '両辺を ' + A + ' で「わる」よ。かけるのではない' });
+        w.push({ t: 'x = ' + inv, ok: false, why: invWhy });
+      } else if (A > 0) {
+        w.push({ t: 'x ' + invertSign(op) + ' ' + V, ok: false, why: '正の数（' + A + '）でわるときは、不等号の向きは変わらないよ' });
+        w.push({ t: 'x ' + op + ' ' + inv, ok: false, why: invWhy });
+      } else {
+        w.push({ t: 'x ' + op + ' ' + V, ok: false, why: '負の数（' + A + '）でわると、不等号の向きが逆になるよ！' });
+        w.push({ t: 'x ' + invertSign(op) + ' ' + (-V), ok: false, why: B + ' ÷ (' + A + ') = ' + V + '。符号に注意' });
+      }
+    }
+    // 念のための予備（正解と重なったときだけ使う）
+    w.push({ t: q.steps[step].replace(/(-?\d+)$/, (d) => String(Number(d) + 1)), ok: false, why: '計算をもう一度見直そう' });
+    return w;
   }
 
   function invertSign(sign) {
@@ -683,6 +888,7 @@ function getQuizData(type, level) {
     ".btn-grid .btn-toggle:not(.active)": "u-btn u-btn-plain",
     ".btn-grid .btn-toggle.active": "u-btn u-btn-blue",
     ".btn-start": "u-btn",
+    ".btn-next-q": "u-btn u-btn-blue",
     ".progress-bar": "u-pill",
     ".option-btn": "u-choice",
     ".option-btn:disabled": "u-ng",

@@ -34,7 +34,7 @@ function getQuestionsDatabase() {
       { id: 2, formula: "x^2 - 7x + 12 = 0", c: 12, ans_f1: "-3", ans_f2: "-4", choices: ["x = 3, 4", "x = -3, -4", "x = 3, -4", "x = -3, 4"], correct: 0, hint: "足して-7、かけて12になる2つの数を見つけよう！", exp: "左辺を因数分解すると、(x - 3)(x - 4) = 0 となります。<br>したがって、x - 3 = 0 または x - 4 = 0 より、解は x = 3, 4 となります。" },
       { id: 3, formula: "x^2 + 2x - 8 = 0", c: -8, ans_f1: "+4", ans_f2: "-2", choices: ["x = -4, 2", "x = 4, -2", "x = 4, 2", "x = -4, -2"], correct: 0, hint: "足して2、かけて-8になる2つの数を見つけよう！", exp: "左辺を因数分解すると、(x + 4)(x - 2) = 0 となります。<br>したがって、x + 4 = 0 または x - 2 = 0 より、解は x = -4, 2 となります。" },
       { id: 4, formula: "x^2 - 3x - 10 = 0", c: -10, ans_f1: "-5", ans_f2: "+2", choices: ["x = 5, -2", "x = -5, 2", "x = 5, 2", "x = -5, -2"], correct: 0, hint: "足して-3、かけて-10になる2つの数を見つけよう！", exp: "左辺を因数分解すると、(x - 5)(x + 2) = 0 となります。<br>したがって、x - 5 = 0 または x + 2 = 0 より、解は x = 5, -2 となります。" },
-      { id: 5, formula: "x^2 - 8x + 16 = 0", c: 16, ans_f1: "-4", ans_f2: "-4", choices: ["x = 4 (重解)", "x = -4 (重解)", "x = 4, -4", "x = 2, 8"], correct: 0, hint: "これは (x - a)^2 = 0 の形になる特別なパターンだよ！", exp: "左辺を因数分解すると、(x - 4)^2 = 0 となります。<br>したがって、x - 4 = 0 より、解は x = 4 (重解) となります。" }
+      { id: 5, formula: "x^2 - 8x + 16 = 0", c: 16, ans_f1: "-4", ans_f2: "-4", choices: ["x = 4 \\text{ (重解)}", "x = -4 \\text{ (重解)}", "x = 4, -4", "x = 2, 8"], correct: 0, hint: "これは (x - a)² = 0 の形になる特別なパターンだよ！", exp: "左辺を因数分解すると、(x - 4)² = 0 となります。<br>したがって、x - 4 = 0 より、解は x = 4 (重解) となります。" }
     ],
     "02": [
       {
@@ -62,7 +62,7 @@ function getQuestionsDatabase() {
           { label: "② 計算を進める", blanks: ["64", "16"], html_ans_type: "text" },
           { label: "③ ルートの中を計算する", blanks: ["48"], html_ans_type: "text" },
           { label: "④ ルートの外に変形", blanks: ["4", "3"], html_ans_type: "coeff_root" },
-          { label: "⑤ 最終的な解", blanks: ["-4", "3"], html_ans_type: "frac_final_root" }
+          { label: "⑤ 最終的な解", blanks: ["-4", "3", "2"], html_ans_type: "frac_final_root" }
         ],
         explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-8 \\pm \\sqrt{8^2 - 4 \\times 1 \\times 4}}{2 \\times 1}$$<br>$$x = \\frac{-8 \\pm \\sqrt{64 - 16}}{2}$$<br>$$x = \\frac{-8 \\pm \\sqrt{48}}{2}$$<br>$$x = \\frac{-8 \\pm 4\\sqrt{3}}{2}$$<br>$$x = -4 \\pm 2\\sqrt{3}$$"
       },
@@ -71,7 +71,7 @@ function getQuestionsDatabase() {
         steps: [
           { label: "① 公式への代入", blanks: ["7", "7", "3"], html_ans_type: "text" },
           { label: "② 計算を進める", blanks: ["49", "24"], html_ans_type: "text" },
-          { label: "③ ルートをはずす", blanks: ["25"], html_ans_type: "text" },
+          { label: "③ ルートの中を計算する", blanks: ["25"], html_ans_type: "text" },
           { label: "④ ルートのない形へ", blanks: ["5"], html_ans_type: "remove_root_single" },
           { label: "⑤ 最終的な解", blanks: ["-1", "2", "-3"], html_ans_type: "two_ans_frac" }
         ],
@@ -94,30 +94,79 @@ function getMode3FormulaPool() {
   return {
     "level1": [
       { formula: "x^2 + 7x + 3 = 0", a_val: "1", b_val: "7", c_val: "3", steps: [{ label: "① 公式への代入", blanks: ["7", "7", "1", "3", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["49", "12"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["-7", "37"], html_ans_type: "frac_normal" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-7 \\pm \\sqrt{7^2 - 4 \\times 1 \\times 3}}{2 \\times 1}$$<br>$$x = \\frac{-7 \\pm \\sqrt{49 - 12}}{2}$$<br>$$x = \\frac{-7 \\pm \\sqrt{37}}{2}$$" },
-      { formula: "x^2 + 5x + 3 = 0", a_val: "1", b_val: "5", c_val: "3", steps: [{ label: "① 公式への代入", blanks: ["5", "5", "1", "3", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["25", "12"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["-5", "13"], html_ans_type: "frac_normal" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-5 \\pm \\sqrt{5^2 - 4 \\times 1 \\times 3}}{2 \\times 1}$$<br>$$x = \\frac{-5 \\pm \\sqrt{25 - 12}}{2}$$<br>$$x = \\frac{-5 \\pm \\sqrt{13}}{2}$$" }
+      { formula: "x^2 + 5x + 3 = 0", a_val: "1", b_val: "5", c_val: "3", steps: [{ label: "① 公式への代入", blanks: ["5", "5", "1", "3", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["25", "12"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["-5", "13"], html_ans_type: "frac_normal" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-5 \\pm \\sqrt{5^2 - 4 \\times 1 \\times 3}}{2 \\times 1}$$<br>$$x = \\frac{-5 \\pm \\sqrt{25 - 12}}{2}$$<br>$$x = \\frac{-5 \\pm \\sqrt{13}}{2}$$" },
+      // 【ブラッシュアップ】この段階の問題を足した（毎回この中から 1 問）
+      { formula: "x^2 + 3x - 1 = 0", a_val: "1", b_val: "3", c_val: "-1", steps: [{"label":"① 公式への代入","blanks":["3","3","1","-1","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["9","4"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["-3","13"],"html_ans_type":"frac_normal"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-3 \\pm \\sqrt{3^2 - 4 \\times 1 \\times (-1)}}{2 \\times 1}$$<br>$$x = \\frac{-3 \\pm \\sqrt{9 + 4}}{2}$$<br>$$x = \\frac{-3 \\pm \\sqrt{13}}{2}$$" },
+      { formula: "x^2 + 5x + 2 = 0", a_val: "1", b_val: "5", c_val: "2", steps: [{"label":"① 公式への代入","blanks":["5","5","1","2","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["25","8"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["-5","17"],"html_ans_type":"frac_normal"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-5 \\pm \\sqrt{5^2 - 4 \\times 1 \\times 2}}{2 \\times 1}$$<br>$$x = \\frac{-5 \\pm \\sqrt{25 - 8}}{2}$$<br>$$x = \\frac{-5 \\pm \\sqrt{17}}{2}$$" }
     ],
     "level2": [
-      { formula: "x^2 - 3x + 1 = 0", a_val: "1", b_val: "-3", c_val: "1", steps: [{ label: "① 公式への代入", blanks: ["-3", "-3", "1", "1", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["9", "4"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["3", "5"], html_ans_type: "frac_normal" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-3) \\pm \\sqrt{(-3)^2 - 4 \\times 1 \\times 1}}{2 \\times 1}$$<br>$$x = \\frac{3 \\pm \\sqrt{9 - 4}}{2}$$<br>$$x = \\frac{3 \\pm \\sqrt{5}}{2}$$" }
+      { formula: "x^2 - 3x + 1 = 0", a_val: "1", b_val: "-3", c_val: "1", steps: [{ label: "① 公式への代入", blanks: ["-3", "-3", "1", "1", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["9", "4"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["3", "5"], html_ans_type: "frac_normal" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-3) \\pm \\sqrt{(-3)^2 - 4 \\times 1 \\times 1}}{2 \\times 1}$$<br>$$x = \\frac{3 \\pm \\sqrt{9 - 4}}{2}$$<br>$$x = \\frac{3 \\pm \\sqrt{5}}{2}$$" },
+      // 【ブラッシュアップ】この段階の問題を足した（毎回この中から 1 問）
+      { formula: "x^2 - x - 3 = 0", a_val: "1", b_val: "-1", c_val: "-3", steps: [{"label":"① 公式への代入","blanks":["-1","-1","1","-3","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["1","12"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["1","13"],"html_ans_type":"frac_normal"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-1) \\pm \\sqrt{(-1)^2 - 4 \\times 1 \\times (-3)}}{2 \\times 1}$$<br>$$x = \\frac{1 \\pm \\sqrt{1 + 12}}{2}$$<br>$$x = \\frac{1 \\pm \\sqrt{13}}{2}$$" },
+      { formula: "x^2 - 7x + 11 = 0", a_val: "1", b_val: "-7", c_val: "11", steps: [{"label":"① 公式への代入","blanks":["-7","-7","1","11","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["49","44"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["7","5"],"html_ans_type":"frac_normal"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-7) \\pm \\sqrt{(-7)^2 - 4 \\times 1 \\times 11}}{2 \\times 1}$$<br>$$x = \\frac{7 \\pm \\sqrt{49 - 44}}{2}$$<br>$$x = \\frac{7 \\pm \\sqrt{5}}{2}$$" }
     ],
     "level3": [
-      { formula: "x^2 + 8x + 4 = 0", a_val: "1", b_val: "8", c_val: "4", steps: [{ label: "① 公式への代入", blanks: ["8", "8", "1", "4", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["64", "16"], html_ans_type: "text" }, { label: "③ ルートの中を計算する", blanks: ["48"], html_ans_type: "text" }, { label: "④ ルートの外に変形", blanks: ["4", "3"], html_ans_type: "coeff_root_m3_l3" }, { label: "⑤ 最終的な解", blanks: ["-4", "3"], html_ans_type: "frac_final_root" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-8 \\pm \\sqrt{8^2 - 4 \\times 1 \\times 4}}{2 \\times 1}$$<br>$$x = \\frac{-8 \\pm \\sqrt{64 - 16}}{2}$$<br>$$x = \\frac{-8 \\pm \\sqrt{48}}{2}$$<br>$$x = \\frac{-8 \\pm 4\\sqrt{3}}{2}$$<br>$$x = -4 \\pm 2\\sqrt{3}$$" }
+      { formula: "x^2 + 8x + 4 = 0", a_val: "1", b_val: "8", c_val: "4", steps: [{ label: "① 公式への代入", blanks: ["8", "8", "1", "4", "1"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["64", "16"], html_ans_type: "text" }, { label: "③ ルートの中を計算する", blanks: ["48"], html_ans_type: "text" }, { label: "④ ルートの外に変形", blanks: ["4", "3"], html_ans_type: "coeff_root_m3_l3" }, { label: "⑤ 最終的な解", blanks: ["-4", "3", "2"], html_ans_type: "frac_final_root" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-8 \\pm \\sqrt{8^2 - 4 \\times 1 \\times 4}}{2 \\times 1}$$<br>$$x = \\frac{-8 \\pm \\sqrt{64 - 16}}{2}$$<br>$$x = \\frac{-8 \\pm \\sqrt{48}}{2}$$<br>$$x = \\frac{-8 \\pm 4\\sqrt{3}}{2}$$<br>$$x = -4 \\pm 2\\sqrt{3}$$" },
+      // 【ブラッシュアップ】この段階の問題を足した（毎回この中から 1 問）
+      { formula: "x^2 - 8x + 4 = 0", a_val: "1", b_val: "-8", c_val: "4", steps: [{"label":"① 公式への代入","blanks":["-8","-8","1","4","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["64","16"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["48"],"html_ans_type":"text"},{"label":"④ ルートの外に変形","blanks":["4","3"],"html_ans_type":"coeff_root_m3_l3"},{"label":"⑤ 最終的な解","blanks":["4","3","2"],"html_ans_type":"frac_final_root"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-8) \\pm \\sqrt{(-8)^2 - 4 \\times 1 \\times 4}}{2 \\times 1}$$<br>$$x = \\frac{8 \\pm \\sqrt{64 - 16}}{2}$$<br>$$x = \\frac{8 \\pm \\sqrt{48}}{2}$$<br>$$x = \\frac{8 \\pm 4\\sqrt{3}}{2}$$<br>$$x = 4 \\pm 2\\sqrt{3}$$" },
+      { formula: "x^2 + 10x + 7 = 0", a_val: "1", b_val: "10", c_val: "7", steps: [{"label":"① 公式への代入","blanks":["10","10","1","7","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["100","28"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["72"],"html_ans_type":"text"},{"label":"④ ルートの外に変形","blanks":["6","2"],"html_ans_type":"coeff_root_m3_l3"},{"label":"⑤ 最終的な解","blanks":["-5","2","3"],"html_ans_type":"frac_final_root"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-10 \\pm \\sqrt{10^2 - 4 \\times 1 \\times 7}}{2 \\times 1}$$<br>$$x = \\frac{-10 \\pm \\sqrt{100 - 28}}{2}$$<br>$$x = \\frac{-10 \\pm \\sqrt{72}}{2}$$<br>$$x = \\frac{-10 \\pm 6\\sqrt{2}}{2}$$<br>$$x = -5 \\pm 3\\sqrt{2}$$" },
+      { formula: "x^2 + 6x + 1 = 0", a_val: "1", b_val: "6", c_val: "1", steps: [{"label":"① 公式への代入","blanks":["6","6","1","1","1"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["36","4"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["32"],"html_ans_type":"text"},{"label":"④ ルートの外に変形","blanks":["4","2"],"html_ans_type":"coeff_root_m3_l3"},{"label":"⑤ 最終的な解","blanks":["-3","2","2"],"html_ans_type":"frac_final_root"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-6 \\pm \\sqrt{6^2 - 4 \\times 1 \\times 1}}{2 \\times 1}$$<br>$$x = \\frac{-6 \\pm \\sqrt{36 - 4}}{2}$$<br>$$x = \\frac{-6 \\pm \\sqrt{32}}{2}$$<br>$$x = \\frac{-6 \\pm 4\\sqrt{2}}{2}$$<br>$$x = -3 \\pm 2\\sqrt{2}$$" }
     ],
     "level4": [
-      { formula: "2x^2 + 7x + 3 = 0", a_val: "2", b_val: "7", c_val: "3", steps: [{ label: "① 公式への代入", blanks: ["7", "7", "2", "3", "2"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["49", "24"], html_ans_type: "text" }, { label: "③ ルートをはずす", blanks: ["25"], html_ans_type: "text" }, { label: "④ ルートのない形へ", blanks: ["5"], html_ans_type: "remove_root_single" }, { label: "⑤ 最終的な解", blanks: ["-1", "2", "-3"], html_ans_type: "two_ans_frac" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-7 \\pm \\sqrt{7^2 - 4 \\times 2 \\times 3}}{2 \\times 2}$$<br>$$x = \\frac{-7 \\pm \\sqrt{49 - 24}}{4}$$<br>$$x = \\frac{-7 \\pm \\sqrt{25}}{4}$$<br>$$x = \\frac{-7 \\pm 5}{4}$$<br>$$x = \\frac{-7 + 5}{4} = \\frac{-2}{4} = -\\frac{1}{2}$$<br>$$x = \\frac{-7 - 5}{4} = \\frac{-12}{4} = -3$$" }
+      { formula: "2x^2 + 7x + 3 = 0", a_val: "2", b_val: "7", c_val: "3", steps: [{ label: "① 公式への代入", blanks: ["7", "7", "2", "3", "2"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["49", "24"], html_ans_type: "text" }, { label: "③ ルートの中を計算する", blanks: ["25"], html_ans_type: "text" }, { label: "④ ルートのない形へ", blanks: ["5"], html_ans_type: "remove_root_single" }, { label: "⑤ 最終的な解", blanks: ["-1", "2", "-3"], html_ans_type: "two_ans_frac" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-7 \\pm \\sqrt{7^2 - 4 \\times 2 \\times 3}}{2 \\times 2}$$<br>$$x = \\frac{-7 \\pm \\sqrt{49 - 24}}{4}$$<br>$$x = \\frac{-7 \\pm \\sqrt{25}}{4}$$<br>$$x = \\frac{-7 \\pm 5}{4}$$<br>$$x = \\frac{-7 + 5}{4} = \\frac{-2}{4} = -\\frac{1}{2}$$<br>$$x = \\frac{-7 - 5}{4} = \\frac{-12}{4} = -3$$" },
+      // 【ブラッシュアップ】この段階の問題を足した（毎回この中から 1 問）
+      { formula: "2x^2 - 5x + 2 = 0", a_val: "2", b_val: "-5", c_val: "2", steps: [{"label":"① 公式への代入","blanks":["-5","-5","2","2","2"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["25","16"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["9"],"html_ans_type":"text"},{"label":"④ ルートのない形へ","blanks":["3"],"html_ans_type":"remove_root_single"},{"label":"⑤ 最終的な解","blanks":["1","2","2"],"html_ans_type":"two_ans_frac"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-5) \\pm \\sqrt{(-5)^2 - 4 \\times 2 \\times 2}}{2 \\times 2}$$<br>$$x = \\frac{5 \\pm \\sqrt{25 - 16}}{4}$$<br>$$x = \\frac{5 \\pm \\sqrt{9}}{4}$$<br>$$x = \\frac{5 \\pm 3}{4}$$<br>$$x = \\frac{1}{2}, \\quad x = 2$$" },
+      { formula: "2x^2 + x - 6 = 0", a_val: "2", b_val: "1", c_val: "-6", steps: [{"label":"① 公式への代入","blanks":["1","1","2","-6","2"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["1","48"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["49"],"html_ans_type":"text"},{"label":"④ ルートのない形へ","blanks":["7"],"html_ans_type":"remove_root_single"},{"label":"⑤ 最終的な解","blanks":["3","2","-2"],"html_ans_type":"two_ans_frac"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-1 \\pm \\sqrt{1^2 - 4 \\times 2 \\times (-6)}}{2 \\times 2}$$<br>$$x = \\frac{-1 \\pm \\sqrt{1 + 48}}{4}$$<br>$$x = \\frac{-1 \\pm \\sqrt{49}}{4}$$<br>$$x = \\frac{-1 \\pm 7}{4}$$<br>$$x = \\frac{3}{2}, \\quad x = -2$$" },
+      { formula: "2x^2 - 3x - 2 = 0", a_val: "2", b_val: "-3", c_val: "-2", steps: [{"label":"① 公式への代入","blanks":["-3","-3","2","-2","2"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["9","16"],"html_ans_type":"text"},{"label":"③ ルートの中を計算する","blanks":["25"],"html_ans_type":"text"},{"label":"④ ルートのない形へ","blanks":["5"],"html_ans_type":"remove_root_single"},{"label":"⑤ 最終的な解","blanks":["-1","2","2"],"html_ans_type":"two_ans_frac"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-3) \\pm \\sqrt{(-3)^2 - 4 \\times 2 \\times (-2)}}{2 \\times 2}$$<br>$$x = \\frac{3 \\pm \\sqrt{9 + 16}}{4}$$<br>$$x = \\frac{3 \\pm \\sqrt{25}}{4}$$<br>$$x = \\frac{3 \\pm 5}{4}$$<br>$$x = -\\frac{1}{2}, \\quad x = 2$$" }
     ],
     "level5": [
-      { formula: "2x^2 - 3x - 1 = 0", a_val: "2", b_val: "-3", c_val: "-1", steps: [{ label: "① 公式への代入", blanks: ["-3", "-3", "2", "-1", "2"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["9", "8"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["3", "17", "4"], html_ans_type: "frac_three" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-3) \\pm \\sqrt{(-3)^2 - 4 \\times 2 \\times (-1)}}{2 \\times 2}$$<br>$$x = \\frac{3 \\pm \\sqrt{9 + 8}}{4}$$<br>$$x = \\frac{3 \\pm \\sqrt{17}}{4}$$" }
+      { formula: "2x^2 - 3x - 1 = 0", a_val: "2", b_val: "-3", c_val: "-1", steps: [{ label: "① 公式への代入", blanks: ["-3", "-3", "2", "-1", "2"], html_ans_type: "m3_full_blank" }, { label: "② 計算を進める", blanks: ["9", "8"], html_ans_type: "text" }, { label: "③ 最終的な解", blanks: ["3", "17", "4"], html_ans_type: "frac_three" }], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-3) \\pm \\sqrt{(-3)^2 - 4 \\times 2 \\times (-1)}}{2 \\times 2}$$<br>$$x = \\frac{3 \\pm \\sqrt{9 + 8}}{4}$$<br>$$x = \\frac{3 \\pm \\sqrt{17}}{4}$$" },
+      // 【ブラッシュアップ】この段階の問題を足した（毎回この中から 1 問）
+      { formula: "2x^2 + x - 2 = 0", a_val: "2", b_val: "1", c_val: "-2", steps: [{"label":"① 公式への代入","blanks":["1","1","2","-2","2"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["1","16"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["-1","17","4"],"html_ans_type":"frac_three"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-1 \\pm \\sqrt{1^2 - 4 \\times 2 \\times (-2)}}{2 \\times 2}$$<br>$$x = \\frac{-1 \\pm \\sqrt{1 + 16}}{4}$$<br>$$x = \\frac{-1 \\pm \\sqrt{17}}{4}$$" },
+      { formula: "3x^2 - 5x + 1 = 0", a_val: "3", b_val: "-5", c_val: "1", steps: [{"label":"① 公式への代入","blanks":["-5","-5","3","1","3"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["25","12"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["5","13","6"],"html_ans_type":"frac_three"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-5) \\pm \\sqrt{(-5)^2 - 4 \\times 3 \\times 1}}{2 \\times 3}$$<br>$$x = \\frac{5 \\pm \\sqrt{25 - 12}}{6}$$<br>$$x = \\frac{5 \\pm \\sqrt{13}}{6}$$" },
+      { formula: "2x^2 - 5x + 1 = 0", a_val: "2", b_val: "-5", c_val: "1", steps: [{"label":"① 公式への代入","blanks":["-5","-5","2","1","2"],"html_ans_type":"m3_full_blank"},{"label":"② 計算を進める","blanks":["25","8"],"html_ans_type":"text"},{"label":"③ 最終的な解","blanks":["5","17","4"],"html_ans_type":"frac_three"}], explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-5) \\pm \\sqrt{(-5)^2 - 4 \\times 2 \\times 1}}{2 \\times 2}$$<br>$$x = \\frac{5 \\pm \\sqrt{25 - 8}}{4}$$<br>$$x = \\frac{5 \\pm \\sqrt{17}}{4}$$" }
     ]
   };
 }
 
 function getMode4Database() {
   return [
-    { formula: "x^2 - 6x + 8 = 0", choices: ["x = 2, 4", "x = -2, -4", "x = 3 \\pm \\sqrt{17}", "x = \\frac{3 \\pm \\sqrt{17}}{2}", "x = 2, -4", "x = -2, 4"], correct: 0, explanation: "<b>【式変形の過程】</b><br>$$(x-2)(x-4)=0$$<br>$$x=2, 4$$" },
-    { formula: "x^2 + 4x + 1 = 0", choices: ["x = -2 \\pm \\sqrt{3}", "x = -4 \\pm \\sqrt{15}", "x = -2, -2", "x = \\frac{-2 \\pm \\sqrt{3}}{2}", "x = 2 \\pm \\sqrt{3}", "x = -4 \\pm \\sqrt{3}"], correct: 0, explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-4 \\pm \\sqrt{4^2 - 4 \\times 1 \\times 1}}{2 \\times 1}$$<br>$$x = \\frac{-4 \\pm \\sqrt{16 - 4}}{2}$$<br>$$x = \\frac{-4 \\pm \\sqrt{12}}{2}$$<br>$$x = \\frac{-4 \\pm 2\\sqrt{3}}{2}$$<br>$$x = -2 \\pm \\sqrt{3}$$" },
-    { formula: "x^2 - 5x - 6 = 0", choices: ["x = 6, -1", "x = -6, 1", "x = 2, 3", "x = -2, -3", "x = \\frac{5 \\pm \\sqrt{49}}{2}", "x = 6 (重解)"], correct: 0, explanation: "<b>【式変形の過程】</b><br>$$(x-6)(x+1)=0$$<br>$$x=6, -1$$" },
-    { formula: "3x^2 - 7x + 2 = 0", choices: ["x = 2, \\frac{1}{3}", "x = -2, -\\frac{1}{3}", "x = \\frac{7 \\pm \\sqrt{73}}{6}", "x = 2, 3", "x = \\frac{7 \\pm \\sqrt{25}}{6}", "x = 1, 2"], correct: 0, explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-7) \\pm \\sqrt{(-7)^2 - 4 \\times 3 \\times 2}}{2 \\times 3}$$<br>$$x = \\frac{7 \\pm \\sqrt{49 - 24}}{6}$$<br>$$x = \\frac{7 \\pm \\sqrt{25}}{6}$$<br>$$x = \\frac{7 \\pm 5}{6}$$<br>$$x = \\frac{12}{6} = 2, \\quad x = \\frac{2}{6} = \\frac{1}{3}$$" },
-    { formula: "x^2 - 6x + 9 = 0", choices: ["x = 3 \\text{ (重解)}", "x = -3 \\text{ (重解)}", "x = 3, -3", "x = 2, 4", "x = 0, 6", "x = 3, 6"], correct: 0, explanation: "<b>【式変形の過程】</b><br>$$(x-3)^2 = 0$$<br>$$x = 3$$" }
+    { formula: "x^2 - 6x + 8 = 0", choices: ["x = 2, 4", "x = -2, -4", "x = 3 \\pm \\sqrt{17}", "x = \\frac{3 \\pm \\sqrt{17}}{2}", "x = 2, -4", "x = -2, 4"], correct: 0,
+      whys: ["", "(x - 2)(x - 4) = 0 の解は x = 2, 4。かっこの中の数と解は符号が逆になるよ", "√ の中は b² - 4ac = 36 - 32 = 4。c の符号をまちがえると 36 + 32 になってしまうよ", "√ の中は 36 - 32 = 4。かけて 8・たして -6 になる 2 数があるので因数分解もできるよ", "かけて +8 になる 2 数は同じ符号。たして -6 なので -2 と -4", "かけて +8 になる 2 数は同じ符号。たして -6 なので -2 と -4"],
+      explanation: "<b>【式変形の過程】</b><br>$$(x-2)(x-4)=0$$<br>$$x=2, 4$$" },
+    { formula: "x^2 + 4x + 1 = 0", choices: ["x = -2 \\pm \\sqrt{3}", "x = -4 \\pm 2\\sqrt{3}", "x = -2 \\pm 2\\sqrt{3}", "x = \\frac{-2 \\pm \\sqrt{3}}{2}", "x = 2 \\pm \\sqrt{3}", "x = -2 \\pm \\sqrt{5}"], correct: 0,
+      whys: ["", "分母の 2 でわるのを忘れているよ。(-4 ± 2√3)/2 = -2 ± √3", "分子の 2 つの項を両方 2 でわる。2√3 ÷ 2 = √3", "(-4 ± 2√3)/2 は分子を 2 でわって -2 ± √3。分母は残らないよ", "-b = -4。符号に注意しよう", "√ の中は 16 - 4 = 12。√12 = 2√3 だよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-4 \\pm \\sqrt{4^2 - 4 \\times 1 \\times 1}}{2 \\times 1}$$<br>$$x = \\frac{-4 \\pm \\sqrt{16 - 4}}{2}$$<br>$$x = \\frac{-4 \\pm \\sqrt{12}}{2}$$<br>$$x = \\frac{-4 \\pm 2\\sqrt{3}}{2}$$<br>$$x = -2 \\pm \\sqrt{3}$$" },
+    { formula: "x^2 - 5x - 6 = 0", choices: ["x = 6, -1", "x = -6, 1", "x = 2, 3", "x = -2, -3", "x = \\frac{5 \\pm 7}{4}", "x = 6 \\text{ (重解)}"], correct: 0,
+      whys: ["", "(x - 6)(x + 1) = 0 の解は x = 6, -1。符号が逆になっているよ", "かけて -6 なので 2 数は正と負の組。2 と 3 はかけて +6", "かけて -6 なので 2 数は正と負の組", "分母は 2a = 2 × 1 = 2 だよ", "重解になるのは (x - a)² = 0 の形のときだけ"],
+      explanation: "<b>【式変形の過程】</b><br>$$(x-6)(x+1)=0$$<br>$$x=6, -1$$" },
+    { formula: "3x^2 - 7x + 2 = 0", choices: ["x = 2, \\frac{1}{3}", "x = -2, -\\frac{1}{3}", "x = \\frac{7 \\pm \\sqrt{73}}{6}", "x = 2, 3", "x = \\frac{7 \\pm 5}{3}", "x = 1, 2"], correct: 0,
+      whys: ["", "(3x - 1)(x - 2) = 0 の解は x = 1/3, 2。符号に注意", "√ の中は 49 - 24 = 25。c の符号をまちがえると 49 + 24 になってしまうよ", "3x - 1 = 0 の解は x = 1/3（3 ではない）", "分母は 2a = 2 × 3 = 6 だよ", "x = 1 を入れると 3 - 7 + 2 = -2 で、0 にならないよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-(-7) \\pm \\sqrt{(-7)^2 - 4 \\times 3 \\times 2}}{2 \\times 3}$$<br>$$x = \\frac{7 \\pm \\sqrt{49 - 24}}{6}$$<br>$$x = \\frac{7 \\pm \\sqrt{25}}{6}$$<br>$$x = \\frac{7 \\pm 5}{6}$$<br>$$x = \\frac{12}{6} = 2, \\quad x = \\frac{2}{6} = \\frac{1}{3}$$<br>（たすき掛けで (3x - 1)(x - 2) = 0 としてもよい）" },
+    { formula: "x^2 - 6x + 9 = 0", choices: ["x = 3 \\text{ (重解)}", "x = -3 \\text{ (重解)}", "x = 3, -3", "x = 2, 4", "x = 0, 6", "x = 3, 6"], correct: 0,
+      whys: ["", "(x - 3)² = 0 なので x - 3 = 0。x = 3 だよ", "(x - 3)² = 0 は x - 3 = 0 だけ。x = -3 を入れると 36 になるよ", "かけて 9、たして -6 になるのは -3 と -3", "x(x - 6) = 0 ではないよ。+9 があるので (x - 3)² = 0", "x = 6 を入れると 36 - 36 + 9 = 9 で、0 にならないよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$(x-3)^2 = 0$$<br>$$x = 3 \\text{（重解）}$$" },
+    { formula: "x^2 - 3x = 0", choices: ["x = 0, 3", "x = 3", "x = 0, -3", "x = \\pm\\sqrt{3}", "x = 0", "x = 1, 3"], correct: 0,
+      whys: ["", "両辺を x でわると x = 0 の解がなくなるよ。x(x - 3) = 0 と共通因数でくくろう", "x - 3 = 0 から x = 3 だよ", "x² = 3 ではないよ。x(x - 3) = 0 と共通因数でくくろう", "x(x - 3) = 0 なので x = 0 または x - 3 = 0。x = 3 も解だよ", "x = 1 を入れると 1 - 3 = -2 で、0 にならないよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$x(x - 3) = 0$$<br>$$x = 0, 3$$<br>（両辺を x でわってはいけない。x = 0 の解がなくなる）" },
+    { formula: "x^2 = 5", choices: ["x = \\pm\\sqrt{5}", "x = \\sqrt{5}", "x = \\pm 5", "x = \\pm\\frac{5}{2}", "x = 25", "x = \\pm 25"], correct: 0,
+      whys: ["", "2 乗して 5 になる数は √5 と -√5 の 2 つ", "5² = 25 だよ。2 乗して 5 になるのは ±√5", "2 でわるのではなく、√ をとるよ", "2 乗するのではなく、√ をとるよ", "2 乗するのではなく、√ をとるよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$x^2 = 5$$<br>$$x = \\pm\\sqrt{5}$$" },
+    { formula: "2x^2 + 5x - 3 = 0", choices: ["x = \\frac{1}{2}, -3", "x = -\\frac{1}{2}, 3", "x = 2, -3", "x = \\frac{-5 \\pm \\sqrt{1}}{4}", "x = 1, -3", "x = \\frac{1}{2}, 3"], correct: 0,
+      whys: ["", "(2x - 1)(x + 3) = 0 の解は x = 1/2, -3。符号に注意", "2x - 1 = 0 の解は x = 1/2 だよ", "√ の中は 25 - 4 × 2 × (-3) = 25 + 24 = 49", "x = 1 を入れると 2 + 5 - 3 = 4 で、0 にならないよ", "x + 3 = 0 の解は x = -3 だよ"],
+      explanation: "<b>【式変形の過程】</b><br>（たすき掛け）$$(2x - 1)(x + 3) = 0$$<br>$$x = \\frac{1}{2}, -3$$" },
+    { formula: "x^2 = 3x + 4", choices: ["x = 4, -1", "x = -4, 1", "x = 4", "x = 1, 4", "x = -1, -4", "x = 2, -2"], correct: 0,
+      whys: ["", "x² - 3x - 4 = (x - 4)(x + 1) = 0。符号に注意", "右辺を 0 にして x² - 3x - 4 = 0 としてから解こう。解は 2 つ", "x = 1 を入れると 左辺 1、右辺 7 で等しくないよ", "x = -4 を入れると 左辺 16、右辺 -8 で等しくないよ", "x² = 4 ではないよ。3x も左辺へ移項する"],
+      explanation: "<b>【式変形の過程】</b><br>$$x^2 - 3x - 4 = 0$$<br>$$(x - 4)(x + 1) = 0$$<br>$$x = 4, -1$$" },
+    { formula: "-x^2 + 2x + 3 = 0", choices: ["x = 3, -1", "x = -3, 1", "x = 1, 3", "x = -1, -3", "x = 3 \\text{ (重解)}", "x = 1 \\pm \\sqrt{2}"], correct: 0,
+      whys: ["", "両辺に -1 をかけて x² - 2x - 3 = (x - 3)(x + 1) = 0。符号に注意", "x = 1 を入れると -1 + 2 + 3 = 4 で、0 にならないよ", "x = -3 を入れると -9 - 6 + 3 = -12 で、0 にならないよ", "x² - 2x - 3 = (x - 3)(x + 1)。解は 2 つ", "x² - 2x - 3 = 0 の √ の中は 4 + 12 = 16。因数分解もできるよ"],
+      explanation: "<b>【式変形の過程】</b><br>（両辺に -1 をかける）$$x^2 - 2x - 3 = 0$$<br>$$(x - 3)(x + 1) = 0$$<br>$$x = 3, -1$$" },
+    { formula: "x^2 + 6x + 2 = 0", choices: ["x = -3 \\pm \\sqrt{7}", "x = -6 \\pm \\sqrt{7}", "x = \\frac{-3 \\pm \\sqrt{7}}{2}", "x = 3 \\pm \\sqrt{7}", "x = -3 \\pm \\sqrt{11}", "x = -3 \\pm 2\\sqrt{7}"], correct: 0,
+      whys: ["", "分子の 2 つの項を両方 2 でわる。-6 ÷ 2 = -3", "(-6 ± 2√7)/2 は -3 ± √7。分母は残らないよ", "-b = -6。符号に注意しよう", "√ の中は 36 - 8 = 28 = 4 × 7。√28 = 2√7", "2√7 も 2 でわって √7 になるよ"],
+      explanation: "<b>【式変形の過程】</b><br>$$x = \\frac{-6 \\pm \\sqrt{6^2 - 4 \\times 1 \\times 2}}{2 \\times 1} = \\frac{-6 \\pm \\sqrt{28}}{2} = \\frac{-6 \\pm 2\\sqrt{7}}{2}$$<br>$$x = -3 \\pm \\sqrt{7}$$<br>（b が偶数のときは $$x = -b' \\pm \\sqrt{b'^2 - ac} = -3 \\pm \\sqrt{9 - 2}$$ でも求められる。b = 2b'）" },
+    { formula: "x^2 + 2x + 5 = 0", choices: ["\\text{実数解はない}", "x = -1 \\pm \\sqrt{6}", "x = 1 \\pm \\sqrt{6}", "x = -1 \\text{ (重解)}", "x = -1, -5", "x = 1, 5"], correct: 0,
+      whys: ["", "√ の中は b² - 4ac = 4 - 20 = -16。c の符号をまちがえると 4 + 20 になってしまうよ", "√ の中は 4 - 20 = -16 で負の数。実数の解はないよ", "重解になるのは b² - 4ac = 0 のとき。ここでは -16", "x = -1 を入れると 1 - 2 + 5 = 4 で、0 にならないよ", "x = 1 を入れると 1 + 2 + 5 = 8 で、0 にならないよ"],
+      explanation: "<b>【判別式で調べる】</b><br>$$D = b^2 - 4ac = 2^2 - 4 \\times 1 \\times 5 = -16 < 0$$<br>D < 0 なので、実数解はない。" }
   ];
 }
 
@@ -128,6 +177,41 @@ function shuffle(array) {
     var temp = copy[i]; copy[i] = copy[j]; copy[j] = temp;
   }
   return copy;
+}
+
+// 【ブラッシュアップ】(x + m)(x + n) = 0 の形の問題を作る。先生のモード01のデータと同じ形にする。
+function makeFactorQuestion(m, n) {
+  var b = m + n, c = m * n;
+  var formula = "x^2" + (b === 0 ? "" : (b > 0 ? " + " : " - ") + (Math.abs(b) === 1 ? "" : Math.abs(b)) + "x") + (c > 0 ? " + " : " - ") + Math.abs(c) + " = 0";
+  function sg(k) { return (k > 0 ? "+" : "-") + Math.abs(k); }
+  function fac(k) { return "(x " + (k > 0 ? "+ " : "- ") + Math.abs(k) + ")"; }
+  var r1 = -m, r2 = -n, choices, hint, exp;
+  if (m === n) {
+    choices = ["x = " + r1 + " \\text{ (重解)}", "x = " + (-r1) + " \\text{ (重解)}", "x = " + r1 + ", " + (-r1), "x = " + (2 * r1) + " \\text{ (重解)}"];
+    hint = "これは (x - a)² = 0 の形になる特別なパターンだよ！";
+    exp = "左辺を因数分解すると、" + fac(m) + "² = 0 となります。<br>したがって、x " + (m > 0 ? "+ " : "- ") + Math.abs(m) + " = 0 より、解は x = " + r1 + " (重解) となります。";
+  } else {
+    choices = ["x = " + r1 + ", " + r2, "x = " + (-r1) + ", " + (-r2), "x = " + r1 + ", " + (-r2), "x = " + (-r1) + ", " + r2];
+    hint = "足して" + b + "、かけて" + c + "になる2つの数を見つけよう！";
+    exp = "左辺を因数分解すると、" + fac(m) + fac(n) + " = 0 となります。<br>したがって、x " + (m > 0 ? "+ " : "- ") + Math.abs(m) + " = 0 または x " + (n > 0 ? "+ " : "- ") + Math.abs(n) + " = 0 より、解は x = " + r1 + ", " + r2 + " となります。";
+  }
+  return { formula: formula, c: c, ans_f1: sg(m), ans_f2: sg(n), choices: choices, correct: 0, hint: hint, exp: exp };
+}
+
+// 【ブラッシュアップ】5 問をランダムに作る（解が 2 つの問題 4 問 ＋ 重解の問題 1 問。同じ問題は出さない）
+function makeFactorSet() {
+  var nums = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6];
+  var list = [], seen = {};
+  while (list.length < 4) {
+    var m = nums[Math.floor(Math.random() * nums.length)], n = nums[Math.floor(Math.random() * nums.length)];
+    var key = Math.min(m, n) + "," + Math.max(m, n);
+    if (m === n || m === -n || seen[key]) continue;   // 重解の問題は別に作る。x の項が消える組（x² − 4 など）は選択肢が重なるので出さない
+    seen[key] = true;
+    list.push(makeFactorQuestion(Math.max(m, n), Math.min(m, n)));
+  }
+  var d = [-5, -4, -3, -2, 2, 3, 4, 5][Math.floor(Math.random() * 8)];
+  list.push(makeFactorQuestion(d, d));
+  return shuffle(list);
 }
 
 function getRandomQuestions(mode, subMode) {
@@ -146,8 +230,7 @@ function getRandomQuestions(mode, subMode) {
     }
   } else if (mode === "03") {
     if (subMode === "01") {
-      var pool = db["01"];
-      var shuffled = shuffle(pool);
+      var shuffled = makeFactorSet();   // 【ブラッシュアップ】元は db["01"] の 5 問の順番を変えるだけだった
       for (var i = 0; i < Math.min(5, shuffled.length); i++) {
         result.push({ type: "01", data: shuffled[i] });
       }
@@ -373,6 +456,9 @@ function getRandomQuestions(mode, subMode) {
     #clear-screen > div { border: 8px solid var(--u-frame); border-radius: 40px !important; box-shadow: none !important; }
     #clear-screen h2 { color: var(--u-accent-text); }
     .modal-overlay { background: rgba(75, 44, 32, 0.55); }
+    /* 【ブラッシュアップ】まちがえたときの理由・自力で正解できた数 */
+    .advice { display: block; margin-top: 6px; font-size: 15px; line-height: 1.6; color: var(--u-ink); font-weight: 700; }
+    .clear-score { font-size: 1.15rem; font-weight: 800; color: var(--u-title); margin: 10px 0 0; }
   
     </style>
 </head>
@@ -380,7 +466,7 @@ function getRandomQuestions(mode, subMode) {
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <header>
-  <div class="header-left"><h1 onclick="goToMenu()">QUADRATIC MASTER</h1><button id="btn-home" class="btn-home" onclick="goToMenu()" style="display:none;">🏠 メニューに戻る</button></div>
+  <div class="header-left"><h1 onclick="goToMenu()">2次方程式マスター</h1><button id="btn-home" class="btn-home" onclick="goToMenu()" style="display:none;">🏠 メニューに戻る</button></div>
   <div id="mode-badge" style="background:rgba(255,255,255,0.2); padding:5px 20px; border-radius:20px; display:none; font-weight:bold; font-size:14px;"></div>
   <div id="progress" style="font-weight:bold; display:none;"></div>
 </header>
@@ -388,18 +474,19 @@ function getRandomQuestions(mode, subMode) {
 <div id="menu-screen" class="menu-container">
   <div style="font-size:32px; font-weight:bold; margin-bottom:40px; color:var(--primary);">2次方程式をマスターしよう！</div>
   <div class="menu-grid">
-    <div class="menu-card" onclick="startApp('01')"><h3>モード 01</h3><p>因数分解ステップ学習 (固定5問)</p></div>
-    <div class="menu-card" onclick="startApp('02')"><h3>モード 02</h3><p>解の公式穴埋め学習 (固定5問)</p></div>
-    <div class="menu-card" onclick="openSubMenu('03')"><h3>モード 03</h3><p>実践ランダム特訓 (大量問題からランダム)</p></div>
-    <div class="menu-card" onclick="startApp('04')"><h3>モード 04</h3><p>【強化】6択数式テスト (解法混ざる完全ランダム5問)</p></div>
+    <!-- 【ブラッシュアップ】モードの名前と説明を、中身と問題数に合わせた -->
+    <div class="menu-card" onclick="startApp('01')"><h3>① 因数分解で解く</h3><p>(x + □)(x + □) = 0 にして解く（5問）</p></div>
+    <div class="menu-card" onclick="startApp('02')"><h3>② 解の公式（穴うめ）</h3><p>公式に代入して、順に計算する（5問）</p></div>
+    <div class="menu-card" onclick="openSubMenu('03')"><h3>③ ランダム練習</h3><p>因数分解・解の公式を、毎回ちがう問題で（5問）</p></div>
+    <div class="menu-card" onclick="startApp('04')"><h3>④ 解き方を見きわめる（6択）</h3><p>12問からランダムに5問。因数分解・解の公式・平方根・共通因数など</p></div>
   </div>
 </div>
 
 <div id="submenu-screen" class="menu-container" style="display:none;">
-  <div class="sub-menu-title">モード03：どちらのランダム特訓を行いますか？</div>
+  <div class="sub-menu-title">③ ランダム練習：どちらを練習しますか？</div>
   <div class="menu-grid" style="max-width:600px;">
-    <div class="menu-card" onclick="startApp('03', '01')"><h3>因数分解パターン</h3><p>豊富なバリエーションからランダムに5問出題</p></div>
-    <div class="menu-card" onclick="startApp('03', '02')"><h3>解の公式パターン</h3><p>係数が様々な問題からランダムに5問出題</p></div>
+    <div class="menu-card" onclick="startApp('03', '01')"><h3>因数分解パターン</h3><p>係数を変えた問題を毎回作って5問（重解も1問）</p></div>
+    <div class="menu-card" onclick="startApp('03', '02')"><h3>解の公式パターン</h3><p>5つの段階から1問ずつ（各段階3〜4問からランダム）</p></div>
   </div>
   <button class="btn" style="margin-top:30px; background:#95a5a6; color:white;" onclick="goToMenu()">← 戻る</button>
 </div>
@@ -407,7 +494,7 @@ function getRandomQuestions(mode, subMode) {
 <div id="game-screen" class="main-container" style="display:none;">
   <div class="board-side">
     <div id="q-board" class="board">
-      <div id="quest-id" style="font-size:14px; font-weight:bold; color:#b2bec3; position:absolute; top:20px; left:20px;">QUESTION #1</div>
+      <div id="quest-id" style="font-size:14px; font-weight:bold; color:#b2bec3; position:absolute; top:20px; left:20px;">第1問</div>
       <button id="btn-hint" class="hint-btn" onclick="toggleHint()">💡 ヒント</button>
       
       <div id="formula-hint-box" class="formula-hint-display">
@@ -424,12 +511,13 @@ function getRandomQuestions(mode, subMode) {
 </div>
 
 <div id="ans-modal" class="modal-overlay">
-  <div class="modal-content"><div style="font-weight:bold; color:var(--primary);">🔍 正解 of ヒント</div><div id="modal-answer-text" class="modal-body"></div><button class="btn-modal-close" onclick="closeModal()">閉じる</button></div>
+  <div class="modal-content"><div style="font-weight:bold; color:var(--primary);">🔍 答え</div><div id="modal-answer-text" class="modal-body"></div><button class="btn-modal-close" onclick="closeModal()">閉じる</button></div>
 </div>
 
 <div id="clear-screen" class="menu-container" style="display:none;">
   <div style="background:white; border-radius:20px; padding:50px; box-shadow:0 10px 30px rgba(0,0,0,0.05);"><h2>🎉 全5問クリア！お疲れ様でした！</h2>
     <!-- 【ブラッシュアップ】同じモードでもう一度・メニュー・ほかの教材 を選べるようにした -->
+    <p id="clear-score" class="clear-score"></p>   <!-- 【ブラッシュアップ】自力で正解できた問題の数 -->
     <div class="clear-nav">
       <button class="btn btn-main" onclick="document.getElementById('clear-screen').style.display='none'; startApp(currentMode, subMode);">同じモードでもう一度</button>
       <button class="btn" style="background:#dfe6ed;" onclick="goToMenu()">メニューに戻る</button>
@@ -446,6 +534,7 @@ function getRandomQuestions(mode, subMode) {
 <script>
   let currentMode = ""; let subMode = ""; let quizData = []; let currentIndex = 0; let currentStep = 1; let currentQ = null; 
   let currentTargetId = "";
+  let qMissed = false, cleanQ = 0;   // 【ブラッシュアップ】この問題でまちがえた・答えを見たか／自力で正解できた問題の数
   let currentShuffledChoices = []; 
   let currentCorrectIndexInShuffled = -1; 
 
@@ -466,7 +555,7 @@ function getRandomQuestions(mode, subMode) {
   }
 
   function startApp(m, sub) {
-    currentMode = m; subMode = sub || ""; currentIndex = 0;
+    currentMode = m; subMode = sub || ""; currentIndex = 0; cleanQ = 0;
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('submenu-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
@@ -474,9 +563,9 @@ function getRandomQuestions(mode, subMode) {
     document.getElementById('btn-home').style.display = 'block';
     document.getElementById('mode-badge').style.display = 'block';
     
-    let badgeText = "モード 0" + currentMode;
-    if(currentMode === "03") badgeText += (subMode === "01" ? " (因数ランダム)" : " (公式ランダム)");
-    if(currentMode === "04") badgeText = "モード 04 (6択数式テスト)";
+    // 【ブラッシュアップ】メニューと同じ名前を出す
+    let badgeText = { "01": "① 因数分解", "02": "② 解の公式（穴うめ）", "03": "③ ランダム練習", "04": "④ 6択" }[currentMode] || "";
+    if(currentMode === "03") badgeText += (subMode === "01" ? "（因数分解）" : "（解の公式）");
     document.getElementById('mode-badge').innerText = badgeText;
     document.getElementById('progress').style.display = 'block';
     
@@ -491,9 +580,10 @@ function getRandomQuestions(mode, subMode) {
       document.getElementById('game-screen').style.display = 'none';
       document.getElementById('game-footer').style.display = 'none';
       document.getElementById('clear-screen').style.display = 'flex';
+      document.getElementById('clear-score').textContent = '自力で正解：' + cleanQ + ' / ' + quizData.length + ' 問（まちがえた・答えを見た問題は数えない）';   // 【ブラッシュアップ】
       return;
     }
-    currentQ = quizData[currentIndex]; currentStep = 1;
+    currentQ = quizData[currentIndex]; currentStep = 1; qMissed = false;
     document.getElementById('q-board').classList.remove('has-exp');
     document.getElementById('exp-area').style.display = 'none';
     document.getElementById('hint-box').style.display = 'none';
@@ -502,8 +592,8 @@ function getRandomQuestions(mode, subMode) {
     document.getElementById('btn-hint').style.display = (currentQ.type === '01' || currentQ.type === '02') ? 'block' : 'none';
     document.getElementById('btn-hint').innerText = (currentQ.type === '01') ? "💡 ヒントペア" : "💡 解の公式ヒント";
 
-    document.getElementById('quest-id').innerText = `QUESTION #${currentIndex + 1}`;
-    document.getElementById('progress').innerText = `Quest ${currentIndex + 1} / ${quizData.length}`;
+    document.getElementById('quest-id').innerText = `第${currentIndex + 1}問`;   // 【ブラッシュアップ】日本語の表記に
+    document.getElementById('progress').innerText = `問題 ${currentIndex + 1} / ${quizData.length}`;
     document.getElementById('equation-box').innerHTML = `\\( ${currentQ.data.formula} \\)`;
     
     document.getElementById('btn-check').style.display = (currentQ.type === '04') ? 'none' : 'block';
@@ -541,7 +631,7 @@ function getRandomQuestions(mode, subMode) {
         label = `解の公式：${sLabel}`;
       }
     } else if (currentQ.type === "04") {
-      label = "解法を見極め、正しい解を選択してください（6択）";
+      label = "解き方を見きわめて、正しい解をえらぼう（6択・答えは最も簡単な形）";   // 【ブラッシュアップ】
     }
     
     let html = "";
@@ -567,6 +657,10 @@ function getRandomQuestions(mode, subMode) {
     
     card.innerHTML = `<div class="step-title">${label}</div><div id="area-${currentStep}">${html}</div><div id="fb-${currentStep}" style="margin-top:10px; font-weight:bold;"></div>`;
     container.appendChild(card);
+    // 【ブラッシュアップ】元はスマホで入力欄をタップするたびに端末のキーボードが開き、画面の半分がかくれた。
+    //   画面のキーボードで入れる作りなので、端末のキーボードは出さない（パソコンのキーボードからは今までどおり打てる）
+    card.querySelectorAll('input.blank').forEach(i => { i.setAttribute('inputmode', 'none'); i.setAttribute('autocomplete', 'off'); });
+    if (window.innerWidth <= 820 && currentStep > 1) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
     
     const panel = document.getElementById('panel-scroll');
     panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
@@ -595,6 +689,7 @@ function getRandomQuestions(mode, subMode) {
       
       let aHTML_num = `<div id="wrap-b3" style="display:inline-block;"><input type="text" id="b3" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div>`;
       let cHTML_num = `<div id="wrap-b4" style="display:inline-block;"><input type="text" id="b4" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div>`;
+      if (parseInt(c) < 0) cHTML_num = '(' + cHTML_num + ')';   // 【ブラッシュアップ】
       let aHTML_den = `<div id="wrap-b5" style="display:inline-block;"><input type="text" id="b5" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div>`;
 
       return `<div class="formula-line"><span>x = </span><div class="math-frac"><div class="math-num">${headHTML}<span> ± </span><div class="math-sqrt">${innerB2}<span> - 4 × </span>${aHTML_num}<span> × </span>${cHTML_num}</div></div><div class="math-den">2 × ${aHTML_den}</div></div></div>`;
@@ -622,7 +717,7 @@ function getRandomQuestions(mode, subMode) {
       if(s===2) return `<div class="formula-line"><span>x = </span><div class="math-frac"><div class="math-num"><span>${headText} ± </span><div class="math-sqrt"><div id="wrap-c1" style="display:inline-block;"><input type="text" id="c1" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div>${signText}<div id="wrap-c2" style="display:inline-block;"><input type="text" id="c2" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div><div class="math-den">${2 * a}</div></div></div>`;
       if(s===3) return `<div class="formula-line"><span>x = </span><div class="math-frac"><div class="math-num"><span>${headText} ± </span><div class="math-sqrt"><div id="wrap-d1" style="display:inline-block;"><input type="text" id="d1" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div><div class="math-den">${2 * a}</div></div></div>`;
       if(s===4) return `<div class="formula-line"><span>x = </span><div class="math-frac"><div class="math-num"><span>${headText} ± </span><div id="wrap-e1" style="display:inline-block;"><input type="text" id="e1" class="blank" style="width:55px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div><div class="math-sqrt"><div id="wrap-e2" style="display:inline-block;"><input type="text" id="e2" class="blank" style="width:55px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div><div class="math-den">${2 * a}</div></div></div>`;
-      if(s===5) return `<div class="formula-line"><span>x = </span><div id="wrap-f1" style="display:inline-block;"><input type="text" id="f1" class="blank" style="width:65px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div><span> ± 2</span><div class="math-sqrt"><div id="wrap-f2" style="display:inline-block;"><input type="text" id="f2" class="blank" style="width:65px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div>`;
+      if(s===5) return `<div class="formula-line"><span>x = </span><div id="wrap-f1" style="display:inline-block;"><input type="text" id="f1" class="blank" style="width:65px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div><span> ± </span><div id="wrap-f3" style="display:inline-block;"><input type="text" id="f3" class="blank" style="width:55px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div><div class="math-sqrt"><div id="wrap-f2" style="display:inline-block;"><input type="text" id="f2" class="blank" style="width:65px;" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div>`;
     }
     if (p === 4) {
       if(s===2) return `<div class="formula-line"><span>x = </span><div class="math-frac"><div class="math-num"><span>${headText} ± </span><div class="math-sqrt"><div id="wrap-c1" style="display:inline-block;"><input type="text" id="c1" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div>${signText}<div id="wrap-c2" style="display:inline-block;"><input type="text" id="c2" class="blank" onfocus="setTarget(this)" onclick="setTarget(this)"></div></div></div><div class="math-den">${2 * a}</div></div></div>`;
@@ -670,16 +765,16 @@ function getRandomQuestions(mode, subMode) {
         area.querySelector('.input-control-wrapper').style.display = 'none';
         fb.innerHTML = "⭕ 正解！"; fb.style.color = "var(--blue-correct)";
         
-        if(v1 === "-4" && v2 === "-4") {
+        if(a1 === a2) {   // 【ブラッシュアップ】元は v1 === "-4" の 1 問だけ
           const summaryContainer = document.getElementById(`heavy-summary-container-${currentIndex}`);
           if (summaryContainer) {
-            summaryContainer.innerHTML = `<div class="summary-box">💡 まとめると：\\( (x - 4)^2 = 0 \\) と書く必要があるよ！</div>`;
+            summaryContainer.innerHTML = `<div class="summary-box">💡 まとめると：\\( (x ${a1.startsWith("-") ? "-" : "+"} ${a1.replace(/^[+-]/, "")})^2 = 0 \\) と書く必要があるよ！</div>`;
             if (window.MathJax) MathJax.typesetPromise([summaryContainer]);
           }
         }
 
         currentStep = 2; addStepCard();
-      } else { fb.innerHTML = "❌ 間違っている箇所があります。"; fb.style.color = "var(--accent)"; }
+      } else { fb.innerHTML = "❌ 間違っている箇所があります。<span class=\"advice\">" + stepAdvice() + "</span>"; qMissed = true; fb.style.color = "var(--accent)"; }
     } else if (currentQ.type === "02") {
       let ins = area.querySelectorAll('input'); let sData = currentQ.data.steps[currentStep-1];
       let correctAnswers = sData.blanks.map(b => cleanVal(b));
@@ -715,6 +810,11 @@ function getRandomQuestions(mode, subMode) {
         let v2 = cleanVal(document.getElementById('f2').value);
         if (v1 === correctAnswers[0]) { document.getElementById('f1').className = "blank is-correct"; } else { document.getElementById('f1').className = "blank is-wrong"; allOk = false; }
         if (v2 === correctAnswers[1]) { document.getElementById('f2').className = "blank is-correct"; } else { document.getElementById('f2').className = "blank is-wrong"; allOk = false; }
+        // 【ブラッシュアップ】√ の前の数（f3）も確かめる
+        if (correctAnswers[2] !== undefined && document.getElementById('f3')) {
+          let v3 = cleanVal(document.getElementById('f3').value);
+          if (v3 === correctAnswers[2]) { document.getElementById('f3').className = "blank is-correct"; } else { document.getElementById('f3').className = "blank is-wrong"; allOk = false; }
+        }
       } else if (sData.html_ans_type === "remove_root_single") {
         let v1 = cleanVal(document.getElementById('e1').value);
         if (v1 === correctAnswers[0]) { document.getElementById('e1').className = "blank is-correct"; } else { document.getElementById('e1').className = "blank is-wrong"; allOk = false; }
@@ -730,7 +830,7 @@ function getRandomQuestions(mode, subMode) {
         area.querySelector('.input-control-wrapper').style.display = 'none';
         fb.innerHTML = "⭕ 正解！"; fb.style.color = "var(--blue-correct)";
         if (currentStep < currentQ.data.steps.length) { currentStep++; addStepCard(); } else finishQ();
-      } else { fb.innerHTML = "❌ 赤枠の部分を修正してください。"; fb.style.color = "var(--accent)"; }
+      } else { fb.innerHTML = "❌ 赤枠の部分を修正してください。<span class=\"advice\">" + stepAdvice() + "</span>"; qMissed = true; fb.style.color = "var(--accent)"; }
     }
   }
 
@@ -742,7 +842,11 @@ function getRandomQuestions(mode, subMode) {
       btn.parentElement.querySelectorAll('.choice-btn').forEach(b => b.classList.add('done-lock')); 
       finishQ(); 
     } else { 
-      btn.classList.add('wrong'); 
+      btn.classList.add('wrong');
+      // 【ブラッシュアップ】選んだ答えのどこがちがうかを出す
+      qMissed = true;
+      const fbSel = document.getElementById('fb-' + currentStep);
+      if (fbSel) { fbSel.innerHTML = '✖ ' + selWhy(idx); fbSel.style.color = 'var(--u-ng)'; } 
     } 
   }
   
@@ -750,11 +854,16 @@ function getRandomQuestions(mode, subMode) {
     document.getElementById('btn-check').style.display = 'none'; 
     document.getElementById('btn-next').style.display = 'block';
     
-    if (currentQ.data.explanation) {
+    if (!qMissed) cleanQ++;   // 【ブラッシュアップ】
+    // 【ブラッシュアップ】モード01 の解説（exp）も出す
+    const expText = currentQ.data.explanation || (currentQ.data.exp ? '<b>【解説】</b><br>' + currentQ.data.exp : '');
+    if (expText) {
       document.getElementById('q-board').classList.add('has-exp');
       const expArea = document.getElementById('exp-area');
       expArea.style.display = 'block';
-      expArea.innerHTML = `${currentQ.data.explanation}`;
+      expArea.innerHTML = expText;
+      // 【ブラッシュアップ】スマホでは解説が作業カードより上にあるので、解説のところまで画面を動かす
+      if (window.innerWidth <= 820) setTimeout(() => expArea.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
       if (window.MathJax) MathJax.typesetPromise([expArea]);
     }
   }
@@ -788,12 +897,14 @@ function getRandomQuestions(mode, subMode) {
     const modal = document.getElementById('ans-modal');
     const modalText = document.getElementById('modal-answer-text');
     modal.style.display = 'flex';
+    qMissed = true;   // 【ブラッシュアップ】
+    setTimeout(() => { if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([modalText]); }, 0);
     
     if (currentQ.type === "01") {
       if (currentStep === 1) {
         modalText.innerHTML = `因数分解の答え:<br>(x ${currentQ.data.ans_f1})(x ${currentQ.data.ans_f2}) = 0`;
       } else {
-        modalText.innerHTML = `方程式の解:<br>${currentQ.data.choices[currentQ.data.correct]}`;
+        modalText.innerHTML = '方程式の解:<br>\\( ' + currentQ.data.choices[currentQ.data.correct] + ' \\)';   // 【ブラッシュアップ】数式として表示
       }
     } else if (currentQ.type === "02") {
       let sData = currentQ.data.steps[currentStep-1];
@@ -805,7 +916,7 @@ function getRandomQuestions(mode, subMode) {
       } else if (sData.html_ans_type === "coeff_root_m3_l3" || sData.html_ans_type === "coeff_root") {
         modalText.innerHTML = `このステップの答え:<br>ルートの前: ${sData.blanks[0]} , ルートの中: ${sData.blanks[1]}`;
       } else if (sData.html_ans_type === "frac_final_root") {
-        modalText.innerHTML = `このステップの答え:<br>左の欄: ${sData.blanks[0]} , ルートの中: ${sData.blanks[1]}`;
+        modalText.innerHTML = `このステップの答え:<br>左の欄: ${sData.blanks[0]} , ルートの前: ${sData.blanks[2] || 2} , ルートの中: ${sData.blanks[1]}`;
       } else if (sData.html_ans_type === "remove_root_single") {
         modalText.innerHTML = `このステップの答え:<br>${sData.blanks[0]}`;
       } else {
@@ -816,6 +927,43 @@ function getRandomQuestions(mode, subMode) {
 
   function closeModal() {
     document.getElementById('ans-modal').style.display = 'none';
+  }
+
+  // 【ブラッシュアップ】理由の文の中のマイナスを「−」で表示する
+  function minusText(s) { return String(s).replace(/ - /g, ' − ').replace(/(^|[^0-9A-Za-z)])-(?=[0-9x(√])/g, '$1−'); }
+
+  // 【ブラッシュアップ】選択式でまちがえたとき、選んだ答えのどこがちがうかを返す
+  function selWhy(idx) {
+    const d = currentQ.data, text = currentShuffledChoices[idx];
+    if (currentQ.type === '04' && d.whys) {
+      const i = d.choices.indexOf(text);
+      if (i >= 0 && d.whys[i]) return minusText(d.whys[i]);
+    }
+    if (currentQ.type === '01') {
+      const f = (k) => 'x ' + (k[0] === '-' ? '- ' : '+ ') + k.replace(/^[+-]/, '');
+      if (d.ans_f1 === d.ans_f2) return minusText('(' + f(d.ans_f1) + ')² = 0 のとき、' + f(d.ans_f1) + ' = 0 となる x は 1 つだけ（重解）。符号に注意しよう');
+      return minusText('(' + f(d.ans_f1) + ')(' + f(d.ans_f2) + ') = 0 なので、' + f(d.ans_f1) + ' = 0 または ' + f(d.ans_f2) + ' = 0。それぞれの x の符号に注意しよう');
+    }
+    return 'もう一度考えてみよう';
+  }
+
+  // 【ブラッシュアップ】穴うめでまちがえたとき、そのステップで気をつけることを返す
+  function stepAdvice() {
+    const d = currentQ.data;
+    if (currentQ.type === '01') {
+      const m = String(d.formula).match(/x\^2\s*([+-])\s*(\d*)x/);
+      const b = m ? (m[1] === '-' ? -1 : 1) * (m[2] === '' ? 1 : Number(m[2])) : 0;
+      return minusText('かけて ' + d.c + '、たして ' + b + ' になる 2 つの数をさがそう（符号もつけて入れる）');
+    }
+    const s = d.steps[currentStep - 1], t = s.html_ans_type, L = s.label;
+    if (L.indexOf('代入') >= 0) return minusText('a・b・c は符号もふくめて入れよう。この問題は a = ' + d.a_val + '、b = ' + d.b_val + '、c = ' + d.c_val);
+    if (L.indexOf('計算を進める') >= 0) return minusText('b² = (' + d.b_val + ')² は 0 以上の数。4ac = 4 × ' + d.a_val + ' × (' + d.c_val + ') を計算しよう（√ の中の + − はもう書いてあるよ）');
+    if (L.indexOf('ルートの中') >= 0) return '√ の中のひき算・たし算を計算しよう';
+    if (t.indexOf('coeff_root') === 0) return '√ の中を「（平方数）×（残り）」に分けよう。例：√48 = √(16 × 3) = 4√3';
+    if (t === 'remove_root_single') return '2 乗すると √ の中の数になる数は？ 例：√25 = 5';
+    if (t === 'two_ans_frac') return '+ のときと − のときを計算して約分しよう。分数の解を左、整数の解を右に';
+    if (t === 'frac_final_root') return '分子の 2 つの項を、どちらも分母でわろう';
+    return '分子の −b と √ の中、分母の 2a を確かめよう';
   }
 
   // 【ブラッシュアップ】MathJax が 6 秒たっても読み込めなければ、数式を読める文字に直して表示する

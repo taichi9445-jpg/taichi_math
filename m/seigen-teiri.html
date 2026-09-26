@@ -564,7 +564,9 @@
     .st-arc.k { stroke: #2563eb; }
     .st-arc.t { stroke: #ea580c; }
     .st-right { fill: none; stroke: #64748b; stroke-width: 1.5; }
-    .st-vtx { font-size: 19px; font-weight: 800; fill: #334155; }
+    .st-vtx { font-size: 21px; font-weight: 800; fill: #334155; font-family: var(--u-math-font); font-style: italic; }   /* 【ブラッシュアップ】頂点の文字は斜体 */
+    .st-ang, .st-side, .st-o, .st-r { font-family: var(--u-math-font); }
+    .st-o, .st-r .v { font-style: italic; }
     .st-ang { font-size: 15px; font-weight: 800; fill: #475569; }
     .st-side { font-size: 18px; font-weight: 800; fill: var(--u-ink); }
     .st-side.var { font-family: 'Times New Roman', serif; font-style: italic; font-size: 22px; }
@@ -582,6 +584,9 @@
     .formula-card .fraction-numerator, .formula-card .fraction-denominator { min-width: 0; padding-left: 2px; padding-right: 2px; }
     .formula-card .sub { color: var(--u-ink); font-size: 13px; }
     .result-message .point { display: inline-block; margin-top: 8px; font-size: 15px; color: var(--u-ink); font-weight: 700; line-height: 1.6; }
+    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
+    .mf { font-family: var(--u-math-font); font-style: normal; }
+    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
   
   </style>
 </head>
@@ -883,7 +888,7 @@
         svg += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="3" class="st-center" />`;
         svg += text(at(O, unit(P.B, O), 12), 'O', 'st-o');
         const mid = [(O[0] + P.B[0]) / 2, (O[1] + P.B[1]) / 2], u = unit(O, P.B);
-        svg += text(at(mid, [-u[1], u[0]], 14), triangle.circle, 'st-r');
+        svg += text(at(mid, [-u[1], u[0]], 14), triangle.circle.replace(/([A-Za-z])/g, '<tspan class="v">$1</tspan>'), 'st-r');   // R は斜体
       }
       const others = { A: ['B', 'C'], B: ['C', 'A'], C: ['A', 'B'] };
       ['A', 'B', 'C'].forEach(L => {
@@ -2025,6 +2030,58 @@
     document.addEventListener('DOMContentLoaded', initializeProblems);
   </script>
  <script>
+  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
+  (function () {
+    const SCOPE = '.formula-card, .problem-text p, .equation-line, .choice-item, .final-choice-item, .result-message .point';   // 数式として書きかえる場所
+    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
+    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
+    function wrapRun(s) {
+      const span = document.createElement('span');
+      span.className = 'mf';
+      s.split(/(sin|cos|tan)/).forEach((part, i) => {
+        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
+        part.split(/([A-Za-zθ])/).forEach((q, j) => {
+          if (!q) return;
+          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
+          else span.appendChild(document.createTextNode(q));
+        });
+      });
+      return span;
+    }
+    function run() {
+      document.querySelectorAll(SCOPE).forEach(el => {
+        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) list.push(w.currentNode);
+        list.forEach(n => {
+          const p = n.parentElement;
+          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
+          const t = n.nodeValue;
+          if (!/[0-9A-Za-zθ√]/.test(t)) return;
+          const frag = document.createDocumentFragment();
+          let last = 0, m;
+          RUN.lastIndex = 0;
+          while ((m = RUN.exec(t))) {
+            if (!m[0].length) { RUN.lastIndex++; continue; }
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            frag.appendChild(wrapRun(m[0]));
+            last = m.index + m[0].length;
+          }
+          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+          n.parentNode.replaceChild(frag, n);
+        });
+      });
+    }
+    let pending = false;
+    new MutationObserver(() => {
+      if (pending) return;
+      pending = true;
+      setTimeout(() => { pending = false; run(); }, 0);
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    run();
+  })();
+</script>
+<script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
   PortTheme.map({
     ".container": "u-card",

@@ -229,7 +229,9 @@
     .question-card { background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-left-width: 4px; border-radius: 24px; }
     .question-number { display: inline-block; background: #fff; color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
     .question-text { color: var(--u-ink); font-weight: 800; }
-    .option { font-size: 1.15rem; padding: 14px 16px; }
+    .option { font-size: 1.15rem; padding: 14px 16px; width: 100%; font-family: inherit; }
+    .option:disabled { cursor: default; }
+    #questionFig .nl { display: block; width: 100%; max-width: 360px; margin: -8px auto 18px; background: #fff; border-radius: 14px; }
     .feedback { border-radius: 16px; }
     .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
     .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
@@ -243,6 +245,7 @@
       body { padding: 8px; }
       .quiz-container { padding: 18px 14px; margin: 0; }
       .question-card { padding: 18px 12px; }
+      .option { font-size: 1.05rem; padding: 12px 10px; }
     }
   
   </style>
@@ -259,8 +262,9 @@
 
         <div id="quizContent">
             <div class="question-card">
-                <div class="question-number" id="questionNumber">問題 1/10</div>
+                <div class="question-number" id="questionNumber">問題 1/14</div>
                 <div class="question-text" id="questionText"></div>
+                <div id="questionFig"></div><!-- 【ブラッシュアップ】数直線の図 -->
                 <div class="options" id="options"></div>
                 <div id="feedback" class="feedback" style="display: none;"></div>
                 <div class="buttons">
@@ -285,56 +289,115 @@
     </div>
 
     <script>
+        // 【ブラッシュアップ】問題を 10 問 → 14 問に。
+        //   段階：① 基本（かつ・または）→ ② 片方の端だけふくむ → ③ 片側だけの範囲・数直線 → ④ 文章を不等式に
+        //   記号は教科書どおり ≦ ≧、マイナスは「−」、2 つに分かれた範囲は「x < 1, 3 < x」の形で書く。
+        //   why：その選択肢をえらんだときに出す一言（正解の選択肢は ''）。exp：正解したときの一言。
+        //   line：数直線の図（a, b は端の数、aIn/bIn はその数をふくむか、type は in=間 / out=外側 / right=右へ / left=左へ）
         const questions = [
+            // ① 基本
             {
-                question: "xが1より小さい、または、3より大きいとき、これを不等式で表すと？",
-                options: ["x < 1 ， x > 3", "1 < x < 3", "x ≤ 1 ， x ≥ 3", "1 ≤ x ≤ 3"],
-                correct: 0
+                question: "x が 1 より小さい、または 3 より大きいとき、これを不等式で表すと？",
+                options: ["x < 1, 3 < x", "1 < x < 3", "x ≦ 1, 3 ≦ x", "1 ≦ x ≦ 3"],
+                correct: 0,
+                why: ["", "1 < x < 3 は「1 より大きく 3 より小さい」（1 と 3 の間）。「または」は 2 つに分かれた範囲だよ。", "≦ ≧ は「以下・以上」（その数をふくむ）。「より小さい・より大きい」は 1 や 3 をふくまないので ＜ を使うよ。", "これは 1 と 3 の間で、しかも 1・3 をふくむ範囲。問題は外側の 2 つの範囲だよ。"],
+                exp: "「または」なので 2 つに分かれた範囲。1 と 3 はふくまないので ＜ を使って x < 1, 3 < x と書くよ。"
             },
             {
                 question: "2 < x < 6 を日本語で表すと？",
-                options: ["xは2より小さい、または6より大きい", "xは2より大きく6より小さい", "xは2以下または6以上", "xは2以上6以下"],
-                correct: 1
+                options: ["x は 2 より大きく 6 より小さい", "x は 2 より小さい、または 6 より大きい", "x は 2 以上 6 以下", "x は 2 以上 6 未満"],
+                correct: 0,
+                why: ["", "2 < x < 6 は 2 と 6 の間の範囲。「または」の 2 つに分かれた範囲ではないよ。", "＜ は「その数をふくまない」。2 も 6 もふくまないので「以上・以下」ではないよ。", "左の ＜ は 2 をふくまない。「2 以上」は 2 をふくむ（≦）ときの言い方だよ。"],
+                exp: "＜ はその数をふくまない。2 < x < 6 は「x は 2 より大きく 6 より小さい」。"
             },
             {
-                question: "xが-1より大きく3より小さいとき、これを不等式で表すと？",
-                options: ["x < -1 ， x > 3", "-1 < x < 3", "x ≤ -1 ， x ≥ 3", "-1 ≤ x ≤ 3"],
-                correct: 1
+                question: "x が −1 より大きく 3 より小さいとき、これを不等式で表すと？",
+                options: ["−1 < x < 3", "x < −1, 3 < x", "−1 ≦ x ≦ 3", "−1 < x ≦ 3"],
+                correct: 0,
+                why: ["", "これは −1 より小さい、または 3 より大きい範囲。問題は −1 と 3 の間だよ。", "≦ は「以下・以上」。「より大きい・より小さい」は −1 も 3 もふくまないよ。", "右の ≦ だと 3 をふくんでしまう。「3 より小さい」は 3 をふくまないよ。"],
+                exp: "−1 と 3 の間で、どちらの端もふくまないので −1 < x < 3。"
             },
             {
-                question: "-3 ≤ x ≤ 2 を日本語で表すと？",
-                options: ["xは-3より小さい、または2より大きい", "xは-3以上2以下", "xは-3より大きく2より小さい", "xは-3以下または2以上"],
-                correct: 1
+                question: "−3 ≦ x ≦ 2 を日本語で表すと？",
+                options: ["x は −3 以上 2 以下", "x は −3 より大きく 2 より小さい", "x は −3 以下、または 2 以上", "x は −3 以上 2 未満"],
+                correct: 0,
+                why: ["", "≦ はその数をふくむ。「より大きい・より小さい」はふくまないときの言い方だよ。", "−3 ≦ x ≦ 2 は −3 と 2 の間。外側の 2 つの範囲ではないよ。", "右の ≦ は 2 をふくむ。「2 未満」は 2 をふくまないよ。"],
+                exp: "≦ はその数をふくむので「以上・以下」。−3 ≦ x ≦ 2 は「x は −3 以上 2 以下」。"
+            },
+            // ② 片方の端だけふくむ
+            {
+                question: "x が 0 以上 5 未満のとき、これを不等式で表すと？",
+                options: ["0 ≦ x < 5", "0 < x ≦ 5", "0 ≦ x ≦ 5", "0 < x < 5"],
+                correct: 0,
+                why: ["", "左右が逆。「0 以上」は 0 をふくむので 0 ≦ x、「5 未満」は 5 をふくまないので x < 5。", "「5 未満」は 5 をふくまない。右は ＜ だよ。", "「0 以上」は 0 をふくむ。左は ≦ だよ。"],
+                exp: "「以上」はふくむ（≦）、「未満」はふくまない（＜）。だから 0 ≦ x < 5。"
             },
             {
-                question: "xが0以上5以下のとき、これを不等式で表すと？",
-                options: ["x < 0 ， x > 5", "0 < x < 5", "0 ≤ x ≤ 5", "x ≤ 0 ， x ≥ 5"],
-                correct: 2
+                question: "1 ≦ x < 4 を日本語で表すと？",
+                options: ["x は 1 以上 4 未満", "x は 1 より大きく 4 以下", "x は 1 以上 4 以下", "x は 1 未満、または 4 以上"],
+                correct: 0,
+                why: ["", "左の ≦ は 1 をふくむので「1 以上」、右の ＜ は 4 をふくまないので「4 未満」。逆になっているよ。", "右の ＜ は 4 をふくまない。「4 以下」は 4 をふくむときの言い方だよ。", "1 ≦ x < 4 は 1 と 4 の間。外側の 2 つの範囲ではないよ。"],
+                exp: "≦ は「以上」（ふくむ）、＜ は「未満」（ふくまない）。1 ≦ x < 4 は「1 以上 4 未満」。"
             },
             {
-                question: "1 ≤ x < 4 を日本語で表すと？",
-                options: ["xは1以上4未満", "xは1より大きく4以下", "xは1未満または4以上", "xは1以下または4より大きい"],
-                correct: 0
+                question: "x が −2 より大きく 5 以下のとき、これを不等式で表すと？",
+                options: ["−2 < x ≦ 5", "−2 ≦ x < 5", "−2 < x < 5", "x < −2, 5 ≦ x"],
+                correct: 0,
+                why: ["", "「−2 より大きい」は −2 をふくまない（＜）、「5 以下」は 5 をふくむ（≦）。逆になっているよ。", "「5 以下」は 5 をふくむ。右は ≦ だよ。", "これは外側の 2 つの範囲。問題は −2 と 5 の間だよ。"],
+                exp: "「より大きい」はふくまない（＜）、「以下」はふくむ（≦）。だから −2 < x ≦ 5。"
             },
             {
-                question: "xが-2より小さい、または、5より大きいとき、これを不等式で表すと？",
-                options: ["-2 < x < 5", "x < -2 ， x > 5", "-2 ≤ x ≤ 5", "x ≤ -2 ， x ≥ 5"],
-                correct: 1
+                question: "x が 4 以下、または 7 以上のとき、これを不等式で表すと？",
+                options: ["x ≦ 4, 7 ≦ x", "4 ≦ x ≦ 7", "x < 4, 7 < x", "4 < x < 7"],
+                correct: 0,
+                why: ["", "4 ≦ x ≦ 7 は 4 と 7 の間。「または」は 2 つに分かれた範囲だよ。", "「以下・以上」は 4 や 7 をふくむ。＜ ではなく ≦ を使うよ。", "4 と 7 の間で、しかもふくまない範囲。問題とは反対側だよ。"],
+                exp: "「または」なので 2 つに分かれた範囲。「以下・以上」はふくむので x ≦ 4, 7 ≦ x。"
+            },
+            // ③ 片側だけの範囲・数直線
+            {
+                question: "x が 3 以上のとき、これを不等式で表すと？",
+                options: ["x ≧ 3", "x > 3", "x ≦ 3", "x < 3"],
+                correct: 0,
+                why: ["", "x > 3 は「3 より大きい」で、3 をふくまない。「以上」は 3 もふくむよ。", "x ≦ 3 は「3 以下」。向きが反対だよ。", "x < 3 は「3 より小さい（3 未満）」。向きが反対で、3 もふくまないよ。"],
+                exp: "「3 以上」は 3 をふくんで、それより大きい数。x ≧ 3（3 ≦ x と書いてもよい）。"
             },
             {
-                question: "-1 < x ≤ 3 を日本語で表すと？",
-                options: ["xは-1より大きく3以下", "xは-1以上3より小さい", "xは-1以下または3以上", "xは-1より小さい、または3より大きい"],
-                correct: 0
+                question: "a が負でない（0 または正の数）とき、これを不等式で表すと？",
+                options: ["a ≧ 0", "a > 0", "a < 0", "a ≦ 0"],
+                correct: 0,
+                why: ["", "a > 0 は「正の数」だけ。「負でない」には 0 もふくまれるよ。", "a < 0 は「負の数」。問題はその反対だよ。", "a ≦ 0 は「0 以下（正でない）」。向きが反対だよ。"],
+                exp: "「負でない」＝「0 以上」。0 もふくむので a ≧ 0。"
             },
             {
-                question: "xが4以下、または、7以上のとき、これを不等式で表すと？",
-                options: ["4 < x < 7", "4 ≤ x ≤ 7", "x ≤ 4 ， x ≥ 7", "x < 4 ， x > 7"],
-                correct: 2
+                question: "下の数直線で、色の付いた範囲を不等式で表すと？（● はその数をふくむ、○ はふくまない）",
+                line: { a: -1, b: 3, aIn: true, bIn: false, type: 'in' },
+                options: ["−1 ≦ x < 3", "−1 < x ≦ 3", "−1 ≦ x ≦ 3", "x ≦ −1, 3 < x"],
+                correct: 0,
+                why: ["", "● と ○ が逆。−1 は ●（ふくむ）なので ≦、3 は ○（ふくまない）なので ＜ だよ。", "3 は ○ なのでふくまない。右は ＜ だよ。", "色が付いているのは −1 と 3 の間。外側ではないよ。"],
+                exp: "−1 は ●（ふくむ）→ −1 ≦ x、3 は ○（ふくまない）→ x < 3。まとめて −1 ≦ x < 3。"
             },
             {
-                question: "0 < x < 8 を日本語で表すと？",
-                options: ["xは0以上8以下", "xは0より大きく8より小さい", "xは0以下または8以上", "xは0より小さい、または8より大きい"],
-                correct: 1
+                question: "下の数直線で、色の付いた範囲を不等式で表すと？（● はその数をふくむ、○ はふくまない）",
+                line: { a: 2, b: 5, aIn: false, bIn: true, type: 'out' },
+                options: ["x < 2, 5 ≦ x", "x ≦ 2, 5 < x", "2 < x ≦ 5", "x < 2, 5 < x"],
+                correct: 0,
+                why: ["", "● と ○ が逆。2 は ○（ふくまない）、5 は ●（ふくむ）だよ。", "色が付いているのは外側の 2 つの範囲。2 と 5 の間ではないよ。", "5 は ● なのでふくむ。5 ≦ x だよ。"],
+                exp: "2 より左（2 は ○ でふくまない）と、5 から右（5 は ● でふくむ）。x < 2, 5 ≦ x。"
+            },
+            // ④ 文章を不等式に
+            {
+                question: "ある数 x の 3 倍から 2 を引いた数は、10 より大きい。これを不等式で表すと？",
+                options: ["3x − 2 > 10", "3x − 2 ≧ 10", "3(x − 2) > 10", "3x − 2 < 10"],
+                correct: 0,
+                why: ["", "「10 より大きい」は 10 をふくまない。≧ ではなく ＞ だよ。", "3(x − 2) は「x から 2 を引いてから 3 倍」。問題は「3 倍してから 2 を引く」だよ。", "「より大きい」なので ＞。向きが反対だよ。"],
+                exp: "「x の 3 倍から 2 を引いた数」は 3x − 2。「10 より大きい」は ＞ 10。"
+            },
+            {
+                question: "1 個 80 円のりんごを x 個と、150 円のかごを 1 個買うと、代金は 1000 円以下になった。これを不等式で表すと？",
+                options: ["80x + 150 ≦ 1000", "80x + 150 < 1000", "80x + 150 ≧ 1000", "80(x + 150) ≦ 1000"],
+                correct: 0,
+                why: ["", "「以下」は 1000 円ちょうどもふくむ。＜ ではなく ≦ だよ。", "「以下」なので ≦。向きが反対だよ。", "80(x + 150) は「(x + 150) 個ぶんのりんご」になってしまう。かごは 150 円を 1 回たすだけだよ。"],
+                exp: "代金は 80 × x + 150 = 80x + 150（円）。「1000 円以下」は ≦ 1000。"
             }
         ];
 
@@ -345,19 +408,46 @@
         let retried = false;   // 【ブラッシュアップ】この問題でまちがえたか（一発正解だけを点にする）
         let order = [0, 1, 2, 3];
 
+        // 【ブラッシュアップ】数直線の図（教科書と同じく、右向きの矢印・範囲は太線・端は ● ○）
+        function numberLine(f) {
+            const W = 320, H = 78, y = 38;
+            const lo = Math.min(f.a, f.b) - 2, hi = Math.max(f.a, f.b) + 2;
+            const X = v => 24 + (v - lo) / (hi - lo) * (W - 60);
+            const num = v => v < 0 ? '−' + (-v) : String(v);
+            const col = '#ea580c';
+            let s = '<svg class="nl" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="数直線">';
+            s += '<line x1="8" y1="' + y + '" x2="' + (W - 14) + '" y2="' + y + '" stroke="#4b2c20" stroke-width="2"/>';
+            s += '<path d="M ' + (W - 14) + ' ' + (y - 6) + ' L ' + (W - 4) + ' ' + y + ' L ' + (W - 14) + ' ' + (y + 6) + ' Z" fill="#4b2c20"/>';
+            s += '<text x="' + (W - 10) + '" y="' + (y + 24) + '" font-size="16" font-style="italic" text-anchor="middle" fill="#4b2c20">x</text>';
+            const seg = (x1, x2) => { s += '<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="' + col + '" stroke-width="6" stroke-linecap="butt"/>'; };
+            if (f.type === 'in') seg(X(f.a), X(f.b));
+            if (f.type === 'out' || f.type === 'left') seg(10, X(f.a));
+            if (f.type === 'out') seg(X(f.b), W - 16);
+            if (f.type === 'right') seg(X(f.a), W - 16);
+            [[f.a, f.aIn], [f.b, f.bIn]].forEach(([v, inc]) => {
+                if (v === undefined) return;
+                s += '<circle cx="' + X(v) + '" cy="' + y + '" r="7" fill="' + (inc ? col : '#fff') + '" stroke="' + col + '" stroke-width="3"/>';
+                s += '<text x="' + X(v) + '" y="' + (y + 28) + '" font-size="17" font-weight="bold" text-anchor="middle" fill="#4b2c20">' + num(v) + '</text>';
+            });
+            return s + '</svg>';
+        }
+
         function loadQuestion() {
             const question = questions[currentQuestion];
-            document.getElementById('questionNumber').textContent = `問題 ${currentQuestion + 1}/10`;
+            document.getElementById('questionNumber').textContent = '問題 ' + (currentQuestion + 1) + '/' + questions.length;
             document.getElementById('questionText').textContent = question.question;
+            document.getElementById('questionFig').innerHTML = question.line ? numberLine(question.line) : '';
 
             const optionsContainer = document.getElementById('options');
             optionsContainer.innerHTML = '';
 
+            // 選択肢の並びは問題ごとにまぜる（元は正解がほとんど 2 番目だった）
             order = question.options.map((_, i) => i);
             for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
             retried = false;
             order.forEach((orig, index) => {
-                const optionDiv = document.createElement('div');
+                const optionDiv = document.createElement('button');   // 【ブラッシュアップ】押せる部品はボタンに
+                optionDiv.type = 'button';
                 optionDiv.className = 'option';
                 optionDiv.textContent = question.options[orig];
                 optionDiv.onclick = () => selectOption(index);
@@ -376,71 +466,44 @@
 
         function selectOption(index) {
             if (answered) return;
-
-            const options = document.querySelectorAll('.option');
-            options.forEach(option => option.classList.remove('selected'));
-            options[index].classList.add('selected');
-
             selectedOption = index;
             checkAnswer();
         }
 
+        // 【ブラッシュアップ】まちがえたら、えらんだ選択肢に合わせた一言を出す。
+        //   まちがえた選択肢は押せなくして、残りからそのままえらび直せる（「もう一度」ボタンを押す手間をなくした）。
+        //   正解したときも、なぜそうなるかを一言出す。点は一発で正解したときだけ。
         function checkAnswer() {
-            if (selectedOption === -1 || answered) return;
-
-            answered = true;
             const question = questions[currentQuestion];
             const options = document.querySelectorAll('.option');
             const feedback = document.getElementById('feedback');
+            const chosen = options[selectedOption];
+            const orig = order[selectedOption];
 
-            options.forEach((option, index) => {
-                option.onclick = null;
-                if (index === selectedOption) {
-                    if (order[index] === question.correct) {
-                        option.classList.add('correct');
-                    } else {
-                        option.classList.add('incorrect');
-                    }
-                }
-            });
-
-            if (order[selectedOption] === question.correct) {
-                if (!retried) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入り、いつも満点にできた
-                feedback.textContent = '🎉 正解です！';
+            if (orig === question.correct) {
+                answered = true;
+                if (!retried) score++;
+                chosen.classList.add('correct');
+                feedback.innerHTML = '🎉 正解です！<div class="rule-hint">💡 ' + question.exp + '</div>';
                 feedback.className = 'feedback correct';
                 document.getElementById('nextBtn').style.display = 'inline-block';
             } else {
-                feedback.innerHTML = '❌ 不正解です。もう一度考えてみましょう！' +
-                    '<div class="rule-hint">💡 「以上・以下」は ≦ ≧（その数をふくむ）、「より大きい・より小さい（未満）」は ＜ ＞（その数をふくまない）。<br>' +
-                    '「〇〇または△△」は 2 つの範囲に分かれるので、x ＜ 〇、x ＞ △ のように 2 つならべて書くよ。</div>';
+                retried = true;
+                chosen.classList.add('incorrect');
+                chosen.disabled = true;
+                feedback.innerHTML = '❌ ちがいます。のこりの選択肢からえらび直そう！<div class="rule-hint">💡 ' + question.why[orig] + '</div>';
                 feedback.className = 'feedback incorrect';
-                document.getElementById('retryBtn').style.display = 'inline-block';
-                // 【ブラッシュアップ】元はまちがえたあと「次の問題」でとばせた。正解するまで次へ進めないようにする
             }
-
             feedback.style.display = 'block';
         }
 
-        function retryQuestion() {
-            const options = document.querySelectorAll('.option');
-            options.forEach(option => {
-                option.classList.remove('selected', 'correct', 'incorrect');
-                option.onclick = (e) => selectOption(Array.from(options).indexOf(e.target));
-            });
-
-            document.getElementById('feedback').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('retryBtn').style.display = 'none';
-
-            selectedOption = -1;
-            answered = false;
-            retried = true;   // 【ブラッシュアップ】
-        }
+        function retryQuestion() { }   // 【ブラッシュアップ】使わなくなった（えらび直しはそのままできる）
 
         function nextQuestion() {
             currentQuestion++;
             if (currentQuestion < questions.length) {
                 loadQuestion();
+                window.scrollTo(0, 0);
             } else {
                 showResults();
             }

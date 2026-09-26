@@ -13,6 +13,8 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二次関数とx軸の共有点クイズ</title>
+    <!-- 【ブラッシュアップ】答えたあとのグラフは共通部品で描く（原点 O・x・y・目盛り・共有点の座標） -->
+    <script src="../assets/graph.js"></script>
     <style>
         * {
             margin: 0;
@@ -310,20 +312,23 @@
     .container { padding: 28px 24px; }
     h1 { font-size: min(2rem, 5.6vw); white-space: nowrap; }
     .level-selector { gap: 8px; flex-wrap: wrap; }
-    .level-btn { padding: 10px 18px; font-size: 16px; }
+    .level-btn { padding: 10px 16px; font-size: 16px; }
     .score { color: var(--u-ink); font-weight: 700; }
     .quiz-area { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; }
     .question-text { color: var(--u-title-dark); background: none; border: none; font-weight: 800; }
-    .problem { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-ink); font-size: 1.7em; border-radius: 20px; }
+    .problem { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-ink); font-size: 1.7em; border-radius: 20px; font-family: 'Times New Roman', serif; }
     .hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
     .hint-section { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; }
     .hint-title { color: var(--u-title); }
-    .factorization { color: var(--u-ink); }
-    .choice-btn { font-size: 1.25em; padding: 14px 10px; }
-    .result { border-radius: 16px; }
+    .factorization { color: var(--u-ink); line-height: 1.8; }
+    .choices.wide { grid-template-columns: 1fr; }
+    .choice-btn { font-size: 1.25em; padding: 14px 10px; font-family: 'Times New Roman', 'M PLUS Rounded 1c', serif; }
+    .result { border-radius: 16px; text-align: left; line-height: 1.7; font-size: 1.05em; }
     .result.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .result.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .result.incorrect { background: var(--u-ng-soft); color: #b91c1c; border: 3px solid var(--u-ng-line); }
     .explanation { background: #fff; border: 3px dashed var(--u-line); border-left: 3px dashed var(--u-line); border-radius: 16px; color: var(--u-ink); line-height: 1.8; }
+    .graph-box { background: #fff; border: 3px solid var(--u-line); border-radius: 16px; padding: 6px; text-align: center; margin: 12px 0; }
+    .graph-note { font-size: .85rem; color: var(--u-sub); font-weight: 700; }
     .level-complete h2 { color: var(--u-accent-text); }
     .level-complete p { color: var(--u-ink); }
     .done-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 18px auto 0; }
@@ -332,8 +337,9 @@
       body { padding: 8px; }
       .container { padding: 16px 12px; }
       .quiz-area { padding: 14px 10px; }
-      .level-btn { padding: 8px 12px; font-size: 15px; }
+      .level-btn { padding: 8px 10px; font-size: 14px; }
       .factorization { overflow-x: auto; }
+      .problem { font-size: 1.4em; }
     }
   
   </style>
@@ -347,11 +353,13 @@
             <button class="level-btn active" onclick="setLevel(0)">レベル0</button>
             <button class="level-btn" onclick="setLevel(1)">レベル1</button>
             <button class="level-btn" onclick="setLevel(2)">レベル2</button>
+            <!-- 【ブラッシュアップ】レベル3 を判別式（共有点の個数）に、元のレベル3（接する・共有点なし）に発展の問題を足してレベル4 にした -->
             <button class="level-btn" onclick="setLevel(3)">レベル3</button>
+            <button class="level-btn" onclick="setLevel(4)">レベル4</button>
         </div>
 
         <div class="score">
-            正解数: <span id="correct">0</span> / 問題数: <span id="total">0</span>
+            一発正解: <span id="correct">0</span> / 解いた問題: <span id="total">0</span>
         </div>
 
         <div class="quiz-area">
@@ -383,327 +391,976 @@
     </div>
 
     <script>
-        let currentLevel = 1;
+
+        let currentLevel = 0;
         let currentProblem = {};
-        let correctCount = 0;
-        let totalCount = 0;
+        let correctCount = 0;   // 一発で正解できた問題の数
+        let totalCount = 0;     // 解いた問題の数
         let currentProblemIndex = 0;
         let levelProblems = [];
-        let currentChoicesOrder = []; // 現在の選択肢の順番を保存
+        let firstTry = true;
+        let hintStep = 0;
+        const PER_LEVEL = 5;
 
         const problems = {
-            0: [ // レベル0: 因数分解の復習（5問）
-                {
-                    equation: "x² + 5x + 6",
-                    hint1: "たして5になる2つの数は？<br>かけて6になる2つの数は？",
-                    hint2: "たして5になる2つの数は？ → 2と3<br>かけて6になる2つの数は？ → 2と3<br>両方の条件を満たすのは2と3です！",
-                    correct: "(x + 2)(x + 3)",
-                    choices: ["(x + 2)(x + 3)", "(x - 2)(x - 3)", "(x + 1)(x + 6)", "(x - 1)(x - 6)"],
-                    correctExplanation: "正解！x² + 5x + 6 = (x + 2)(x + 3)<br>・かけて定数項（6）になる数：2 × 3 = 6<br>・たしてxの係数（5）になる数：2 + 3 = 5<br>両方の条件を満たすので正解です！",
-                    wrongAdvice: "因数分解のコツを思い出してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（5）になるかチェック<br>6になる組み合わせ：1×6、2×3<br>このうち、たして5になるのはどちらでしょう？"
-                },
-                {
-                    equation: "x² + 7x + 12",
-                    hint1: "たして7になる2つの数は？<br>かけて12になる2つの数は？",
-                    hint2: "たして7になる2つの数は？ → 3と4<br>かけて12になる2つの数は？ → 3と4<br>両方の条件を満たすのは3と4です！",
-                    correct: "(x + 3)(x + 4)",
-                    choices: ["(x + 3)(x + 4)", "(x - 3)(x - 4)", "(x + 2)(x + 6)", "(x + 1)(x + 12)"],
-                    correctExplanation: "正解！x² + 7x + 12 = (x + 3)(x + 4)<br>・かけて定数項（12）になる数：3 × 4 = 12<br>・たしてxの係数（7）になる数：3 + 4 = 7<br>両方の条件を満たすので正解です！",
-                    wrongAdvice: "因数分解のコツを思い出してみましょう！<br>・かけて定数項（12）になる2つの数を考える<br>・その2つの数をたすとxの係数（7）になるかチェック<br>12になる組み合わせ：1×12、2×6、3×4<br>このうち、たして7になるのはどれでしょう？"
-                },
-                {
-                    equation: "x² - 5x + 6",
-                    hint1: "たして-5になる2つの数は？<br>かけて6になる2つの数は？",
-                    hint2: "たして-5になる2つの数は？ → -2と-3<br>かけて6になる2つの数は？ → -2と-3<br>両方の条件を満たすのは-2と-3です！",
-                    correct: "(x - 2)(x - 3)",
-                    choices: ["(x - 2)(x - 3)", "(x + 2)(x + 3)", "(x - 1)(x - 6)", "(x + 1)(x + 6)"],
-                    correctExplanation: "正解！x² - 5x + 6 = (x - 2)(x - 3)<br>・かけて定数項（6）になる数：(-2) × (-3) = 6<br>・たしてxの係数（-5）になる数：(-2) + (-3) = -5<br>両方の条件を満たすので正解です！",
-                    wrongAdvice: "符号に注意して因数分解してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（-5）になるかチェック<br>xの係数が負なので、2つの数は両方とも負になります<br>(-1)×(-6) = 6、(-2)×(-3) = 6<br>このうち、たして-5になるのはどちらでしょう？"
-                },
-                {
-                    equation: "x² + x - 6",
-                    hint1: "たして1になる2つの数は？<br>かけて-6になる2つの数は？",
-                    hint2: "たして1になる2つの数は？ → 3と-2<br>かけて-6になる2つの数は？ → 3と-2<br>両方の条件を満たすのは3と-2です！",
-                    correct: "(x + 3)(x - 2)",
-                    choices: ["(x + 3)(x - 2)", "(x - 3)(x + 2)", "(x + 6)(x - 1)", "(x - 6)(x + 1)"],
-                    correctExplanation: "正解！x² + x - 6 = (x + 3)(x - 2)<br>・かけて定数項（-6）になる数：3 × (-2) = -6<br>・たしてxの係数（1）になる数：3 + (-2) = 1<br>両方の条件を満たすので正解です！",
-                    wrongAdvice: "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（-6）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（1）になるかチェック<br>-6になる組み合わせ：1×(-6)、(-1)×6、2×(-3)、(-2)×3<br>このうち、たして1になるのはどれでしょう？"
-                },
-                {
-                    equation: "x² - 3x - 10",
-                    hint1: "たして-3になる2つの数は？<br>かけて-10になる2つの数は？",
-                    hint2: "たして-3になる2つの数は？ → -5と2<br>かけて-10になる2つの数は？ → -5と2<br>両方の条件を満たすのは-5と2です！",
-                    correct: "(x - 5)(x + 2)",
-                    choices: ["(x - 5)(x + 2)", "(x + 5)(x - 2)", "(x - 10)(x + 1)", "(x + 10)(x - 1)"],
-                    correctExplanation: "正解！x² - 3x - 10 = (x - 5)(x + 2)<br>・かけて定数項（-10）になる数：(-5) × 2 = -10<br>・たしてxの係数（-3）になる数：(-5) + 2 = -3<br>両方の条件を満たすので正解です！",
-                    wrongAdvice: "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（-10）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（-3）になるかチェック<br>-10になる組み合わせ：1×(-10)、(-1)×10、2×(-5)、(-2)×5<br>このうち、たして-3になるのはどれでしょう？"
-                }
-            ],
-            1: [ // レベル1: 簡単な因数分解（5問）
-                {
-                    equation: "y = x² - 3x + 2",
-                    hint1: "x² - 3x + 2 = (x - 1)(x - 2)",
-                    hint2: "x² - 3x + 2 = (x - 1)(x - 2) = 0<br>よって (x - 1) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = 1, 2",
-                    choices: ["x = 1, 2", "x = -1, -2", "x = 2, 3", "x = 0, 3"],
-                    correctExplanation: "正解！<br>x² - 3x + 2 = (x - 1)(x - 2) = 0<br>(x - 1) = 0 または (x - 2) = 0<br>よって x = 1, 2",
-                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 3x + 2を因数分解すると何になるでしょう？"
-                },
-                {
-                    equation: "y = x² - 5x + 6",
-                    hint1: "x² - 5x + 6 = (x - 2)(x - 3)",
-                    hint2: "x² - 5x + 6 = (x - 2)(x - 3) = 0<br>よって (x - 2) = 0 または (x - 3) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = 2, 3",
-                    choices: ["x = 2, 3", "x = -2, -3", "x = 1, 6", "x = 5, 6"],
-                    correctExplanation: "正解！<br>x² - 5x + 6 = (x - 2)(x - 3) = 0<br>(x - 2) = 0 または (x - 3) = 0<br>よって x = 2, 3",
-                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 5x + 6を因数分解すると何になるでしょう？"
-                },
-                {
-                    equation: "y = x² - 4x + 3",
-                    hint1: "x² - 4x + 3 = (x - 1)(x - 3)",
-                    hint2: "x² - 4x + 3 = (x - 1)(x - 3) = 0<br>よって (x - 1) = 0 または (x - 3) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = 1, 3",
-                    choices: ["x = 1, 3", "x = -1, -3", "x = 2, 2", "x = 4, 3"],
-                    correctExplanation: "正解！<br>x² - 4x + 3 = (x - 1)(x - 3) = 0<br>(x - 1) = 0 または (x - 3) = 0<br>よって x = 1, 3",
-                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 4x + 3を因数分解すると何になるでしょう？"
-                },
-                {
-                    equation: "y = x² - 7x + 12",
-                    hint1: "x² - 7x + 12 = (x - 3)(x - 4)",
-                    hint2: "x² - 7x + 12 = (x - 3)(x - 4) = 0<br>よって (x - 3) = 0 または (x - 4) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = 3, 4",
-                    choices: ["x = 3, 4", "x = -3, -4", "x = 7, 12", "x = 1, 12"],
-                    correctExplanation: "正解！<br>x² - 7x + 12 = (x - 3)(x - 4) = 0<br>(x - 3) = 0 または (x - 4) = 0<br>よって x = 3, 4",
-                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 7x + 12を因数分解すると何になるでしょう？"
-                },
-                {
-                    equation: "y = x² - 6x + 8",
-                    hint1: "x² - 6x + 8 = (x - 2)(x - 4)",
-                    hint2: "x² - 6x + 8 = (x - 2)(x - 4) = 0<br>よって (x - 2) = 0 または (x - 4) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = 2, 4",
-                    choices: ["x = 2, 4", "x = -2, -4", "x = 6, 8", "x = 3, 8"],
-                    correctExplanation: "正解！<br>x² - 6x + 8 = (x - 2)(x - 4) = 0<br>(x - 2) = 0 または (x - 4) = 0<br>よって x = 2, 4",
-                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 6x + 8を因数分解すると何になるでしょう？"
-                }
-            ],
-            2: [ // レベル2: 負の数を含む（5問）
-                {
-                    equation: "y = x² + x - 6",
-                    hint1: "x² + x - 6 = (x + 3)(x - 2)",
-                    hint2: "x² + x - 6 = (x + 3)(x - 2) = 0<br>よって (x + 3) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = -3, 2",
-                    choices: ["x = -3, 2", "x = 3, -2", "x = 1, -6", "x = -1, 6"],
-                    correctExplanation: "正解！<br>x² + x - 6 = (x + 3)(x - 2) = 0<br>(x + 3) = 0 または (x - 2) = 0<br>よって x = -3, 2",
-                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + x - 6を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
-                },
-                {
-                    equation: "y = x² - x - 12",
-                    hint1: "x² - x - 12 = (x - 4)(x + 3)",
-                    hint2: "x² - x - 12 = (x - 4)(x + 3) = 0<br>よって (x - 4) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = -3, 4",
-                    choices: ["x = -3, 4", "x = 3, -4", "x = 1, 12", "x = -1, -12"],
-                    correctExplanation: "正解！<br>x² - x - 12 = (x - 4)(x + 3) = 0<br>(x - 4) = 0 または (x + 3) = 0<br>よって x = -3, 4",
-                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - x - 12を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
-                },
-                {
-                    equation: "y = x² + 2x - 8",
-                    hint1: "x² + 2x - 8 = (x + 4)(x - 2)",
-                    hint2: "x² + 2x - 8 = (x + 4)(x - 2) = 0<br>よって (x + 4) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = -4, 2",
-                    choices: ["x = -4, 2", "x = 4, -2", "x = -2, 8", "x = 2, -8"],
-                    correctExplanation: "正解！<br>x² + 2x - 8 = (x + 4)(x - 2) = 0<br>(x + 4) = 0 または (x - 2) = 0<br>よって x = -4, 2",
-                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 2x - 8を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
-                },
-                {
-                    equation: "y = x² - 2x - 15",
-                    hint1: "x² - 2x - 15 = (x - 5)(x + 3)",
-                    hint2: "x² - 2x - 15 = (x - 5)(x + 3) = 0<br>よって (x - 5) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = -3, 5",
-                    choices: ["x = -3, 5", "x = 3, -5", "x = 2, 15", "x = -2, -15"],
-                    correctExplanation: "正解！<br>x² - 2x - 15 = (x - 5)(x + 3) = 0<br>(x - 5) = 0 または (x + 3) = 0<br>よって x = -3, 5",
-                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 2x - 15を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
-                },
-                {
-                    equation: "y = x² + 3x - 10",
-                    hint1: "x² + 3x - 10 = (x + 5)(x - 2)",
-                    hint2: "x² + 3x - 10 = (x + 5)(x - 2) = 0<br>よって (x + 5) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
-                    correct: "x = -5, 2",
-                    choices: ["x = -5, 2", "x = 5, -2", "x = -3, 10", "x = 3, -10"],
-                    correctExplanation: "正解！<br>x² + 3x - 10 = (x + 5)(x - 2) = 0<br>(x + 5) = 0 または (x - 2) = 0<br>よって x = -5, 2",
-                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 3x - 10を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
-                }
-            ],
-            3: [ // レベル3: 接点または共有点なしの問題（5問）
-                {
-                    equation: "y = x² - 6x + 9",
-                    hint1: "x² - 6x + 9 = (x - 3)²",
-                    correct: "x = 3（重解）",
-                    choices: ["x = 3（重解）", "x = -3（重解）", "x = 6, 9", "共有点なし"],
-                    correctExplanation: "正解！<br>x² - 6x + 9 = (x - 3)² = 0<br>(x - 3)² = 0<br>よって x - 3 = 0<br>x = 3（重解）",
-                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² - 6x + 9の形を見てください<br>これは (x - 3)² の形に因数分解できます<br>(x - 3)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
-                },
-                {
-                    equation: "y = x² + 4x + 4",
-                    hint1: "x² + 4x + 4 = (x + 2)²",
-                    correct: "x = -2（重解）",
-                    choices: ["x = -2（重解）", "x = 2（重解）", "x = -4, 4", "共有点なし"],
-                    correctExplanation: "正解！<br>x² + 4x + 4 = (x + 2)² = 0<br>(x + 2)² = 0<br>よって x + 2 = 0<br>x = -2（重解）",
-                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² + 4x + 4の形を見てください<br>これは (x + 2)² の形に因数分解できます<br>(x + 2)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
-                },
-                {
-                    equation: "y = x² - 8x + 16",
-                    hint1: "x² - 8x + 16 = (x - 4)²",
-                    correct: "x = 4（重解）",
-                    choices: ["x = 4（重解）", "x = -4（重解）", "x = 8, 16", "共有点なし"],
-                    correctExplanation: "正解！<br>x² - 8x + 16 = (x - 4)² = 0<br>(x - 4)² = 0<br>よって x - 4 = 0<br>x = 4（重解）",
-                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² - 8x + 16の形を見てください<br>これは (x - 4)² の形に因数分解できます<br>(x - 4)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
-                },
-                {
-                    equation: "y = x² + 2x + 5",
-                    hint1: `この問題は解の公式を使って解きましょう。<br><br>解の公式: <div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-b ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">b² - 4ac</span></div><div style="margin-top: 5px;">2a</div></div>a = 1, b = 2, c = 5<br><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 150px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">2² - 4×1×5</span></div><div style="margin-top: 5px;">2×1</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">4 - 20</span></div><div style="margin-top: 5px;">2</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 80px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-16</span></div><div style="margin-top: 5px;">2</div></div><br>√<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-16</span>は実数ではないため、実数解はありません。`,
-                    correct: "共有点なし",
-                    choices: ["共有点なし", "x = -1（重解）", "x = -2, -5", "x = 1, 5"],
-                    correctExplanation: "正解！<br>この問題は解の公式を使って解きます<br>√の中が負の数になるため、実数解はありません<br>つまり、この放物線はx軸と交わりません",
-                    wrongAdvice: "この問題は因数分解できないので解の公式を使います！<br>解の公式で√の中（b² - 4ac）を計算してみましょう<br>a = 1, b = 2, c = 5のとき<br>b² - 4ac = 4 - 20 = -16<br>√の中が負の数になると実数解はありません<br>つまり、放物線とx軸は交わりません"
-                },
-                {
-                    equation: "y = x² - 4x + 5",
-                    hint1: `この問題は解の公式を使って解きましょう。<br><br>解の公式: <div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-b ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">b² - 4ac</span></div><div style="margin-top: 5px;">2a</div></div>a = 1, b = -4, c = 5<br><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 150px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">(-4)² - 4×1×5</span></div><div style="margin-top: 5px;">2×1</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">16 - 20</span></div><div style="margin-top: 5px;">2</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 80px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-4</span></div><div style="margin-top: 5px;">2</div></div><br>√<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-4</span>は実数ではないため、実数解はありません。`,
-                    correct: "共有点なし",
-                    choices: ["共有点なし", "x = 2（重解）", "x = 1, 5", "x = -1, -5"],
-                    correctExplanation: "正解！<br>この問題は解の公式を使って解きます<br>√の中が負の数になるため、実数解はありません<br>つまり、この放物線はx軸と交わりません",
-                    wrongAdvice: "この問題は因数分解できないので解の公式を使います！<br>解の公式で√の中（b² - 4ac）を計算してみましょう<br>a = 1, b = -4, c = 5のとき<br>b² - 4ac = 16 - 20 = -4<br>√の中が負の数になると実数解はありません<br>つまり、放物線とx軸は交わりません"
-                }
+         "0": [
+          {
+           "equation": "x² + 5x + 6",
+           "hint1": "たして5になる2つの数は？<br>かけて6になる2つの数は？",
+           "hint2": "かけて 6 になる 2 数の組：−6 と −1、−3 と −2、1 と 6、2 と 3<br>このうち、たして 5 になるのは 2 と 3！",
+           "correct": "(x + 2)(x + 3)",
+           "choices": [
+            "(x + 2)(x + 3)",
+            "(x − 2)(x − 3)",
+            "(x + 1)(x + 6)",
+            "(x − 1)(x − 6)"
+           ],
+           "correctExplanation": "正解！x² + 5x + 6 = (x + 2)(x + 3)<br>・かけて定数項（6）になる数：2 × 3 = 6<br>・たしてxの係数（5）になる数：2 + 3 = 5<br>両方の条件を満たすので正解です！",
+           "wrongAdvice": "因数分解のコツを思い出してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（5）になるかチェック<br>6になる組み合わせ：1×6、2×3<br>このうち、たして5になるのはどちらでしょう？",
+           "whys": [
+            "",
+            "(x − 2)(x − 3) を展開すると x² − 5x + 6。元の式 x² + 5x + 6 と x の係数・定数項をくらべよう",
+            "(x + 1)(x + 6) を展開すると x² + 7x + 6。元の式 x² + 5x + 6 と x の係数・定数項をくらべよう",
+            "(x − 1)(x − 6) を展開すると x² − 7x + 6。元の式 x² + 5x + 6 と x の係数・定数項をくらべよう"
+           ]
+          },
+          {
+           "equation": "x² + 7x + 12",
+           "hint1": "たして7になる2つの数は？<br>かけて12になる2つの数は？",
+           "hint2": "かけて 12 になる 2 数の組：−12 と −1、−6 と −2、−4 と −3、1 と 12、2 と 6、3 と 4<br>このうち、たして 7 になるのは 3 と 4！",
+           "correct": "(x + 3)(x + 4)",
+           "choices": [
+            "(x + 3)(x + 4)",
+            "(x − 3)(x − 4)",
+            "(x + 2)(x + 6)",
+            "(x + 1)(x + 12)"
+           ],
+           "correctExplanation": "正解！x² + 7x + 12 = (x + 3)(x + 4)<br>・かけて定数項（12）になる数：3 × 4 = 12<br>・たしてxの係数（7）になる数：3 + 4 = 7<br>両方の条件を満たすので正解です！",
+           "wrongAdvice": "因数分解のコツを思い出してみましょう！<br>・かけて定数項（12）になる2つの数を考える<br>・その2つの数をたすとxの係数（7）になるかチェック<br>12になる組み合わせ：1×12、2×6、3×4<br>このうち、たして7になるのはどれでしょう？",
+           "whys": [
+            "",
+            "(x − 3)(x − 4) を展開すると x² − 7x + 12。元の式 x² + 7x + 12 と x の係数・定数項をくらべよう",
+            "(x + 2)(x + 6) を展開すると x² + 8x + 12。元の式 x² + 7x + 12 と x の係数・定数項をくらべよう",
+            "(x + 1)(x + 12) を展開すると x² + 13x + 12。元の式 x² + 7x + 12 と x の係数・定数項をくらべよう"
+           ]
+          },
+          {
+           "equation": "x² − 5x + 6",
+           "hint1": "たして−5になる2つの数は？<br>かけて6になる2つの数は？",
+           "hint2": "かけて 6 になる 2 数の組：−6 と −1、−3 と −2、1 と 6、2 と 3<br>このうち、たして −5 になるのは −3 と −2！",
+           "correct": "(x − 2)(x − 3)",
+           "choices": [
+            "(x − 2)(x − 3)",
+            "(x + 2)(x + 3)",
+            "(x − 1)(x − 6)",
+            "(x + 1)(x + 6)"
+           ],
+           "correctExplanation": "正解！x² − 5x + 6 = (x − 2)(x − 3)<br>・かけて定数項（6）になる数：(−2) × (−3) = 6<br>・たしてxの係数（−5）になる数：(−2) + (−3) = −5<br>両方の条件を満たすので正解です！",
+           "wrongAdvice": "符号に注意して因数分解してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（−5）になるかチェック<br>xの係数が負なので、2つの数は両方とも負になります<br>(−1)×(−6) = 6、(−2)×(−3) = 6<br>このうち、たして−5になるのはどちらでしょう？",
+           "whys": [
+            "",
+            "(x + 2)(x + 3) を展開すると x² + 5x + 6。元の式 x² − 5x + 6 と x の係数・定数項をくらべよう",
+            "(x − 1)(x − 6) を展開すると x² − 7x + 6。元の式 x² − 5x + 6 と x の係数・定数項をくらべよう",
+            "(x + 1)(x + 6) を展開すると x² + 7x + 6。元の式 x² − 5x + 6 と x の係数・定数項をくらべよう"
+           ]
+          },
+          {
+           "equation": "x² + x − 6",
+           "hint1": "たして1になる2つの数は？<br>かけて−6になる2つの数は？",
+           "hint2": "かけて −6 になる 2 数の組：−6 と 1、−3 と 2、−2 と 3、−1 と 6<br>このうち、たして 1 になるのは −2 と 3！",
+           "correct": "(x + 3)(x − 2)",
+           "choices": [
+            "(x + 3)(x − 2)",
+            "(x − 3)(x + 2)",
+            "(x + 6)(x − 1)",
+            "(x − 6)(x + 1)"
+           ],
+           "correctExplanation": "正解！x² + x − 6 = (x + 3)(x − 2)<br>・かけて定数項（−6）になる数：3 × (−2) = −6<br>・たしてxの係数（1）になる数：3 + (−2) = 1<br>両方の条件を満たすので正解です！",
+           "wrongAdvice": "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（−6）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（1）になるかチェック<br>−6になる組み合わせ：1×(−6)、(−1)×6、2×(−3)、(−2)×3<br>このうち、たして1になるのはどれでしょう？",
+           "whys": [
+            "",
+            "(x − 3)(x + 2) を展開すると x² − x − 6。元の式 x² + x − 6 と x の係数・定数項をくらべよう",
+            "(x + 6)(x − 1) を展開すると x² + 5x − 6。元の式 x² + x − 6 と x の係数・定数項をくらべよう",
+            "(x − 6)(x + 1) を展開すると x² − 5x − 6。元の式 x² + x − 6 と x の係数・定数項をくらべよう"
+           ]
+          },
+          {
+           "equation": "x² − 3x − 10",
+           "hint1": "たして−3になる2つの数は？<br>かけて−10になる2つの数は？",
+           "hint2": "かけて −10 になる 2 数の組：−10 と 1、−5 と 2、−2 と 5、−1 と 10<br>このうち、たして −3 になるのは −5 と 2！",
+           "correct": "(x − 5)(x + 2)",
+           "choices": [
+            "(x − 5)(x + 2)",
+            "(x + 5)(x − 2)",
+            "(x − 10)(x + 1)",
+            "(x + 10)(x − 1)"
+           ],
+           "correctExplanation": "正解！x² − 3x − 10 = (x − 5)(x + 2)<br>・かけて定数項（−10）になる数：(−5) × 2 = −10<br>・たしてxの係数（−3）になる数：(−5) + 2 = −3<br>両方の条件を満たすので正解です！",
+           "wrongAdvice": "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（−10）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（−3）になるかチェック<br>−10になる組み合わせ：1×(−10)、(−1)×10、2×(−5)、(−2)×5<br>このうち、たして−3になるのはどれでしょう？",
+           "whys": [
+            "",
+            "(x + 5)(x − 2) を展開すると x² + 3x − 10。元の式 x² − 3x − 10 と x の係数・定数項をくらべよう",
+            "(x − 10)(x + 1) を展開すると x² − 9x − 10。元の式 x² − 3x − 10 と x の係数・定数項をくらべよう",
+            "(x + 10)(x − 1) を展開すると x² + 9x − 10。元の式 x² − 3x − 10 と x の係数・定数項をくらべよう"
+           ]
+          }
+         ],
+         "1": [
+          {
+           "equation": "y = x² − 3x + 2",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 3x + 2 = 0 を解こう。かけて 2、たして −3 になる 2 つの数は？",
+           "hint2": "x² − 3x + 2 = (x − 1)(x − 2) = 0<br>よって (x − 1) = 0 または (x − 2) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = 1, 2",
+           "choices": [
+            "x = 1, 2",
+            "x = −2, −1",
+            "x = −2, 1",
+            "共有点なし"
+           ],
+           "correctExplanation": "正解！<br>x² − 3x + 2 = (x − 1)(x − 2) = 0<br>(x − 1) = 0 または (x − 2) = 0<br>よって x = 1, 2<br>共有点の座標は (1, 0)、(2, 0)",
+           "wrongAdvice": "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 3x + 2を因数分解すると何になるでしょう？",
+           "whys": [
+            "",
+            "符号が逆。x = −1 を代入すると y = 6 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "x = −2 を代入すると y = 12 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = (−3)² − 4 × 1 × 2 = 1 > 0 なので、共有点は 2 つあるよ"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -3,
+            "c": 2,
+            "pts": [
+             [
+              1,
+              "1"
+             ],
+             [
+              2,
+              "2"
+             ]
             ]
+           }
+          },
+          {
+           "equation": "y = x² − 5x + 6",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 5x + 6 = 0 を解こう。かけて 6、たして −5 になる 2 つの数は？",
+           "hint2": "x² − 5x + 6 = (x − 2)(x − 3) = 0<br>よって (x − 2) = 0 または (x − 3) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = 2, 3",
+           "choices": [
+            "x = 2, 3",
+            "x = −3, −2",
+            "x = 1, 6",
+            "x = −6, −1"
+           ],
+           "correctExplanation": "正解！<br>x² − 5x + 6 = (x − 2)(x − 3) = 0<br>(x − 2) = 0 または (x − 3) = 0<br>よって x = 2, 3<br>共有点の座標は (2, 0)、(3, 0)",
+           "wrongAdvice": "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 5x + 6を因数分解すると何になるでしょう？",
+           "whys": [
+            "",
+            "符号が逆。x = −2 を代入すると y = 20 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 6 になる組でも、たして −5 にならない組だよ。x = 6 を代入すると y = 12 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 6 になる組でも、たして −5 にならない組だよ。x = −1 を代入すると y = 12 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -5,
+            "c": 6,
+            "pts": [
+             [
+              2,
+              "2"
+             ],
+             [
+              3,
+              "3"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − 4x + 3",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 4x + 3 = 0 を解こう。かけて 3、たして −4 になる 2 つの数は？",
+           "hint2": "x² − 4x + 3 = (x − 1)(x − 3) = 0<br>よって (x − 1) = 0 または (x − 3) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = 1, 3",
+           "choices": [
+            "x = 1, 3",
+            "x = −3, −1",
+            "x = −3, 1",
+            "共有点なし"
+           ],
+           "correctExplanation": "正解！<br>x² − 4x + 3 = (x − 1)(x − 3) = 0<br>(x − 1) = 0 または (x − 3) = 0<br>よって x = 1, 3<br>共有点の座標は (1, 0)、(3, 0)",
+           "wrongAdvice": "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 4x + 3を因数分解すると何になるでしょう？",
+           "whys": [
+            "",
+            "符号が逆。x = −1 を代入すると y = 8 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "x = −3 を代入すると y = 24 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = (−4)² − 4 × 1 × 3 = 4 > 0 なので、共有点は 2 つあるよ"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -4,
+            "c": 3,
+            "pts": [
+             [
+              1,
+              "1"
+             ],
+             [
+              3,
+              "3"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − 7x + 12",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 7x + 12 = 0 を解こう。かけて 12、たして −7 になる 2 つの数は？",
+           "hint2": "x² − 7x + 12 = (x − 3)(x − 4) = 0<br>よって (x − 3) = 0 または (x − 4) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = 3, 4",
+           "choices": [
+            "x = 3, 4",
+            "x = −4, −3",
+            "x = 1, 12",
+            "x = 2, 6"
+           ],
+           "correctExplanation": "正解！<br>x² − 7x + 12 = (x − 3)(x − 4) = 0<br>(x − 3) = 0 または (x − 4) = 0<br>よって x = 3, 4<br>共有点の座標は (3, 0)、(4, 0)",
+           "wrongAdvice": "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 7x + 12を因数分解すると何になるでしょう？",
+           "whys": [
+            "",
+            "符号が逆。x = −3 を代入すると y = 42 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 12 になる組でも、たして −7 にならない組だよ。x = 12 を代入すると y = 72 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 12 になる組でも、たして −7 にならない組だよ。x = 6 を代入すると y = 6 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -7,
+            "c": 12,
+            "pts": [
+             [
+              3,
+              "3"
+             ],
+             [
+              4,
+              "4"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − 6x + 8",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 6x + 8 = 0 を解こう。かけて 8、たして −6 になる 2 つの数は？",
+           "hint2": "x² − 6x + 8 = (x − 2)(x − 4) = 0<br>よって (x − 2) = 0 または (x − 4) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = 2, 4",
+           "choices": [
+            "x = 2, 4",
+            "x = −4, −2",
+            "x = 1, 8",
+            "x = −8, −1"
+           ],
+           "correctExplanation": "正解！<br>x² − 6x + 8 = (x − 2)(x − 4) = 0<br>(x − 2) = 0 または (x − 4) = 0<br>よって x = 2, 4<br>共有点の座標は (2, 0)、(4, 0)",
+           "wrongAdvice": "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 6x + 8を因数分解すると何になるでしょう？",
+           "whys": [
+            "",
+            "符号が逆。x = −2 を代入すると y = 24 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 8 になる組でも、たして −6 にならない組だよ。x = 8 を代入すると y = 24 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて 8 になる組でも、たして −6 にならない組だよ。x = −1 を代入すると y = 15 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -6,
+            "c": 8,
+            "pts": [
+             [
+              2,
+              "2"
+             ],
+             [
+              4,
+              "4"
+             ]
+            ]
+           }
+          }
+         ],
+         "2": [
+          {
+           "equation": "y = x² + x − 6",
+           "hint1": "y = 0 とおいて、2次方程式 x² + x − 6 = 0 を解こう。かけて −6、たして 1 になる 2 つの数は？",
+           "hint2": "x² + x − 6 = (x + 3)(x − 2) = 0<br>よって (x + 3) = 0 または (x − 2) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = −3, 2",
+           "choices": [
+            "x = −3, 2",
+            "x = −2, 3",
+            "x = −1, 6",
+            "x = −6, 1"
+           ],
+           "correctExplanation": "正解！<br>x² + x − 6 = (x + 3)(x − 2) = 0<br>(x + 3) = 0 または (x − 2) = 0<br>よって x = −3, 2<br>共有点の座標は (−3, 0)、(2, 0)",
+           "wrongAdvice": "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + x − 6を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります",
+           "whys": [
+            "",
+            "符号が逆。x = 3 を代入すると y = 6 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −6 になる組でも、たして 1 にならない組だよ。x = 6 を代入すると y = 36 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −6 になる組でも、たして 1 にならない組だよ。x = 1 を代入すると y = −4 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": 1,
+            "c": -6,
+            "pts": [
+             [
+              -3,
+              "−3"
+             ],
+             [
+              2,
+              "2"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − x − 12",
+           "hint1": "y = 0 とおいて、2次方程式 x² − x − 12 = 0 を解こう。かけて −12、たして −1 になる 2 つの数は？",
+           "hint2": "x² − x − 12 = (x − 4)(x + 3) = 0<br>よって (x − 4) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = −3, 4",
+           "choices": [
+            "x = −3, 4",
+            "x = −4, 3",
+            "x = −1, 12",
+            "x = −2, 6"
+           ],
+           "correctExplanation": "正解！<br>x² − x − 12 = (x − 4)(x + 3) = 0<br>(x − 4) = 0 または (x + 3) = 0<br>よって x = −3, 4<br>共有点の座標は (−3, 0)、(4, 0)",
+           "wrongAdvice": "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − x − 12を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります",
+           "whys": [
+            "",
+            "符号が逆。x = 3 を代入すると y = −6 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −12 になる組でも、たして −1 にならない組だよ。x = 12 を代入すると y = 120 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −12 になる組でも、たして −1 にならない組だよ。x = 6 を代入すると y = 18 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -1,
+            "c": -12,
+            "pts": [
+             [
+              -3,
+              "−3"
+             ],
+             [
+              4,
+              "4"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 2x − 8",
+           "hint1": "y = 0 とおいて、2次方程式 x² + 2x − 8 = 0 を解こう。かけて −8、たして 2 になる 2 つの数は？",
+           "hint2": "x² + 2x − 8 = (x + 4)(x − 2) = 0<br>よって (x + 4) = 0 または (x − 2) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = −4, 2",
+           "choices": [
+            "x = −4, 2",
+            "x = −2, 4",
+            "x = −1, 8",
+            "x = −8, 1"
+           ],
+           "correctExplanation": "正解！<br>x² + 2x − 8 = (x + 4)(x − 2) = 0<br>(x + 4) = 0 または (x − 2) = 0<br>よって x = −4, 2<br>共有点の座標は (−4, 0)、(2, 0)",
+           "wrongAdvice": "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 2x − 8を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります",
+           "whys": [
+            "",
+            "符号が逆。x = 4 を代入すると y = 16 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −8 になる組でも、たして 2 にならない組だよ。x = 8 を代入すると y = 72 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −8 になる組でも、たして 2 にならない組だよ。x = 1 を代入すると y = −5 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": 2,
+            "c": -8,
+            "pts": [
+             [
+              -4,
+              "−4"
+             ],
+             [
+              2,
+              "2"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − 2x − 15",
+           "hint1": "y = 0 とおいて、2次方程式 x² − 2x − 15 = 0 を解こう。かけて −15、たして −2 になる 2 つの数は？",
+           "hint2": "x² − 2x − 15 = (x − 5)(x + 3) = 0<br>よって (x − 5) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = −3, 5",
+           "choices": [
+            "x = −3, 5",
+            "x = −5, 3",
+            "x = −1, 15",
+            "x = −15, 1"
+           ],
+           "correctExplanation": "正解！<br>x² − 2x − 15 = (x − 5)(x + 3) = 0<br>(x − 5) = 0 または (x + 3) = 0<br>よって x = −3, 5<br>共有点の座標は (−3, 0)、(5, 0)",
+           "wrongAdvice": "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² − 2x − 15を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります",
+           "whys": [
+            "",
+            "符号が逆。x = 3 を代入すると y = −12 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −15 になる組でも、たして −2 にならない組だよ。x = 15 を代入すると y = 180 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −15 になる組でも、たして −2 にならない組だよ。x = 1 を代入すると y = −16 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": -2,
+            "c": -15,
+            "pts": [
+             [
+              -3,
+              "−3"
+             ],
+             [
+              5,
+              "5"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 3x − 10",
+           "hint1": "y = 0 とおいて、2次方程式 x² + 3x − 10 = 0 を解こう。かけて −10、たして 3 になる 2 つの数は？",
+           "hint2": "x² + 3x − 10 = (x + 5)(x − 2) = 0<br>よって (x + 5) = 0 または (x − 2) = 0<br>それぞれの式を解いてみましょう",
+           "correct": "x = −5, 2",
+           "choices": [
+            "x = −5, 2",
+            "x = −2, 5",
+            "x = −1, 10",
+            "x = −10, 1"
+           ],
+           "correctExplanation": "正解！<br>x² + 3x − 10 = (x + 5)(x − 2) = 0<br>(x + 5) = 0 または (x − 2) = 0<br>よって x = −5, 2<br>共有点の座標は (−5, 0)、(2, 0)",
+           "wrongAdvice": "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 3x − 10を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります",
+           "whys": [
+            "",
+            "符号が逆。x = 5 を代入すると y = 30 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −10 になる組でも、たして 3 にならない組だよ。x = 10 を代入すると y = 120 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "かけて −10 になる組でも、たして 3 にならない組だよ。x = 1 を代入すると y = −6 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "graph": {
+            "a": 1,
+            "b": 3,
+            "c": -10,
+            "pts": [
+             [
+              -5,
+              "−5"
+             ],
+             [
+              2,
+              "2"
+             ]
+            ]
+           }
+          }
+         ],
+         "3": [
+          {
+           "equation": "y = x² − 4x + 1",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "2 個",
+            "1 個（x 軸に接する）",
+            "0 個（共有点なし）"
+           ],
+           "correct": "2 個",
+           "whys": [
+            "",
+            "D = (−4)² − 4 × 1 × 1 = 12。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = (−4)² − 4 × 1 × 1 = 12。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 x² − 4x + 1 = 0 の判別式 D = b² − 4ac を計算しよう（a = 1、b = −4、c = 1）",
+           "correctExplanation": "正解！<br>D = (−4)² − 4 × 1 × 1 = 12 > 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 2 個",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": 1,
+            "b": -4,
+            "c": 1,
+            "pts": [
+             [
+              0.2679491924311228,
+              ""
+             ],
+             [
+              3.732050807568877,
+              ""
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 6x + 9",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "1 個（x 軸に接する）",
+            "2 個",
+            "0 個（共有点なし）"
+           ],
+           "correct": "1 個（x 軸に接する）",
+           "whys": [
+            "",
+            "D = 6² − 4 × 1 × 9 = 0。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = 6² − 4 × 1 × 9 = 0。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 x² + 6x + 9 = 0 の判別式 D = b² − 4ac を計算しよう（a = 1、b = 6、c = 9）",
+           "correctExplanation": "正解！<br>D = 6² − 4 × 1 × 9 = 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 1 個（x 軸に接する）",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": 1,
+            "b": 6,
+            "c": 9,
+            "pts": [
+             [
+              -3,
+              "−3"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = 2x² − x + 1",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "0 個（共有点なし）",
+            "2 個",
+            "1 個（x 軸に接する）"
+           ],
+           "correct": "0 個（共有点なし）",
+           "whys": [
+            "",
+            "D = (−1)² − 4 × 2 × 1 = −7。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = (−1)² − 4 × 2 × 1 = −7。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 2x² − x + 1 = 0 の判別式 D = b² − 4ac を計算しよう（a = 2、b = −1、c = 1）",
+           "correctExplanation": "正解！<br>D = (−1)² − 4 × 2 × 1 = −7 < 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 0 個（共有点なし）",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": 2,
+            "b": -1,
+            "c": 1,
+            "pts": []
+           }
+          },
+          {
+           "equation": "y = −x² + 2x + 3",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "2 個",
+            "1 個（x 軸に接する）",
+            "0 個（共有点なし）"
+           ],
+           "correct": "2 個",
+           "whys": [
+            "",
+            "D = 2² − 4 × (−1) × 3 = 16。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = 2² − 4 × (−1) × 3 = 16。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 −x² + 2x + 3 = 0 の判別式 D = b² − 4ac を計算しよう（a = −1、b = 2、c = 3）",
+           "correctExplanation": "正解！<br>D = 2² − 4 × (−1) × 3 = 16 > 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 2 個",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": -1,
+            "b": 2,
+            "c": 3,
+            "pts": [
+             [
+              3,
+              "3"
+             ],
+             [
+              -1,
+              "−1"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 2x + 5",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "0 個（共有点なし）",
+            "2 個",
+            "1 個（x 軸に接する）"
+           ],
+           "correct": "0 個（共有点なし）",
+           "whys": [
+            "",
+            "D = 2² − 4 × 1 × 5 = −16。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = 2² − 4 × 1 × 5 = −16。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 x² + 2x + 5 = 0 の判別式 D = b² − 4ac を計算しよう（a = 1、b = 2、c = 5）",
+           "correctExplanation": "正解！<br>D = 2² − 4 × 1 × 5 = −16 < 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 0 個（共有点なし）",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": 1,
+            "b": 2,
+            "c": 5,
+            "pts": []
+           }
+          },
+          {
+           "equation": "y = 4x² − 4x + 1",
+           "question": "このグラフと x 軸の共有点の個数を、判別式 D = b² − 4ac で調べよう",
+           "choices": [
+            "1 個（x 軸に接する）",
+            "2 個",
+            "0 個（共有点なし）"
+           ],
+           "correct": "1 個（x 軸に接する）",
+           "whys": [
+            "",
+            "D = (−4)² − 4 × 4 × 1 = 0。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+            "D = (−4)² − 4 × 4 × 1 = 0。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 4x² − 4x + 1 = 0 の判別式 D = b² − 4ac を計算しよう（a = 4、b = −4、c = 1）",
+           "correctExplanation": "正解！<br>D = (−4)² − 4 × 4 × 1 = 0<br>D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個<br>よって 1 個（x 軸に接する）",
+           "wrongAdvice": "判別式 D = b² − 4ac の符号で決まるよ。D > 0 → 2 個、D = 0 → 1 個（接する）、D < 0 → 0 個",
+           "graph": {
+            "a": 4,
+            "b": -4,
+            "c": 1,
+            "pts": [
+             [
+              0.5,
+              ""
+             ]
+            ]
+           }
+          }
+         ],
+         "4": [
+          {
+           "equation": "y = x² − 6x + 9",
+           "choices": [
+            "x = 3（接する）",
+            "x = −3（接する）",
+            "共有点なし",
+            "x = −3, 3"
+           ],
+           "correct": "x = 3（接する）",
+           "whys": [
+            "",
+            "x = −3 を代入すると y = 36 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = (−6)² − 4 × 1 × 9 = 0 なので、x 軸と 1 点で接するよ",
+            "x = −3 を代入すると y = 36 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "hint1": "x² − 6x + 9 = (x − 3)²<br>判別式 D = b² − 4ac = 0 のとき、x 軸に接する（共有点は 1 つ）",
+           "correctExplanation": "正解！<br>D = (−6)² − 4 × 1 × 9 = 0 なので x 軸に接する。<br>x² − 6x + 9 = (x − 3)² = 0 より x = 3<br>接点の座標は (3, 0)",
+           "wrongAdvice": "判別式を調べよう：D > 0 → 2 点、D = 0 → 接する、D < 0 → 共有点なし",
+           "graph": {
+            "a": 1,
+            "b": -6,
+            "c": 9,
+            "pts": [
+             [
+              3,
+              "3"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 4x + 4",
+           "choices": [
+            "x = −2（接する）",
+            "x = 2（接する）",
+            "共有点なし",
+            "x = −2, 2"
+           ],
+           "correct": "x = −2（接する）",
+           "whys": [
+            "",
+            "x = 2 を代入すると y = 16 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = 4² − 4 × 1 × 4 = 0 なので、x 軸と 1 点で接するよ",
+            "x = 2 を代入すると y = 16 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "hint1": "x² + 4x + 4 = (x + 2)²<br>判別式 D = b² − 4ac = 0 のとき、x 軸に接する（共有点は 1 つ）",
+           "correctExplanation": "正解！<br>D = 4² − 4 × 1 × 4 = 0 なので x 軸に接する。<br>x² + 4x + 4 = (x + 2)² = 0 より x = −2<br>接点の座標は (−2, 0)",
+           "wrongAdvice": "判別式を調べよう：D > 0 → 2 点、D = 0 → 接する、D < 0 → 共有点なし",
+           "graph": {
+            "a": 1,
+            "b": 4,
+            "c": 4,
+            "pts": [
+             [
+              -2,
+              "−2"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² − 8x + 16",
+           "choices": [
+            "x = 4（接する）",
+            "x = −4（接する）",
+            "共有点なし",
+            "x = −4, 4"
+           ],
+           "correct": "x = 4（接する）",
+           "whys": [
+            "",
+            "x = −4 を代入すると y = 64 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = (−8)² − 4 × 1 × 16 = 0 なので、x 軸と 1 点で接するよ",
+            "x = −4 を代入すると y = 64 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "hint1": "x² − 8x + 16 = (x − 4)²<br>判別式 D = b² − 4ac = 0 のとき、x 軸に接する（共有点は 1 つ）",
+           "correctExplanation": "正解！<br>D = (−8)² − 4 × 1 × 16 = 0 なので x 軸に接する。<br>x² − 8x + 16 = (x − 4)² = 0 より x = 4<br>接点の座標は (4, 0)",
+           "wrongAdvice": "判別式を調べよう：D > 0 → 2 点、D = 0 → 接する、D < 0 → 共有点なし",
+           "graph": {
+            "a": 1,
+            "b": -8,
+            "c": 16,
+            "pts": [
+             [
+              4,
+              "4"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 2x + 5",
+           "choices": [
+            "共有点なし",
+            "x = −1（接する）",
+            "x = −2, 0",
+            "x = 1（接する）"
+           ],
+           "correct": "共有点なし",
+           "whys": [
+            "",
+            "D = 2² − 4 × 1 × 5 = −16 < 0 なので、x 軸と接しないよ（頂点 (−1, 4) は x 軸より上）",
+            "x = −2 を代入すると y = 5 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = 2² − 4 × 1 × 5 = −16 < 0。x = 1 を代入すると y = 8 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 x² + 2x + 5 = 0 の判別式 D = b² − 4ac を計算しよう（a = 1、b = 2、c = 5）",
+           "correctExplanation": "正解！<br>D = 2² − 4 × 1 × 5 = −16 < 0<br>D < 0 なので、実数の解はない。つまり、この放物線は x 軸と共有点をもたない。<br>（平方完成すると y = (x + 1)² + 4 で、y はいつも 4 以上）",
+           "wrongAdvice": "判別式 D = b² − 4ac を計算しよう。D > 0 → 2 点、D = 0 → 接する、D < 0 → 共有点なし",
+           "graph": {
+            "a": 1,
+            "b": 2,
+            "c": 5,
+            "pts": []
+           }
+          },
+          {
+           "equation": "y = x² − 4x + 5",
+           "choices": [
+            "共有点なし",
+            "x = 2（接する）",
+            "x = 1, 3",
+            "x = −2（接する）"
+           ],
+           "correct": "共有点なし",
+           "whys": [
+            "",
+            "D = (−4)² − 4 × 1 × 5 = −4 < 0 なので、x 軸と接しないよ（頂点 (2, 1) は x 軸より上）",
+            "x = 1 を代入すると y = 2 で、0 にならないよ（y = 0 になる x が共有点の x 座標）",
+            "D = (−4)² − 4 × 1 × 5 = −4 < 0。x = −2 を代入すると y = 17 で、0 にならないよ（y = 0 になる x が共有点の x 座標）"
+           ],
+           "hint1": "y = 0 とおいた 2次方程式 x² − 4x + 5 = 0 の判別式 D = b² − 4ac を計算しよう（a = 1、b = −4、c = 5）",
+           "correctExplanation": "正解！<br>D = (−4)² − 4 × 1 × 5 = −4 < 0<br>D < 0 なので、実数の解はない。つまり、この放物線は x 軸と共有点をもたない。<br>（平方完成すると y = (x − 2)² + 1 で、y はいつも 1 以上）",
+           "wrongAdvice": "判別式 D = b² − 4ac を計算しよう。D > 0 → 2 点、D = 0 → 接する、D < 0 → 共有点なし",
+           "graph": {
+            "a": 1,
+            "b": -4,
+            "c": 5,
+            "pts": []
+           }
+          },
+          {
+           "equation": "y = x² − 2x − 2",
+           "choices": [
+            "x = 1 ± √3",
+            "x = −1 ± √3",
+            "x = 1 ± 2√3",
+            "共有点なし"
+           ],
+           "correct": "x = 1 ± √3",
+           "whys": [
+            "",
+            "−b = −(−2) = 2。解の公式の分子は 2 ± √12 だよ",
+            "√12 = 2√3。分子の 2 ± 2√3 を 2 でわると 1 ± √3",
+            "D = 4 + 8 = 12 > 0 なので、共有点は 2 つあるよ"
+           ],
+           "hint1": "因数分解できないときは解の公式。x = (−b ± √(b² − 4ac)) / 2a（a = 1、b = −2、c = −2）",
+           "correctExplanation": "正解！<br>D = (−2)² − 4 × 1 × (−2) = 12 > 0 なので共有点は 2 つ。<br>x = (2 ± √12) / 2 = (2 ± 2√3) / 2 = 1 ± √3<br>共有点の座標は (1 − √3, 0)、(1 + √3, 0)",
+           "wrongAdvice": "解の公式で解こう。√12 = 2√3 と簡単にしてから約分する",
+           "graph": {
+            "a": 1,
+            "b": -2,
+            "c": -2,
+            "pts": [
+             [
+              -0.7320508075688772,
+              "1 − √3"
+             ],
+             [
+              2.732050807568877,
+              "1 + √3"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = 2x² − 5x + 2",
+           "choices": [
+            "x = 1/2, 2",
+            "x = −1/2, −2",
+            "x = 1, 2",
+            "x = 1/2, 4"
+           ],
+           "correct": "x = 1/2, 2",
+           "whys": [
+            "",
+            "符号が逆。x = −2 を代入すると y = 20 で、0 にならないよ",
+            "x = 1 を代入すると y = 2 − 5 + 2 = −1 で、0 にならないよ（2x − 1 = 0 の解は x = 1/2）",
+            "x = 4 を代入すると y = 32 − 20 + 2 = 14 で、0 にならないよ"
+           ],
+           "hint1": "たすき掛け：2x² − 5x + 2 = (2x − □)(x − □)。または解の公式（a = 2、b = −5、c = 2）",
+           "correctExplanation": "正解！<br>2x² − 5x + 2 = (2x − 1)(x − 2) = 0 より x = 1/2, 2<br>（D = 25 − 16 = 9 > 0 なので共有点は 2 つ）<br>共有点の座標は (1/2, 0)、(2, 0)",
+           "wrongAdvice": "たすき掛けで因数分解するか、解の公式で解こう",
+           "graph": {
+            "a": 2,
+            "b": -5,
+            "c": 2,
+            "pts": [
+             [
+              0.5,
+              "1/2"
+             ],
+             [
+              2,
+              "2"
+             ]
+            ]
+           }
+          },
+          {
+           "equation": "y = x² + 4x + k",
+           "question": "このグラフが x 軸に接するときの k の値と、接点の座標は？",
+           "choices": [
+            "k = 4、接点 (−2, 0)",
+            "k = −4、接点 (2, 0)",
+            "k = 16、接点 (−2, 0)",
+            "k = 4、接点 (2, 0)"
+           ],
+           "correct": "k = 4、接点 (−2, 0)",
+           "whys": [
+            "",
+            "D = 16 − 4k = 0 から k = 4。符号に注意",
+            "D = 4² − 4 × 1 × k = 16 − 4k。これが 0 なので k = 4",
+            "k = 4 のとき y = (x + 2)²。接点の x 座標は −2"
+           ],
+           "hint1": "x 軸に接する ⇔ 判別式 D = b² − 4ac = 0。D = 4² − 4 × 1 × k",
+           "correctExplanation": "正解！<br>D = 4² − 4 × 1 × k = 16 − 4k = 0 より k = 4<br>このとき y = x² + 4x + 4 = (x + 2)²<br>接点の座標は (−2, 0)",
+           "wrongAdvice": "x 軸に接するのは D = 0 のとき。D を k の式で表そう",
+           "graph": {
+            "a": 1,
+            "b": 4,
+            "c": 4,
+            "pts": [
+             [
+              -2,
+              "−2"
+             ]
+            ]
+           }
+          }
+         ]
+        };
+
+        const LEVEL_Q = {
+            0: '次の式を因数分解しなさい',
+            1: '次の二次関数のグラフと x 軸の共有点の x 座標を求めなさい',
+            2: '次の二次関数のグラフと x 軸の共有点の x 座標を求めなさい',
+            3: '判別式を使って、共有点の個数を求めなさい',
+            4: '共有点の x 座標を求めなさい（x 軸に接するとき・共有点がないときもあるよ）'
         };
 
         function setLevel(level) {
             currentLevel = level;
             currentProblemIndex = 0;
-            // 【ブラッシュアップ】元は前のレベルの正解数・問題数が残り、レベル完了の正解率に混ざっていた
-            correctCount = 0; totalCount = 0; firstTry = true; cleanCount = 0;
+            correctCount = 0; totalCount = 0;
             document.getElementById('correct').textContent = 0;
             document.getElementById('total').textContent = 0;
             levelProblems = [...problems[currentLevel]];
-            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
-
-            // レベルボタンのアクティブ状態を更新
-            const levelButtons = document.querySelectorAll('.level-btn');
-            levelButtons[level].classList.add('active');
-
-            // クイズエリアを元に戻す
+            document.querySelectorAll('.level-btn').forEach((btn, i) => btn.classList.toggle('active', i === level));
             const quizArea = document.querySelector('.quiz-area');
-            const questionText = level === 0 ?
-                "次の式を因数分解しなさい" :
-                "次の二次関数とx軸との共有点のx座標を求めなさい";
-            const hintTitle = level === 0 ? "💡 因数分解のヒント" : "💡 計算のヒント";
-
             quizArea.innerHTML = `
-                <div class="question-text" id="questionText">
-                    ${questionText}
-                </div>
+                <div class="question-text" id="questionText"></div>
                 <div class="problem" id="problem"></div>
-
                 <div style="text-align: center;">
                     <button class="hint-btn" onclick="showHint()" id="hintBtn">💡 ヒントを見る</button>
                 </div>
-
                 <div class="hint-section" id="hintSection">
-                    <div class="hint-title">${hintTitle}</div>
+                    <div class="hint-title">${level === 0 ? '💡 因数分解のヒント' : '💡 計算のヒント'}</div>
                     <div class="factorization" id="factorization"></div>
                 </div>
-
-                <div class="choices" id="choices">
-                    <!-- 選択肢がここに表示されます -->
-                </div>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="next-btn" onclick="nextProblem()" id="nextBtn" style="display: none;">次の問題</button>
-                </div>
-
+                <div class="choices" id="choices"></div>
                 <div id="result" class="result" style="display: none;"></div>
                 <div id="explanation" class="explanation" style="display: none;"></div>
+                <div id="graphBox" class="graph-box" style="display: none;"></div>
+                <div style="text-align: center; margin-top: 16px;">
+                    <button class="next-btn" onclick="nextProblem()" id="nextBtn" style="display: none;">次の問題</button>
+                </div>
             `;
-
             nextProblem();
         }
-
-        let hintStep = 0;
-        let firstTry = true, cleanCount = 0;   // 【ブラッシュアップ】一発で正解できた問題の数
 
         function showHint() {
             const hintSection = document.getElementById('hintSection');
             const hintBtn = document.getElementById('hintBtn');
             const factorization = document.getElementById('factorization');
-
-            if (currentLevel === 0 || currentLevel === 1 || currentLevel === 2) {
-                // レベル0-2は2段階ヒント
-                hintStep++;
-                if (hintStep === 1) {
-                    factorization.innerHTML = currentProblem.hint1;
-                    hintSection.style.display = 'block';
-                    hintBtn.textContent = '💡 ヒント2';
-                } else {
-                    factorization.innerHTML = currentProblem.hint2;
-                    hintBtn.style.display = 'none';
-                }
-            } else {
-                // レベル3は1段階ヒント
+            hintStep++;
+            if (hintStep === 1 || !currentProblem.hint2) {
                 factorization.innerHTML = currentProblem.hint1;
                 hintSection.style.display = 'block';
+                if (currentProblem.hint2) hintBtn.textContent = '💡 ヒント2'; else hintBtn.style.display = 'none';
+            } else {
+                factorization.innerHTML = currentProblem.hint2;
                 hintBtn.style.display = 'none';
             }
         }
 
         function nextProblem() {
-            if (currentProblemIndex >= 5) {
-                showLevelComplete();
-                return;
-            }
-
-            if (levelProblems.length === 0) {
-                levelProblems = [...problems[currentLevel]];
-            }
-
-            firstTry = true;   // 【ブラッシュアップ】
+            if (currentProblemIndex >= PER_LEVEL) { showLevelComplete(); return; }
+            if (levelProblems.length === 0) levelProblems = [...problems[currentLevel]];
+            firstTry = true;
+            hintStep = 0;
             const randomIndex = Math.floor(Math.random() * levelProblems.length);
             currentProblem = levelProblems[randomIndex];
             levelProblems.splice(randomIndex, 1);
 
-            document.getElementById('problem').innerHTML = currentProblem.equation;
-
-            // ヒントステップをリセット
-            hintStep = 0;
-
-            // ヒントを隠す
+            document.getElementById('questionText').textContent = currentProblem.question || LEVEL_Q[currentLevel];
+            document.getElementById('problem').textContent = currentProblem.equation;
             document.getElementById('hintSection').style.display = 'none';
-            document.getElementById('hintBtn').style.display = 'inline-block';
-            document.getElementById('hintBtn').textContent = (currentLevel === 0 || currentLevel === 1 || currentLevel === 2) ? '💡 ヒント1' : '💡 ヒントを見る';
+            const hb = document.getElementById('hintBtn');
+            hb.style.display = 'inline-block';
+            hb.textContent = currentProblem.hint2 ? '💡 ヒント1' : '💡 ヒントを見る';
 
-            // 選択肢をシャッフルして表示
             const choicesDiv = document.getElementById('choices');
             choicesDiv.innerHTML = '';
-
-            // 選択肢をシャッフル
-            const shuffledChoices = [...currentProblem.choices];
-            for (let i = shuffledChoices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
-            }
-
-            // 現在の選択肢の順番を保存
-            currentChoicesOrder = [...shuffledChoices];
-
-            shuffledChoices.forEach((choice, index) => {
+            const idx = currentProblem.choices.map((c, i) => i);
+            for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+            choicesDiv.className = 'choices' + (currentProblem.choices.length === 3 || currentProblem.choices.some(c => c.length > 14) ? ' wide' : '');
+            idx.forEach(i => {
                 const button = document.createElement('button');
                 button.className = 'choice-btn';
-                button.textContent = choice;
-                button.onclick = () => selectAnswer(choice, button);
+                button.textContent = currentProblem.choices[i];
+                button.onclick = () => selectAnswer(i, button);
                 choicesDiv.appendChild(button);
             });
 
             document.getElementById('result').style.display = 'none';
             document.getElementById('explanation').style.display = 'none';
+            document.getElementById('graphBox').style.display = 'none';
             document.getElementById('nextBtn').style.display = 'none';
         }
 
@@ -713,108 +1370,61 @@
                 <div class="level-complete">
                     <h2>🎉 レベル${currentLevel}完了！</h2>
                     <p>おめでとうございます！すべての問題をクリアしました。</p>
-                    <p>一発正解: ${cleanCount} / 5問（正解率 ${Math.round((correctCount / totalCount) * 100)}%）</p>
-                    <!-- 【ブラッシュアップ】同じレベル・次のレベル・ほかの教材 を選べるようにした（元はレベル3のあと、レベル0をとばしてレベル1に戻っていた） -->
+                    <p>一発正解: ${correctCount} / ${PER_LEVEL}問</p>
                     <div class="done-nav">
-                        ${currentLevel < 3 ? '<button class="next" onclick="goToNextLevel()">次のレベルへ ▶</button>' : ''}
+                        ${currentLevel < 4 ? '<button class="next" onclick="setLevel(currentLevel + 1)">次のレベルへ ▶</button>' : ''}
                         <button class="again" onclick="setLevel(currentLevel)">同じレベルでもう一度</button>
-                        ${currentLevel === 3 ? '<button class="back" onclick="setLevel(0)">レベル0から始める</button>' : ''}
+                        ${currentLevel === 4 ? '<button class="back" onclick="setLevel(0)">レベル0から始める</button>' : ''}
                         <a href="../remake.html">ほかの教材をえらぶ</a>
                     </div>
                 </div>
             `;
         }
 
-        function goToNextLevel() {
-            if (currentLevel < 3) {
-                setLevel(currentLevel + 1);
-            } else {
-                setLevel(1);
-            }
-        }
-
-        function selectAnswer(selectedChoice, buttonElement) {
+        function selectAnswer(i, buttonElement) {
             const resultDiv = document.getElementById('result');
             const explanationDiv = document.getElementById('explanation');
-            const allButtons = document.querySelectorAll('.choice-btn');
-
-            // すべてのボタンを無効化
-            allButtons.forEach(btn => {
-                btn.classList.add('disabled');
-                btn.onclick = null;
-            });
-
-            if (selectedChoice === currentProblem.correct) {
-                // 正解の場合
-                buttonElement.classList.add('correct');   // 【ブラッシュアップ】
-                if (firstTry) cleanCount++;
-                correctCount++;
+            resultDiv.style.display = 'block';
+            explanationDiv.style.display = 'block';
+            if (currentProblem.choices[i] === currentProblem.correct) {
+                buttonElement.classList.add('correct');
+                document.querySelectorAll('.choice-btn').forEach(btn => { btn.classList.add('disabled'); btn.onclick = null; });
+                if (firstTry) correctCount++;
                 totalCount++;
                 currentProblemIndex++;
                 document.getElementById('correct').textContent = correctCount;
                 document.getElementById('total').textContent = totalCount;
-
                 resultDiv.innerHTML = '🎉 正解です！';
                 resultDiv.className = 'result correct';
-                document.getElementById('nextBtn').style.display = 'inline-block';
-            } else {
-                // 不正解の場合
-                firstTry = false;   // 【ブラッシュアップ】
-                totalCount++;
-                document.getElementById('total').textContent = totalCount;
-
-                buttonElement.classList.add('selected');
-
-                const encouragingMessages = [
-                    '❌ 惜しい！でも大丈夫、きっとできるよ！',
-                    '❌ あと少し！君ならできる！',
-                    '❌ 間違いは成長のチャンス！',
-                    '❌ 全然大丈夫！みんな最初は間違えるものだよ。',
-                    '❌ いい調子！間違いを恐れずに挑戦する姿勢が素晴らしい！'
-                ];
-                const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
-                resultDiv.innerHTML = randomMessage;
-                resultDiv.className = 'result incorrect';
-
-                // もう一度挑戦ボタンを表示
-                setTimeout(() => {
-                    const tryAgainBtn = document.createElement('button');
-                    tryAgainBtn.className = 'next-btn try-again-btn';
-                    tryAgainBtn.textContent = 'もう一度挑戦';
-                    tryAgainBtn.onclick = tryAgain;
-                    tryAgainBtn.style.marginTop = '10px';
-                    resultDiv.appendChild(tryAgainBtn);
-                }, 1000);
-            }
-
-            resultDiv.style.display = 'block';
-
-            // 正解時は正解の解説、不正解時はアドバイスを表示
-            if (selectedChoice === currentProblem.correct) {
                 explanationDiv.innerHTML = '<strong>解説：</strong><br>' + currentProblem.correctExplanation;
+                drawGraph();
+                const nb = document.getElementById('nextBtn');
+                nb.textContent = currentProblemIndex >= PER_LEVEL ? '結果を見る ▶' : '次の問題 ▶';
+                nb.style.display = 'inline-block';
             } else {
+                // まちがえた選択肢だけ使えなくして、理由とアドバイスを出す（そのまま選び直せる）
+                firstTry = false;
+                buttonElement.classList.add('selected', 'disabled');
+                buttonElement.onclick = null;
+                resultDiv.innerHTML = '✖ ' + (currentProblem.whys[i] || 'もう一度考えてみよう');
+                resultDiv.className = 'result incorrect';
                 explanationDiv.innerHTML = '<strong>アドバイス：</strong><br>' + currentProblem.wrongAdvice;
             }
-            explanationDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function tryAgain() {
-            // 選択肢を保存された順番で表示（シャッフルしない）
-            const choicesDiv = document.getElementById('choices');
-            choicesDiv.innerHTML = '';
-
-            // 保存された順番で選択肢を表示
-            currentChoicesOrder.forEach((choice, index) => {
-                const button = document.createElement('button');
-                button.className = 'choice-btn';
-                button.textContent = choice;
-                button.onclick = () => selectAnswer(choice, button);
-                choicesDiv.appendChild(button);
-            });
-
-            // 結果のメッセージのみ非表示（解説は残す）
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'none';
+        // 答えたあとのグラフ（graph.js）：共有点に印と x 座標
+        function drawGraph() {
+            const g = currentProblem.graph, box = document.getElementById('graphBox');
+            if (!g || !window.Graph) { box.style.display = 'none'; return; }
+            const v = -g.b / (2 * g.a);
+            const xs = g.pts.map(p => p[0]).concat([v]);
+            const xmin = Math.floor(Math.min(...xs)) - 2, xmax = Math.ceil(Math.max(...xs)) + 2;
+            const svg = Graph.parabola({ a: g.a, b: g.b, c: g.c, xmin, xmax, points: g.pts.map(p => ({ x: p[0], y: 0, label: p[1] ? '(' + p[1] + ', 0)' : '' })) });
+            box.innerHTML = svg + '<div class="graph-note">' + (g.pts.length === 0 ? 'x 軸と共有点がない（放物線が x 軸より上）' : g.pts.length === 1 ? '緑の点で x 軸に接している' : '緑の点が x 軸との共有点') + '</div>';
+            const s = box.querySelector('svg');
+            if (s) { s.removeAttribute('width'); s.style.width = '100%'; s.style.maxWidth = '420px'; s.style.height = 'auto'; }
+            box.style.display = 'block';
         }
 
         // 初期化
@@ -831,8 +1441,7 @@
     ".choice-btn": "u-choice",
     ".choice-btn.correct": "u-ok",
     ".choice-btn.selected": "u-ng",
-    ".next-btn:not(.try-again-btn)": "u-btn u-btn-blue",
-    ".try-again-btn": "u-btn",
+    ".next-btn": "u-btn u-btn-blue",
     ".done-nav .again": "u-btn",
     ".done-nav .next": "u-btn u-btn-blue",
     ".done-nav .back": "u-btn u-btn-plain"

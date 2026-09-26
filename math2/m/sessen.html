@@ -276,7 +276,11 @@
     .question-text { background: none !important; -webkit-text-fill-color: var(--u-ink); color: var(--u-ink); font-size: 1.2rem; margin-bottom: 12px; }
     .math-expression { background: var(--u-soft-yellow); border: 3px dashed #fde68a; color: var(--u-ink); font-weight: 700; margin: 8px 0; }
     .option::before { display: none; }
-    .option { font-size: 1.25rem; font-weight: 700; text-align: center; width: 100%; font-family: 'Times New Roman', serif; }
+    .option { font-size: 1.25rem; font-weight: 700; text-align: center; width: 100%; }
+    /* 【ブラッシュアップ】式の中の文字は斜体・数字は立体、書体は数式用（日本語はふつうの書体） */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; }
+    .m i { font-style: italic; padding-right: 0.04em; }
+
     .option:disabled { cursor: default; }
     .options { margin-top: 16px; gap: 12px; }
     .feedback { border-radius: 16px; line-height: 1.7; }
@@ -288,7 +292,7 @@
     .hint-box { margin-top: 10px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.8; text-align: left; }
     .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
     .hint-row { text-align: center; margin-top: 14px; }
-    .hint-button { background: #fff; border: 2px solid var(--u-line); border-radius: 999px; padding: 8px 18px; font-weight: 700; color: var(--u-sub); cursor: pointer; font-family: inherit; font-size: 0.95rem; }
+    .hint-button { padding: 8px 18px !important; font-size: 0.95rem; border-radius: 999px !important; }
     .final-score { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; padding: 28px 16px; }
     .final-score h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
     .final-score div[style] { color: var(--u-title) !important; font-weight: 800; }
@@ -581,7 +585,50 @@
             displayQuestion();
         }
 
+        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・f など）は斜体、数字は立体、書体は問題の式と同じ数式用。
+        //   選択肢・ヒント・解説の中の英数字のまとまりを <span class="m"> で包み、文字を <i> にする（日本語はふつうの書体のまま）
+        const MATH_RUN = /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*[A-Za-z0-9][A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .hint-tag, .no-math, script, style, .katex')) continue;
+                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    text.split(/([A-Za-z]+)/).forEach((part, k) => {
+                        if (!part) return;
+                        if (k % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                        else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        // 画面が書きかわるたびに、指定した場所の式を整える
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+
         // クイズを開始
+        watchMath(['.question-text', '.math-expression', '#options', '#feedback', '#hints']);
         displayQuestion();
         updateScore();
     </script>
@@ -595,6 +642,7 @@
     ".option.correct": "u-ok",
     ".option.incorrect": "u-ng",
     ".next-button": "u-btn u-btn-blue",
+    ".hint-button": "u-btn u-btn-plain",
     ".result-nav .again": "u-btn",
     ".result-nav .next": "u-btn u-btn-blue"
   });

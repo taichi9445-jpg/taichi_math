@@ -218,6 +218,17 @@
     #finish h2 { color: var(--u-accent-text) !important; }
     #feedback .card { border-color: var(--u-ok-line); background: var(--u-ok-soft); }
     #feedback h2 { color: var(--u-ok) !important; white-space: nowrap; font-size: min(1.9rem, 6.5vw); }
+    /* 【ブラッシュアップ】ひっ算の表・モード1の解説 */
+    .hissan-table { border-collapse: collapse; font-size: 1.35rem; font-weight: 700; background: #fff; }
+    .hissan-table td { padding: 3px 8px; text-align: right; white-space: nowrap; min-width: 2.2em; }
+    .hissan-table td.op { text-align: left; color: var(--u-sub); min-width: 1.8em; }
+    .hissan-table tr.sum td { border-top: 3px solid var(--u-ink); }
+    .hissan-table tr.flip td:not(.op) { color: #ef4444; }
+    .hissan-table tr.res td { color: #e11d48; }
+    .hissan-wrap { overflow-x: auto; max-width: 100%; }
+    .ex-list { margin: 0; padding-left: 1.2em; line-height: 1.9; font-weight: 700; }
+    .step-note { font-size: .85rem; color: var(--u-sub); font-weight: 400; }
+    @media (max-width: 640px) { .hissan-table { font-size: 1.1rem; } .hissan-table td { padding: 2px 5px; } }
     @media (max-width: 640px) {
       body.u-theme { padding: 8px !important; }
       #app { padding: 14px 10px; }
@@ -287,7 +298,7 @@
         <!-- 解説画面 -->
         <div id="feedback" class="hidden">
             <div class="card p-6 border-4 border-emerald-400 bg-emerald-50 mb-6 text-center">
-                <h2 class="text-3xl font-black mb-4 text-emerald-700">正解！解説をチェック ✨</h2>
+                <h2 id="feedback-title" class="text-3xl font-black mb-4 text-emerald-700">正解！解説をチェック ✨</h2>
                 <div id="explanation" class="text-left bg-white p-6 rounded-xl shadow-inner overflow-x-auto min-w-full"></div>
             </div>
             <button onclick="nextProblem()" class="w-full py-5 bg-orange-500 text-white text-3xl font-black rounded-2xl btn-pop">次の問題へ！</button>
@@ -299,27 +310,84 @@
         let currentIdx = 0;
         let currentProblem = null;
 
+        // 【ブラッシュアップ】モード1：選択肢を「よくあるまちがい」で作る（元は全部の係数に同じ数を足すだけで、
+        //   3x + 3 なら 4x + 4、5x + 5 … と同じ形ばかりだった）。解説（ex）も問題ごとに。5・6 問目を追加
         const stageDataMode1 = [
-            { display: "2x + 3 + x", resultCoeffs: [0, 0, 3, 3] },
-            { display: "5x - 4 + 2x + 1", resultCoeffs: [0, 0, 7, -3] },
-            { display: "3x² + 2x + x²", resultCoeffs: [0, 4, 2, 0] },
-            { display: "2x² + 3x + 5x² - 2x", resultCoeffs: [0, 7, 1, 0] }
+            { display: "2x + 3 + x", resultCoeffs: [0, 0, 3, 3], answer: "3x + 3",
+              choices: ["3x + 3", "2x + 3", "6x", "2x + 4"],
+              ex: ["2x + x = 3x（x は 1x のこと）", "3 は数の項。文字の項とはまとめられないので、そのまま"] },
+            { display: "5x - 4 + 2x + 1", resultCoeffs: [0, 0, 7, -3], answer: "7x - 3",
+              choices: ["7x - 3", "7x - 5", "7x + 3", "4x"],
+              ex: ["5x + 2x = 7x", "-4 + 1 = -3", "7x と -3 は同類項ではないので、4x にはしない"] },
+            { display: "3x² + 2x + x²", resultCoeffs: [0, 4, 2, 0], answer: "4x² + 2x",
+              choices: ["4x² + 2x", "4x⁴ + 2x", "3x² + 3x", "6x²"],
+              ex: ["3x² + x² = 4x²（係数だけをたす。指数はたさないので x⁴ にはならない）", "2x は x² と同類項ではないので、そのまま"] },
+            { display: "2x² + 3x + 5x² - 2x", resultCoeffs: [0, 7, 1, 0], answer: "7x² + x",
+              choices: ["7x² + x", "7x² + 5x", "7x⁴ + x", "8x²"],
+              ex: ["2x² + 5x² = 7x²", "3x - 2x = x（1x の 1 は書かない）"] },
+            { display: "x² - 3x + 5 - 2x² + x - 7", resultCoeffs: [0, -1, -2, -2], answer: "-x² - 2x - 2",
+              choices: ["-x² - 2x - 2", "x² - 2x - 2", "-x² - 4x - 2", "-x² - 2x + 2"],
+              ex: ["x² - 2x² = -x²", "-3x + x = -2x", "5 - 7 = -2"] },
+            { display: "3a²b - ab² + 2a²b + 4ab²", answer: "5a²b + 3ab²",
+              choices: ["5a²b + 3ab²", "8a²b", "5a²b - 5ab²", "5a²b + 5ab²"],
+              ex: ["3a²b + 2a²b = 5a²b", "-ab² + 4ab² = 3ab²", "a²b と ab² は文字の指数がちがうので、同類項ではない"] }
         ];
 
+        // 【ブラッシュアップ】モード2・3：5〜7 問目を追加（抜けている次数・2A − 3B・文字が2つ）
         const stageDataNormal = [
             { a: [0, 0, 5, 2], b: [0, 0, 3, 1], type: "A+B" },
             { a: [0, 0, 4, 3], b: [0, 0, 2, -1], type: "A-B" },
             { a: [0, 3, 6, 4], b: [0, 2, -4, -3], type: "A+B" },
-            { a: [0, 1, -2, 5], b: [0, 2, 3, -1], type: "A-B" }
+            { a: [0, 1, -2, 5], b: [0, 2, 3, -1], type: "A-B" },
+            { a: [2, 0, -5, 3], b: [1, 2, 0, -4], type: "A-B" },
+            { a: [0, 1, -2, 3], b: [0, 2, 1, -1], type: "2A-3B" },
+            { a: [3, -2, 1], b: [1, 4, -3], type: "A-B", units: ["x²", "xy", "y²"] }
         ];
+
+        // 【ブラッシュアップ】ここから
+        // 項の文字の部分（元は x³, x², x, 数 に決まっていた。文字が2つの問題では問題ごとに持つ）
+        function unitsOf(p) { return (p && p.units) || ["x³", "x²", "x", ""]; }
+        // A と B にかける数（A+B → 1 と 1、A-B → 1 と -1、2A-3B → 2 と -3）
+        function multOf(p) {
+            const m = String(p.type).replace(/\s/g, '').match(/^(\d*)A([+-])(\d*)B$/);
+            return { ka: m[1] ? +m[1] : 1, kb: (m[3] ? +m[3] : 1) * (m[2] === '-' ? -1 : 1) };
+        }
+        function typeLabel(p) { return String(p.type).replace('-', ' − ').replace('+', ' + '); }
+        // 表示用：マイナスは「−」、文字は斜体
+        function mt(s) { return String(s).replace(/-/g, '−').replace(/([a-z])/g, '<i>$1</i>'); }
+        let revealedThis = false;   // 「答えを見る」を使ったか
+
+        // ひっ算：次数（文字の部分）ごとに列をそろえた表。抜けている次数は空けておく
+        function hissanTable(rows, U) {
+            let h = '<table class="hissan-table">';
+            const used = U.map((u, i) => rows.some(r => r.coeffs && r.coeffs[i] !== 0));   // どの行にも出てこない列は作らない
+            rows.forEach(r => {
+                h += `<tr class="${r.line ? 'sum' : ''} ${r.cls || ''}"><td class="op">${r.op || ''}</td>`;
+                let first = true;
+                U.forEach((u, i) => {
+                    if (!used[i]) return;
+                    const c = r.coeffs ? r.coeffs[i] : 0;
+                    let cell = '';
+                    if (c !== 0) {
+                        const abs = Math.abs(c);
+                        cell = (c < 0 ? '−' : (first ? '' : '+')) + ((abs === 1 && u !== '') ? '' : abs) + mt(u);
+                        first = false;
+                    }
+                    h += `<td>${cell}</td>`;
+                });
+                h += '</tr>';
+            });
+            return h + '</table>';
+        }
+        // 【ブラッシュアップ】ここまで
 
         function formatTerm(coeff, power, isFirst = false) {
             if (coeff === 0) return "";
             const abs = Math.abs(coeff);
-            const units = ["x³", "x²", "x", ""];
-            const sign = coeff > 0 ? (isFirst ? "" : "+ ") : "- ";
+            const units = unitsOf(currentProblem);   // 【ブラッシュアップ】文字が2つの問題もあるので、問題ごとに
+            const sign = coeff > 0 ? (isFirst ? "" : "+ ") : (isFirst ? "-" : "- ");   // 【ブラッシュアップ】先頭は「-x²」
             let valStr = abs.toString();
-            if (abs === 1 && power < 3) valStr = ""; 
+            if (abs === 1 && units[power] !== "") valStr = "";   // 【ブラッシュアップ】数だけの項のときは 1 を残す 
             return sign + valStr + units[power];
         }
 
@@ -354,7 +422,9 @@
             const data = (currentMode === 1) ? stageDataMode1 : stageDataNormal;
             currentProblem = data[currentIdx];
             
-            document.getElementById('progress').innerText = `Q ${currentIdx + 1} / 4`;
+            document.getElementById('progress').innerText = `Q ${currentIdx + 1} / ${data.length}`;   // 【ブラッシュアップ】問題を増やしたので
+            revealedThis = false;
+            window.scrollTo(0, 0);
             document.getElementById('message-box').classList.add('hidden');
             document.getElementById('check-btn').classList.remove('hidden');
             document.getElementById('show-ans-btn').classList.remove('hidden');
@@ -364,22 +434,23 @@
             area.innerHTML = "";
 
             if (currentMode === 1) {
-                document.getElementById('problem-header').innerHTML = `<span class="text-3xl">${currentProblem.display}</span>`;
+                document.getElementById('problem-header').innerHTML = `<span class="text-3xl">${mt(currentProblem.display)}</span>`;
                 document.getElementById('problem-instruction').innerText = `同類項をまとめよう！`;
                 renderMode1();
             } else {
                 const A_str = formatPoly(currentProblem.a);
                 const B_str = formatPoly(currentProblem.b);
-                document.getElementById('problem-header').innerHTML = `A = ${A_str}<br>B = ${B_str}`;
-                document.getElementById('problem-instruction').innerText = `${currentProblem.type} の計算をしよう！`;
+                document.getElementById('problem-header').innerHTML = `<i>A</i> = ${mt(A_str)}<br><i>B</i> = ${mt(B_str)}`;
+                document.getElementById('problem-instruction').innerText = `${typeLabel(currentProblem)} の計算をしよう！`;
                 renderInputModes();
             }
         }
 
         function renderMode1() {
             const res = currentProblem.resultCoeffs;
-            const correctAns = formatPoly(res);
-            const choices = [correctAns];
+            // 【ブラッシュアップ】答えと選択肢は問題ごとに用意したもの（よくあるまちがい）を使う
+            const correctAns = currentProblem.answer || formatPoly(res);
+            const choices = currentProblem.choices ? currentProblem.choices.slice() : [correctAns];
             let guard = 0;   // 【ブラッシュアップ】万一ダミーが作れなくても固まらないように
             while(choices.length < 4 && guard++ < 200) {
                 let offset = (Math.floor(Math.random() * 3) + 1) * (Math.random() > 0.5 ? 1 : -1);
@@ -394,7 +465,7 @@
             choices.forEach(c => {
                 const btn = document.createElement('button');
                 btn.className = "choice-btn math-text";
-                btn.innerText = c;
+                btn.innerHTML = mt(c);   // 【ブラッシュアップ】マイナスは「−」、文字は斜体
                 btn.onclick = () => {
                     if (c === correctAns) {
                         btn.classList.add('correct');
@@ -419,79 +490,84 @@
         function renderInputModes() {
             const area = document.getElementById('answer-area');
             const p = currentProblem;
-            const isAdd = p.type === "A+B";
+            // 【ブラッシュアップ】A+B・A-B だけでなく 2A-3B も。文字の部分は問題ごと（文字が2つの問題のため）
+            const { ka, kb } = multOf(p);
+            const U = unitsOf(p);
+            const kStr = (k) => (Math.abs(k) === 1 ? '' : Math.abs(k));
 
-            area.innerHTML += `<div class="step-box"><span class="math-text flex-shrink-0">= (${formatPoly(p.a)}) ${isAdd?'+':'-'} (${formatPoly(p.b)})</span></div>`;
+            // 【ブラッシュアップ】1 行目の左辺を書く（元は「= (…) - (…)」で、何の計算かが書かれていなかった）
+            area.innerHTML += `<div class="step-box"><span class="math-text flex-shrink-0">${mt(typeLabel(p))} = ${ka === 1 ? '' : ka}(${mt(formatPoly(p.a))}) ${kb < 0 ? '−' : '+'} ${kStr(kb)}(${mt(formatPoly(p.b))})</span></div>`;
 
             const step2 = document.createElement('div');
             step2.className = "step-box";
             step2.innerHTML = `<span class="math-text flex-shrink-0">= </span>`;
-            
+
             const terms = [];
-            p.a.forEach((v, i) => { if(v !== 0) terms.push({v, i}); });
-            p.b.forEach((v, i) => { if(v !== 0) terms.push({v: isAdd ? v : -v, i}); });
+            p.a.forEach((v, i) => { if (v !== 0) terms.push({ v: ka * v, i, changed: ka !== 1 }); });
+            p.b.forEach((v, i) => { if (v !== 0) terms.push({ v: kb * v, i, changed: true }); });
 
             // 非常に項が多い場合は少しフォントを小さくする
             if (terms.length > 4) {
                 step2.style.fontSize = "0.9em";
             }
 
+            // 【ブラッシュアップ】穴にするところ
+            //   モード2：1問目は最後の項の数、2問目は最後の2項の数、3問目からは「かっこを外して変わる項」の数
+            //            （ひき算・2A−3B では符号も）。元は3問目から穴がなく、符号も一度も自分で書かなかった
+            //   モード3：かっこを外して変わる項の、符号と数を全部（A をそのまま写すだけの欄は作らない）
             terms.forEach((t, idx) => {
                 const sign = t.v >= 0 ? "+" : "-";
                 const absV = Math.abs(t.v);
-                const displayVal = (absV === 1 && t.i < 3) ? "" : absV;
-                const unit = ["x³", "x²", "x", ""][t.i];
+                const displayVal = (absV === 1 && U[t.i] !== "") ? "" : absV;
+                const unit = U[t.i];
+                let valHole = false, signHole = false;
+                if (currentMode === 3) { valHole = t.changed; signHole = t.changed; }
+                else if (currentIdx === 0) valHole = (idx === terms.length - 1);
+                else if (currentIdx === 1) valHole = (idx >= terms.length - 2);
+                else { valHole = t.changed; signHole = t.changed && (kb < 0 || ka !== 1); }
 
                 if (idx > 0 || t.v < 0) {
-                    if (currentMode === 3) {
+                    if (signHole) {
                         step2.innerHTML += `<input type="text" class="input-hole flex-shrink-0 input-hole-sign sign-part" data-target="${sign}" placeholder="±">`;
                     } else {
-                        step2.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign}</span>`;
+                        step2.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign === '-' ? '−' : '+'}</span>`;
                     }
                 }
-
-                let isHole = (currentMode === 3);
-                if (currentMode === 2) {
-                    if (currentIdx === 0 && idx === terms.length - 1) isHole = true;
-                    if (currentIdx === 1 && idx >= terms.length - 2) isHole = true;
-                }
-                
-                if (isHole && displayVal !== "") {
+                if (valHole && displayVal !== "") {
                     step2.innerHTML += `<input type="text" class="input-hole flex-shrink-0 val-part" data-target="${displayVal}" placeholder="?">`;
                 } else if (displayVal !== "") {
                     step2.innerHTML += `<span class="math-text flex-shrink-0">${displayVal}</span>`;
                 }
-                step2.innerHTML += `<span class="math-text flex-shrink-0">${unit}</span>`;
+                step2.innerHTML += `<span class="math-text flex-shrink-0">${mt(unit)}</span>`;
             });
+            step2.innerHTML += `<span class="step-note flex-shrink-0">（かっこを外す）</span>`;
             area.appendChild(step2);
 
             const res = getResultCoeffs(p);
             const step3 = document.createElement('div');
             step3.className = "step-box";
             step3.innerHTML = `<span class="math-text flex-shrink-0">= </span>`;
-            
+
             let first = true;
             res.forEach((v, i) => {
                 if (v === 0) return;
                 const sign = v >= 0 ? "+" : "-";
                 const absV = Math.abs(v);
-                const displayVal = (absV === 1 && i < 3) ? "" : absV;
-                const unit = ["x³", "x²", "x", ""][i];
+                const displayVal = (absV === 1 && U[i] !== "") ? "" : absV;
+                const unit = U[i];
 
                 if (!first || v < 0) {
                     if (currentMode === 3) {
                         step3.innerHTML += `<input type="text" class="input-hole flex-shrink-0 input-hole-sign final-sign" data-target="${sign}" placeholder="±">`;
                     } else {
-                        step3.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign}</span>`;
+                        step3.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign === '-' ? '−' : '+'}</span>`;
                     }
                 }
 
                 if (displayVal !== "") {
                     step3.innerHTML += `<input type="text" class="input-hole flex-shrink-0 final-val" data-target="${displayVal}" placeholder="?">`;
-                } else {
-                    step3.innerHTML += `<span class="math-text flex-shrink-0">${displayVal}</span>`;
                 }
-                step3.innerHTML += `<span class="math-text flex-shrink-0">${unit}</span>`;
+                step3.innerHTML += `<span class="math-text flex-shrink-0">${mt(unit)}</span>`;
                 first = false;
             });
             area.appendChild(step3);
@@ -509,11 +585,11 @@
                     input.readOnly = true;
                     input.setAttribute('inputmode', 'none');
                     input.addEventListener('click', () => {
-                        input.value = input.value === '+' ? '-' : '+';
+                        input.value = input.value === '+' ? '−' : '+';   // マイナスは「−」で表示（答え合わせでは同じあつかい）
                         input.classList.remove('error');
                     });
                     input.addEventListener('keydown', (e) => {
-                        if (e.key === '+' || e.key === '-') { input.value = e.key; input.classList.remove('error'); e.preventDefault(); }
+                        if (e.key === '+' || e.key === '-') { input.value = e.key === '-' ? '−' : '+'; input.classList.remove('error'); e.preventDefault(); }
                         if (e.key === 'Enter') checkAnswer();
                     });
                 } else {
@@ -525,12 +601,10 @@
 
         function getResultCoeffs(p) {
             if (p.resultCoeffs) return p.resultCoeffs;
-            const res = [0,0,0,0];
-            const isAdd = p.type === "A+B";
-            for(let i=0; i<4; i++) {
-                res[i] = isAdd ? (p.a[i] + p.b[i]) : (p.a[i] - p.b[i]);
-            }
-            return res;
+            // 【ブラッシュアップ】A+B・A-B だけでなく 2A-3B も。項の数も問題ごと
+            if (!p.type) return [];   // 文字が2つのモード1の問題は、答えを文字で持っているので使わない
+            const { ka, kb } = multOf(p);
+            return p.a.map((v, i) => ka * v + kb * p.b[i]);
         }
 
         function checkAnswer() {
@@ -548,7 +622,7 @@
                 }
             });
             if (allCorrect) {
-                showMessage("正解！完璧です！", true);
+                showMessage(revealedThis ? "答えをたしかめたら、解説へ進もう" : "正解！完璧です！", true);   // 【ブラッシュアップ】
                 document.getElementById('check-btn').classList.add('hidden');
                 document.getElementById('show-ans-btn').classList.add('hidden');
                 document.getElementById('next-trigger-btn').classList.remove('hidden');
@@ -559,9 +633,10 @@
 
         function showAnswerAuto() {
             document.querySelectorAll('.input-hole').forEach(input => {
-                input.value = input.dataset.target;
+                input.value = input.dataset.target === '-' ? '−' : input.dataset.target;
                 input.classList.remove('error');
             });
+            revealedThis = true;   // 【ブラッシュアップ】
         }
 
         function showMessage(txt, isSuccess) {
@@ -573,6 +648,9 @@
         function goToFeedback() {
             document.getElementById('game').classList.add('hidden');
             document.getElementById('feedback').classList.remove('hidden');
+            // 【ブラッシュアップ】答えを見たときは見出しを変える・解説の先頭から見せる
+            document.getElementById('feedback-title').innerText = revealedThis ? '答えと解説をたしかめよう ✨' : '正解！解説をチェック ✨';
+            window.scrollTo(0, 0);
             showExplanation();
         }
 
@@ -610,49 +688,50 @@
             area.innerHTML = "";
 
             if (currentMode === 1) {
-                area.innerHTML = `<div class="math-text p-4 bg-slate-50 rounded-xl mb-6 text-center">${p.display}<br>= <span class="text-rose-600 font-black underline">${formatPoly(res)}</span></div>`;
+                // 【ブラッシュアップ】答えだけでなく、どの項どうしをまとめたかを書く
+                area.innerHTML = `<div class="math-text p-4 bg-slate-50 rounded-xl mb-4 text-center">${mt(p.display)}<br>= <span class="text-rose-600 font-black underline">${mt(p.answer || formatPoly(res))}</span></div>`
+                    + (p.ex ? `<ul class="ex-list">${p.ex.map(l => '<li>' + mt(l) + '</li>').join('')}</ul>` : '');
                 return;
             }
 
-            const isSub = p.type === "A-B";
-            
+            // 【ブラッシュアップ】2A − 3B・文字が2つの問題にも対応。「同類項を集める」の行を追加
+            const { ka, kb } = multOf(p);
+            const U = unitsOf(p);
+            const kStr = (k) => (Math.abs(k) === 1 ? '' : Math.abs(k));
+            const aK = p.a.map(v => ka * v), bK = p.b.map(v => kb * v);
+            let group = '';
+            U.forEach((u, i) => {
+                const ts = [aK[i], bK[i]].filter(v => v !== 0);
+                if (!ts.length) return;
+                if (ts.length === 2) group += (group ? ' + ' : '') + '(' + ts.map((v, j) => formatTerm(v, i, j === 0)).join(' ') + ')';
+                else group += (group ? ' ' : '') + formatTerm(ts[0], i, group === '');
+            });
+
             let stepHtml = `<div class="mb-8">
                 <p class="font-black text-xl text-sky-700 mb-4 border-l-4 border-sky-400 pl-3">① 横書きで計算する</p>
                 <div class="math-text space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div>(${formatPoly(p.a)}) ${isSub ? '-' : '+'} (${formatPoly(p.b)})</div>`;
-
-            const bModified = isSub ? p.b.map(v => -v) : p.b;
-            stepHtml += `<div>= ${formatPoly(p.a)} ${formatPoly(bModified, true)} <span class="text-sm text-gray-500 font-normal">（かっこを外す）</span></div>`;
-            
-            stepHtml += `<div class="text-rose-600 underline font-black">= ${formatPoly(res)}</div>
+                    <div>${mt(typeLabel(p))} = ${ka === 1 ? '' : ka}(${mt(formatPoly(p.a))}) ${kb < 0 ? '−' : '+'} ${kStr(kb)}(${mt(formatPoly(p.b))})</div>
+                    <div>= ${mt(formatPoly(aK))} ${mt(formatPoly(bK, true))} <span class="text-sm text-gray-500 font-normal">（かっこを外す）</span></div>
+                    <div>= ${mt(group)} <span class="text-sm text-gray-500 font-normal">（同類項を集める）</span></div>
+                    <div class="text-rose-600 underline font-black">= ${mt(formatPoly(res))}</div>
                 </div>
             </div>`;
 
+            // 【ブラッシュアップ】ひっ算は次数（文字の部分）ごとに列をそろえた表に。抜けている次数は空ける
             let hissanHtml = `<div class="mb-4">
                 <p class="font-black text-xl text-sky-700 mb-4 border-l-4 border-sky-400 pl-3">② ひっ算で計算する</p>
                 <div class="flex items-center gap-4 flex-wrap">`;
-            
-            if (isSub) {
-                hissanHtml += `<div class="hissan-block border border-slate-200">
-                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
-                    <div>-) ${formatHissanRow(p.b)}</div>
-                    <div class="hissan-line"></div>
-                </div>`;
+            if (ka === 1 && kb === -1) {
+                hissanHtml += '<div class="hissan-wrap">' + hissanTable([{ coeffs: p.a }, { op: '−)', coeffs: p.b }, { line: true }], U) + '</div>';
                 hissanHtml += `<span class="text-2xl">➡</span>`;
-                hissanHtml += `<div class="hissan-block border-2 border-rose-300 bg-rose-50">
-                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
-                    <div><span class="sign-change">+)</span> ${coeffsToHissanFlipped(p.b)}</div>
-                    <div class="hissan-line"></div>
-                    <div class="text-rose-600 font-bold">${formatHissanRow(res)}</div>
-                </div>`;
+                hissanHtml += '<div class="hissan-wrap">' + hissanTable([{ coeffs: p.a }, { op: '+)', coeffs: p.b.map(v => -v), cls: 'flip' }, { line: true, coeffs: res, cls: 'res' }], U) + '</div>';
                 hissanHtml += `</div><p class="text-rose-600 font-bold mt-4 bg-rose-50 p-3 rounded-lg">💡 引き算は、引く方の式のすべての符号を逆にして「足し算」として計算するのがミスを防ぐコツだよ！</p>`;
-            } else {
-                hissanHtml += `<div class="hissan-block border border-slate-200">
-                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
-                    <div>+) ${formatHissanRow(p.b)}</div>
-                    <div class="hissan-line">${formatHissanRow(res)}</div>
-                </div>`;
+            } else if (ka === 1 && kb === 1) {
+                hissanHtml += '<div class="hissan-wrap">' + hissanTable([{ coeffs: p.a }, { op: '+)', coeffs: p.b }, { line: true, coeffs: res, cls: 'res' }], U) + '</div>';
                 hissanHtml += `</div>`;
+            } else {
+                hissanHtml += '<div class="hissan-wrap">' + hissanTable([{ coeffs: aK }, { op: '+)', coeffs: bK, cls: kb < 0 ? 'flip' : '' }, { line: true, coeffs: res, cls: 'res' }], U) + '</div>';
+                hissanHtml += `</div><p class="text-rose-600 font-bold mt-4 bg-rose-50 p-3 rounded-lg">💡 先に ${mt(ka + 'A')} ＝ ${mt(formatPoly(aK))}、${mt(kb + 'B')} ＝ ${mt(formatPoly(bK))} を作ってから、たし算のひっ算にする。${kb < 0 ? '引く方の式は、符号が全部逆になる！' : ''}</p>`;
             }
             hissanHtml += `</div>`;
 

@@ -179,7 +179,8 @@
     .miss-note { margin-top: 14px; background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); border-radius: 16px; padding: 10px 14px; font-weight: 800; text-align: center; }
     .hint-box { margin-top: 10px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.8; }
     .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
-    .give-up { display: block; width: 100%; margin-top: 10px; padding: 10px; font-weight: 700; color: var(--u-sub); background: #fff; border: 2px solid var(--u-line); border-radius: 999px; }
+    .give-up { display: block; width: 100%; margin-top: 10px; padding: 10px !important; font-size: 0.95rem; }
+    .hint-toggle { padding: 10px !important; font-size: 0.95rem !important; }
     #answer-area > button.bg-orange-500 { position: sticky; bottom: 8px; z-index: 5; }
     #result-screen p.text-gray-400 { color: var(--u-sub) !important; }
     #final-result { color: var(--u-title) !important; }
@@ -494,7 +495,7 @@
                     <div class="text-orange-500 font-bold text-xs mb-2">使う公式</div>
                     \\[ ${data.h} \\]
                 </div>
-                <button onclick="toggleHint()" class="mt-6 w-full text-sm text-orange-400 font-bold py-2">💡 使う公式を見る</button>
+                <button onclick="toggleHint()" class="hint-toggle mt-6 w-full text-sm font-bold py-2">💡 使う公式を見る</button>
             `;
             renderAnswerArea(data);
             renderMath();
@@ -715,6 +716,8 @@
     "#result-screen h2": "u-title",
     "#result-screen .flex-col button.bg-blue-600": "u-btn",
     "#btn-next-course": "u-btn u-btn-blue",
+    ".give-up": "u-btn u-btn-plain",
+    ".hint-toggle": "u-btn u-btn-plain",
     "#result-screen .flex-col button.bg-gray-100": "u-btn u-btn-plain"
   });
 </script>

@@ -382,17 +382,43 @@
     .timer { background: #fff; color: var(--u-accent-text); padding: 6px 14px; }
     .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; }
     .question { color: var(--u-ink); font-size: 1.6rem; }
+    .q-sub { font-size: 0.75em; color: var(--u-sub); }
+    .c-note { margin: 0 0 12px; text-align: center; color: var(--u-sub); font-weight: 700; font-size: 0.95rem; }
     .option { font-size: 1.25rem; font-weight: 700; }
+    .option .fraction, .explain .fraction, .rule-hint .fraction { font-size: 0.85em; }
     .result-message { border-radius: 16px; }
     .result-correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
     .result-wrong { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .rule-hint { margin-top: 6px; font-size: 0.95rem; color: var(--u-title); }
+    .result-reduce { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); border: 3px solid #fde047; }
+    .result-shown { background: var(--u-soft-blue); color: var(--u-title); border: 3px solid var(--u-soft-blue-line); }
+    .rule-hint { margin-top: 6px; font-size: 0.95rem; color: var(--u-title); line-height: 2; }
+    .explain { margin: 10px auto 0; padding: 10px 12px; max-width: 520px; background: #fff; border: 2px dashed var(--u-line); border-radius: 12px;
+               color: var(--u-ink); font-weight: 700; line-height: 2.2; text-align: left; font-size: 1.05rem; }
+    .explain-note { margin-top: 4px; color: var(--u-sub); font-size: 0.9rem; }
     .controls { flex-wrap: wrap; gap: 8px; }
     .x-symbol, .math-symbol { color: var(--u-ink); }
-    .input-field { border-color: var(--u-line-dark); border-radius: 10px; color: var(--u-ink); }
+    .input-field { border-color: var(--u-line-dark); border-radius: 10px; color: var(--u-ink); font-size: 16px; }
     .input-field.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); }
     .input-field.wrong { background: var(--u-ng-soft); border-color: var(--u-ng-line); }
+    .input-field.reduce { background: var(--u-soft-yellow); border-color: #fde047; }
     .fraction-line { background: var(--u-ink); }
+    /* 【ブラッシュアップ】入力練習モードの新しい形 */
+    .term-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 6px; width: 100%; }
+    .term { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .frac-in { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+    .frac-in .fraction-line { width: 56px; height: 3px; }
+    .input-field.in-num, .input-field.in-den, .input-field.in-c { width: 56px; padding: 6px 2px; }
+    .input-field.in-pow { width: 44px; padding: 4px 2px; align-self: flex-start; margin-top: 4px; font-size: 14px; }
+    .term .x-symbol { font-size: 2rem; }
+    .term .math-symbol { font-size: 1.8rem; }
+    .lhs { font-size: 1.5rem !important; margin-right: 4px; }
+    .sign-btn { min-width: 42px; min-height: 46px; padding: 0 6px; font-size: 1.5rem; font-weight: 800; background: #fff; color: var(--u-ink);
+                border: 3px solid var(--u-line-dark); border-bottom-width: 5px; border-radius: 12px; cursor: pointer; }
+    .sign-btn.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); }
+    .sign-btn.wrong { background: var(--u-ng-soft); border-color: var(--u-ng-line); }
+    .in-help { width: 100%; margin: 6px 0 0; text-align: center; color: var(--u-sub); font-weight: 700; font-size: 0.88rem; line-height: 1.6; }
+    .option.answer-shown { background: var(--u-ok-soft) !important; border-color: var(--u-ok-line) !important; color: var(--u-ok) !important; }
+    @media (pointer: coarse) { .enter-hint { display: none !important; } }
     .final-result { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
     .final-score { color: var(--u-title); white-space: nowrap; font-size: min(2rem, 7.5vw); }
     #finalMessage { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
@@ -405,15 +431,16 @@
       .container { padding: 14px 10px; }
       .question-card { padding: 16px 10px; }
       .question { font-size: 1.35rem; }
-      .options { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .options { grid-template-columns: 1fr; gap: 8px; }
       .option { padding: 12px 6px; font-size: 1.1rem; }
       .input-form { gap: 4px; }
-      .fraction-input { flex-wrap: wrap; justify-content: center; gap: 4px; }
-      .input-field { width: 46px; padding: 6px 2px; }
-      .input-field.coefficient { width: 54px; font-size: 1.3rem; }
-      .input-field.power { width: 38px; }
-      .fraction-line { width: 54px; }
-      .x-symbol, .math-symbol { font-size: 1.6rem; }
+      .input-field.in-num, .input-field.in-den, .input-field.in-c { width: 46px; }
+      .frac-in .fraction-line { width: 46px; }
+      .input-field.in-pow { width: 38px; }
+      .term .x-symbol { font-size: 1.6rem; }
+      .term .math-symbol { font-size: 1.5rem; }
+      .sign-btn { min-width: 38px; font-size: 1.3rem; }
+      .explain { font-size: 1rem; }
       .controls .btn { padding: 10px 14px; }
     }
   
@@ -430,11 +457,11 @@
         <div id="modeSelection" class="mode-selection">
             <button class="mode-card" onclick="startQuiz('random10')">
                 <h3>🎯 ランダム10選モード</h3>
-                <p>やさしい問題から順に、10問に挑戦</p>
+                <p>やさしい問題から順に10問（展開してから積分する問題も）</p>
             </button>
             <button class="mode-card" onclick="startQuiz('random100')">
-                <h3>📖 100問ランダムモード</h3>
-                <p>全<span class="pool-count">100</span>問をランダム順で挑戦</p>
+                <h3>📖 全問ランダムモード</h3>
+                <p>全<span class="pool-count">100</span>問をランダム順で（とちゅうで結果を見てもOK）</p>
             </button>
             <button class="mode-card" onclick="startQuiz('challenge')">
                 <h3>🔥 鬼連チャンモード</h3>
@@ -442,7 +469,7 @@
             </button>
             <button class="mode-card" onclick="startQuiz('input')">
                 <h3>✏️ 入力練習モード</h3>
-                <p>係数や次数を直接入力して練習</p>
+                <p>係数・次数・積分定数 C を自分で入力して練習</p>
             </button>
         </div>
 
@@ -455,6 +482,7 @@
 
             <div class="question-card">
                 <div class="question" id="question">∫ x dx = ?</div>
+                <p class="c-note" id="cNote">（C は積分定数とする）</p>
                 <div class="options" id="options"></div>
                 <div id="inputContainer" class="input-form hidden"></div>
             </div>
@@ -467,6 +495,7 @@
                 <button id="nextBtn" class="btn btn-secondary hidden" onclick="nextQuestion()">次の問題</button>
                 <button id="retryBtn" class="btn btn-retry hidden" onclick="retryQuestion()">もう一度挑戦</button>
                 <button id="showAnswerBtn" class="btn btn-secondary" onclick="showAnswer()">答えを見る</button>
+                <button id="finishBtn" class="btn btn-secondary hidden" onclick="showFinalResult()">ここで終わって結果を見る</button>
                 <button id="backBtn" class="btn btn-secondary" onclick="backToMenu()">メニューに戻る</button>
             </div>
         </div>
@@ -519,6 +548,17 @@
             {q: "∫ (4x³ - 3x² + 2x - 1) dx", options: ["12x² - 6x + 2 + C", "4x⁴ - 3x³ + 2x² - x + C", "16x² - 9x + 2 + C", "x⁴ - x³ + x² - x + C"], correct: 3}
         ];
 
+        // 【ブラッシュアップ】展開してから積分する問題（選択肢は式から自動で作る）
+        const expandQuestions = [
+            {q: "∫ (x + 1)² dx"},
+            {q: "∫ (x + 1)(x - 2) dx"},
+            {q: "∫ (2x - 1)² dx"},
+            {q: "∫ (x - 3)² dx"},
+            {q: "∫ x(x + 2) dx"},
+            {q: "∫ (x + 2)(x - 2) dx"},
+            {q: "∫ (x - 1)(x + 3) dx"}
+        ];
+
         // 入力モード用問題プール
         const inputQuestions = [
             {q: "∫ x dx", answer: {type: "fraction", numerator: "x^2", denominator: "2"}},
@@ -529,9 +569,9 @@
             {q: "∫ 6x dx", answer: {type: "simple", coefficient: "3", power: "2"}},
             {q: "∫ 4x³ dx", answer: {type: "simple", coefficient: "1", power: "4"}},
             {q: "∫ (2x + 3) dx", answer: {type: "polynomial", term1: {numerator: "x^2", denominator: "1"}, term2: {coefficient: "3"}}},
-            {q: "∫ (x² + 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "1", power: "2"}}},   // 【ブラッシュアップ】2 つ目の項は x²
+            {q: "∫ (x² + 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "1"}}},
             {q: "∫ (3x + 2) dx", answer: {type: "polynomial", term1: {numerator: "3x^2", denominator: "2"}, term2: {coefficient: "2"}}},
-            {q: "∫ (x² - 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "-1", power: "2"}}},   // 【ブラッシュアップ】2 つ目の項は x²
+            {q: "∫ (x² - 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "-1"}}},
             {q: "∫ (4x - 2) dx", answer: {type: "polynomial", term1: {numerator: "2x^2", denominator: "1"}, term2: {coefficient: "-2"}}},
             {q: "∫ x⁴ dx", answer: {type: "fraction", numerator: "x^5", denominator: "5"}},
             {q: "∫ x⁵ dx", answer: {type: "fraction", numerator: "x^6", denominator: "6"}},
@@ -540,7 +580,16 @@
             {q: "∫ (5x + 3) dx", answer: {type: "polynomial", term1: {numerator: "5x^2", denominator: "2"}, term2: {coefficient: "3"}}},
             {q: "∫ (6x - 2) dx", answer: {type: "polynomial", term1: {numerator: "3x^2", denominator: "1"}, term2: {coefficient: "-2"}}},
             {q: "∫ 9x² dx", answer: {type: "simple", coefficient: "3", power: "3"}},
-            {q: "∫ 10x dx", answer: {type: "simple", coefficient: "5", power: "2"}}
+            {q: "∫ 10x dx", answer: {type: "simple", coefficient: "5", power: "2"}},
+            // 【ブラッシュアップ】展開してから積分する問題（答えは式から自動で作る）
+            {q: "∫ (x + 1)² dx", level: "expand"},
+            {q: "∫ (x + 1)(x - 2) dx", level: "expand"},
+            {q: "∫ (2x - 1)² dx", level: "expand"},
+            {q: "∫ x(x + 2) dx", level: "expand"},
+            // 【ブラッシュアップ】条件から積分定数 C を決める問題
+            {q: "F'(x) = 3x² - 2, F(1) = 3", cond: true, deriv: "3x² - 2", at: 1, val: 3, level: "cond"},
+            {q: "F'(x) = 2x + 1, F(0) = 5", cond: true, deriv: "2x + 1", at: 0, val: 5, level: "cond"},
+            {q: "F'(x) = 6x² - 2x, F(1) = 2", cond: true, deriv: "6x² - 2x", at: 1, val: 2, level: "cond"}
         ];
 
         // 全問題プール（他のモード用）
@@ -661,11 +710,160 @@
         let missedThis = false;
         let runId = 0;
 
+        const isTouch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+        // 全角の数字・記号を半角に、いろいろな「ー」をマイナスにそろえる
+        function nz(v) {
+            return String(v).normalize('NFKC').replace(/[ー－−―‐]/g, '-').replace(/\s/g, '');
+        }
+        function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; }
+        function frac(n, d) { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return [n / g, d / g]; }
+        const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+        function supOf(p) { return String(p).split('').map(ch => SUP[+ch]).join(''); }
+        function pretty(s) { return String(s).replace(/-/g, '−'); }
+
+        // 式の文字列（例 "(x+1)(x-2)"、"3x² - 4x + 5"）を読んで、係数の配列 [定数, x, x², …] にする
+        function parsePoly(str) {
+            const s = str.replace(/\s/g, '').replace(/[−]/g, '-');
+            let i = 0;
+            const add = (a, b) => { const r = []; for (let k = 0; k < Math.max(a.length, b.length); k++) r[k] = (a[k] || 0) + (b[k] || 0); return r; };
+            const mul = (a, b) => { const r = new Array(a.length + b.length - 1).fill(0); a.forEach((x, p) => b.forEach((y, q) => { r[p + q] += x * y; })); return r; };
+            const pow = (a, n) => { let r = [1]; for (let k = 0; k < n; k++) r = mul(r, a); return r; };
+            function readSup() { let t = ''; while (i < s.length && SUP.includes(s[i])) t += SUP.indexOf(s[i++]); return t === '' ? 1 : +t; }
+            function base() {
+                if (s[i] === '(') { i++; const e = expr(); if (s[i] !== ')') throw new Error('かっこが閉じていない: ' + str); i++; return e; }
+                if (s[i] === 'x') { i++; return [0, 1]; }
+                let t = '';
+                while (i < s.length && /\d/.test(s[i])) t += s[i++];
+                if (t === '') throw new Error('読めない式: ' + str);
+                return [+t];
+            }
+            function factor() { const b = base(); return pow(b, readSup()); }
+            function term() {
+                let sign = 1;
+                while (s[i] === '+' || s[i] === '-') { if (s[i] === '-') sign = -sign; i++; }
+                let r = factor();
+                while (i < s.length && (s[i] === '(' || s[i] === 'x' || /\d/.test(s[i]))) r = mul(r, factor());
+                return r.map(c => c * sign);
+            }
+            function expr() {
+                let r = term();
+                while (i < s.length && (s[i] === '+' || s[i] === '-')) r = add(r, term());
+                return r;
+            }
+            const r = expr();
+            if (i !== s.length) throw new Error('読めない式: ' + str);
+            return r;
+        }
+        function integrandOf(q) { return q.replace(/^∫\s*/, '').replace(/\s*dx\s*$/, ''); }
+        // 係数の配列 → 項の並び [{k, p}]（次数の高い順）
+        function termsOf(c) { const t = []; for (let p = c.length - 1; p >= 0; p--) if (c[p]) t.push({ k: c[p], p }); return t; }
+        // 不定積分の項：k xᵖ → (k/(p+1)) xᵖ⁺¹
+        function antiTerms(it) { return it.map(({ k, p }) => { const [n, d] = frac(k, p + 1); return { n, d, p: p + 1 }; }); }
+
+        function fracHTML(n, d) { return `<span class="fraction"><span>${n}</span><span>${d}</span></span>`; }
+        // 1 つの項（符号なし）：係数 n/d、次数 p
+        function monoHTML(n, d, p) {
+            n = Math.abs(n);
+            const xs = p === 0 ? '' : p === 1 ? 'x' : 'x' + supOf(p);
+            const c = d === 1 ? ((n === 1 && p > 0) ? '' : String(n)) : fracHTML(n, d);
+            return c + xs;
+        }
+        // 項の並び [{n, d, p}] → 式の HTML（withC なら最後に「+ C」）
+        function polyHTML(terms, withC) {
+            let h = '';
+            terms.filter(t => t.n !== 0).forEach((t, j) => {
+                const neg = t.n < 0;
+                h += j === 0 ? (neg ? '−' : '') : (neg ? ' − ' : ' + ');
+                h += monoHTML(t.n, t.d, t.p);
+            });
+            if (h === '') h = '0';
+            if (withC) h += ' + C';
+            return h;
+        }
+
+        // 選択肢を作る（定数だけの問題は null を返し、先生の選択肢を使う）
+        function makeOptions(q) {
+            const it = termsOf(parsePoly(integrandOf(q)));
+            if (it.every(t => t.p === 0)) return null;
+            const T = (n, d, p) => { const f = frac(n, d); return { n: f[0], d: f[1], p }; };
+            const correct = polyHTML(antiTerms(it), true);
+            const cands = [
+                polyHTML(it.map(({ k, p }) => p === 0 ? T(k, 1, 1) : T(k, p, p + 1)), true),   // n でわった（n+1 でなく）
+                polyHTML(it.map(({ k, p }) => T(k, p + 1, p)), true),                            // 次数を上げずにわった
+                polyHTML(it.filter(t => t.p > 0).map(({ k, p }) => T(k * p, 1, p - 1)), true),  // 微分してしまった
+                polyHTML(it.map(({ k, p }) => T(k, 1, p + 1)), true),                            // (n+1) でわり忘れ
+                polyHTML(antiTerms(it), false)                                                   // C の書き忘れ
+            ];
+            const seen = new Set([correct]);
+            const pool = [];
+            shuffleArray(cands).forEach(h => { if (!seen.has(h)) { seen.add(h); pool.push(h); } });
+            const pick = pool.slice(0, 3);
+            const hasFrac = h => h.includes('fraction');
+            // 分数の選択肢が正解だけにならないようにする
+            if (hasFrac(correct) && !pick.some(hasFrac)) {
+                const f = pool.slice(3).find(hasFrac);
+                if (f) pick[pick.length - 1] = f;
+            }
+            if (pick.length < 3) return null;
+            return { options: [correct, ...pick], correct: 0 };
+        }
+
+        // 解説（途中式つき）
+        function explainHTML(question) {
+            if (question.cond) return condExplainHTML(question);
+            const src = integrandOf(question.q);
+            const it = termsOf(parsePoly(src));
+            const expanded = polyHTML(it.map(({ k, p }) => ({ n: k, d: 1, p })), false);
+            let h = '';
+            if (/\)[\s]*[(x\d²³]|x\(|\)[²³]/.test(src)) h += `まず展開する：${pretty(src)} = ${expanded}<br>`;
+            const steps = it.map(({ k, p }, j) => {
+                const sign = j === 0 ? (k < 0 ? '−' : '') : (k < 0 ? ' − ' : ' + ');
+                const a = Math.abs(k);
+                if (p === 0) return sign + (a === 1 ? 'x' : a + 'x');
+                return sign + (a === 1 ? '' : a + '·') + fracHTML(1, p + 1) + 'x' + supOf(p + 1);
+            }).join('');
+            const ans = polyHTML(antiTerms(it), true);
+            h += `∫${it.length > 1 ? '(' + expanded + ')' : expanded} dx = ${steps} + C`;
+            if (steps + ' + C' !== ans) h += `<br>　　　　 = ${ans}`;
+            return `<div class="explain">${h}<div class="explain-note">xⁿ の不定積分は ${fracHTML(1, 'n+1')}xⁿ⁺¹ + C（C は積分定数）</div></div>`;
+        }
+        // 条件から C を決める問題の解説
+        function condInfo(question) {
+            const at = antiTerms(termsOf(parsePoly(question.deriv)));
+            // F(a) の C 以外の部分（分数で計算）
+            let n = 0, d = 1;
+            at.forEach(t => { const v = frac(t.n * Math.pow(question.at, t.p), t.d); [n, d] = frac(n * v[1] + v[0] * d, d * v[1]); });
+            const [cn, cd] = frac(question.val * d - n, d);
+            return { at, f0: [n, d], c: [cn, cd] };
+        }
+        function numHTML([n, d]) { const s = n < 0 ? '−' : ''; return d === 1 ? s + Math.abs(n) : s + fracHTML(Math.abs(n), d); }
+        function condExplainHTML(question) {
+            const info = condInfo(question);
+            const F = polyHTML(info.at, false);
+            const cval = numHTML(info.c);
+            return `<div class="explain">F(x) = ∫(${pretty(question.deriv)})dx = ${F} + C<br>` +
+                `F(${question.at}) = ${numHTML(info.f0)} + C = ${question.val} より C = ${cval}<br>` +
+                `よって F(x) = ${F}${info.c[0] < 0 ? ' − ' + numHTML([-info.c[0], info.c[1]]) : ' + ' + cval}</div>`;
+        }
+
+        // 問題を出す前の準備：選択肢を作り直す
+        function prepareQuestion(q) {
+            const o = Object.assign({}, q);
+            if (currentMode !== 'input' && !o.cond) {
+                const g = makeOptions(o.q);
+                if (g) { o.options = g.options; o.correct = g.correct; }
+            }
+            return o;
+        }
+
+        // 展開してから積分する問題を、全問モード・連チャンモードにも入れる
+        questionPool.push(...expandQuestions);
+
         function startQuiz(mode) {
             currentMode = mode;
             currentQuestionIndex = 0;
             score = 0;
-            runId++;   // 【ブラッシュアップ】
+            runId++;
             window.scrollTo(0, 0);
             selectedOption = -1;
             hasAnswered = false;
@@ -674,40 +872,37 @@
             // 問題を準備
             if (mode === 'random10') {
                 currentQuestions = getProgressiveQuestions();
-            } else if (mode === 'random100') {
-                currentQuestions = shuffleArray([...questionPool]);
-            } else if (mode === 'challenge') {
+            } else if (mode === 'random100' || mode === 'challenge') {
                 currentQuestions = shuffleArray([...questionPool]);
             } else if (mode === 'input') {
-                currentQuestions = shuffleArray([...inputQuestions]).slice(0, 10);
+                // ふつうの問題 7 問 → 展開する問題 2 問 → 条件から C を決める問題 1 問
+                currentQuestions = [
+                    ...shuffleArray(inputQuestions.filter(q => !q.level)).slice(0, 7),
+                    ...shuffleArray(inputQuestions.filter(q => q.level === 'expand')).slice(0, 2),
+                    ...shuffleArray(inputQuestions.filter(q => q.level === 'cond')).slice(0, 1)
+                ];
             }
+            currentQuestions = currentQuestions.map(prepareQuestion);
 
             document.getElementById('modeSelection').style.display = 'none';
             document.getElementById('quizContainer').style.display = 'block';
             document.getElementById('finalResult').classList.add('hidden');
+            document.getElementById('finishBtn').classList.toggle('hidden', mode !== 'random100');
 
             startTimer();
             showQuestion();
         }
 
         function getProgressiveQuestions() {
-            // 段階的に難しくなる10問を選択
-            const progressive = [];
-
-            // 簡単な問題から3-4問
-            const shuffledEasy = shuffleArray([...easyQuestions]);
-            progressive.push(...shuffledEasy.slice(0, 4));
-
-            // 中程度の問題から3-4問
-            const shuffledMedium = shuffleArray([...mediumQuestions]);
-            progressive.push(...shuffledMedium.slice(0, 3));
-
-            // 難しい問題から3問
-            const shuffledHard = shuffleArray([...hardQuestions]);
-            progressive.push(...shuffledHard.slice(0, 3));
-
-            return progressive;
+            // やさしい 3 問 → ふつう 3 問 → むずかしい 2 問 → 展開する 2 問
+            return [
+                ...shuffleArray([...easyQuestions]).slice(0, 3),
+                ...shuffleArray([...mediumQuestions]).slice(0, 3),
+                ...shuffleArray([...hardQuestions]).slice(0, 2),
+                ...shuffleArray([...expandQuestions]).slice(0, 2)
+            ];
         }
+
 
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
@@ -745,59 +940,35 @@
             const question = currentQuestions[currentQuestionIndex];
 
             // プログレス更新
-            let totalQuestions = currentQuestions.length;
-            if (currentMode === 'challenge') {
-                totalQuestions = '∞';
-            }
+            const totalQuestions = currentMode === 'challenge' ? '∞' : currentQuestions.length;
             document.getElementById('progress').textContent = `問題 ${currentQuestionIndex + 1}/${totalQuestions}`;
-            document.getElementById('score').textContent = currentMode === 'challenge' ? `連続正解: ${score}問` : `一発正解: ${score}問`;   // 【ブラッシュアップ】
+            document.getElementById('score').textContent = currentMode === 'challenge' ? `連続正解: ${score}問` : `一発正解: ${score}問`;
 
-            // 問題表示
-            document.getElementById('question').textContent = question.q + ' = ?';
+            // 問題表示（- は − で表示する）
+            document.getElementById('question').innerHTML = question.cond
+                ? `F′(x) = ${pretty(question.deriv)}、F(${question.at}) = ${question.val}<br><span class="q-sub">を満たす関数 F(x) を求めよう</span>`
+                : pretty(question.q) + ' = ?';
+            document.getElementById('cNote').style.display = question.cond ? 'none' : '';
 
             if (currentMode === 'input') {
-                // 入力モード
                 document.getElementById('options').classList.add('hidden');
                 document.getElementById('inputContainer').classList.remove('hidden');
                 showInputForm(question);
             } else {
-                // 選択肢モード
                 document.getElementById('options').classList.remove('hidden');
                 document.getElementById('inputContainer').classList.add('hidden');
                 document.getElementById('inputContainer').innerHTML = '';
 
                 // 選択肢をシャッフル
-                const shuffledOptions = [];
-                const originalCorrect = question.correct;
-                let newCorrectIndex = -1;
-
-                // インデックスの配列を作成してシャッフル
-                const indices = [0, 1, 2, 3];
-                for (let i = indices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
-                }
-
-                // シャッフルされた順序で選択肢を配置
-                indices.forEach((originalIndex, newIndex) => {
-                    shuffledOptions.push(question.options[originalIndex]);
-                    if (originalIndex === originalCorrect) {
-                        newCorrectIndex = newIndex;
-                    }
-                });
-
-                // 現在の問題の正解インデックスを更新
-                currentQuestions[currentQuestionIndex].shuffledCorrect = newCorrectIndex;
-
-                // 選択肢表示
+                const indices = shuffleArray([0, 1, 2, 3]);
                 const optionsContainer = document.getElementById('options');
                 optionsContainer.innerHTML = '';
-
-                shuffledOptions.forEach((option, index) => {
+                indices.forEach((originalIndex, newIndex) => {
+                    if (originalIndex === question.correct) question.shuffledCorrect = newIndex;
                     const optionDiv = document.createElement('div');
                     optionDiv.className = 'option';
-                    optionDiv.innerHTML = option;
-                    optionDiv.onclick = () => selectOption(index);
+                    optionDiv.innerHTML = question.options[originalIndex];
+                    optionDiv.onclick = () => selectOption(newIndex);
                     optionsContainer.appendChild(optionDiv);
                 });
             }
@@ -805,445 +976,145 @@
             // ボタン状態リセット
             selectedOption = -1;
             hasAnswered = false;
-            missedThis = false;   // 【ブラッシュアップ】
+            missedThis = false;
             document.getElementById('nextBtn').classList.add('hidden');
             document.getElementById('retryBtn').classList.add('hidden');
             document.getElementById('resultMessage').classList.add('hidden');
             document.getElementById('enterHint').classList.add('hidden');
             document.getElementById('showAnswerBtn').classList.remove('hidden');
-
-            if (currentMode === 'input') {
-                document.getElementById('checkBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('checkBtn').classList.add('hidden');
-            }
+            document.getElementById('checkBtn').classList.toggle('hidden', currentMode !== 'input');
         }
+
 
         function showInputForm(question) {
             const container = document.getElementById('inputContainer');
-            container.innerHTML = '';
+            const ans = antiTerms(termsOf(parsePoly(question.cond ? question.deriv : integrandOf(question.q))));
+            question._ans = ans;
+            if (question.cond) question._c = condInfo(question).c;
 
-            const answer = question.answer;
+            let h = '<div class="term-row">' + (question.cond ? '<span class="math-symbol lhs">F(x) =</span>' : '');
+            ans.forEach((t, j) => {
+                h += '<span class="term">';
+                if (j > 0 || t.n < 0) h += `<button type="button" class="sign-btn" data-j="${j}" data-v="" aria-label="符号（タップで ＋ と − が入れかわる）">±</button>`;
+                h += `<span class="frac-in"><input class="input-field in-num" data-j="${j}" inputmode="numeric" autocomplete="off" placeholder="分子" aria-label="係数の分子">` +
+                     `<span class="fraction-line"></span>` +
+                     `<input class="input-field in-den" data-j="${j}" inputmode="numeric" autocomplete="off" placeholder="分母" aria-label="係数の分母"></span>` +
+                     `<span class="x-symbol">x</span><input class="input-field in-pow" data-j="${j}" inputmode="numeric" autocomplete="off" placeholder="次数" aria-label="次数">`;
+                h += '</span>';
+            });
+            h += `<span class="term"><span class="math-symbol">+</span><input class="input-field in-c" autocomplete="off" autocapitalize="characters" ${question.cond ? 'inputmode="numeric" placeholder="数" aria-label="C の値"' : 'placeholder="？" aria-label="積分定数"'}></span></div>`;
+            h += `<p class="in-help">係数は分数で入れよう（整数なら分母は空らん、係数 1 は空らんでもOK）。<br>${question.cond ? '最後の欄には、条件から求めた C の値を入れよう。' : '最後の欄には、積分定数を表す文字を入れよう。'}</p>`;
+            container.innerHTML = h;
 
-            if (answer.type === 'simple') {
-                // 係数 x^次数 + C の形式
-                // 係数が1の場合は入力フィールドを表示しない
-                if (answer.coefficient === '1') {
-                    if (answer.power === '1') {
-                        container.innerHTML = `
-                            <span class="x-symbol">x</span>
-                            <span class="math-symbol">+ C</span>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <span class="x-symbol">x</span>
-                            <input type="number" class="input-field power" id="power" placeholder="次数">
-                            <span class="math-symbol">+ C</span>
-                        `;
-                    }
-                } else {
-                    if (answer.power === '1') {
-                        container.innerHTML = `
-                            <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
-                            <span class="x-symbol">x</span>
-                            <span class="math-symbol">+ C</span>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
-                            <span class="x-symbol">x</span>
-                            <input type="number" class="input-field power" id="power" placeholder="次数">
-                            <span class="math-symbol">+ C</span>
-                        `;
-                    }
-                }
-            } else if (answer.type === 'fraction') {
-                // 分数の形式 - 既約分数に変換して表示
-                const numeratorParts = parseNumerator(answer.numerator);
-                const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
+            container.querySelectorAll('.sign-btn').forEach(b => b.addEventListener('click', () => {
+                if (hasAnswered) return;
+                b.dataset.v = b.dataset.v === '+' ? '-' : '+';
+                b.textContent = b.dataset.v === '+' ? '+' : '−';
+                b.classList.remove('correct', 'wrong');
+            }));
 
-                // 分母が1の場合は整数として表示（係数1は表示しない）
-                if (simplified.denominator === 1) {
-                    if (simplified.numerator === 1) {
-                        if (numeratorParts.power === 1) {
-                            container.innerHTML = `
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        } else {
-                            container.innerHTML = `
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="power" placeholder="次数">
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        }
-                    } else {
-                        if (numeratorParts.power === 1) {
-                            container.innerHTML = `
-                                <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        } else {
-                            container.innerHTML = `
-                                <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="power" placeholder="次数">
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        }
-                    }
-                } else {
-                    // 分数の場合は係数1も明示的に入力
-                    if (numeratorParts.power === 1) {
-                        container.innerHTML = `
-                            <div class="fraction-input">
-                                <div class="fraction-part">
-                                    <input type="number" class="input-field coefficient" id="numerator-coeff" placeholder="係数">
-                                    <div class="fraction-line"></div>
-                                    <input type="number" class="input-field" id="denominator" placeholder="分母">
-                                </div>
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <div class="fraction-input">
-                                <div class="fraction-part">
-                                    <input type="number" class="input-field coefficient" id="numerator-coeff" placeholder="係数">
-                                    <div class="fraction-line"></div>
-                                    <input type="number" class="input-field" id="denominator" placeholder="分母">
-                                </div>
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="numerator-power" placeholder="次数">
-                                <span class="math-symbol">+ C</span>
-                            </div>
-                        `;
-                    }
-                }
-            } else if (answer.type === 'polynomial') {
-                // 多項式の形式（簡略化）
-                const term1Parts = parseNumerator(answer.term1.numerator);
-                const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
-
-                // 分母が1の場合は整数として表示（係数1は表示しない）
-                if (simplified.denominator === 1) {
-                    if (simplified.numerator === 1) {
-                        if (term1Parts.power === 1) {
-                            container.innerHTML = `
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        } else {
-                            container.innerHTML = `
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        }
-                    } else {
-                        if (term1Parts.power === 1) {
-                            container.innerHTML = `
-                                <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        } else {
-                            container.innerHTML = `
-                                <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            `;
-                        }
-                    }
-                } else {
-                    // 分数の場合は係数1も明示的に入力
-                    if (term1Parts.power === 1) {
-                        container.innerHTML = `
-                            <div class="fraction-input">
-                                <div class="fraction-part">
-                                    <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
-                                    <div class="fraction-line"></div>
-                                    <input type="number" class="input-field" id="term1-den" placeholder="分母">
-                                </div>
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <div class="fraction-input">
-                                <div class="fraction-part">
-                                    <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
-                                    <div class="fraction-line"></div>
-                                    <input type="number" class="input-field" id="term1-den" placeholder="分母">
-                                </div>
-                                <span class="x-symbol">x</span>
-                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
-                                <span class="math-symbol">+</span>
-                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
-                                <span class="x-symbol">x</span>
-                                <span class="math-symbol">+ C</span>
-                            </div>
-                        `;
-                    }
-                }
-            }
-
-            // 【ブラッシュアップ】2 つ目の項が x² の問題は、x² と書いておく
-            if (answer.type === 'polynomial' && answer.term2.power) {
-                const xs = container.querySelectorAll('.x-symbol');
-                xs[xs.length - 1].innerHTML = 'x<sup>' + answer.term2.power + '</sup>';
-            }
-
-            // 【ブラッシュアップ】元は問題が出るたびに同じ動きが重ねて登録されていた。一度だけ登録する
+            // 入力の動き（一度だけ登録する）
             if (!container.dataset.bound) {
                 container.dataset.bound = '1';
-                // 入力時に即座にチェック
-                container.addEventListener('input', () => {
-                    setTimeout(checkInputAnswer, 100);
-                });
-
-                // Enterキーでチェック（同じ Enter で次の問題に進まないようにする）
+                container.addEventListener('input', e => { if (e.target.classList) e.target.classList.remove('wrong', 'reduce'); });
+                // Enter キーで判定（同じ Enter で次の問題に進まないようにする）
                 container.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' && !e.isComposing && e.target.tagName === 'INPUT') {
+                        e.preventDefault();
                         e.stopPropagation();
                         checkInputAnswer();
                     }
                 });
             }
 
-            // 最初の入力フィールドにフォーカス
+            // スマホではキーボードをいきなり出さない
             setTimeout(() => {
                 const firstInput = container.querySelector('.input-field');
-                if (firstInput && !(window.matchMedia && matchMedia('(pointer: coarse)').matches)) firstInput.focus();   // 【ブラッシュアップ】スマホではキーボードをいきなり出さない
+                if (firstInput && !isTouch) firstInput.focus();
             }, 100);
         }
 
-        // 分子部分を解析する関数（係数とxの次数を分離）
-        function parseNumerator(numerator) {
-            if (numerator.includes('x^')) {
-                const parts = numerator.split('x^');
-                const coefficient = parts[0] === '' ? 1 : parseInt(parts[0]);
-                const power = parseInt(parts[1]);
-                return { coefficient, power };
-            } else if (numerator === 'x') {
-                return { coefficient: 1, power: 1 };
-            } else if (numerator.includes('x')) {
-                const coefficient = parseInt(numerator.replace('x', ''));
-                return { coefficient, power: 1 };
-            } else {
-                return { coefficient: parseInt(numerator), power: 0 };
-            }
+        function setMark(el, state) {
+            el.classList.remove('correct', 'wrong', 'reduce');
+            if (state) el.classList.add(state);
         }
-
-        // 分数を既約分数に変換する関数
-        function simplifyFraction(numerator, denominator) {
-            function gcd(a, b) {
-                return b === 0 ? a : gcd(b, a % b);
-            }
-
-            const g = gcd(Math.abs(numerator), Math.abs(denominator));
-            return {
-                numerator: numerator / g,
-                denominator: denominator / g
-            };
-        }
-
-        // 分数文字列を解析する関数
-        function parseFraction(str) {
-            if (str.includes('/')) {
-                const parts = str.split('/');
-                return {
-                    numerator: parseInt(parts[0]),
-                    denominator: parseInt(parts[1])
-                };
-            } else {
-                return {
-                    numerator: parseInt(str),
-                    denominator: 1
-                };
-            }
+        // 分子・分母の欄を読む（空らんは 1）。数でなければ NaN
+        function readFrac(inNum, inDen) {
+            const a = nz(inNum.value), b = nz(inDen.value);
+            const n = a === '' ? 1 : (/^\d+$/.test(a) ? +a : NaN);
+            const d = b === '' ? 1 : (/^\d+$/.test(b) ? +b : NaN);
+            return [n, d];
         }
 
         function checkInputAnswer() {
+            if (hasAnswered) return;
             const question = currentQuestions[currentQuestionIndex];
-            const answer = question.answer;
-            let allFieldsCorrect = true;
-
-            if (answer.type === 'simple') {
-                let powerCorrect = true;
-                let coeffCorrect = true;
-
-                // 次数のチェック（次数が1でない場合のみ）
-                if (answer.power !== '1') {
-                    const power = document.getElementById('power').value.trim();
-                    powerCorrect = power === answer.power;
-                    document.getElementById('power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
-                }
-
-                // 係数のチェック（係数が1でない場合のみ）
-                if (answer.coefficient !== '1') {
-                    const coeff = document.getElementById('coeff').value.trim();
-                    coeffCorrect = coeff === answer.coefficient;
-                    document.getElementById('coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
-                }
-
-                allFieldsCorrect = coeffCorrect && powerCorrect;
-
-            } else if (answer.type === 'fraction') {
-                const numeratorParts = parseNumerator(answer.numerator);
-                const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
-
-                let numeratorCorrect = true;
-
-                // 分母が1の場合は整数として扱う
-                if (simplified.denominator === 1) {
-                    // 係数のチェック（係数が1でない場合のみ）
-                    if (simplified.numerator !== 1) {
-                        const coeff = document.getElementById('coeff').value.trim();
-                        const coeffCorrect = coeff === simplified.numerator.toString();
-                        document.getElementById('coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
-                        numeratorCorrect = numeratorCorrect && coeffCorrect;
-                    }
-
-                    // 次数のチェック（次数が1でない場合のみ）
-                    if (numeratorParts.power !== 1) {
-                        const power = document.getElementById('power').value.trim();
-                        const powerCorrect = power === numeratorParts.power.toString();
-                        document.getElementById('power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
-                        numeratorCorrect = numeratorCorrect && powerCorrect;
-                    }
-
-                    allFieldsCorrect = numeratorCorrect;
-                } else {
-                    // 分数として扱う（係数1も明示的に入力が必要）
-                    const numeratorCoeff = document.getElementById('numerator-coeff').value.trim();
-                    const coeffCorrect = numeratorCoeff === simplified.numerator.toString();
-                    document.getElementById('numerator-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
-                    numeratorCorrect = numeratorCorrect && coeffCorrect;
-
-                    // 次数のチェック（次数が1でない場合のみ）
-                    if (numeratorParts.power !== 1) {
-                        const numeratorPower = document.getElementById('numerator-power').value.trim();
-                        const powerCorrect = numeratorPower === numeratorParts.power.toString();
-                        document.getElementById('numerator-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
-                        numeratorCorrect = numeratorCorrect && powerCorrect;
-                    }
-
-                    // 分母のチェック
-                    const denominator = document.getElementById('denominator').value.trim();
-                    const denCorrect = denominator === simplified.denominator.toString();
-                    document.getElementById('denominator').className = `input-field ${denCorrect ? 'correct' : 'wrong'}`;
-
-                    allFieldsCorrect = numeratorCorrect && denCorrect;
-                }
-
-            } else if (answer.type === 'polynomial') {
-                const term1Parts = parseNumerator(answer.term1.numerator);
-                const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
-
-                let term1Correct = true;
-
-                // 分母が1の場合は整数として扱う
-                if (simplified.denominator === 1) {
-                    // 第1項の係数のチェック（係数が1でない場合のみ）
-                    if (simplified.numerator !== 1) {
-                        const term1Coeff = document.getElementById('term1-coeff').value.trim();
-                        const coeffCorrect = term1Coeff === simplified.numerator.toString();
-                        document.getElementById('term1-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
-                        term1Correct = term1Correct && coeffCorrect;
-                    }
-
-                    // 第1項の次数のチェック（次数が1でない場合のみ）
-                    if (term1Parts.power !== 1) {
-                        const term1Power = document.getElementById('term1-power').value.trim();
-                        const powerCorrect = term1Power === term1Parts.power.toString();
-                        document.getElementById('term1-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
-                        term1Correct = term1Correct && powerCorrect;
-                    }
-                } else {
-                    // 分数として扱う（係数1も明示的に入力が必要）
-                    const term1Coeff = document.getElementById('term1-coeff').value.trim();
-                    const coeffCorrect = term1Coeff === simplified.numerator.toString();
-                    document.getElementById('term1-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
-                    term1Correct = term1Correct && coeffCorrect;
-
-                    // 第1項の次数のチェック（次数が1でない場合のみ）
-                    if (term1Parts.power !== 1) {
-                        const term1Power = document.getElementById('term1-power').value.trim();
-                        const powerCorrect = term1Power === term1Parts.power.toString();
-                        document.getElementById('term1-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
-                        term1Correct = term1Correct && powerCorrect;
-                    }
-
-                    // 第1項の分母のチェック
-                    const term1Den = document.getElementById('term1-den').value.trim();
-                    const denCorrect = term1Den === simplified.denominator.toString();
-                    document.getElementById('term1-den').className = `input-field ${denCorrect ? 'correct' : 'wrong'}`;
-                    term1Correct = term1Correct && denCorrect;
-                }
-
-                // 第2項の係数のチェック
-                const term2Coeff = document.getElementById('term2-coeff').value.trim();
-                const term2Correct = term2Coeff === answer.term2.coefficient;
-                document.getElementById('term2-coeff').className = `input-field coefficient ${term2Correct ? 'correct' : 'wrong'}`;
-
-                allFieldsCorrect = term1Correct && term2Correct;
+            const box = document.getElementById('inputContainer');
+            let allOk = true, onlyReduce = true, cProblem = '';
+            // まだ何も入れていない項があるときは、判定しない（まちがいにも数えない）
+            const emptyTerm = question._ans.some((t, j) => ['.in-num', '.in-den', '.in-pow'].every(sel => nz(box.querySelector(`${sel}[data-j="${j}"]`).value) === ''));
+            if (emptyTerm) {
+                const m = document.getElementById('resultMessage');
+                m.className = 'result-message result-reduce';
+                m.innerHTML = 'まだ入っていない項があります。係数と次数を入れよう。';
+                return;
             }
 
-            // 全て正解の場合のみ次の問題へ
-            if (allFieldsCorrect && !hasAnswered) {
+            question._ans.forEach((t, j) => {
+                const nIn = box.querySelector(`.in-num[data-j="${j}"]`);
+                const dIn = box.querySelector(`.in-den[data-j="${j}"]`);
+                const pIn = box.querySelector(`.in-pow[data-j="${j}"]`);
+                const sBtn = box.querySelector(`.sign-btn[data-j="${j}"]`);
+                const [n, d] = readFrac(nIn, dIn);
+                const sameValue = n * t.d === Math.abs(t.n) * d;
+                const reduced = gcd(n, d) === 1;
+                const fracState = sameValue ? (reduced ? 'correct' : 'reduce') : 'wrong';
+                setMark(nIn, fracState); setMark(dIn, fracState);
+                const pv = nz(pIn.value);
+                const powOk = pv === String(t.p) || (t.p === 1 && pv === '');
+                setMark(pIn, powOk ? 'correct' : 'wrong');
+                let signOk = true;
+                if (sBtn) { signOk = sBtn.dataset.v === (t.n < 0 ? '-' : '+'); setMark(sBtn, signOk ? 'correct' : 'wrong'); }
+                if (fracState !== 'correct' || !powOk || !signOk) allOk = false;
+                if (fracState === 'wrong' || !powOk || !signOk) onlyReduce = false;
+            });
+            const cIn = box.querySelector('.in-c');
+            const cv = nz(cIn.value).toUpperCase();
+            let cOk;
+            if (question.cond) {
+                const [cn, cd] = question._c;
+                cOk = cd === 1 ? cv === String(cn) : cv === `${cn}/${cd}`;
+            } else {
+                cOk = cv === 'C';
+                if (!cOk) cProblem = cv === '' ? '積分定数 C を忘れずに書こう！' : '積分定数は C で表そう。';
+            }
+            setMark(cIn, cOk ? 'correct' : 'wrong');
+            if (!cOk) { allOk = false; onlyReduce = false; }
+
+            const resultMessage = document.getElementById('resultMessage');
+            resultMessage.classList.remove('hidden');
+            if (allOk) {
                 hasAnswered = true;
-                if (!missedThis) score++;   // 【ブラッシュアップ】答えを見た問題は数えない
-
-                const resultMessage = document.getElementById('resultMessage');
-                resultMessage.textContent = '正解です！';
+                if (!missedThis) score++;
                 resultMessage.className = 'result-message result-correct';
-                resultMessage.classList.remove('hidden');
-
+                resultMessage.innerHTML = '正解です！' + explainHTML(question);
+                box.querySelectorAll('input, button').forEach(el => { el.disabled = true; });
                 document.getElementById('checkBtn').classList.add('hidden');
                 document.getElementById('nextBtn').classList.remove('hidden');
                 document.getElementById('enterHint').classList.remove('hidden');
                 document.getElementById('showAnswerBtn').classList.add('hidden');
-
-                // エンターキーで次の問題へ
+                document.getElementById('score').textContent = `一発正解: ${score}問`;
                 document.addEventListener('keydown', handleEnterKey);
-            } else if (!allFieldsCorrect && hasAnswered) {
-                // 間違いがある場合、0.5秒後に入力可能にする
-                setTimeout(() => {
-                    document.querySelectorAll('.input-field').forEach(field => {
-                        if (field.classList.contains('wrong')) {
-                            field.className = field.classList.contains('coefficient') ? 'input-field coefficient' :
-                                            field.classList.contains('power') ? 'input-field power' : 'input-field';
-                            field.value = '';
-                        }
-                    });
-                    hasAnswered = false;
-
-                    // 最初の間違ったフィールドにフォーカス
-                    const firstWrongField = document.querySelector('.input-field:not(.correct)');
-                    if (firstWrongField) firstWrongField.focus();
-                }, 500);
+            } else if (onlyReduce) {
+                resultMessage.className = 'result-message result-reduce';
+                resultMessage.innerHTML = 'おしい！ 値は合っています。黄色の係数を約分しよう。';
+            } else {
+                missedThis = true;
+                resultMessage.className = 'result-message result-wrong';
+                resultMessage.innerHTML = '赤い欄がちがいます。' + (cProblem ? `<div class="rule-hint">💡 ${cProblem}</div>` : '') + RULE_HINT;
             }
         }
+
 
         function selectOption(index) {
             if (hasAnswered) return;
@@ -1261,56 +1132,55 @@
             checkAnswer();
         }
 
+        const RULE_HINT = '<div class="rule-hint">💡 ∫xⁿ dx = <span class="fraction"><span>1</span><span>n+1</span></span>xⁿ⁺¹ + C（次数を 1 ふやして、その数でわる。C は積分定数）。微分してもとの式にもどるか、たしかめよう。</div>';
+
         function checkAnswer() {
             if (currentMode === 'input') {
                 checkInputAnswer();
                 return;
             }
-
             if (selectedOption === -1 || hasAnswered) return;
 
             hasAnswered = true;
             const question = currentQuestions[currentQuestionIndex];
             const isCorrect = selectedOption === question.shuffledCorrect;
-
             const resultMessage = document.getElementById('resultMessage');
+            const options = document.querySelectorAll('.option');
 
             if (isCorrect) {
-                if (!missedThis) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入った
-                resultMessage.textContent = '正解です！';
+                if (!missedThis) score++;
+                resultMessage.innerHTML = '正解です！' + explainHTML(question);
                 resultMessage.className = 'result-message result-correct';
                 resultMessage.classList.remove('hidden');
-
+                document.getElementById('score').textContent = currentMode === 'challenge' ? `連続正解: ${score}問` : `一発正解: ${score}問`;
                 document.getElementById('nextBtn').classList.remove('hidden');
                 document.getElementById('enterHint').classList.remove('hidden');
                 document.getElementById('showAnswerBtn').classList.add('hidden');
-
-                // エンターキーで次の問題へ
+                document.getElementById('retryBtn').classList.add('hidden');
                 document.addEventListener('keydown', handleEnterKey);
             } else {
-                // 間違った選択肢を赤くマーク
-                document.querySelectorAll('.option')[selectedOption].classList.add('wrong');
-
-                missedThis = true;   // 【ブラッシュアップ】
-                resultMessage.innerHTML = '不正解です。' + (currentMode === 'challenge' ? '' : '<div class="rule-hint">💡 xⁿ の不定積分は <b>xⁿ⁺¹ / (n+1)</b>（次数を 1 ふやして、その数でわる）。微分してもとの式にもどるか、たしかめよう。</div>');
+                options[selectedOption].classList.add('wrong');
+                missedThis = true;
                 resultMessage.className = 'result-message result-wrong';
                 resultMessage.classList.remove('hidden');
 
                 if (currentMode === 'challenge') {
-                    // 鬼連チャンモードでは即終了（【ブラッシュアップ】正しい答えを見せる。メニューに戻っていたら結果を出さない）
-                    const right = document.querySelectorAll('.option')[question.shuffledCorrect];
+                    // 鬼連チャンモードでは即終了。正しい答えと解説を見せる。メニューに戻っていたら結果を出さない
+                    const right = options[question.shuffledCorrect];
                     if (right) right.classList.add('selected');
+                    resultMessage.innerHTML = '不正解です。' + explainHTML(question);
                     const myRun = runId;
                     setTimeout(() => {
                         if (myRun === runId) showFinalResult();
-                    }, 2000);
+                    }, 3000);
                 } else {
-                    // 他のモードではもう一度挑戦可能
+                    // まちがえたままでは次へ進めない（もう一度挑戦 か 答えを見る）
+                    resultMessage.innerHTML = '不正解です。' + RULE_HINT;
                     document.getElementById('retryBtn').classList.remove('hidden');
-                    // 【ブラッシュアップ】まちがえたままでは次へ進めない（もう一度挑戦 か 答えを見る）
                 }
             }
         }
+
 
         function handleEnterKey(event) {
             if (event.key === 'Enter' && hasAnswered) {
@@ -1367,7 +1237,7 @@
                 showFinalResult();
             } else if (currentMode === 'challenge' && currentQuestionIndex >= currentQuestions.length) {
                 // 全問題を使い切った場合、新しい問題セットを生成
-                currentQuestions = shuffleArray([...questionPool]);
+                currentQuestions = shuffleArray([...questionPool]).map(prepareQuestion);   // 【ブラッシュアップ】
                 currentQuestionIndex = 0;
                 showQuestion();
             } else {
@@ -1401,8 +1271,10 @@
                     finalMessage.textContent = `もう少し練習してみましょう！💪\n所要時間: ${timeText}`;
                 }
             } else if (currentMode === 'random100') {
-                finalScore.textContent = `${score}/${currentQuestions.length}問 一発正解！`;
-                const percentage = Math.round((score / currentQuestions.length) * 100);
+                // 【ブラッシュアップ】とちゅうで終わったときは、そこまでに答えた問題の数で
+                const doneCount = Math.min(currentQuestions.length, currentQuestionIndex + (hasAnswered ? 1 : 0));
+                finalScore.textContent = `${score}/${doneCount}問 一発正解！`;
+                const percentage = doneCount ? Math.round((score / doneCount) * 100) : 0;
                 finalMessage.textContent = `正解率: ${percentage}%\n所要時間: ${timeText}`;
             } else if (currentMode === 'challenge') {
                 finalScore.textContent = `${score}問連続正解！`;
@@ -1420,163 +1292,44 @@
 
         function showAnswer() {
             const question = currentQuestions[currentQuestionIndex];
+            missedThis = true;
+            hasAnswered = true;
 
             if (currentMode === 'input') {
-                const answer = question.answer;
-                missedThis = true;   // 【ブラッシュアップ】
-
-                if (answer.type === 'simple') {
-                    if (answer.coefficient !== '1') {
-                        const coeffField = document.getElementById('coeff');
-                        if (coeffField) {
-                            coeffField.value = answer.coefficient;
-                            coeffField.className = 'input-field coefficient correct';
-                        }
-                    }
-                    if (answer.power !== '1') {
-                        const powerField = document.getElementById('power');
-                        if (powerField) {
-                            powerField.value = answer.power;
-                            powerField.className = 'input-field power correct';
-                        }
-                    }
-                } else if (answer.type === 'fraction') {
-                    const numeratorParts = parseNumerator(answer.numerator);
-                    const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
-
-                    // 分母が1の場合は整数として表示
-                    if (simplified.denominator === 1) {
-                        if (simplified.numerator !== 1) {
-                            const coeffField = document.getElementById('coeff');
-                            if (coeffField) {
-                                coeffField.value = simplified.numerator;
-                                coeffField.className = 'input-field coefficient correct';
-                            }
-                        }
-
-                        if (numeratorParts.power !== 1) {
-                            const powerField = document.getElementById('power');
-                            if (powerField) {
-                                powerField.value = numeratorParts.power;
-                                powerField.className = 'input-field power correct';
-                            }
-                        }
-                    } else {
-                        // 分数として表示（係数1も明示的に表示）
-                        const coeffField = document.getElementById('numerator-coeff');
-                        if (coeffField) {
-                            coeffField.value = simplified.numerator;
-                            coeffField.className = 'input-field coefficient correct';
-                        }
-
-                        if (numeratorParts.power !== 1) {
-                            const powerField = document.getElementById('numerator-power');
-                            if (powerField) {
-                                powerField.value = numeratorParts.power;
-                                powerField.className = 'input-field power correct';
-                            }
-                        }
-
-                        const denField = document.getElementById('denominator');
-                        if (denField) {
-                            denField.value = simplified.denominator;
-                            denField.className = 'input-field correct';
-                        }
-                    }
-                } else if (answer.type === 'polynomial') {
-                    const term1Parts = parseNumerator(answer.term1.numerator);
-                    const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
-
-                    // 分母が1の場合は整数として表示
-                    if (simplified.denominator === 1) {
-                        if (simplified.numerator !== 1) {
-                            const term1CoeffField = document.getElementById('term1-coeff');
-                            if (term1CoeffField) {
-                                term1CoeffField.value = simplified.numerator;
-                                term1CoeffField.className = 'input-field coefficient correct';
-                            }
-                        }
-
-                        if (term1Parts.power !== 1) {
-                            const term1PowerField = document.getElementById('term1-power');
-                            if (term1PowerField) {
-                                term1PowerField.value = term1Parts.power;
-                                term1PowerField.className = 'input-field power correct';
-                            }
-                        }
-                    } else {
-                        // 分数として表示（係数1も明示的に表示）
-                        const term1CoeffField = document.getElementById('term1-coeff');
-                        if (term1CoeffField) {
-                            term1CoeffField.value = simplified.numerator;
-                            term1CoeffField.className = 'input-field coefficient correct';
-                        }
-
-                        if (term1Parts.power !== 1) {
-                            const term1PowerField = document.getElementById('term1-power');
-                            if (term1PowerField) {
-                                term1PowerField.value = term1Parts.power;
-                                term1PowerField.className = 'input-field power correct';
-                            }
-                        }
-
-                        const term1DenField = document.getElementById('term1-den');
-                        if (term1DenField) {
-                            term1DenField.value = simplified.denominator;
-                            term1DenField.className = 'input-field correct';
-                        }
-                    }
-
-                    const term2CoeffField = document.getElementById('term2-coeff');
-                    if (term2CoeffField) {
-                        term2CoeffField.value = answer.term2.coefficient;
-                        term2CoeffField.className = 'input-field coefficient correct';
-                    }
-                }
-
-                hasAnswered = true;
+                const box = document.getElementById('inputContainer');
+                question._ans.forEach((t, j) => {
+                    const set = (sel, v) => { const el = box.querySelector(`${sel}[data-j="${j}"]`); if (el) { el.value = v; setMark(el, 'correct'); } };
+                    set('.in-num', Math.abs(t.n));
+                    set('.in-den', t.d === 1 ? '' : t.d);
+                    set('.in-pow', t.p);
+                    const b = box.querySelector(`.sign-btn[data-j="${j}"]`);
+                    if (b) { b.dataset.v = t.n < 0 ? '-' : '+'; b.textContent = t.n < 0 ? '−' : '+'; setMark(b, 'correct'); }
+                });
+                const cIn = box.querySelector('.in-c');
+                cIn.value = question.cond ? (question._c[1] === 1 ? question._c[0] : question._c.join('/')) : 'C';
+                setMark(cIn, 'correct');
+                box.querySelectorAll('input, button').forEach(el => { el.disabled = true; });
                 document.getElementById('checkBtn').classList.add('hidden');
-                document.getElementById('nextBtn').classList.remove('hidden');
-                document.getElementById('enterHint').classList.remove('hidden');
-                document.getElementById('showAnswerBtn').classList.add('hidden');
-
-                const resultMessage = document.getElementById('resultMessage');
-                resultMessage.textContent = '答えを表示しました';
-                resultMessage.className = 'result-message result-correct';
-                resultMessage.classList.remove('hidden');
-
-                // エンターキーで次の問題へ
-                document.addEventListener('keydown', handleEnterKey);
             } else {
                 // 選択肢モードでは正解の選択肢をハイライト
-                const question = currentQuestions[currentQuestionIndex];
-                missedThis = true;   // 【ブラッシュアップ】
                 document.getElementById('retryBtn').classList.add('hidden');
-                const correctIndex = question.shuffledCorrect;
-
-                document.querySelectorAll('.option').forEach((opt, index) => {
-                    if (index === correctIndex) {
-                        opt.classList.add('selected');
-                        opt.style.background = '#38a169';
-                        opt.style.color = 'white';
-                        opt.style.borderColor = '#38a169';
-                    }
-                });
-
-                hasAnswered = true;
-                document.getElementById('nextBtn').classList.remove('hidden');
-                document.getElementById('enterHint').classList.remove('hidden');
-                document.getElementById('showAnswerBtn').classList.add('hidden');
-
-                const resultMessage = document.getElementById('resultMessage');
-                resultMessage.textContent = '答えを表示しました';
-                resultMessage.className = 'result-message result-correct';
-                resultMessage.classList.remove('hidden');
-
-                // エンターキーで次の問題へ
-                document.addEventListener('keydown', handleEnterKey);
+                const opt = document.querySelectorAll('.option')[question.shuffledCorrect];
+                if (opt) opt.classList.add('selected', 'answer-shown');
             }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+            document.getElementById('enterHint').classList.remove('hidden');
+            document.getElementById('showAnswerBtn').classList.add('hidden');
+
+            const resultMessage = document.getElementById('resultMessage');
+            resultMessage.innerHTML = '答えを表示しました' + explainHTML(question);
+            resultMessage.className = 'result-message result-shown';
+            resultMessage.classList.remove('hidden');
+
+            // エンターキーで次の問題へ
+            document.addEventListener('keydown', handleEnterKey);
         }
+
 
         function backToMenu() {
             runId++;   // 【ブラッシュアップ】
@@ -1603,6 +1356,7 @@
     "#nextBtn": "u-btn u-btn-blue",
     "#retryBtn": "u-btn",
     "#showAnswerBtn": "u-btn u-btn-plain",
+    "#finishBtn": "u-btn u-btn-plain",
     "#backBtn": "u-btn u-btn-plain",
     ".result-nav .again": "u-btn",
     ".result-nav .next": "u-btn u-btn-blue",

@@ -11,7 +11,8 @@
   <script src="../assets/port.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>平方根タワー</title>
+  <!-- 【ブラッシュアップ】16「ルートの計算全般」と同じ名前だったので「基礎編」に -->
+  <title>平方根タワー 基礎編</title>
   <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
        本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
        同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
@@ -311,6 +312,7 @@
     .completion-nav .completion-btn.sub { background: rgba(255,255,255,0.14); }
     .completion-nav a { margin-top: 4px; }
     .feedback-close { border: 2px solid #fbbf24 !important; }
+    .rad { border-top: 2px solid currentColor; padding: 1px 1px 0; margin-left: 1px; }   /* √ の横線（括線） */
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
     @media (max-width: 640px) {
@@ -370,7 +372,7 @@
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <!-- ヘッダー -->
     <div class="header-glow">
-      <h1 id="game-title" style="font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #fbbf24, #f87171, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">平方根タワー</h1>
+      <h1 id="game-title" style="font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #fbbf24, #f87171, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">平方根タワー 基礎編</h1>
       <p style="font-size: 16px; opacity: 0.9; color: white;">9つのフロアを登ってマスターを目指そう！🏗️</p>
     </div>
 
@@ -408,13 +410,14 @@
         <p id="question-text" style="font-size: 28px; text-align: center; font-weight: bold; color: white; line-height: 1.8;"></p>
       </div>
 
+      <div id="choices-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;"></div>
+
+      <!-- 【ブラッシュアップ】こたえのことばを選択肢の下へ（上に出すと選択肢の位置がずれていた） -->
       <div id="feedback-section" class="feedback-section hidden">
         <div id="feedback" style="font-size: 24px; font-weight: bold; margin-bottom: 0;"></div>
         <div id="hint-text" class="hint-text"></div>
         <button id="retry-btn" class="retry-btn hidden">もう一度やってみる</button>
       </div>
-
-      <div id="choices-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;"></div>
 
       <button id="next-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: none; font-size: 16px; transition: all 0.3s;">次へ →</button>
     </div>
@@ -440,15 +443,19 @@
   <script>
     const stages = [
       { name: '平方根を求める', floor: '1F', hasDifficulty: true },
-      { name: '平方根を求める', floor: '2F', hasDifficulty: false },
+      { name: '√を使って表す', floor: '2F', hasDifficulty: false },   // 【ブラッシュアップ】1F と同じ名前だった
       { name: '根号を外す', floor: '3F', hasDifficulty: true },
-      { name: '値を求める', floor: '4F', hasDifficulty: false },
-      { name: '乗除の基本', floor: '5F', hasDifficulty: true },
-      { name: 'a√bの変形', floor: '6F', hasDifficulty: true },
+      // 【ブラッシュアップ】4F に中級（√(a²) の問題）を足した。5F と 6F を入れかえた（問題データもあとで入れかえる）
+      { name: '値を求める', floor: '4F', hasDifficulty: true },
+      { name: 'a√bの変形', floor: '5F', hasDifficulty: true },
+      { name: '乗除の基本', floor: '6F', hasDifficulty: true },
       { name: '加減の計算', floor: '7F', hasDifficulty: true },
       { name: '展開の計算', floor: '8F', hasDifficulty: true },
       { name: '分母の有理化', floor: '9F', hasDifficulty: true }
     ];
+
+    // 【ブラッシュアップ】√ の中が式のとき（√(3²) など）に、中身の上に横線（括線）を引いて表す
+    function rt(x) { return '√<span class="rad">' + x + '</span>'; }
 
     function makeFraction(numerator, denominator) {
       return `<div class="fraction"><div class="fraction-numerator">${numerator}</div><div class="fraction-denominator">${denominator}</div></div>`;
@@ -463,27 +470,31 @@
       return shuffled;
     }
 
+    // 【ブラッシュアップ】ヒントを見直した。元は 8F で 1 問ずれていたり（√3(√3+2) に √2 のヒント）、
+    //   (√2+1)² に「(a+b)(a−b)」、マイナスのない √64 に「マイナスをつけて」と出たり、7F では答えそのものが出ていた。
+    //   ヒントは下で問題 1 つ 1 つに結びつけるので、問題の順番を混ぜてもずれない。
     const hints = {
       1: {
-        beginner: ['16の平方根は？掛け算で考えると4×4=16', '9の平方根は？両側に±の符号をつけてね', '25の平方根は？5×5=25', '36の平方根は？6×6=36', '49の平方根は？7×7=49'],
-        intermediate: ['もう一度ゆっくり計算してみて', '平方根の定義を思い出して', 'a²=b のときbの平方根は±a', '掛け算で確認してね', '√の中の数を因数分解してみて'],
-        advanced: ['平方根の基本に戻ってね', 'a×a=bのとき、bの平方根は？', '平方数を覚えてる？', 'もう一度丁寧に計算してみて', '√の定義を確認してね']
+        beginner: ['□×□=16 となる数 □ は？ 正と負の 2 つあるよ', '9の平方根は？両側に±の符号をつけてね', '□×□=25 となる数は、正と負の 2 つ', '□×□=36 となる数は、正と負の 2 つ', '□×□=49 となる数は、正と負の 2 つ'],
+        intermediate: ['12×12 はいくつ？ 負の数も忘れずに', '平方根の定義を思い出して', 'a²=b のときbの平方根は±a', '掛け算で確認してね', '11×11 はいくつ？'],
+        advanced: ['0.3×0.3 はいくつ？ 平方根は正と負の 2 つ', '分母と分子をそれぞれ 2 乗して考えよう', '平方数を覚えてる？ 13×13 は？', 'もう一度丁寧に計算してみて', '15×15 はいくつ？']
       },
       2: {
         beginner: ['このままで大丈夫。√の形で答えるよ', '平方根の形で答えましょう', '√で囲まれた数が答えです', 'ルートの形のままで正解！', '無理数になるから√の形です']
       },
       3: {
-        beginner: ['√4=2 だからそのままの数が答え', '平方根を計算して外してね', '√の中を因数分解すれば？', '完全平方数を外すのが目標', '√を計算してね'],
-        intermediate: ['-がついてる場合は符号に注意', '√16=4だからマイナスをつけて', 'プラス側の数を出してからマイナスをつけて', '√の計算をしてからマイナスをつけてね', 'マイナスの記号も含めて答えてね'],
-        advanced: ['マイナスの記号も忘れずに', '√を外した後にマイナスをつけてね', '完全平方数を見つけてね', 'ルートを計算してからマイナスをつけて', 'もう一度符号を確認して']
+        beginner: ['√4 は「2乗して 4 になる正の数」', '√16 は正の数だけ。± はつかないよ', '□×□=36 となる正の数 □ は？', '□×□=49 となる正の数 □ は？', '□×□=81 となる正の数 □ は？'],
+        intermediate: ['√9 を先に計算してから、前の − をつけよう', '√16 を先に計算してから、前の − をつけよう', '√36 を先に計算してから、前の − をつけよう', '√64 は「64 の正の平方根」。± はつかないよ', '√100 を先に計算してから、前の − をつけよう'],
+        advanced: ['√100 は「100 の正の平方根」。± はつかないよ', '√121 を先に計算してから、前の − をつけよう', '□×□=169 の □ を見つけてから − をつけよう', '√196 は正の数だけ。14×14 は？', '√225 を先に計算してから、前の − をつけよう']
       },
       4: {
-        beginner: ['(√a)²=a という性質を使ってね', '√2×√2=2になるよ', 'ルートの二乗は中の数になる', '(√5)²はどうなる？', 'マイナスでも二乗するとプラスになる']
+        beginner: ['(√a)²=a という性質を使ってね', '(√5)²=√5×√5。√a×√a=a だよ', '(−√3)²=(−√3)×(−√3)。マイナス×マイナスは？', 'ルートの 2 乗は中の数になる', 'マイナスでも 2 乗するとプラスになる'],
+        intermediate: ['√(a²) は「a² の正の平方根」。まず 3² を計算', '(−3)² を先に計算しよう。√ の答えは負にならない', '√((−5)²) を先に計算してから、前の − をつけよう', '(−7)² を先に計算しよう。√ の答えは負にならない', '(−√6)×(−√6)。マイナス×マイナスは？']
       },
       5: {
-        beginner: ['√a×√b=√(ab) という公式だよ', '√3と√2をかけるなら...', 'ルートの中同士をかける', '√を一つにしてね', '35÷7=5だから...'],
-        intermediate: ['√同士をかけて...', '3×6=18だから？', '√の中の数同士をかけて', '125÷5=25だから...', '216÷6=36だから...'],
-        advanced: ['2と√3の部分に分けて考えて', '√6×√3をしてから2をかけて', 'マイナスの符号も忘れずに', '√125÷√5をしてからマイナスをつけて', '2√6÷√216を計算してみて']
+        beginner: ['√a×√b=√(ab) という公式だよ', '√5×√3 は √ の中どうしをかけて √(5×3)', 'ルートの中同士をかける', '√を一つにしてね', '√a÷√b=√(a÷b)。35÷7 は？'],
+        intermediate: ['√a×√a=a だよ', '√18 になったら、18=9×2 で a√b の形に', '√の中の数同士をかけて。符号も忘れずに', '125÷5=25 だから √25 は？', '216÷6=36 だから √36 は？'],
+        advanced: ['2と√3の部分に分けて考えて', '√6×√3をしてから2をかけて', 'マイナスの符号も忘れずに', '√125÷√5をしてからマイナスをつけて', '√216=6√6 と変形してから約分しよう']
       },
       6: {
         beginner: ['8=4×2だから√8=2√2', '12=4×3だから...', '18=9×2だから...', '20=4×5だから...', '27=9×3だから...'],
@@ -491,19 +502,19 @@
         advanced: ['294を因数分解してみて', '147=49×3だから...', '200=100×2だから...', '175=25×7だから...', '363=121×3だから...']
       },
       7: {
-        beginner: ['同じルートの数同士は足せます', '4√3+√3=5√3', '同じ√の部分同士をかき集めて', '7√2-3√2=4√2', '同じルートの係数を足し引きしてね'],
+        beginner: ['同じルートの数同士は足せます', '√3 は 1√3 のこと。係数どうしをたそう', '同じ√の部分同士をかき集めて', '√2 はそのまま、前の数（係数）だけ引こう', '同じルートの係数を足し引きしてね'],
         intermediate: ['√12をまず変形してみて。√12=2√3', '√20を変形すれば...', '√18を変形すればいくつ？', '√8を変形すれば...', '√27を変形すれば...'],
         advanced: ['√12と√27をそれぞれ変形してね', '2√12-4√27を変形してから計算', '√50+√8-√2を変形してから計算', '3√20-2√45を変形してから計算', '2√8+√18-√32をそれぞれ変形してね']
       },
       8: {
-        beginner: ['分配法則を使ってね', '√2×√2=2 と √2×1=√2', '√3×√3=3 と √3×2=2√3', '√5×√5=5 と √5×(-1)=-√5', '√2を配ってみて'],
-        intermediate: ['分配法則で展開してね', '(a+b)²=a²+2ab+b² を使ってね', '(a+b)(a-b)=a²-b² を思い出して', '和と差の展開だ！', '(a+b)(a-b)の公式だよ'],
+        beginner: ['分配法則：a(b+c)=ab+ac', '√3×√3 と √3×2 をそれぞれ計算しよう', '√5×√5 と √5×(−1) をそれぞれ計算しよう', '√2×3√2 と √2×1 をそれぞれ計算しよう', '√3×√3 と √3×(−√2) をそれぞれ計算しよう'],
+        intermediate: ['√2×3√2 と √2×(−2) をそれぞれ計算しよう', '√5×1 と √5×√5 をそれぞれ計算しよう', '(a+b)²=a²+2ab+b² を使ってね', '(a+b)(a−b)=a²−b² を思い出して', '(a+b)(a−b)の公式だよ'],
         advanced: ['(a+b)²の公式を使ってね', '(a-b)²の公式で...', '(a+b)(a-b)=a²-b²だ！', '(2√5)²=20を計算してね', '(3√2)²=18を計算して']
       },
       9: {
         beginner: ['分母と分子に√2をかけてね', '分母と分子に√3をかけてね', '分母と分子に√5をかけてね', '分母と分子に√2をかけてね', '分母と分子に√6をかけてね'],
         intermediate: ['2÷√2ならば√2をかけて', '分母と分子に√3をかけてね', '4÷√2を計算してみて', '6÷√3を計算してみて', '3÷√6を計算してみて'],
-        advanced: ['8÷√2を計算してみて', '9÷√3を計算してみて', '3√2÷√3を計算してね', '分母の共役(√7-√5)を使ってね', '分母の共役(√7+√3)を使ってね']
+        advanced: ['8÷√2を計算してみて', '9÷√3を計算してみて', '3√2÷√3を計算してね', '分母と分子に (√7−√5) をかけてね（和と差の積）', '分母と分子に (√7+√3) をかけてね（和と差の積）']
       }
     };
 
@@ -536,15 +547,16 @@
           { instruction: '次の数の平方根を求めなさい。', q: '49', choices: ['±7', '7', '±6', '24.5'], answer: '±7' }
         ],
         intermediate: [
-          { instruction: '次の数の平方根を求めなさい。', q: '36', choices: ['±6', '6', '±5', '18'], answer: '±6' },
+          { instruction: '次の数の平方根を求めなさい。', q: '144', choices: ['±12', '12', '±14', '72'], answer: '±12' },   // 【ブラッシュアップ】初級と同じ 36 だった
           { instruction: '次の数の平方根を求めなさい。', q: '64', choices: ['±8', '8', '±7', '32'], answer: '±8' },
           { instruction: '次の数の平方根を求めなさい。', q: '81', choices: ['±9', '9', '±8', '40.5'], answer: '±9' },
           { instruction: '次の数の平方根を求めなさい。', q: '100', choices: ['±10', '10', '±9', '50'], answer: '±10' },
           { instruction: '次の数の平方根を求めなさい。', q: '121', choices: ['±11', '11', '±10', '60.5'], answer: '±11' }
         ],
         advanced: [
-          { instruction: '次の数の平方根を求めなさい。', q: '100', choices: ['±10', '10', '±9', '50'], answer: '±10' },
-          { instruction: '次の数の平方根を求めなさい。', q: '121', choices: ['±11', '11', '±10', '60.5'], answer: '±11' },
+          // 【ブラッシュアップ】中級と同じ 100・121 だったので、小数と分数の平方根に
+          { instruction: '次の数の平方根を求めなさい。', q: '0.09', choices: ['±0.3', '0.3', '±0.03', '±0.9'], answer: '±0.3' },
+          { instruction: '次の数の平方根を求めなさい。', q: makeFraction('4', '9'), choices: ['±' + makeFraction('2', '3'), makeFraction('2', '3'), '±' + makeFraction('2', '9'), '±' + makeFraction('4', '3')], answer: '±' + makeFraction('2', '3') },
           { instruction: '次の数の平方根を求めなさい。', q: '169', choices: ['±13', '13', '±12', '84.5'], answer: '±13' },
           { instruction: '次の数の平方根を求めなさい。', q: '196', choices: ['±14', '14', '±13', '98'], answer: '±14' },
           { instruction: '次の数の平方根を求めなさい。', q: '225', choices: ['±15', '15', '±14', '112.5'], answer: '±15' }
@@ -562,14 +574,14 @@
       3: {
         beginner: [
           { instruction: '次の数を根号を使わずに表しなさい。', q: '√4', choices: ['2', '±2', '√2', '4'], answer: '2' },
-          { instruction: '次の数を根号を使わずに表しなさい。', q: '√16', choices: ['4', '±4', '√32', '16'], answer: '4' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√16', choices: ['4', '±4', '8', '16'], answer: '4' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '√36', choices: ['6', '±6', '√6', '18'], answer: '6' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '√49', choices: ['7', '±7', '√7', '24.5'], answer: '7' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '√81', choices: ['9', '±9', '√9', '40.5'], answer: '9' }
         ],
         intermediate: [
-          { instruction: '次の数を根号を使わずに表しなさい。', q: '√49', choices: ['7', '±7', '√49', '24.5'], answer: '7' },
-          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√16', choices: ['-4', '±4', '-√32', '16'], answer: '-4' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√9', choices: ['-3', '±3', '3', '-9'], answer: '-3' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√16', choices: ['-4', '±4', '-8', '16'], answer: '-4' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '-√36', choices: ['-6', '±6', '-√6', '18'], answer: '-6' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '√64', choices: ['8', '±8', '√64', '32'], answer: '8' },
           { instruction: '次の数を根号を使わずに表しなさい。', q: '-√100', choices: ['-10', '±10', '-√100', '50'], answer: '-10' }
@@ -589,6 +601,14 @@
           { instruction: '次の数を求めなさい。', q: '(-√3)²', choices: ['3', '-√3', '-3', '-9'], answer: '3' },
           { instruction: '次の数を求めなさい。', q: '(√7)²', choices: ['7', '√7', '49', '3.5'], answer: '7' },
           { instruction: '次の数を求めなさい。', q: '(-√2)²', choices: ['2', '-2', '4', '1'], answer: '2' }
+        ],
+        // 【ブラッシュアップ】中級を追加：√(a²) は a² の正の平方根（a が負でも答えは正）
+        intermediate: [
+          { instruction: '次の数を求めなさい。', q: rt('3²'), choices: ['3', '±3', '9', '-3'], answer: '3' },
+          { instruction: '次の数を求めなさい。', q: rt('(-3)²'), choices: ['3', '-3', '±3', '9'], answer: '3' },
+          { instruction: '次の数を求めなさい。', q: '-' + rt('(-5)²'), choices: ['-5', '5', '±5', '25'], answer: '-5' },
+          { instruction: '次の数を求めなさい。', q: rt('(-7)²'), choices: ['7', '-7', '49', '±7'], answer: '7' },
+          { instruction: '次の数を求めなさい。', q: '(-√6)²', choices: ['6', '-6', '36', '√6'], answer: '6' }
         ]
       },
       5: {
@@ -670,14 +690,14 @@
         ],
         intermediate: [
           { instruction: '次の計算をしなさい。', q: '√2(3√2-2)', choices: ['6-2√2', '3√2-2', '5', '√2'], answer: '6-2√2' },
-          { instruction: '次の計算をしなさい。', q: '√5(1+√5)', choices: ['√5+5', '1+√5', '6', '√5+√5'], answer: '√5+5' },
-          { instruction: '次の計算をしなさい。', q: '(√2+1)²', choices: ['3+2√2', '2+1', '4+2√2', '5√2'], answer: '3+2√2' },
+          { instruction: '次の計算をしなさい。', q: '√5(1+√5)', choices: ['5+√5', '1+√5', '6', '√5+√5'], answer: '5+√5' },
+          { instruction: '次の計算をしなさい。', q: '(√2+1)²', choices: ['3+2√2', '3', '4+2√2', '5√2'], answer: '3+2√2' },
           { instruction: '次の計算をしなさい。', q: '(√3+1)(√3-1)', choices: ['2', '3', '4', '6'], answer: '2' },
           { instruction: '次の計算をしなさい。', q: '(√5+2)(√5-2)', choices: ['1', '3', '4', '9'], answer: '1' }
         ],
         advanced: [
-          { instruction: '次の計算をしなさい。', q: '(√3+2)²', choices: ['7+4√3', '3+4', '9+4√3', '√3+4'], answer: '7+4√3' },
-          { instruction: '次の計算をしなさい。', q: '(2√2-1)²', choices: ['9-4√2', '8-1', '8-4√2', '4-2√2'], answer: '9-4√2' },
+          { instruction: '次の計算をしなさい。', q: '(√3+2)²', choices: ['7+4√3', '7', '9+4√3', '√3+4'], answer: '7+4√3' },
+          { instruction: '次の計算をしなさい。', q: '(2√2-1)²', choices: ['9-4√2', '7', '8-4√2', '4-2√2'], answer: '9-4√2' },
           { instruction: '次の計算をしなさい。', q: '(√6+√2)(√6-√2)', choices: ['4', '6', '8', '6-2'], answer: '4' },
           { instruction: '次の計算をしなさい。', q: '(2√5+2)(2√5-2)', choices: ['16', '20', '18', '20-4'], answer: '16' },
           { instruction: '次の計算をしなさい。', q: '(3√2+1)(3√2-1)', choices: ['17', '18', '19', '20'], answer: '17' }
@@ -702,11 +722,24 @@
           { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('8', '√2'), choices: [makeFraction('8√2', '2'), '4√2', '8√2', '4'], answer: '4√2' },
           { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('9', '√3'), choices: [makeFraction('9√3', '3'), '3√3', '9√3', '3'], answer: '3√3' },
           { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('3√2', '√3'), choices: [makeFraction('3√6', '3'), '√6', '3√6', makeFraction('√6', '2')], answer: '√6' },
-          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√7+√5'), choices: [makeFraction('√7-√5', '2'), makeFraction('√7-√5', '1'), '√7-√5', makeFraction('1', '2')], answer: makeFraction('√7-√5', '2') },
-          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('4', '√7-√3'), choices: ['√7+√3', makeFraction('√7+√3', '1'), makeFraction('4(√7+√3)', '4'), '√7-√3'], answer: '√7+√3' }
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√7+√5'), choices: [makeFraction('√7-√5', '2'), makeFraction('√7+√5', '2'), '√7-√5', makeFraction('1', '2')], answer: makeFraction('√7-√5', '2') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('4', '√7-√3'), choices: ['√7+√3', makeFraction('√7+√3', '4'), makeFraction('4(√7+√3)', '4'), '√7-√3'], answer: '√7+√3' }
         ]
       }
     };
+
+    // 【ブラッシュアップ】5F（乗除）と 6F（a√b）を入れかえる。乗除の中級・上級で a√b の変形を使うため、a√b を先に。
+    [problems[5], problems[6]] = [problems[6], problems[5]];
+    [hints[5], hints[6]] = [hints[6], hints[5]];
+    // 【ブラッシュアップ】ヒントを問題 1 つ 1 つに結びつける（問題の順番を混ぜてもずれないように）
+    Object.keys(problems).forEach(f => Object.keys(problems[f]).forEach(d => problems[f][d].forEach((p, i) => {
+      p.hint = (hints[f] && hints[f][d] && hints[f][d][i]) || '';
+    })));
+    // 【ブラッシュアップ】表示用：半角の - を数学の − に、√ のあとの数に横線（括線）を引く（採点は元の文字列で行う）
+    function fmtMath(html) {
+      return ('>' + html + '<').replace(/>([^<]*)</g, (m, t) => '>' + t.replace(/-/g, '−').replace(/√(\d+(?:\.\d+)?)/g, '√<span class="rad">$1</span>') + '<').slice(1, -1);
+    }
+    function levelsOf(floor) { return ['beginner', 'intermediate', 'advanced'].filter(d => problems[floor] && problems[floor][d]); }
 
     function initializeStages() {
       const stageGrid = document.getElementById('stage-grid');
@@ -731,8 +764,8 @@
       document.getElementById('difficulty-title').textContent = `${stage.floor} ${stage.name}`;
 
       const warningMsg = document.getElementById('warning-message');
-      if (floor === 5 && stage.hasDifficulty) {
-        warningMsg.textContent = '💡 ヒント：【6F a√bの変形】を先に学ぶことをお勧めします！中級・上級ではこの知識が必要です。';
+      if (floor === 6) {   // 【ブラッシュアップ】5F と 6F を入れかえたので、6F（乗除）で案内する
+        warningMsg.textContent = '💡 中級・上級では【5F a√bの変形】を使います。';
         warningMsg.classList.remove('hidden');
       } else {
         warningMsg.classList.add('hidden');
@@ -741,35 +774,19 @@
       const container = document.getElementById('difficulty-buttons-container');
       container.innerHTML = '';
 
-      if (stage.hasDifficulty) {
-        const btn1 = document.createElement('button');
-        btn1.id = 'btn-beginner';
-        btn1.className = 'btn-difficulty btn-beginner';
-        btn1.textContent = '🌿 初級';
-        btn1.addEventListener('click', () => startQuiz('beginner'));
-        container.appendChild(btn1);
-
-        const btn2 = document.createElement('button');
-        btn2.id = 'btn-intermediate';
-        btn2.className = 'btn-difficulty btn-intermediate';
-        btn2.textContent = '🔥 中級';
-        btn2.addEventListener('click', () => startQuiz('intermediate'));
-        container.appendChild(btn2);
-
-        const btn3 = document.createElement('button');
-        btn3.id = 'btn-advanced';
-        btn3.className = 'btn-difficulty btn-advanced';
-        btn3.textContent = '💎 上級';
-        btn3.addEventListener('click', () => startQuiz('advanced'));
-        container.appendChild(btn3);
-      } else {
-        const btn1 = document.createElement('button');
-        btn1.id = 'btn-beginner';
-        btn1.className = 'btn-difficulty btn-beginner';
-        btn1.textContent = '🌿 初級';
-        btn1.addEventListener('click', () => startQuiz('beginner'));
-        container.appendChild(btn1);
-      }
+      // 【ブラッシュアップ】問題がある難易度だけボタンを出す（4F に中級を足したため）。
+      //   ボタンが 1 つしかないフロア（2F）は、難易度の画面を出さずにすぐ始める。
+      const labels = { beginner: '🌿 初級', intermediate: '🔥 中級', advanced: '💎 上級' };
+      const lvls = levelsOf(floor);
+      lvls.forEach(d => {
+        const b = document.createElement('button');
+        b.id = 'btn-' + d;
+        b.className = 'btn-difficulty btn-' + d;
+        b.textContent = labels[d];
+        b.addEventListener('click', () => startQuiz(d));
+        container.appendChild(b);
+      });
+      if (lvls.length === 1) startQuiz(lvls[0]);
     }
 
     document.getElementById('back-btn').addEventListener('click', () => {
@@ -781,14 +798,15 @@
 
     document.getElementById('back-to-difficulty').addEventListener('click', () => {
       document.getElementById('question-screen').classList.add('hidden');
-      document.getElementById('difficulty-select').classList.remove('hidden');
+      // 【ブラッシュアップ】難易度が 1 つだけのフロアは、フロアの選択にもどる
+      document.getElementById(levelsOf(currentFloor).length === 1 ? 'stage-select' : 'difficulty-select').classList.remove('hidden');
       currentQuestionIndex = 0;
       isAnswered = false;
     });
 
     function startQuiz(difficulty) {
       currentDifficulty = difficulty;
-      currentProblemSet = problems[currentFloor]?.[difficulty] || [];
+      currentProblemSet = shuffleArray(problems[currentFloor]?.[difficulty] || []);   // 【ブラッシュアップ】問題の順番も毎回混ぜる
       currentQuestionIndex = 0;
       isAnswered = false;
 
@@ -809,7 +827,7 @@
 
       const problem = currentProblemSet[currentQuestionIndex];
       document.getElementById('instruction-text').textContent = problem.instruction;
-      document.getElementById('question-text').innerHTML = problem.q;
+      document.getElementById('question-text').innerHTML = fmtMath(problem.q);   // 【ブラッシュアップ】
       document.getElementById('question-number').textContent = `${currentQuestionIndex + 1} / ${currentProblemSet.length}`;
 
       const choicesContainer = document.getElementById('choices-container');
@@ -820,7 +838,7 @@
       shuffledChoices.forEach(choice => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
-        btn.innerHTML = choice;
+        btn.innerHTML = fmtMath(choice);   // 【ブラッシュアップ】
         btn.addEventListener('click', () => checkAnswer(choice, problem.answer, btn, problem.choices));
         choicesContainer.appendChild(btn);
       });
@@ -831,8 +849,7 @@
     }
 
     function checkAnswer(selected, correct, btn, allChoices) {
-      if (isAnswered) return;
-      isAnswered = true;
+      if (isAnswered || btn.disabled) return;
 
       const feedbackSection = document.getElementById('feedback-section');
       const feedback = document.getElementById('feedback');
@@ -840,6 +857,19 @@
       const retryBtn = document.getElementById('retry-btn');
       const choiceButtons = document.querySelectorAll('.choice-btn');
 
+      // 【ブラッシュアップ】元はまちがえるたびに「もう一度やってみる」を押す必要があり、まちがえた選択肢もまた押せた。
+      //   まちがえた選択肢だけ押せなくして、ほかの選択肢はそのまま選び直せるようにする。
+      if (selected !== correct) {
+        btn.disabled = true;
+        feedback.textContent = sameValue(selected, correct) ? '🤏 おしい！' : '❌ 不正解… ほかの答えをえらぼう';
+        hintText.textContent = sameValue(selected, correct) ? '💡 ' + closeMessage(selected) : '💡 ヒント: ' + (currentProblemSet[currentQuestionIndex].hint || 'もう一度ゆっくり考えてみよう');
+        feedbackSection.classList.remove('feedback-correct');
+        feedbackSection.classList.add('feedback-incorrect');
+        retryBtn.classList.add('hidden');
+        feedbackSection.classList.remove('hidden');
+        return;
+      }
+      isAnswered = true;
       choiceButtons.forEach(b => b.disabled = true);
 
       if (selected === correct) {
@@ -850,11 +880,12 @@
         feedbackSection.classList.add('feedback-correct');
         retryBtn.classList.add('hidden');
         document.getElementById('next-btn').style.display = 'block';
+        setTimeout(() => document.getElementById('next-btn').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);   // 【ブラッシュアップ】
       } else if (sameValue(selected, correct)) {
         // 【ブラッシュアップ】元は √18（＝3√2）や 2√2/2（＝√2）のように「値は同じだけど、まだ簡単にできる形」を
         //   選んでもただ「不正解」になり、何がいけないのか分からなかった。
         feedback.textContent = '🤏 おしい！';
-        hintText.textContent = '💡 ' + closeMessage();
+        hintText.textContent = '💡 ' + closeMessage(selected);
         feedbackSection.classList.remove('feedback-correct');
         feedbackSection.classList.add('feedback-incorrect');
         retryBtn.classList.remove('hidden');
@@ -867,7 +898,6 @@
         };
       } else {
         feedback.textContent = '❌ 不正解...';
-        const hintIndex = Math.floor(Math.random() * hints[currentFloor][currentDifficulty].length);
         hintText.textContent = '💡 ヒント: ' + hints[currentFloor][currentDifficulty][currentQuestionIndex % hints[currentFloor][currentDifficulty].length];
         feedbackSection.classList.remove('feedback-correct');
         feedbackSection.classList.add('feedback-incorrect');
@@ -908,6 +938,7 @@
         isAnswered = false;
       };
       // 【ブラッシュアップ】「次へ」のボタンの文字
+      document.getElementById('completion-btn').style.display = levelsOf(currentFloor).length === 1 ? 'none' : '';   // 【ブラッシュアップ】
       const t = nextTarget();
       const nb = document.getElementById('next-target-btn');
       nb.style.display = t ? '' : 'none';
@@ -920,7 +951,8 @@
     function nextTarget() {
       const order = ['beginner', 'intermediate', 'advanced'];
       const i = order.indexOf(currentDifficulty);
-      if (currentStage && currentStage.hasDifficulty && i < 2) return { floor: currentFloor, diff: order[i + 1] };
+      const nx = order.slice(i + 1).find(d => problems[currentFloor] && problems[currentFloor][d]);   // 【ブラッシュアップ】
+      if (nx) return { floor: currentFloor, diff: nx };
       if (currentFloor < 9) return { floor: currentFloor + 1, diff: 'beginner' };
       return null;
     }
@@ -951,9 +983,10 @@
       const x = valueOf(a), y = valueOf(b);
       return isFinite(x) && isFinite(y) && Math.abs(x - y) < 1e-9;
     }
-    function closeMessage() {
+    function closeMessage(sel) {
       if (currentFloor === 3) return '値は同じだけど、この問題は「√を使わない形」で答えよう。';
-      if (currentFloor === 6) return '値は同じだけど、a√b の形（√の中をできるだけ小さい数）にしよう。';
+      if (currentFloor === 5) return '値は同じだけど、a√b の形（√の中をできるだけ小さい数）にしよう。';   // 【ブラッシュアップ】5F と 6F を入れかえた
+      if (/fraction/.test(sel || '')) return '値は同じだけど、まだ約分できるよ。';
       if (currentFloor === 9) return '値は同じだけど、まだ簡単にできるよ。約分できるところは約分しよう。';
       return '値は同じだけど、まだ簡単にできるよ。√の中をできるだけ小さくして、計算できるところは計算しよう。';
     }
@@ -961,7 +994,7 @@
     initializeStages();
 
     if (window.elementSdk) {
-      const defaultConfig = { game_title: '平方根タワー' };
+      const defaultConfig = { game_title: '平方根タワー 基礎編' };   // 【ブラッシュアップ】
       window.elementSdk.init({
         defaultConfig,
         onConfigChange: async (config) => {

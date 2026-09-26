@@ -1116,6 +1116,24 @@
     .result-nav { border: 6px solid var(--u-frame); border-radius: 28px; box-shadow: 0 10px 0 rgba(0,0,0,0.05); }
     .result-nav-title.ok { color: var(--u-accent-text); }
     .message { color: var(--u-ink); }
+    /* 【ブラッシュアップ】解説の枠・ヒント・ゲームオーバーの答え・数式の書き方（数字は立て、文字だけ斜体） */
+    .choice-card, .demon-problem, .term-block { font-style: normal !important; font-family: 'Times New Roman', serif; }
+    .choice-card i, .demon-problem i, .term-block i, .ex-box i, .result-ex i { font-style: italic; }
+    .ex-box { width: 100%; max-width: 500px; margin-top: 4px; padding: 12px 16px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 18px; color: var(--u-ink); font-weight: 700; line-height: 1.9; }
+    .ex-box.hint { background: var(--u-soft-yellow); border-color: #fde68a; }
+    .ex-answer { font-size: 1.15rem; }
+    .ex-answer b, .ex-body b, .result-ex b { color: var(--u-title-dark); }
+    .ex-body { font-family: 'Times New Roman', var(--u-font); }
+    .ex-box .ex-next { display: block; margin: 10px auto 0; }
+    .result-ex { width: 100%; max-width: 420px; padding: 10px 14px; background: var(--u-soft-blue); border-radius: 16px; font-weight: 700; line-height: 1.9; color: var(--u-ink); }
+    .demon-speech-bubble { color: var(--u-title-dark) !important; }
+    @media (max-width: 600px) {
+      .dungeon-scene { height: 190px !important; }
+      .dungeon-scene .demon-container { zoom: 0.46 !important; }
+      .choice-grid { grid-template-columns: 1fr 1fr !important; }
+      .choice-grid.long { grid-template-columns: 1fr !important; }
+      .choice-card { min-height: 64px; }
+    }
   
   </style>
 </head>
@@ -1124,7 +1142,7 @@
    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
    <div id="menu-screen">
     <div class="game-header">
-     <h1 class="game-title" id="gameTitle">数式バトル：6つのダンジョン</h1>
+     <h1 class="game-title" id="gameTitle">数式バトル：7つのダンジョン</h1>
      <p class="mode-selection-text" id="modeSelectionText">挑戦するモードを選んでください</p>
     </div>
     <div class="mode-grid">
@@ -1170,6 +1188,14 @@
       <h2 class="mode-title">バリアを破れ！分配法則Ver.2</h2>
       <p class="mode-description">分配法則を使って展開！カッコの前に文字式がある問題</p>
      </div>
+     <!-- 【ブラッシュアップ】分配法則でかっこを外してから、同類項をまとめる問題（数学Ⅰの定番）を追加 -->
+     <div class="mode-card" onclick="showDifficultySelect(7)">
+      <div class="mode-number">
+       7
+      </div>
+      <h2 class="mode-title">バリアを破れ！分配法則Ver.3</h2>
+      <p class="mode-description">かっこを外してから同類項をまとめよう！例：2(x + 3) − 3(x − 1)</p>
+     </div>
     </div>
    </div>
    <div id="difficulty-select" class="difficulty-select">
@@ -1192,7 +1218,7 @@
   </div>
   <script>
     const defaultConfig = {
-      game_title: "数式バトル：6つのダンジョン",
+      game_title: "数式バトル：7つのダンジョン",
       mode_selection_text: "挑戦するモードを選んでください",
       background_color: "#667eea",
       card_color: "#ffffff",
@@ -1281,7 +1307,12 @@
         { problem: "3x² - 5x + 2x² + 7x", answer: "5x² + 2x", choices: ["5x² + 2x", "5x² - 2x", "x² + 2x", "5x² + 12x"] },
         { problem: "6xy - 4x + 2xy + 3x", answer: "8xy - x", choices: ["8xy - x", "8xy + x", "4xy - x", "8xy - 7x"] },
         { problem: "5a² + 3a - 2a² + 4a", answer: "3a² + 7a", choices: ["3a² + 7a", "3a² + a", "7a² + 7a", "3a² - 7a"] },
-        { problem: "4pq - 3p + 2pq + 6p", answer: "6pq + 3p", choices: ["6pq + 3p", "6pq - 3p", "2pq + 3p", "6pq + 9p"] }
+        { problem: "4pq - 3p + 2pq + 6p", answer: "6pq + 3p", choices: ["6pq + 3p", "6pq - 3p", "2pq + 3p", "6pq + 9p"] },
+        // 【ブラッシュアップ】かっこを外してまとめる問題を追加
+        { problem: "(3x - 2y) - (x - 5y)", answer: "2x + 3y", choices: ["2x + 3y", "2x - 7y", "4x - 7y", "2x - 3y"],
+          ex: ["(3x - 2y) - (x - 5y)", "= 3x - 2y - x + 5y（-( ) は中の符号が全部変わる）", "= 2x + 3y"] },
+        { problem: "(4a + b) - (2a - 3b)", answer: "2a + 4b", choices: ["2a + 4b", "2a - 2b", "6a - 2b", "2a + 2b"],
+          ex: ["(4a + b) - (2a - 3b)", "= 4a + b - 2a + 3b（-( ) は中の符号が全部変わる）", "= 2a + 4b"] }
       ],
       boss: [
         { problem: "2x + 5y - 5x + 8y + 6xy - 2xy", answer: "-3x + 13y + 4xy", choices: ["-3x + 13y + 4xy", "-3x + 13y + 8xy", "7x + 13y + 4xy", "-3x + 3y + 4xy"] },
@@ -1302,7 +1333,11 @@
         { problem: "3p × 4q", answer: "12pq", choices: ["12pq", "7pq", "12p²q", "12pq²"] },
         { problem: "4a × 2b", answer: "8ab", choices: ["8ab", "6ab", "8a²b", "8ab²"] },
         { problem: "5 × 3x²", answer: "15x²", choices: ["15x²", "8x²", "15x", "5x²"] },
-        { problem: "2xy × 4", answer: "8xy", choices: ["8xy", "6xy", "8x²y", "2xy"] }
+        { problem: "2xy × 4", answer: "8xy", choices: ["8xy", "6xy", "8x²y", "2xy"] },
+        // 【ブラッシュアップ】マイナスの係数の問題を追加
+        { problem: "(-3x) × 4y", answer: "-12xy", choices: ["-12xy", "12xy", "-7xy", "-12x²y"] },
+        { problem: "(-2a) × (-5a)", answer: "10a²", choices: ["10a²", "-10a²", "-7a²", "10a"] },
+        { problem: "3x × (-2)", answer: "-6x", choices: ["-6x", "6x", "-6", "x"] }
       ],
       medium: [
         { problem: "x² × x³", answer: "x⁵", choices: ["x⁵", "x⁶", "x", "2x⁵"] },
@@ -1315,7 +1350,12 @@
         { problem: "(b³)³", answer: "b⁹", choices: ["b⁹", "b⁶", "b¹²", "3b³"] },
         { problem: "(p²)⁵", answer: "p¹⁰", choices: ["p¹⁰", "p⁷", "p¹²", "5p²"] },
         { problem: "(x⁴)²", answer: "x⁸", choices: ["x⁸", "x⁶", "x¹⁰", "2x⁴"] },
-        { problem: "(a²)⁶", answer: "a¹²", choices: ["a¹²", "a⁸", "a¹⁴", "6a²"] }
+        { problem: "(a²)⁶", answer: "a¹²", choices: ["a¹²", "a⁸", "a¹⁴", "6a²"] },
+        // 【ブラッシュアップ】(−a)² と −(2x)² のちがい、マイナスのかけ算
+        { problem: "(-a)²", answer: "a²", choices: ["a²", "-a²", "2a", "-2a"] },
+        { problem: "-(2x)²", answer: "-4x²", choices: ["-4x²", "4x²", "-2x²", "-4x"] },
+        { problem: "(-3a)²", answer: "9a²", choices: ["9a²", "-9a²", "-6a²", "9a"] },
+        { problem: "(-x) × x²", answer: "-x³", choices: ["-x³", "x³", "-x²", "-2x³"] }
       ],
       strong: [
         { problem: "3xy × 4xy", answer: "12x²y²", choices: ["12x²y²", "12xy", "7x²y²", "12xy²"] },
@@ -1339,7 +1379,11 @@
         { problem: "(2a³b)³", answer: "8a⁹b³", choices: ["8a⁹b³", "2a⁹b³", "8a³b³", "8a⁹b"] },
         { problem: "(xy³)⁴", answer: "x⁴y¹²", choices: ["x⁴y¹²", "xy¹²", "x⁴y³", "4xy³"] },
         { problem: "(4ab²)²", answer: "16a²b⁴", choices: ["16a²b⁴", "4a²b⁴", "16ab⁴", "16a²b²"] },
-        { problem: "(5x²y)²", answer: "25x⁴y²", choices: ["25x⁴y²", "5x⁴y²", "25x²y²", "25x⁴y"] }
+        { problem: "(5x²y)²", answer: "25x⁴y²", choices: ["25x⁴y²", "5x⁴y²", "25x²y²", "25x⁴y"] },
+        // 【ブラッシュアップ】マイナスの係数の問題を追加
+        { problem: "(-2x)² × 3x", answer: "12x³", choices: ["12x³", "-12x³", "6x³", "12x²"] },
+        { problem: "(-4ab) × 3a²b", answer: "-12a³b²", choices: ["-12a³b²", "12a³b²", "-12a²b²", "-a³b²"] },
+        { problem: "-2x² × (-3x)³", answer: "54x⁵", choices: ["54x⁵", "-54x⁵", "18x⁵", "54x⁶"] }
       ],
       boss: [
         { problem: "5x²y³ × 3xy²", answer: "15x³y⁵", choices: ["15x³y⁵", "15x²y³", "8x³y⁵", "15xy"] },
@@ -1368,7 +1412,11 @@
         { problem: "5a ÷ 2b", answer: createFraction("5a", "2b"), choices: [createFraction("5a", "2b"), createFraction("5", "2b"), createFraction("5a", "2"), createFraction("a", "2b")] },
         { problem: "6p ÷ 5q", answer: createFraction("6p", "5q"), choices: [createFraction("6p", "5q"), createFraction("6p", "5"), createFraction("p", "5q"), createFraction("6", "5q")] },
         { problem: "7x ÷ 4y", answer: createFraction("7x", "4y"), choices: [createFraction("7x", "4y"), createFraction("7x", "4"), createFraction("x", "4y"), createFraction("7", "4y")] },
-        { problem: "8a ÷ 3b", answer: createFraction("8a", "3b"), choices: [createFraction("8a", "3b"), createFraction("8", "3b"), createFraction("8a", "3"), createFraction("a", "3b")] }
+        { problem: "8a ÷ 3b", answer: createFraction("8a", "3b"), choices: [createFraction("8a", "3b"), createFraction("8", "3b"), createFraction("8a", "3"), createFraction("a", "3b")] },
+        // 【ブラッシュアップ】マイナスの係数の問題を追加
+        { problem: "(-12x²) ÷ 4x", answer: "-3x", choices: ["-3x", "3x", "-3x²", "-8x"] },
+        { problem: "8ab ÷ (-2b)", answer: "-4a", choices: ["-4a", "4a", "-4ab", "-6a"] },
+        { problem: "(-15y²) ÷ (-5y)", answer: "3y", choices: ["3y", "-3y", "3y²", "-10y"] }
       ],
       medium: [
         { problem: "15a²b ÷ 3ab", answer: "5a", choices: ["5a", "5ab", "5b", "15a"] },
@@ -1383,7 +1431,10 @@
         { problem: "5xy ÷ 3", answer: createFraction("5xy", "3"), choices: [createFraction("5xy", "3"), createFraction("5x", "3"), createFraction("5y", "3"), createFraction("xy", "3")] },
         { problem: "9p² ÷ 4q", answer: createFraction("9p²", "4q"), choices: [createFraction("9p²", "4q"), createFraction("9p²", "4"), createFraction("9", "4q"), createFraction("p²", "4q")] },
         { problem: "11xy ÷ 5", answer: createFraction("11xy", "5"), choices: [createFraction("11xy", "5"), createFraction("11x", "5"), createFraction("11y", "5"), createFraction("xy", "5")] },
-        { problem: "13a² ÷ 6b", answer: createFraction("13a²", "6b"), choices: [createFraction("13a²", "6b"), createFraction("13a²", "6"), createFraction("13", "6b"), createFraction("a²", "6b")] }
+        { problem: "13a² ÷ 6b", answer: createFraction("13a²", "6b"), choices: [createFraction("13a²", "6b"), createFraction("13a²", "6"), createFraction("13", "6b"), createFraction("a²", "6b")] },
+        // 【ブラッシュアップ】かけ算とわり算がまざる問題を追加（左から順に計算する）
+        { problem: "6x²y × 2y ÷ 4xy", answer: "3xy", choices: ["3xy", "3y", "12xy", "3x²y"] },
+        { problem: "4a²b ÷ 2ab × 3b", answer: "6ab", choices: ["6ab", createFraction("2a", "3b"), "6a", "6ab²"] }
       ],
       strong: [
         { problem: "12x²y³ ÷ 3xy", answer: "4xy²", choices: ["4xy²", "4x²y³", "9xy²", "4xy"] },
@@ -1395,7 +1446,10 @@
         { problem: "8x²y ÷ 2xy²", answer: createFraction("4x", "y"), choices: [createFraction("4x", "y"), createFraction("4x²", "y"), createFraction("4x", "y²"), createFraction("4", "y")] },
         { problem: "15a³b ÷ 3ab²", answer: createFraction("5a²", "b"), choices: [createFraction("5a²", "b"), createFraction("5a³", "b"), createFraction("5a²", "b²"), createFraction("5a", "b")] },
         { problem: "12p²q³ ÷ 4pq⁴", answer: createFraction("3p", "q"), choices: [createFraction("3p", "q"), createFraction("3p²", "q"), createFraction("3p", "q⁴"), createFraction("3", "q")] },
-        { problem: "20x³y² ÷ 5x²y³", answer: createFraction("4x", "y"), choices: [createFraction("4x", "y"), createFraction("4x³", "y"), createFraction("4x", "y³"), createFraction("4", "y")] }
+        { problem: "20x³y² ÷ 5x²y³", answer: createFraction("4x", "y"), choices: [createFraction("4x", "y"), createFraction("4x³", "y"), createFraction("4x", "y³"), createFraction("4", "y")] },
+        // 【ブラッシュアップ】分数でわる問題を追加（逆数をかける）
+        { problem: "4a²b ÷ " + createFraction("2", "3") + "ab", answer: "6a", choices: ["6a", createFraction("8a", "3"), "6ab", "8a"] },
+        { problem: "(-6x³y) ÷ " + createFraction("3", "2") + "xy", answer: "-4x²", choices: ["-4x²", "4x²", "-9x²", "-4x²y"] }
       ],
       boss: [
         { problem: "45x³y⁴ ÷ 9xy²", answer: "5x²y²", choices: ["5x²y²", "5xy⁴", "36x²y²", "5x³y²"] },
@@ -1466,6 +1520,47 @@
       boss: [
         { problem: "-3x²(2x³ + 4x² + x + 4)", answer: "-6x⁵ - 12x⁴ - 3x³ - 12x²", choices: ["-6x⁵ - 12x⁴ - 3x³ - 12x²", "-6x⁵ + 12x⁴ - 3x³ - 12x²", "-6x⁵ - 12x⁴ + 3x³ - 12x²", "-6x⁵ - 12x⁴ - 3x³ + 12x²"] },
         { problem: "-5xy(6x² + 2xy - 4y²)", answer: "-30x³y - 10x²y² + 20xy³", choices: ["-30x³y - 10x²y² + 20xy³", "-30x³y + 10x²y² + 20xy³", "-30x³y - 10x²y² - 20xy³", "30x³y - 10x²y² + 20xy³"] }
+      ]
+    };
+
+    // 【ブラッシュアップ】ダンジョン7：分配法則Ver.3（分配してから同類項をまとめる）。ex は解説（1行ずつ）
+    const mode7Pool = {
+      weak: [
+        { problem: "2(x + 3) + 3(x - 1)", answer: "5x + 3", choices: ["5x + 3", "5x + 9", "5x + 2", "5x - 3"],
+          ex: ["2(x + 3) + 3(x - 1)", "= 2x + 6 + 3x - 3（かっこを外す）", "= 5x + 3（同類項をまとめる）"] },
+        { problem: "3(a + 2) + 2(a - 4)", answer: "5a - 2", choices: ["5a - 2", "5a + 14", "5a - 6", "5a + 2"],
+          ex: ["3(a + 2) + 2(a - 4)", "= 3a + 6 + 2a - 8（かっこを外す）", "= 5a - 2（同類項をまとめる）"] },
+        { problem: "4(x - 1) + (x + 7)", answer: "5x + 3", choices: ["5x + 3", "5x + 6", "5x - 3", "4x + 3"],
+          ex: ["4(x - 1) + (x + 7)", "= 4x - 4 + x + 7（かっこを外す）", "= 5x + 3（同類項をまとめる）"] },
+        { problem: "2(3x + 1) - 4x", answer: "2x + 2", choices: ["2x + 2", "2x + 1", "10x + 2", "-2x + 2"],
+          ex: ["2(3x + 1) - 4x", "= 6x + 2 - 4x（かっこを外す）", "= 2x + 2（同類項をまとめる）"] },
+        { problem: "5(a - 1) - 2a", answer: "3a - 5", choices: ["3a - 5", "3a - 1", "7a - 5", "3a + 5"],
+          ex: ["5(a - 1) - 2a", "= 5a - 5 - 2a（かっこを外す）", "= 3a - 5（同類項をまとめる）"] }
+      ],
+      medium: [
+        { problem: "3(2a - b) - 2(a - 3b)", answer: "4a + 3b", choices: ["4a + 3b", "4a - 9b", "4a - 5b", "8a + 3b"],
+          ex: ["3(2a - b) - 2(a - 3b)", "= 6a - 3b - 2a + 6b（-2 をかけると符号が変わる）", "= 4a + 3b"] },
+        { problem: "2(x + 4) - 3(x - 2)", answer: "-x + 14", choices: ["-x + 14", "-x + 2", "5x + 14", "-x - 14"],
+          ex: ["2(x + 4) - 3(x - 2)", "= 2x + 8 - 3x + 6（-3 × (-2) = +6）", "= -x + 14"] },
+        { problem: "5(x - y) - (2x - 3y)", answer: "3x - 2y", choices: ["3x - 2y", "3x - 8y", "7x - 8y", "3x + 2y"],
+          ex: ["5(x - y) - (2x - 3y)", "= 5x - 5y - 2x + 3y（-( ) は中の符号が全部変わる）", "= 3x - 2y"] },
+        { problem: "-(a - 2b) + 3(a + b)", answer: "2a + 5b", choices: ["2a + 5b", "2a + b", "-4a + 5b", "2a - 5b"],
+          ex: ["-(a - 2b) + 3(a + b)", "= -a + 2b + 3a + 3b（かっこを外す）", "= 2a + 5b"] }
+      ],
+      strong: [
+        { problem: "x(x + 2) + 3(x - 1)", answer: "x² + 5x - 3", choices: ["x² + 5x - 3", "x² + 5x + 3", "x² + 3x - 3", "x² + 5x - 1"],
+          ex: ["x(x + 2) + 3(x - 1)", "= x² + 2x + 3x - 3（かっこを外す）", "= x² + 5x - 3"] },
+        { problem: "2a(a - 3) - a(a - 4)", answer: "a² - 2a", choices: ["a² - 2a", "a² - 10a", "3a² - 10a", "a² + 2a"],
+          ex: ["2a(a - 3) - a(a - 4)", "= 2a² - 6a - a² + 4a（-a × (-4) = +4a）", "= a² - 2a"] },
+        { problem: "3x(x - 2) - 2(x² - 3x)", answer: "x²", choices: ["x²", "x² - 12x", "5x² - 12x", "x² + 12x"],
+          ex: ["3x(x - 2) - 2(x² - 3x)", "= 3x² - 6x - 2x² + 6x（かっこを外す）", "= x²（x の項は消える）"] }
+      ],
+      boss: [
+        { problem: "3(x² - 2x + 1) - 2(x² - 4x - 3)", answer: "x² + 2x + 9", choices: ["x² + 2x + 9", "x² - 14x - 3", "x² + 2x - 3", "5x² - 14x + 9"],
+          ex: ["3(x² - 2x + 1) - 2(x² - 4x - 3)", "= 3x² - 6x + 3 - 2x² + 8x + 6（-2 をかけると符号が全部変わる）", "= x² + 2x + 9"] },
+        { problem: createFraction("x + 1", "2") + " - " + createFraction("x - 3", "3"), answer: createFraction("x + 9", "6"),
+          choices: [createFraction("x + 9", "6"), createFraction("x - 3", "6"), createFraction("5x - 3", "6"), createFraction("x + 9", "5")],
+          ex: ["通分して、分子を1つにまとめる", "= " + createFraction("3(x + 1) - 2(x - 3)", "6"), "= " + createFraction("3x + 3 - 2x + 6", "6") + "（-2 × (-3) = +6）", "= " + createFraction("x + 9", "6")] }
       ]
     };
 
@@ -1555,6 +1650,173 @@
       return questions;
     }
 
+    // 【ブラッシュアップ】ここから：解説・ヒント・表示のための関数
+    let stageMiss = 0;          // その問題でまちがえた回数
+    let firstTryCount = 0;      // 1回目で正解した問題の数（通常モードの結果に出す）
+
+    // 表示用：マイナスは「−」、文字は斜体（タグの中は変えない）
+    function dispMath(s) {
+      return String(s).replace(/(^|>)([^<]*)/g, (m, a, b) => a + b.replace(/-/g, '−').replace(/([a-z])/g, '<i>$1</i>'));
+    }
+
+    // --- 単項式の計算（解説を作るため） ---
+    const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+    const supToNum = (s) => +[...s].map(ch => SUPS.indexOf(ch)).join('');
+    const numToSup = (n) => String(n).split('').map(d => SUPS[+d]).join('');
+    const gcdN = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+    // "−3x²y" → { n: -3, d: 1, v: { x: 2, y: 1 } }
+    function parseMono(str) {
+      const s = String(str).replace(/\s/g, '').replace(/−/g, '-');
+      const m = s.match(/^([+-]?)(\d*)((?:[a-z][⁰¹²³⁴⁵⁶⁷⁸⁹]*)*)$/);
+      if (!m || (m[2] === '' && m[3] === '')) return null;
+      const v = {};
+      (m[3].match(/[a-z][⁰¹²³⁴⁵⁶⁷⁸⁹]*/g) || []).forEach(t => { v[t[0]] = (v[t[0]] || 0) + (t.length > 1 ? supToNum(t.slice(1)) : 1); });
+      return { n: (m[1] === '-' ? -1 : 1) * (m[2] === '' ? 1 : +m[2]), d: 1, v };
+    }
+    function letters(v, sign) { return Object.keys(v).sort().filter(k => v[k] * sign > 0).map(k => k + (Math.abs(v[k]) === 1 ? '' : numToSup(Math.abs(v[k])))).join(''); }
+    // 単項式を文字にする（分母に文字や数が残るときは分数）
+    function monoStr(mo) {
+      const g = gcdN(mo.n, mo.d); let n = mo.n / g, d = mo.d / g;
+      if (d < 0) { n = -n; d = -d; }
+      const top = letters(mo.v, 1), bot = letters(mo.v, -1);
+      const sign = n < 0 ? '-' : '';
+      const an = Math.abs(n);
+      if (d === 1 && bot === '') return sign + ((an === 1 && top) ? '' : an) + top;
+      return sign + createFraction(((an === 1 && top) ? '' : an) + top, (d === 1 ? '' : d) + bot);
+    }
+    function mulMono(a, b) { const v = { ...a.v }; Object.keys(b.v).forEach(k => { v[k] = (v[k] || 0) + b.v[k]; if (!v[k]) delete v[k]; }); return { n: a.n * b.n, d: a.d * b.d, v }; }
+    function powMono(a, e) { const v = {}; Object.keys(a.v).forEach(k => v[k] = a.v[k] * e); return { n: Math.pow(a.n, e), d: Math.pow(a.d, e), v }; }
+    function invMono(a) { const v = {}; Object.keys(a.v).forEach(k => v[k] = -a.v[k]); return { n: a.d * Math.sign(a.n), d: Math.abs(a.n), v }; }
+    const paren = (s) => (/^-/.test(s) ? '(' + s + ')' : s);
+    // 項を「+ 3x」「- 2y」のようにつなぐ
+    function joinTerms(ts) { return ts.map((t, i) => (i === 0 ? t : (/^-/.test(t) ? '- ' + t.slice(1) : '+ ' + t))).join(' ') || '0'; }
+    function splitTerms(s) { return s.replace(/\s/g, '').replace(/(?!^)-/g, '+-').split('+').filter(t => t !== ''); }
+
+    // --- 種類ごとの解説（{ html, result }）。result は検算用の答えの式 ---
+    function explainAddSub(problem) {           // 同類項をまとめる
+      const groups = [], byKey = {};
+      splitTerms(problem).forEach(t => {
+        const mo = parseMono(t); const key = letters(mo.v, 1);
+        if (!byKey[key]) { byKey[key] = { key, terms: [], sum: 0 }; groups.push(byKey[key]); }
+        byKey[key].terms.push(t); byKey[key].sum += mo.n;
+      });
+      const lines = groups.filter(g => g.terms.length > 1).map(g => joinTerms(g.terms) + ' = ' + (g.sum === 0 ? '0' : monoStr({ n: g.sum, d: 1, v: parseMono(g.terms[0]).v })));
+      const res = joinTerms(groups.filter(g => g.sum !== 0).map(g => monoStr({ n: g.sum, d: 1, v: parseMono(g.terms[0]).v })));
+      return { html: '文字の部分が同じ項（同類項）どうしをまとめる：<br>' + lines.join('<br>') + '<br>→ ' + res, result: res };
+    }
+    function explainMul(problem) {               // 単項式のかけ算・累乗
+      const lines = [];
+      const factors = problem.replace(/\s/g, '').split('×').map(f => {
+        let m = f.match(/^(-?)\((.+)\)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$/);
+        if (m) {                                  // (−2x²y)³ や −(2x)²
+          const inner = parseMono(m[2]), e = supToNum(m[3]);
+          let r = powMono(inner, e); if (m[1]) r = { ...r, n: -r.n };
+          const parts = [];
+          if (inner.n !== 1) parts.push((inner.n < 0 ? '(' + inner.n + ')' : inner.n) + numToSup(e));
+          Object.keys(inner.v).sort().forEach(k => parts.push(inner.v[k] === 1 ? k + numToSup(e) : '(' + k + numToSup(inner.v[k]) + ')' + numToSup(e)));
+          lines.push(f + ' = ' + (m[1] ? '-(' : '') + parts.join(' × ') + (m[1] ? ')' : '') + ' = ' + monoStr(r) + (Object.values(inner.v).some(x => x > 1) ? '（指数どうしはかけ算）' : ''));
+          return r;
+        }
+        m = f.match(/^\((.+)\)$/);
+        return parseMono(m ? m[1] : f);
+      });
+      const r = factors.reduce((a, b) => mulMono(a, b));
+      if (factors.length > 1) {
+        lines.push('係数どうし：' + factors.map(f => paren(String(f.n))).join(' × ') + ' = ' + r.n);
+        const ls = Object.keys(r.v).sort().filter(k => factors.filter(f => f.v[k]).length > 1);
+        if (ls.length) lines.push('同じ文字どうし：' + ls.map(k => factors.filter(f => f.v[k]).map(f => k + (f.v[k] === 1 ? '' : numToSup(f.v[k]))).join(' × ') + ' = ' + k + numToSup(r.v[k])).join('、') + '（指数はたし算）');
+      }
+      const res = monoStr(r);
+      return { html: lines.join('<br>') + '<br>→ ' + res, result: res };
+    }
+    function explainDiv(problem) {               // 単項式のわり算（かけ算まじり・分数でわる も）
+      // 分数の係数（createFraction）をふくむ因数は、ふつうの数と文字にしてから読む
+      const src = problem.replace(/<span class="fraction"><span class="fraction-numerator">(\d+)<\/span><span class="fraction-line"><\/span><span class="fraction-denominator">(\d+)<\/span><\/span>/g, '[$1/$2]');
+      const toks = src.replace(/\s/g, '').split(/([×÷])/);
+      const num = [], den = [];
+      let r = null;
+      for (let i = 0; i < toks.length; i += 2) {
+        let f = toks[i].replace(/^\((.+)\)$/, '$1'), mo;
+        const fm = f.match(/^(-?)\[(\d+)\/(\d+)\](.*)$/);
+        if (fm) { mo = parseMono((fm[1] || '') + '1' + fm[4]); mo.n *= +fm[2]; mo.d = +fm[3]; if (fm[4] === '') mo.v = {}; }
+        else mo = parseMono(f);
+        const op = i === 0 ? '×' : toks[i - 1];
+        (op === '÷' ? den : num).push(toks[i]);
+        r = r ? (op === '÷' ? mulMono(r, invMono(mo)) : mulMono(r, mo)) : mo;
+      }
+      const show = (arr) => arr.map(t => t.replace(/\[(\d+)\/(\d+)\]/g, (m, a, b) => createFraction(a, b))).join(' × ');
+      const hasFrac = /\[/.test(src);
+      let html = hasFrac ? '分数でわるときは、<b>逆数をかける</b>。わる式は分母へ：<br>' : 'わる式を分母にした分数にして、係数どうし・文字どうしを約分する：<br>';
+      const res = monoStr(r);
+      html += createFraction(show(num), show(den)) + ' = ' + res;
+      return { html, result: res };
+    }
+    function explainDist(problem) {              // 分配法則
+      const p = problem.replace(/\s/g, '');
+      let k, inner, m = p.match(/^\((.+)\)×(.+)$/);
+      if (m) { inner = m[1]; k = m[2]; } else { m = p.match(/^(.*?)\((.+)\)$/); k = m[1]; inner = m[2]; }
+      const kMono = k === '' ? parseMono('1') : k === '-' ? parseMono('-1') : parseMono(k);
+      const kShow = k === '-' ? '(-1)' : paren(k);
+      const outs = [], lines = [];
+      splitTerms(inner).forEach(t => { const r = monoStr(mulMono(kMono, parseMono(t))); outs.push(r); lines.push(kShow + ' × ' + paren(t) + ' = ' + r); });
+      const res = joinTerms(outs);
+      return { html: 'かっこの外の ' + (k === '-' ? '-（-1 のこと）' : k) + ' を、中の<b>全部の項</b>にかける：<br>' + lines.join('<br>') + '<br>→ ' + res, result: res };
+    }
+    function explainFor(stage) {
+      try {
+        if (stage.ex) return { html: stage.ex.join('<br>'), result: stage.answer };
+        if (currentMode === 2) return explainAddSub(stage.problem);
+        if (currentMode === 3) return explainMul(stage.problem);
+        if (currentMode === 4) return explainDiv(stage.problem);
+        if (currentMode === 5 || currentMode === 6) return explainDist(stage.problem);
+      } catch (e) { }
+      return { html: '', result: '' };
+    }
+    // まちがえたときに悪魔の吹き出しに出すヒント（短く・生徒を責めない）
+    function hintFor(stage) {
+      const p = String(stage.problem);
+      if (currentMode === 2) return /\(/.test(p) ? '−( ) は、中の符号が全部変わるぞ' : '文字が同じ項だけ、まとめるのだ';
+      if (currentMode === 3) {
+        if (/\)[⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(p)) return /-/.test(p) ? 'マイナスを何回かけるか数えよ' : '外の指数は、中の全部にかかるぞ';
+        return /-/.test(p) ? '符号を先に決めてみよ' : '係数どうし・文字どうしをかけよ';
+      }
+      if (currentMode === 4) return /fraction/.test(p) ? '分数でわるときは逆数をかけよ' : 'わる式を分母にして約分するのだ';
+      if (currentMode === 7) return 'かっこを外してから、まとめるのだ';
+      return /^-|\(-|-\d*[a-z]*\(/.test(p.replace(/\s/g, '')) ? '−をかけると符号が全部変わるぞ' : 'かっこの中の全部の項にかけよ';
+    }
+    // 解説の枠を出す（次へのボタンつきにもできる）
+    function showExplainBox(stage, withNext, onNext) {
+      const gameArea = document.getElementById('gameArea');
+      gameArea.querySelectorAll('.ex-box').forEach(b => b.remove());
+      const ex = explainFor(stage);
+      const box = document.createElement('div');
+      box.className = 'ex-box';
+      box.innerHTML = '<div class="ex-answer">答え：<b>' + dispMath(stage.answer) + '</b></div>' + (ex.html ? '<div class="ex-body">💡 ' + dispMath(ex.html) + '</div>' : '');
+      if (withNext) {
+        const b = document.createElement('button');
+        b.className = 'result-btn main ex-next';
+        b.textContent = '次へ ▶';
+        b.onclick = onNext;
+        box.appendChild(b);
+      }
+      gameArea.appendChild(box);
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    // ゲームオーバーのときに出す「正しい答えと、とき方」
+    function answerSummary(stage) {
+      const ex = explainFor(stage);
+      return '正しい答えは <b>' + dispMath(stage.answer) + '</b>' + (ex.html ? '<div class="ex-body">💡 ' + dispMath(ex.html) + '</div>' : '');
+    }
+    // 同類項パズル：整理した結果の式
+    function puzzleResultText() {
+      const order = [];
+      puzzleTemplates[currentStage % puzzleTemplates.length].forEach(b => { if (!order.includes(b.var)) order.push(b.var); });
+      order.sort((a, b) => (a === '') - (b === ''));
+      const ts = order.map(v => puzzleBlocks.find(b => b.var === v)).filter(b => b && b.coef !== 0).map(b => b.term);
+      return dispMath(joinTerms(ts));
+    }
+    // 【ブラッシュアップ】ここまで
+
     function showDifficultySelect(mode) {
       pendingMode = mode;
       const difficultySelect = document.getElementById('difficulty-select');
@@ -1565,7 +1827,8 @@
         3: "乗法のダンジョン",
         4: "除法のダンジョン",
         5: "分配法則Ver.1",
-        6: "分配法則Ver.2"
+        6: "分配法則Ver.2",
+        7: "分配法則Ver.3"   // 【ブラッシュアップ】
       };
 
       difficultyTitle.textContent = `${modeNames[mode]} - モード選択`;
@@ -1587,19 +1850,21 @@
 
     function startMode(mode) {
       session++;
+      firstTryCount = 0;   // 【ブラッシュアップ】
       merging = false;
       currentMode = mode;
       currentStage = 0;
       selectedBlock = null;
       clearTimer();
 
-      if (mode >= 2 && mode <= 6) {
+      if (mode >= 2 && mode <= 7) {   // 【ブラッシュアップ】ダンジョン7 を追加
         const pools = {
           2: mode2Pool,
           3: mode3Pool,
           4: mode4Pool,
           5: mode5Pool,
-          6: mode6Pool
+          6: mode6Pool,
+          7: mode7Pool
         };
         currentQuestions = generateRandomQuestions(pools[mode], 10);
       }
@@ -1623,7 +1888,7 @@
     }
 
     function loadStage() {
-      const maxStages = currentMode === 1 ? 3 : 10;
+      const maxStages = currentMode === 1 ? 3 : currentQuestions.length;   // 【ブラッシュアップ】
       const stageInfo = document.getElementById('stageInfo');
       const gameArea = document.getElementById('gameArea');
       gameArea.innerHTML = '';
@@ -1647,7 +1912,7 @@
       const gameArea = document.getElementById('gameArea');
       const instruction = document.createElement('div');
       instruction.className = 'instruction';
-      instruction.textContent = '同じ文字のブロックを2回タップするか、ドラッグして重ねると合体します。全部整理しよう！';
+      instruction.textContent = '同じ文字のブロックを1つずつ続けてタップすると合体します（パソコンはドラッグでも OK）。全部整理しよう！';   // 【ブラッシュアップ】
       gameArea.appendChild(instruction);
 
       const grid = document.createElement('div');
@@ -1673,7 +1938,7 @@
       puzzleBlocks.forEach((block, index) => {
         const blockEl = document.createElement('div');
         blockEl.className = block.var === 'empty' ? 'term-block empty' : 'term-block';
-        blockEl.textContent = block.term;
+        blockEl.innerHTML = dispMath(block.term);   // 【ブラッシュアップ】マイナスは「−」、文字は斜体
         blockEl.draggable = block.var !== 'empty';
         blockEl.dataset.index = index;
 
@@ -1729,7 +1994,7 @@
       const varPart = fromBlock.var;
 
       if (newCoef === 0) {
-        newTerm = '0';
+        newTerm = varPart === '' ? '0' : '0' + varPart;   // 【ブラッシュアップ】
       }
       else if (varPart === '') {
         newTerm = String(newCoef);
@@ -1834,7 +2099,7 @@
 
       const subText = document.createElement('div');
       subText.className = 'congratulation-subtext';
-      subText.textContent = randomMessage.sub;
+      subText.innerHTML = '整理した式：<b>' + puzzleResultText() + '</b><br>' + randomMessage.sub;   // 【ブラッシュアップ】
 
       overlay.appendChild(mainText);
       overlay.appendChild(subText);
@@ -1853,7 +2118,7 @@
 
       const subText = document.createElement('div');
       subText.className = 'congratulation-subtext';
-      subText.textContent = 'あなたは同類項整理のマスターです！本当に素晴らしい！';
+      subText.innerHTML = '整理した式：<b>' + puzzleResultText() + '</b><br>あなたは同類項整理のマスターです！本当に素晴らしい！';   // 【ブラッシュアップ】
 
       overlay.appendChild(mainText);
       overlay.appendChild(subText);
@@ -1969,6 +2234,7 @@
     function loadDungeonMode() {
       const stage = currentQuestions[currentStage];
       const gameArea = document.getElementById('gameArea');
+      stageMiss = 0;   // 【ブラッシュアップ】
 
       const instruction = document.createElement('div');
       instruction.className = 'instruction';
@@ -2045,7 +2311,7 @@
 
       const demonProblem = document.createElement('div');
       demonProblem.className = 'demon-problem';
-      demonProblem.innerHTML = stage.problem;
+      demonProblem.innerHTML = dispMath(stage.problem);   // 【ブラッシュアップ】
 
       problemFrame.appendChild(demonProblem);
       dungeonScene.appendChild(problemFrame);
@@ -2064,22 +2330,22 @@
 
       const choiceGrid = document.createElement('div');
       choiceGrid.className = 'choice-grid';
+      // 【ブラッシュアップ】スマホでは短い選択肢を 2 列に。長い式があるときだけ 1 列
+      if (stage.choices.some(c => String(c).replace(/<[^>]+>/g, '').length > 12)) choiceGrid.classList.add('long');
 
       const shuffledChoices = shuffleArray(stage.choices);
 
       shuffledChoices.forEach(choice => {
         const card = document.createElement('div');
         card.className = 'choice-card';
-        card.innerHTML = choice;
+        card.innerHTML = dispMath(choice);   // 【ブラッシュアップ】
 
         card.onclick = () => {
           const selectedAnswer = card.dataset.answer || choice;
           checkDungeonAnswer(selectedAnswer, stage.answer);
         };
 
-        if (typeof choice === 'string' && choice.includes('fraction')) {
-          card.dataset.answer = choice;
-        }
+        card.dataset.answer = choice;   // 【ブラッシュアップ】表示を変えたので、元の文字列はいつも持たせる
 
         choiceGrid.appendChild(card);
       });
@@ -2130,7 +2396,7 @@
       setTimeout(() => {
         message.remove();
         if (sid !== session) return;
-        showResultNav('⏰ 時間切れ…', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+        showResultNav('⏰ 時間切れ…', false, answerSummary(currentQuestions[currentStage]));   // 【ブラッシュアップ】もう一度ちょうせんできるように
       }, 3000);
     }
 
@@ -2151,9 +2417,12 @@
           demonContainer.classList.add('defeated');
         }, 400);
 
-        setTimeout(() => {
+        // 【ブラッシュアップ】解説を出す。一発で正解したら少し見せて自動で次へ、まちがえたあとは「次へ」を押すまで読める
+        const stageNow = currentQuestions[currentStage];
+        if (stageMiss === 0) firstTryCount++;
+        const goAfterCorrect = () => {
           if (sid !== session) return;
-          const maxStages = 10;
+          const maxStages = currentQuestions.length;
           if (currentStage < maxStages - 1) {
             currentStage++;
             loadStage();
@@ -2175,22 +2444,19 @@
             gameArea.appendChild(finalMessage);
 
             // 【ブラッシュアップ】元は 3 秒後に自動でメニューに戻っていた。次を選べるボタンを出す
-            showResultNav('🎉 クリア！', true);
+            showResultNav('🎉 クリア！' + (!isHellMode && !isPressureMode ? '（1回目で正解 ' + firstTryCount + '/' + currentQuestions.length + '問）' : ''), true);
           }
-        }, 1200);
+        };
+        if (stageMiss > 0 && !isHellMode && !isPressureMode) showExplainBox(stageNow, true, goAfterCorrect);
+        else { showExplainBox(stageNow, false); setTimeout(goAfterCorrect, 1500); }
       } else {
         slash.classList.add('failed');
+        stageMiss++;   // 【ブラッシュアップ】
         demonContainer.classList.add('shake');
 
-        const taunts = [
-          "効かない！",
-          "なんだ！その弱い攻撃は",
-          "もっと勉強してこい！",
-          "お前の力はその程度か",
-          "甘いな...貴様の攻撃は",
-          "笑わせるな！",
-          "無駄だ！無駄無駄ァ！"
-        ];
+        // 【ブラッシュアップ】元は「もっと勉強してこい！」「お前の力はその程度か」など生徒を責めるセリフだった。
+        //   何を見直せばよいかが分かる、短いヒントに替えた
+        const taunts = [hintFor(currentQuestions[currentStage])];
 
         const speechBubble = document.createElement('div');
         speechBubble.className = 'demon-speech-bubble active';
@@ -2225,7 +2491,7 @@
             setTimeout(() => {
               message.remove();
               if (sid !== session) return;
-              showResultNav('💀 ゲームオーバー', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+              showResultNav('💀 ゲームオーバー', false, answerSummary(currentQuestions[currentStage]));   // 【ブラッシュアップ】もう一度ちょうせんできるように
             }, 2500);
           }, 2000);
         } else if (isPressureMode) {
@@ -2261,31 +2527,41 @@
             setTimeout(() => {
               message.remove();
               if (sid !== session) return;
-              showResultNav('💥 悪魔の勝利…', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+              showResultNav('💥 悪魔の勝利…', false, answerSummary(currentQuestions[currentStage]));   // 【ブラッシュアップ】もう一度ちょうせんできるように
             }, 3000);
           }, 2000);
         } else {
+          // 【ブラッシュアップ】ヒントを選択肢の下にも出す（吹き出しは 2 秒で消えるため）
+          const gA = document.getElementById('gameArea');
+          gA.querySelectorAll('.ex-box').forEach(b => b.remove());
+          const hintBox = document.createElement('div');
+          hintBox.className = 'ex-box hint';
+          hintBox.textContent = '💡 ヒント：' + hintFor(currentQuestions[currentStage]);
+          gA.appendChild(hintBox);
           setTimeout(() => {
             if (sid !== session) return;
             // 【ブラッシュアップ】まちがえた選択肢は押せないままにして、ほかから選べるようにする
-            choices.forEach(c => { if (c.innerHTML !== selected && !c.classList.contains('wrong-picked')) c.style.pointerEvents = 'auto'; else { c.classList.add('wrong-picked'); c.style.opacity = '0.45'; } });
-          }, 2000);
+            //   （選択肢の元の文字列は data-answer に持たせてある）
+            choices.forEach(c => { if ((c.dataset.answer || c.innerHTML) !== selected && !c.classList.contains('wrong-picked')) c.style.pointerEvents = 'auto'; else { c.classList.add('wrong-picked'); c.style.opacity = '0.45'; } });
+          }, 800);   // 【ブラッシュアップ】選び直せるまでの待ち時間を 2 秒から短く
         }
       }
     }
 
     // 【ブラッシュアップ】クリア・ゲームオーバーのあとに出すボタン（同じモード・次のダンジョン・えらび直す・ほかの教材）
-    function showResultNav(title, ok) {
+    //   extra：ゲームオーバーのときに出す「正しい答えと、とき方」
+    function showResultNav(title, ok, extra) {
       clearTimer();
       const gameArea = document.getElementById('gameArea');
-      gameArea.querySelectorAll('.choice-grid, .result-nav').forEach(g => g.remove());
+      gameArea.querySelectorAll('.choice-grid, .result-nav, .ex-box').forEach(g => g.remove());
       const nav = document.createElement('div');
       nav.className = 'result-nav';
       const modeLabel = isHellMode ? '（鬼連チャン）' : isPressureMode ? '（プレッシャー）' : '';
       nav.innerHTML =
         '<div class="result-nav-title ' + (ok ? 'ok' : 'ng') + '">' + title + '</div>' +
+        (extra ? '<div class="result-ex">' + extra + '</div>' : '') +
         '<button class="result-btn main" onclick="startMode(currentMode)">' + (ok ? '同じモードでもう一度' : 'もう一度ちょうせん') + modeLabel + '</button>' +
-        (ok && currentMode < 6 ? '<button class="result-btn next" onclick="goNextDungeon()">次のダンジョンへ ▶</button>' : '') +
+        (ok && currentMode < 7 ? '<button class="result-btn next" onclick="goNextDungeon()">次のダンジョンへ ▶</button>' : '') +
         '<button class="result-btn" onclick="backToMenu()">ダンジョンをえらび直す</button>' +
         '<a href="../remake.html">ほかの教材をえらぶ</a>';
       gameArea.appendChild(nav);

@@ -479,7 +479,9 @@
     .tri-arc { fill: none; stroke: #ef4444; stroke-width: 2.5; }
     .tri-ang { fill: #ef4444; font-size: 18px; font-weight: 800; }
     .tri-side { fill: var(--u-ink); font-size: 20px; font-weight: 800; }
-    .tri-vtx { fill: #1e40af; font-size: 22px; font-weight: 800; }
+    .tri-vtx { fill: #1e40af; font-size: 25px; font-weight: 800; font-family: var(--u-math-font); font-style: italic; }   /* 【ブラッシュアップ】頂点の文字は斜体 */
+    .tri-side, .tri-ang { font-family: var(--u-math-font); }
+    .tri-side { font-size: 22px; }
     .tri-ang, .tri-side, .tri-vtx { paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
     @media (max-width: 760px) {
       /* 【ブラッシュアップ】スマホ：図を上に固定し、式と同時に見えるようにする。選択肢は小さくして下に固定 */
@@ -509,6 +511,9 @@
       .choice { padding: 8px 14px; font-size: 17px; }
       .nav-button { padding: 10px 14px; }
     }
+    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
+    .mf { font-family: var(--u-math-font); font-style: normal; }
+    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
   
   </style>
 </head>
@@ -1411,6 +1416,58 @@
     cropDiagram(1);   // 【ブラッシュアップ】
   </script>
  <script>
+  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
+  (function () {
+    const SCOPE = '.formula-card, .problem-statement, .formula-line, .choice, #answerText';   // 数式として書きかえる場所
+    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
+    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
+    function wrapRun(s) {
+      const span = document.createElement('span');
+      span.className = 'mf';
+      s.split(/(sin|cos|tan)/).forEach((part, i) => {
+        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
+        part.split(/([A-Za-zθ])/).forEach((q, j) => {
+          if (!q) return;
+          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
+          else span.appendChild(document.createTextNode(q));
+        });
+      });
+      return span;
+    }
+    function run() {
+      document.querySelectorAll(SCOPE).forEach(el => {
+        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) list.push(w.currentNode);
+        list.forEach(n => {
+          const p = n.parentElement;
+          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
+          const t = n.nodeValue;
+          if (!/[0-9A-Za-zθ√]/.test(t)) return;
+          const frag = document.createDocumentFragment();
+          let last = 0, m;
+          RUN.lastIndex = 0;
+          while ((m = RUN.exec(t))) {
+            if (!m[0].length) { RUN.lastIndex++; continue; }
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            frag.appendChild(wrapRun(m[0]));
+            last = m.index + m[0].length;
+          }
+          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+          n.parentNode.replaceChild(frag, n);
+        });
+      });
+    }
+    let pending = false;
+    new MutationObserver(() => {
+      if (pending) return;
+      pending = true;
+      setTimeout(() => { pending = false; run(); }, 0);
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    run();
+  })();
+</script>
+<script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
   PortTheme.map({
     ".container": "u-card",
