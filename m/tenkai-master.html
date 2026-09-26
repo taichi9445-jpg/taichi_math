@@ -7,7 +7,7 @@
     <!--
       09. 展開の練習（展開マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -80,8 +80,27 @@
       .judge-btn { font-size: 24px; padding: 14px 40px; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #app { box-sizing: border-box; }
+    #q-area { border-color: #fde68a; background: var(--u-soft-yellow); }
+    #q-text { color: var(--u-ink); }
+    #progress-text { color: var(--u-sub); font-weight: 700; }
+    #ans-zone { background: var(--u-soft-yellow); border: 3px dashed #fde68a; }
+    .tile-tray { background: var(--u-soft-blue); }
+    .tile { box-shadow: none; border: 2px solid var(--u-line-dark); border-bottom-width: 4px; }
+    .ans-chip { border-color: var(--u-accent); }
+    .order-note { color: var(--u-accent-text); font-weight: 700; }
+    #done-screen h2 { color: var(--u-accent-text) !important; white-space: nowrap; }
+    #done-screen .done-msg { color: var(--u-ink); font-weight: 700; }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
   <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
   <div id="app">
     <div id="menu-screen" class="screen active">
@@ -307,6 +326,23 @@ function fail() {
   f.style.color = "#F44336";
   setTimeout(() => f.innerText = "", 1000);
 }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#app": "u-card",
+    "#menu-screen h1": "u-title",
+    ".btn-group .mode-btn:not(.selected)": "u-btn u-btn-plain",
+    ".btn-group .mode-btn.selected": "u-btn u-btn-blue",
+    "#menu-screen > .mode-btn": "u-btn",
+    "#done-screen .nav .mode-btn.selected": "u-btn",
+    "#done-screen .nav .mode-btn:not(.selected)": "u-btn u-btn-plain",
+    "#home-btn": "u-btn u-btn-plain",
+    "#progress-bar-bg": "u-progress",
+    ".choice-btn": "u-choice",
+    ".choice-btn:disabled": "u-ng",
+    ".judge-btn": "u-btn"
+  });
 </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
     <!--
       10. 展開の公式（展開の公式 マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -220,8 +220,28 @@ function generateQuizSet(level, subMode) {
       #feedback { font-size: 30px; height: 40px; margin: 10px 0; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .menu-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 20px; }
+    .card-title { color: var(--u-sub); border-left-color: var(--u-accent) !important; }
+    .formula-row { border-color: var(--u-line); }
+    .formula-text { color: var(--u-ink); }
+    #problem { color: var(--u-ink); }
+    #drop-zone { background: var(--u-title-dark); }
+    #drop-zone.solved { background: var(--u-ok); }
+    .bin { background: var(--u-soft-blue); }
+    .choice { box-shadow: none; border: 2px solid var(--u-line-dark); border-bottom-width: 5px; color: var(--u-ink); }
+    #progress-bar { background: linear-gradient(90deg, #facc15, #f97316); }
+    #answer-note { color: var(--u-ng); }
+    #done h2 { color: var(--u-accent-text) !important; }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div id="container">
   <div id="progress-container"><div id="progress-bar"></div></div>
@@ -355,6 +375,20 @@ function generateQuizSet(level, subMode) {
 
   // 【ブラッシュアップ】alert をやめて、画面の中に答えを出す
   function showAnswer() { document.getElementById('answer-note').innerText = "正解の例： " + questions[current].correct; }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#container": "u-card",
+    "#home h2": "u-title",
+    ".btn-mini:not(.blue)": "u-btn",
+    ".btn-mini.blue": "u-btn u-btn-blue",
+    ".btn-4": "u-choice",
+    ".btn-4:disabled": "u-ng",
+    "#submit-btn": "u-btn",
+    ".nav-btn": "u-btn u-btn-plain",
+    ".ans-btn": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>
