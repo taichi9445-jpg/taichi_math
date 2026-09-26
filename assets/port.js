@@ -43,4 +43,56 @@
   global.google = global.google || {};
   global.google.script = global.google.script || {};
   global.google.script.run = runner(null, null);
+
+  /* ------------------------------------------------------------------
+     数式表示（MathJax）が読み込めなかったときの予備
+     ------------------------------------------------------------------
+     学校の回線などで MathJax を読み込めないと、\frac{1}{2} や \sqrt{3} のような記号が
+     そのまま画面に出てしまう。決めた時間までに読み込めなかったら、代わりの MathJax を置いて、
+     記号を (1)/(2)、√3 のような読める形に直す。教材側の MathJax.typesetPromise(...) の
+     呼び出しは、そのまま代わりのほうに届く。                                          */
+  function texToPlain(s) {
+    var t = String(s);
+    for (var i = 0; i < 6; i++) {
+      t = t.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)')
+           .replace(/\\sqrt\s*\{([^{}]*)\}/g, function (m, a) { return a.length > 1 ? '√(' + a + ')' : '√' + a; })
+           .replace(/\\text\s*\{([^{}]*)\}/g, '$1');
+    }
+    return t
+      .replace(/\\pm/g, '±').replace(/\\times/g, '×').replace(/\\div/g, '÷')
+      .replace(/\\left|\\right/g, '').replace(/\\sqrt\s*(\d+)/g, '√$1')
+      .replace(/\^\{?2\}?/g, '²').replace(/\^\{?3\}?/g, '³')
+      .replace(/\\\(|\\\)|\\\[|\\\]|\$\$|\$/g, '')
+      .replace(/\\,|\\;|\\ /g, ' ')
+      .replace(/\\/g, '');
+  }
+
+  function plainMath(root) {
+    if (!root || !root.ownerDocument) return;
+    var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (n) {
+      if (/\\|\$\$|\^/.test(n.nodeValue)) n.nodeValue = texToPlain(n.nodeValue);
+    });
+  }
+
+  global.PortMath = {
+    texToPlain: texToPlain,
+    plainMath: plainMath,
+    /** ms ミリ秒たっても MathJax が使えなければ、代わりを置いて画面の記号を直す */
+    fallbackAfter: function (ms) {
+      setTimeout(function () {
+        if (global.MathJax && global.MathJax.typesetPromise) return;
+        global.MathJax = {
+          typesetPromise: function (els) {
+            (els && els.length ? els : [document.body]).forEach(plainMath);
+            return Promise.resolve();
+          },
+          typesetClear: function () {}
+        };
+        plainMath(document.body);
+      }, ms || 6000);
+    }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
