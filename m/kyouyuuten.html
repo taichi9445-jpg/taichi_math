@@ -1,183 +1,842 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>2次関数とx軸の共有点</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    22. 2次関数と共有点の座標の計算練習（二次関数とx軸の共有点クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二次関数とx軸の共有点クイズ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .level-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .level-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .level-btn.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .level-btn:not(.active) {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .level-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .quiz-area {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .problem {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .hint-section {
+            background: #e8f4fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+            display: none;
+        }
+
+        .hint-title {
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .factorization {
+            font-size: 1.1em;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .hint-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 15px 0;
+        }
+
+        .hint-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .question-text {
+            background: #f0f8ff;
+            border: 2px solid #4169E1;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .answer-input {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .answer-input input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .answer-input input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .check-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .check-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .next-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .next-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .step {
+            margin: 10px 0;
+            padding: 8px 0;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .choice-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.selected {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .choice-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .try-again-btn {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .try-again-btn:hover {
+            background: #e0a800;
+        }
+
+        .level-complete {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.3em;
+        }
+
+        .level-complete h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; }
+    .container { padding: 28px 24px; }
+    h1 { font-size: min(2rem, 5.6vw); white-space: nowrap; }
+    .level-selector { gap: 8px; flex-wrap: wrap; }
+    .level-btn { padding: 10px 18px; font-size: 16px; }
+    .score { color: var(--u-ink); font-weight: 700; }
+    .quiz-area { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; }
+    .question-text { color: var(--u-title-dark); background: none; border: none; font-weight: 800; }
+    .problem { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-ink); font-size: 1.7em; border-radius: 20px; }
+    .hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    .hint-section { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; }
+    .hint-title { color: var(--u-title); }
+    .factorization { color: var(--u-ink); }
+    .choice-btn { font-size: 1.25em; padding: 14px 10px; }
+    .result { border-radius: 16px; }
+    .result.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .result.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .explanation { background: #fff; border: 3px dashed var(--u-line); border-left: 3px dashed var(--u-line); border-radius: 16px; color: var(--u-ink); line-height: 1.8; }
+    .level-complete h2 { color: var(--u-accent-text); }
+    .level-complete p { color: var(--u-ink); }
+    .done-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 18px auto 0; }
+    .done-nav a { color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 16px 12px; }
+      .quiz-area { padding: 14px 10px; }
+      .level-btn { padding: 8px 12px; font-size: 15px; }
+      .factorization { overflow-x: auto; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <h1>🎯 二次関数とx軸の共有点クイズ</h1>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/graph.js"></script>
+        <div class="level-selector">
+            <button class="level-btn active" onclick="setLevel(0)">レベル0</button>
+            <button class="level-btn" onclick="setLevel(1)">レベル1</button>
+            <button class="level-btn" onclick="setLevel(2)">レベル2</button>
+            <button class="level-btn" onclick="setLevel(3)">レベル3</button>
+        </div>
+
+        <div class="score">
+            正解数: <span id="correct">0</span> / 問題数: <span id="total">0</span>
+        </div>
+
+        <div class="quiz-area">
+            <div class="question-text" id="questionText">
+                次の二次関数とx軸との共有点のx座標を求めなさい
+            </div>
+            <div class="problem" id="problem"></div>
+
+            <div style="text-align: center;">
+                <button class="hint-btn" onclick="showHint()" id="hintBtn">💡 ヒントを見る</button>
+            </div>
+
+            <div class="hint-section" id="hintSection">
+                <div class="hint-title">💡 因数分解のヒント</div>
+                <div class="factorization" id="factorization"></div>
+            </div>
+
+            <div class="choices" id="choices">
+                <!-- 選択肢がここに表示されます -->
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="next-btn" onclick="nextProblem()" id="nextBtn" style="display: none;">次の問題</button>
+            </div>
+
+            <div id="result" class="result" style="display: none;"></div>
+            <div id="explanation" class="explanation" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let currentProblem = {};
+        let correctCount = 0;
+        let totalCount = 0;
+        let currentProblemIndex = 0;
+        let levelProblems = [];
+        let currentChoicesOrder = []; // 現在の選択肢の順番を保存
+
+        const problems = {
+            0: [ // レベル0: 因数分解の復習（5問）
+                {
+                    equation: "x² + 5x + 6",
+                    hint1: "たして5になる2つの数は？<br>かけて6になる2つの数は？",
+                    hint2: "たして5になる2つの数は？ → 2と3<br>かけて6になる2つの数は？ → 2と3<br>両方の条件を満たすのは2と3です！",
+                    correct: "(x + 2)(x + 3)",
+                    choices: ["(x + 2)(x + 3)", "(x - 2)(x - 3)", "(x + 1)(x + 6)", "(x - 1)(x - 6)"],
+                    correctExplanation: "正解！x² + 5x + 6 = (x + 2)(x + 3)<br>・かけて定数項（6）になる数：2 × 3 = 6<br>・たしてxの係数（5）になる数：2 + 3 = 5<br>両方の条件を満たすので正解です！",
+                    wrongAdvice: "因数分解のコツを思い出してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（5）になるかチェック<br>6になる組み合わせ：1×6、2×3<br>このうち、たして5になるのはどちらでしょう？"
+                },
+                {
+                    equation: "x² + 7x + 12",
+                    hint1: "たして7になる2つの数は？<br>かけて12になる2つの数は？",
+                    hint2: "たして7になる2つの数は？ → 3と4<br>かけて12になる2つの数は？ → 3と4<br>両方の条件を満たすのは3と4です！",
+                    correct: "(x + 3)(x + 4)",
+                    choices: ["(x + 3)(x + 4)", "(x - 3)(x - 4)", "(x + 2)(x + 6)", "(x + 1)(x + 12)"],
+                    correctExplanation: "正解！x² + 7x + 12 = (x + 3)(x + 4)<br>・かけて定数項（12）になる数：3 × 4 = 12<br>・たしてxの係数（7）になる数：3 + 4 = 7<br>両方の条件を満たすので正解です！",
+                    wrongAdvice: "因数分解のコツを思い出してみましょう！<br>・かけて定数項（12）になる2つの数を考える<br>・その2つの数をたすとxの係数（7）になるかチェック<br>12になる組み合わせ：1×12、2×6、3×4<br>このうち、たして7になるのはどれでしょう？"
+                },
+                {
+                    equation: "x² - 5x + 6",
+                    hint1: "たして-5になる2つの数は？<br>かけて6になる2つの数は？",
+                    hint2: "たして-5になる2つの数は？ → -2と-3<br>かけて6になる2つの数は？ → -2と-3<br>両方の条件を満たすのは-2と-3です！",
+                    correct: "(x - 2)(x - 3)",
+                    choices: ["(x - 2)(x - 3)", "(x + 2)(x + 3)", "(x - 1)(x - 6)", "(x + 1)(x + 6)"],
+                    correctExplanation: "正解！x² - 5x + 6 = (x - 2)(x - 3)<br>・かけて定数項（6）になる数：(-2) × (-3) = 6<br>・たしてxの係数（-5）になる数：(-2) + (-3) = -5<br>両方の条件を満たすので正解です！",
+                    wrongAdvice: "符号に注意して因数分解してみましょう！<br>・かけて定数項（6）になる2つの数を考える<br>・その2つの数をたすとxの係数（-5）になるかチェック<br>xの係数が負なので、2つの数は両方とも負になります<br>(-1)×(-6) = 6、(-2)×(-3) = 6<br>このうち、たして-5になるのはどちらでしょう？"
+                },
+                {
+                    equation: "x² + x - 6",
+                    hint1: "たして1になる2つの数は？<br>かけて-6になる2つの数は？",
+                    hint2: "たして1になる2つの数は？ → 3と-2<br>かけて-6になる2つの数は？ → 3と-2<br>両方の条件を満たすのは3と-2です！",
+                    correct: "(x + 3)(x - 2)",
+                    choices: ["(x + 3)(x - 2)", "(x - 3)(x + 2)", "(x + 6)(x - 1)", "(x - 6)(x + 1)"],
+                    correctExplanation: "正解！x² + x - 6 = (x + 3)(x - 2)<br>・かけて定数項（-6）になる数：3 × (-2) = -6<br>・たしてxの係数（1）になる数：3 + (-2) = 1<br>両方の条件を満たすので正解です！",
+                    wrongAdvice: "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（-6）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（1）になるかチェック<br>-6になる組み合わせ：1×(-6)、(-1)×6、2×(-3)、(-2)×3<br>このうち、たして1になるのはどれでしょう？"
+                },
+                {
+                    equation: "x² - 3x - 10",
+                    hint1: "たして-3になる2つの数は？<br>かけて-10になる2つの数は？",
+                    hint2: "たして-3になる2つの数は？ → -5と2<br>かけて-10になる2つの数は？ → -5と2<br>両方の条件を満たすのは-5と2です！",
+                    correct: "(x - 5)(x + 2)",
+                    choices: ["(x - 5)(x + 2)", "(x + 5)(x - 2)", "(x - 10)(x + 1)", "(x + 10)(x - 1)"],
+                    correctExplanation: "正解！x² - 3x - 10 = (x - 5)(x + 2)<br>・かけて定数項（-10）になる数：(-5) × 2 = -10<br>・たしてxの係数（-3）になる数：(-5) + 2 = -3<br>両方の条件を満たすので正解です！",
+                    wrongAdvice: "定数項が負の場合の因数分解を考えてみましょう！<br>・かけて定数項（-10）になる2つの数を考える<br>・定数項が負なので、1つは正、1つは負の数になります<br>・その2つの数をたすとxの係数（-3）になるかチェック<br>-10になる組み合わせ：1×(-10)、(-1)×10、2×(-5)、(-2)×5<br>このうち、たして-3になるのはどれでしょう？"
+                }
+            ],
+            1: [ // レベル1: 簡単な因数分解（5問）
+                {
+                    equation: "y = x² - 3x + 2",
+                    hint1: "x² - 3x + 2 = (x - 1)(x - 2)",
+                    hint2: "x² - 3x + 2 = (x - 1)(x - 2) = 0<br>よって (x - 1) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = 1, 2",
+                    choices: ["x = 1, 2", "x = -1, -2", "x = 2, 3", "x = 0, 3"],
+                    correctExplanation: "正解！<br>x² - 3x + 2 = (x - 1)(x - 2) = 0<br>(x - 1) = 0 または (x - 2) = 0<br>よって x = 1, 2",
+                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 3x + 2を因数分解すると何になるでしょう？"
+                },
+                {
+                    equation: "y = x² - 5x + 6",
+                    hint1: "x² - 5x + 6 = (x - 2)(x - 3)",
+                    hint2: "x² - 5x + 6 = (x - 2)(x - 3) = 0<br>よって (x - 2) = 0 または (x - 3) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = 2, 3",
+                    choices: ["x = 2, 3", "x = -2, -3", "x = 1, 6", "x = 5, 6"],
+                    correctExplanation: "正解！<br>x² - 5x + 6 = (x - 2)(x - 3) = 0<br>(x - 2) = 0 または (x - 3) = 0<br>よって x = 2, 3",
+                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 5x + 6を因数分解すると何になるでしょう？"
+                },
+                {
+                    equation: "y = x² - 4x + 3",
+                    hint1: "x² - 4x + 3 = (x - 1)(x - 3)",
+                    hint2: "x² - 4x + 3 = (x - 1)(x - 3) = 0<br>よって (x - 1) = 0 または (x - 3) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = 1, 3",
+                    choices: ["x = 1, 3", "x = -1, -3", "x = 2, 2", "x = 4, 3"],
+                    correctExplanation: "正解！<br>x² - 4x + 3 = (x - 1)(x - 3) = 0<br>(x - 1) = 0 または (x - 3) = 0<br>よって x = 1, 3",
+                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 4x + 3を因数分解すると何になるでしょう？"
+                },
+                {
+                    equation: "y = x² - 7x + 12",
+                    hint1: "x² - 7x + 12 = (x - 3)(x - 4)",
+                    hint2: "x² - 7x + 12 = (x - 3)(x - 4) = 0<br>よって (x - 3) = 0 または (x - 4) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = 3, 4",
+                    choices: ["x = 3, 4", "x = -3, -4", "x = 7, 12", "x = 1, 12"],
+                    correctExplanation: "正解！<br>x² - 7x + 12 = (x - 3)(x - 4) = 0<br>(x - 3) = 0 または (x - 4) = 0<br>よって x = 3, 4",
+                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 7x + 12を因数分解すると何になるでしょう？"
+                },
+                {
+                    equation: "y = x² - 6x + 8",
+                    hint1: "x² - 6x + 8 = (x - 2)(x - 4)",
+                    hint2: "x² - 6x + 8 = (x - 2)(x - 4) = 0<br>よって (x - 2) = 0 または (x - 4) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = 2, 4",
+                    choices: ["x = 2, 4", "x = -2, -4", "x = 6, 8", "x = 3, 8"],
+                    correctExplanation: "正解！<br>x² - 6x + 8 = (x - 2)(x - 4) = 0<br>(x - 2) = 0 または (x - 4) = 0<br>よって x = 2, 4",
+                    wrongAdvice: "因数分解から解を求める手順を確認しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 6x + 8を因数分解すると何になるでしょう？"
+                }
+            ],
+            2: [ // レベル2: 負の数を含む（5問）
+                {
+                    equation: "y = x² + x - 6",
+                    hint1: "x² + x - 6 = (x + 3)(x - 2)",
+                    hint2: "x² + x - 6 = (x + 3)(x - 2) = 0<br>よって (x + 3) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = -3, 2",
+                    choices: ["x = -3, 2", "x = 3, -2", "x = 1, -6", "x = -1, 6"],
+                    correctExplanation: "正解！<br>x² + x - 6 = (x + 3)(x - 2) = 0<br>(x + 3) = 0 または (x - 2) = 0<br>よって x = -3, 2",
+                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + x - 6を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
+                },
+                {
+                    equation: "y = x² - x - 12",
+                    hint1: "x² - x - 12 = (x - 4)(x + 3)",
+                    hint2: "x² - x - 12 = (x - 4)(x + 3) = 0<br>よって (x - 4) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = -3, 4",
+                    choices: ["x = -3, 4", "x = 3, -4", "x = 1, 12", "x = -1, -12"],
+                    correctExplanation: "正解！<br>x² - x - 12 = (x - 4)(x + 3) = 0<br>(x - 4) = 0 または (x + 3) = 0<br>よって x = -3, 4",
+                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - x - 12を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
+                },
+                {
+                    equation: "y = x² + 2x - 8",
+                    hint1: "x² + 2x - 8 = (x + 4)(x - 2)",
+                    hint2: "x² + 2x - 8 = (x + 4)(x - 2) = 0<br>よって (x + 4) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = -4, 2",
+                    choices: ["x = -4, 2", "x = 4, -2", "x = -2, 8", "x = 2, -8"],
+                    correctExplanation: "正解！<br>x² + 2x - 8 = (x + 4)(x - 2) = 0<br>(x + 4) = 0 または (x - 2) = 0<br>よって x = -4, 2",
+                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 2x - 8を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
+                },
+                {
+                    equation: "y = x² - 2x - 15",
+                    hint1: "x² - 2x - 15 = (x - 5)(x + 3)",
+                    hint2: "x² - 2x - 15 = (x - 5)(x + 3) = 0<br>よって (x - 5) = 0 または (x + 3) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = -3, 5",
+                    choices: ["x = -3, 5", "x = 3, -5", "x = 2, 15", "x = -2, -15"],
+                    correctExplanation: "正解！<br>x² - 2x - 15 = (x - 5)(x + 3) = 0<br>(x - 5) = 0 または (x + 3) = 0<br>よって x = -3, 5",
+                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² - 2x - 15を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
+                },
+                {
+                    equation: "y = x² + 3x - 10",
+                    hint1: "x² + 3x - 10 = (x + 5)(x - 2)",
+                    hint2: "x² + 3x - 10 = (x + 5)(x - 2) = 0<br>よって (x + 5) = 0 または (x - 2) = 0<br>それぞれの式を解いてみましょう",
+                    correct: "x = -5, 2",
+                    choices: ["x = -5, 2", "x = 5, -2", "x = -3, 10", "x = 3, -10"],
+                    correctExplanation: "正解！<br>x² + 3x - 10 = (x + 5)(x - 2) = 0<br>(x + 5) = 0 または (x - 2) = 0<br>よって x = -5, 2",
+                    wrongAdvice: "負の数を含む因数分解に注意しましょう！<br>1. まず因数分解をする<br>2. 因数分解した式を0と等しくおく<br>3. それぞれの因数を0にして解を求める<br>x² + 3x - 10を因数分解すると何になるでしょう？<br>定数項が負なので、1つは正、1つは負の因数になります"
+                }
+            ],
+            3: [ // レベル3: 接点または共有点なしの問題（5問）
+                {
+                    equation: "y = x² - 6x + 9",
+                    hint1: "x² - 6x + 9 = (x - 3)²",
+                    correct: "x = 3（重解）",
+                    choices: ["x = 3（重解）", "x = -3（重解）", "x = 6, 9", "共有点なし"],
+                    correctExplanation: "正解！<br>x² - 6x + 9 = (x - 3)² = 0<br>(x - 3)² = 0<br>よって x - 3 = 0<br>x = 3（重解）",
+                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² - 6x + 9の形を見てください<br>これは (x - 3)² の形に因数分解できます<br>(x - 3)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
+                },
+                {
+                    equation: "y = x² + 4x + 4",
+                    hint1: "x² + 4x + 4 = (x + 2)²",
+                    correct: "x = -2（重解）",
+                    choices: ["x = -2（重解）", "x = 2（重解）", "x = -4, 4", "共有点なし"],
+                    correctExplanation: "正解！<br>x² + 4x + 4 = (x + 2)² = 0<br>(x + 2)² = 0<br>よって x + 2 = 0<br>x = -2（重解）",
+                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² + 4x + 4の形を見てください<br>これは (x + 2)² の形に因数分解できます<br>(x + 2)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
+                },
+                {
+                    equation: "y = x² - 8x + 16",
+                    hint1: "x² - 8x + 16 = (x - 4)²",
+                    correct: "x = 4（重解）",
+                    choices: ["x = 4（重解）", "x = -4（重解）", "x = 8, 16", "共有点なし"],
+                    correctExplanation: "正解！<br>x² - 8x + 16 = (x - 4)² = 0<br>(x - 4)² = 0<br>よって x - 4 = 0<br>x = 4（重解）",
+                    wrongAdvice: "完全平方式の因数分解を考えてみましょう！<br>x² - 8x + 16の形を見てください<br>これは (x - 4)² の形に因数分解できます<br>(x - 4)² = 0 になるとき、xの値はいくつでしょう？<br>重解とは、同じ解が2つあることを意味します"
+                },
+                {
+                    equation: "y = x² + 2x + 5",
+                    hint1: `この問題は解の公式を使って解きましょう。<br><br>解の公式: <div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-b ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">b² - 4ac</span></div><div style="margin-top: 5px;">2a</div></div>a = 1, b = 2, c = 5<br><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 150px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">2² - 4×1×5</span></div><div style="margin-top: 5px;">2×1</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">4 - 20</span></div><div style="margin-top: 5px;">2</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 80px;">-2 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-16</span></div><div style="margin-top: 5px;">2</div></div><br>√<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-16</span>は実数ではないため、実数解はありません。`,
+                    correct: "共有点なし",
+                    choices: ["共有点なし", "x = -1（重解）", "x = -2, -5", "x = 1, 5"],
+                    correctExplanation: "正解！<br>この問題は解の公式を使って解きます<br>√の中が負の数になるため、実数解はありません<br>つまり、この放物線はx軸と交わりません",
+                    wrongAdvice: "この問題は因数分解できないので解の公式を使います！<br>解の公式で√の中（b² - 4ac）を計算してみましょう<br>a = 1, b = 2, c = 5のとき<br>b² - 4ac = 4 - 20 = -16<br>√の中が負の数になると実数解はありません<br>つまり、放物線とx軸は交わりません"
+                },
+                {
+                    equation: "y = x² - 4x + 5",
+                    hint1: `この問題は解の公式を使って解きましょう。<br><br>解の公式: <div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">-b ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">b² - 4ac</span></div><div style="margin-top: 5px;">2a</div></div>a = 1, b = -4, c = 5<br><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 150px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">(-4)² - 4×1×5</span></div><div style="margin-top: 5px;">2×1</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 120px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">16 - 20</span></div><div style="margin-top: 5px;">2</div></div><br><div style="text-align: center; margin: 10px 0;"><div style="border-bottom: 2px solid #333; display: inline-block; padding: 5px; min-width: 80px;">4 ± √<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-4</span></div><div style="margin-top: 5px;">2</div></div><br>√<span style="border-top: 2px solid #333; padding: 2px 8px; position: relative; top: -2px;">-4</span>は実数ではないため、実数解はありません。`,
+                    correct: "共有点なし",
+                    choices: ["共有点なし", "x = 2（重解）", "x = 1, 5", "x = -1, -5"],
+                    correctExplanation: "正解！<br>この問題は解の公式を使って解きます<br>√の中が負の数になるため、実数解はありません<br>つまり、この放物線はx軸と交わりません",
+                    wrongAdvice: "この問題は因数分解できないので解の公式を使います！<br>解の公式で√の中（b² - 4ac）を計算してみましょう<br>a = 1, b = -4, c = 5のとき<br>b² - 4ac = 16 - 20 = -4<br>√の中が負の数になると実数解はありません<br>つまり、放物線とx軸は交わりません"
+                }
+            ]
+        };
+
+        function setLevel(level) {
+            currentLevel = level;
+            currentProblemIndex = 0;
+            // 【ブラッシュアップ】元は前のレベルの正解数・問題数が残り、レベル完了の正解率に混ざっていた
+            correctCount = 0; totalCount = 0; firstTry = true; cleanCount = 0;
+            document.getElementById('correct').textContent = 0;
+            document.getElementById('total').textContent = 0;
+            levelProblems = [...problems[currentLevel]];
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+
+            // レベルボタンのアクティブ状態を更新
+            const levelButtons = document.querySelectorAll('.level-btn');
+            levelButtons[level].classList.add('active');
+
+            // クイズエリアを元に戻す
+            const quizArea = document.querySelector('.quiz-area');
+            const questionText = level === 0 ?
+                "次の式を因数分解しなさい" :
+                "次の二次関数とx軸との共有点のx座標を求めなさい";
+            const hintTitle = level === 0 ? "💡 因数分解のヒント" : "💡 計算のヒント";
+
+            quizArea.innerHTML = `
+                <div class="question-text" id="questionText">
+                    ${questionText}
+                </div>
+                <div class="problem" id="problem"></div>
+
+                <div style="text-align: center;">
+                    <button class="hint-btn" onclick="showHint()" id="hintBtn">💡 ヒントを見る</button>
+                </div>
+
+                <div class="hint-section" id="hintSection">
+                    <div class="hint-title">${hintTitle}</div>
+                    <div class="factorization" id="factorization"></div>
+                </div>
+
+                <div class="choices" id="choices">
+                    <!-- 選択肢がここに表示されます -->
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="next-btn" onclick="nextProblem()" id="nextBtn" style="display: none;">次の問題</button>
+                </div>
+
+                <div id="result" class="result" style="display: none;"></div>
+                <div id="explanation" class="explanation" style="display: none;"></div>
+            `;
+
+            nextProblem();
+        }
+
+        let hintStep = 0;
+        let firstTry = true, cleanCount = 0;   // 【ブラッシュアップ】一発で正解できた問題の数
+
+        function showHint() {
+            const hintSection = document.getElementById('hintSection');
+            const hintBtn = document.getElementById('hintBtn');
+            const factorization = document.getElementById('factorization');
+
+            if (currentLevel === 0 || currentLevel === 1 || currentLevel === 2) {
+                // レベル0-2は2段階ヒント
+                hintStep++;
+                if (hintStep === 1) {
+                    factorization.innerHTML = currentProblem.hint1;
+                    hintSection.style.display = 'block';
+                    hintBtn.textContent = '💡 ヒント2';
+                } else {
+                    factorization.innerHTML = currentProblem.hint2;
+                    hintBtn.style.display = 'none';
+                }
+            } else {
+                // レベル3は1段階ヒント
+                factorization.innerHTML = currentProblem.hint1;
+                hintSection.style.display = 'block';
+                hintBtn.style.display = 'none';
+            }
+        }
+
+        function nextProblem() {
+            if (currentProblemIndex >= 5) {
+                showLevelComplete();
+                return;
+            }
+
+            if (levelProblems.length === 0) {
+                levelProblems = [...problems[currentLevel]];
+            }
+
+            firstTry = true;   // 【ブラッシュアップ】
+            const randomIndex = Math.floor(Math.random() * levelProblems.length);
+            currentProblem = levelProblems[randomIndex];
+            levelProblems.splice(randomIndex, 1);
+
+            document.getElementById('problem').innerHTML = currentProblem.equation;
+
+            // ヒントステップをリセット
+            hintStep = 0;
+
+            // ヒントを隠す
+            document.getElementById('hintSection').style.display = 'none';
+            document.getElementById('hintBtn').style.display = 'inline-block';
+            document.getElementById('hintBtn').textContent = (currentLevel === 0 || currentLevel === 1 || currentLevel === 2) ? '💡 ヒント1' : '💡 ヒントを見る';
+
+            // 選択肢をシャッフルして表示
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+
+            // 選択肢をシャッフル
+            const shuffledChoices = [...currentProblem.choices];
+            for (let i = shuffledChoices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledChoices[i], shuffledChoices[j]] = [shuffledChoices[j], shuffledChoices[i]];
+            }
+
+            // 現在の選択肢の順番を保存
+            currentChoicesOrder = [...shuffledChoices];
+
+            shuffledChoices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                button.onclick = () => selectAnswer(choice, button);
+                choicesDiv.appendChild(button);
+            });
+
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('explanation').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function showLevelComplete() {
+            const quizArea = document.querySelector('.quiz-area');
+            quizArea.innerHTML = `
+                <div class="level-complete">
+                    <h2>🎉 レベル${currentLevel}完了！</h2>
+                    <p>おめでとうございます！すべての問題をクリアしました。</p>
+                    <p>一発正解: ${cleanCount} / 5問（正解率 ${Math.round((correctCount / totalCount) * 100)}%）</p>
+                    <!-- 【ブラッシュアップ】同じレベル・次のレベル・ほかの教材 を選べるようにした（元はレベル3のあと、レベル0をとばしてレベル1に戻っていた） -->
+                    <div class="done-nav">
+                        ${currentLevel < 3 ? '<button class="next" onclick="goToNextLevel()">次のレベルへ ▶</button>' : ''}
+                        <button class="again" onclick="setLevel(currentLevel)">同じレベルでもう一度</button>
+                        ${currentLevel === 3 ? '<button class="back" onclick="setLevel(0)">レベル0から始める</button>' : ''}
+                        <a href="../remake.html">ほかの教材をえらぶ</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function goToNextLevel() {
+            if (currentLevel < 3) {
+                setLevel(currentLevel + 1);
+            } else {
+                setLevel(1);
+            }
+        }
+
+        function selectAnswer(selectedChoice, buttonElement) {
+            const resultDiv = document.getElementById('result');
+            const explanationDiv = document.getElementById('explanation');
+            const allButtons = document.querySelectorAll('.choice-btn');
+
+            // すべてのボタンを無効化
+            allButtons.forEach(btn => {
+                btn.classList.add('disabled');
+                btn.onclick = null;
+            });
+
+            if (selectedChoice === currentProblem.correct) {
+                // 正解の場合
+                buttonElement.classList.add('correct');   // 【ブラッシュアップ】
+                if (firstTry) cleanCount++;
+                correctCount++;
+                totalCount++;
+                currentProblemIndex++;
+                document.getElementById('correct').textContent = correctCount;
+                document.getElementById('total').textContent = totalCount;
+
+                resultDiv.innerHTML = '🎉 正解です！';
+                resultDiv.className = 'result correct';
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                // 不正解の場合
+                firstTry = false;   // 【ブラッシュアップ】
+                totalCount++;
+                document.getElementById('total').textContent = totalCount;
+
+                buttonElement.classList.add('selected');
+
+                const encouragingMessages = [
+                    '❌ 惜しい！でも大丈夫、きっとできるよ！',
+                    '❌ あと少し！君ならできる！',
+                    '❌ 間違いは成長のチャンス！',
+                    '❌ 全然大丈夫！みんな最初は間違えるものだよ。',
+                    '❌ いい調子！間違いを恐れずに挑戦する姿勢が素晴らしい！'
+                ];
+                const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+                resultDiv.innerHTML = randomMessage;
+                resultDiv.className = 'result incorrect';
+
+                // もう一度挑戦ボタンを表示
+                setTimeout(() => {
+                    const tryAgainBtn = document.createElement('button');
+                    tryAgainBtn.className = 'next-btn try-again-btn';
+                    tryAgainBtn.textContent = 'もう一度挑戦';
+                    tryAgainBtn.onclick = tryAgain;
+                    tryAgainBtn.style.marginTop = '10px';
+                    resultDiv.appendChild(tryAgainBtn);
+                }, 1000);
+            }
+
+            resultDiv.style.display = 'block';
+
+            // 正解時は正解の解説、不正解時はアドバイスを表示
+            if (selectedChoice === currentProblem.correct) {
+                explanationDiv.innerHTML = '<strong>解説：</strong><br>' + currentProblem.correctExplanation;
+            } else {
+                explanationDiv.innerHTML = '<strong>アドバイス：</strong><br>' + currentProblem.wrongAdvice;
+            }
+            explanationDiv.style.display = 'block';
+        }
+
+        function tryAgain() {
+            // 選択肢を保存された順番で表示（シャッフルしない）
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+
+            // 保存された順番で選択肢を表示
+            currentChoicesOrder.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                button.onclick = () => selectAnswer(choice, button);
+                choicesDiv.appendChild(button);
+            });
+
+            // 結果のメッセージのみ非表示（解説は残す）
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        // 初期化
+        setLevel(0);
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   22. 2次関数と共有点の座標の計算練習
-     レベル0 … 共有点の個数を判別式で判定
-     レベル1 … 因数分解して共有点を求める
-     レベル2 … 解の公式が必要な場合
-     レベル3 … 総合
-
-   元教材から直した点：
-     ・選択肢に「x = 1, 6」のように、正解と数の組が同じで順番だけ
-       違うものが混ざっていて、どちらを選んでも同じはずなのに片方が
-       不正解になっていた。
-       → 解の組として比べるので、順番のちがいで不正解にならない。
-       　 また、同じ組の選択肢は作らない。
-     ・共有点が 1 個（重解）のとき、答えを 2 つ選ばせる形になっていた。
-       → 重解は 1 つの共有点として扱う。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt;
-
-  function sameSet(p, q) {
-    if (p.length !== q.length) return false;
-    var a = p.slice().sort(function (x, y) { return x - y; });
-    var b = q.slice().sort(function (x, y) { return x - y; });
-    for (var i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 1e-9) return false;
-    return true;
-  }
-
-  function fmtRoots(rs) {
-    return 'x = ' + rs.map(function (r) {
-      return Number.isInteger(r) ? r : Math.round(r * 100) / 100;
-    }).join(', ');
-  }
-
-  /* ---------- レベル0：共有点の個数 ---------- */
-  function level0() {
-    var a = Quiz.pick([1, 1, 2, -1]);
-    var b = A.randInt(-8, 8);
-    var c = A.randInt(-8, 8);
-    var D = b * b - 4 * a * c;
-    var n = D > 0 ? 2 : D === 0 ? 1 : 0;
-    var labels = ['0個（共有点なし）', '1個（接する）', '2個'];
-
-    return {
-      tag: 'レベル0',
-      text: 'この2次関数のグラフと x 軸の<b>共有点の個数</b>を答えなさい。',
-      math: 'y = ' + F.poly([[a, F.pow('x', 2)], [b, 'x'], [c, '']]),
-      figure: Graph.parabola({ a: a, b: b, c: c }),
-      type: 'choice',
-      choices: [labels[n], labels[(n + 1) % 3], labels[(n + 2) % 3]],
-      correct: 0,
-      noShuffle: false,
-      hint: '判別式 D = b² − 4ac の符号で決まります。D > 0 なら2個、D = 0 なら1個、D < 0 なら0個。',
-      explain: 'D = ' + b + '² − 4×' + a + '×' + c + ' = ' + D +
-        ' なので、共有点は ' + labels[n] + ' です。'
-    };
-  }
-
-  /* ---------- レベル1：因数分解で求める ---------- */
-  function level1() {
-    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
-    var roots = [-it.a, -it.b].sort(function (x, y) { return x - y; });
-    return makeRootQuestion('レベル1', 'y = ' + it.expanded, 1, it.sum, it.prod, roots,
-      'かけて ' + it.prod + '、たして ' + it.sum + ' になる 2 数をさがして因数分解します。',
-      '因数分解すると ' + it.factored + ' = 0。よって共有点の x 座標は ' + roots.join('、') + ' です。');
-  }
-
-  /* ---------- レベル2：解の公式が必要 ---------- */
-  function level2() {
-    var guard = 0;
-    while (guard++ < 200) {
-      var a = Quiz.pick([1, 1, 2]);
-      var b = A.randInt(-9, 9);
-      var c = A.randInt(-9, 9);
-      var D = b * b - 4 * a * c;
-      if (D <= 0) continue;
-      var sq = Math.sqrt(D);
-      if (Number.isInteger(sq)) continue;         // 因数分解で解けるものはレベル1にまわす
-      var r1 = (-b - sq) / (2 * a), r2 = (-b + sq) / (2 * a);
-      return makeRootQuestion('レベル2',
-        'y = ' + F.poly([[a, F.pow('x', 2)], [b, 'x'], [c, '']]), a, b, c, [r1, r2],
-        '因数分解できないので解の公式を使います。 x = ( −b ± √(b²−4ac) ) ÷ 2a',
-        'D = ' + D + ' なので x = ( ' + (-b) + ' ± √' + D + ' ) ÷ ' + (2 * a) + '。' +
-        '小数で表すと ' + fmtRoots([r1, r2]) + ' です。');
-    }
-    return level1();
-  }
-
-  function makeRootQuestion(tag, show, a, b, c, roots, hint, explain) {
-    var correct = fmtRoots(roots);
-    var used = [roots];
-    var choices = [correct];
-    var guard = 0;
-    while (choices.length < 4 && guard++ < 100) {
-      var cand;
-      var r = Math.random();
-      if (r < 0.4) cand = roots.map(function (x) { return -x; });                    // 符号ミス
-      else if (r < 0.7) cand = roots.map(function (x) { return x + Quiz.pick([1, -1, 2]); });
-      else cand = [A.nz(-8, 8), A.nz(-8, 8)];
-      // すでに使った組と同じものは作らない（順番ちがいの重複を防ぐ）
-      if (used.some(function (u) { return sameSet(u, cand); })) continue;
-      used.push(cand);
-      choices.push(fmtRoots(cand.sort(function (x, y) { return x - y; })));
-    }
-
-    return {
-      tag: tag,
-      text: '次の2次関数のグラフと x 軸との共有点の x 座標を求めなさい。',
-      math: show,
-      figure: Graph.parabola({
-        a: a, b: b, c: c,
-        points: roots.map(function (x) { return { x: x, y: 0 }; })
-      }),
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: hint,
-      explain: explain
-    };
-  }
-
-  /* ---------- 記述で答える ---------- */
-  function inputQuestion() {
-    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
-    var roots = [-it.a, -it.b].sort(function (x, y) { return x - y; });
-    return {
-      tag: '記述',
-      text: '次の2次関数のグラフと x 軸との共有点の x 座標を、すべて求めなさい。',
-      math: 'y = ' + it.expanded,
-      type: 'input',
-      answer: roots,                       // 配列を渡すと解の組として判定される
-      answerLabel: fmtRoots(roots),
-      placeholder: '例： -2, 3',
-      note: 'カンマで区切って入力します。順番は自由です。',
-      hint: 'y = 0 とおいて、因数分解して解きます。',
-      explain: '因数分解すると ' + it.factored + ' = 0。答えは ' + fmtRoots(roots) + ' です。'
-    };
-  }
-
-  Quiz.start({
-    title: '2次関数とx軸の共有点',
-    subtitle: '共有点の個数から、座標を求めるところまで。',
-    modes: [
-      { id: '0', name: 'レベル0：共有点の個数', desc: '判別式で判定（10問）' },
-      { id: '1', name: 'レベル1：因数分解', desc: '共有点の座標を求める（10問）' },
-      { id: '2', name: 'レベル2：解の公式', desc: '因数分解できない場合（8問）' },
-      { id: '3', name: 'レベル3：総合', desc: 'レベル0〜2をまぜて（12問）' },
-      { id: 'i', name: '記述で答える', desc: '自分で書く（8問）' }
-    ],
-    build: function (id) {
-      var out = [], i;
-      if (id === '0') { for (i = 0; i < 10; i++) out.push(level0()); }
-      else if (id === '1') { for (i = 0; i < 10; i++) out.push(level1()); }
-      else if (id === '2') { for (i = 0; i < 8; i++) out.push(level2()); }
-      else if (id === 'i') { for (i = 0; i < 8; i++) out.push(inputQuestion()); }
-      else {
-        for (i = 0; i < 4; i++) { out.push(level0()); out.push(level1()); out.push(level2()); }
-        out = Quiz.shuffle(out);
-      }
-      return out;
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    "h1": "u-title",
+    ".level-btn:not(.active)": "u-btn u-btn-plain",
+    ".level-btn.active": "u-btn",
+    ".hint-btn": "u-btn",
+    ".choice-btn": "u-choice",
+    ".choice-btn.correct": "u-ok",
+    ".choice-btn.selected": "u-ng",
+    ".next-btn:not(.try-again-btn)": "u-btn u-btn-blue",
+    ".try-again-btn": "u-btn",
+    ".done-nav .again": "u-btn",
+    ".done-nav .next": "u-btn u-btn-blue",
+    ".done-nav .back": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
