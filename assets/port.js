@@ -117,16 +117,25 @@
       } catch (e) { return; }
       list.forEach(function (el) {
         r.cls.forEach(function (c) { if (!el.classList.contains(c)) el.classList.add(c); });
+        if (r.state) r.els.add(el);
       });
     });
-    // 状態のクラス（正解・まちがい など）は、元の状態が外れたら外す
+    // 状態のクラス（正解・まちがい など）は、元の状態が外れたら外す。
+    // そのルールで付けた部品だけを見て、ほかのルールでも必要なクラスは残す
     themeRules.forEach(function (r) {
       if (!r.state) return;
-      [].slice.call(document.querySelectorAll('.' + r.cls.join('.'))).forEach(function (el) {
-        try { if (!el.matches(r.sel)) r.cls.forEach(function (c) { el.classList.remove(c); }); } catch (e) { }
+      r.els.forEach(function (el) {
+        if (!el.isConnected) { r.els.delete(el); return; }
+        if (safeMatches(el, r.sel)) return;
+        r.els.delete(el);
+        r.cls.forEach(function (c) {
+          var keep = themeRules.some(function (o) { return o !== r && o.cls.indexOf(c) >= 0 && safeMatches(el, o.sel); });
+          if (!keep) el.classList.remove(c);
+        });
       });
     });
   }
+  function safeMatches(el, sel) { try { return el.matches(sel); } catch (e) { return false; } }
   var themeTimer = null;
   function scheduleTheme() {
     if (themeTimer) return;
@@ -139,7 +148,7 @@
         var cls = String(v).split(/\s+/).filter(Boolean);
         // 「.a.b」のように状態を表すクラスが 2 つ以上重なった指定は、状態として扱う
         var state = /\.[\w-]+\.[\w-]+|:/.test(sel);
-        themeRules.push({ sel: sel, cls: cls, state: state });
+        themeRules.push({ sel: sel, cls: cls, state: state, els: new Set() });
       });
       var start = function () {
         applyTheme(document.body);
