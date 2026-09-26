@@ -1,185 +1,1762 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>二次不等式グラフクイズ</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    24. 2次不等式（二次不等式グラフクイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二次不等式グラフクイズ</title>
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { background-image: none !important; }
+    body > .container { max-width: 52rem; margin-top: 8px; margin-bottom: 24px; }
+    h1 { font-size: min(2.2rem, 7vw) !important; white-space: nowrap; }
+    body > .container > .text-center p { color: var(--u-sub) !important; font-weight: 700; }
+    body > .container > .bg-white { background: #f8fafc !important; border: 3px solid var(--u-line); box-shadow: none !important; border-radius: 24px !important; }
+    body > .container h2, body > .container h3 { color: var(--u-title-dark) !important; }
+    #level0.ring-4, #level1.ring-4, #level2.ring-4 { box-shadow: 0 0 0 4px rgba(251,146,60,0.5) !important; }
+    #level0 { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    #level1 { background: var(--u-accent) !important; border-bottom-color: var(--u-accent-dark) !important; }
+    #level2 { background: var(--u-blue) !important; border-bottom-color: var(--u-blue-dark) !important; }
+    #inequality { color: var(--u-ink); }
+    #inequality { display: inline; }
+    .text-2xl.bg-indigo-50 { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; color: var(--u-ink) !important; border-radius: 20px !important; }
+    #hint1Btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    #hint2Btn { background: var(--u-accent) !important; border-bottom-color: var(--u-accent-dark) !important; }
+    #hint3Btn { background: #ef4444 !important; border-bottom-color: #b91c1c !important; }
+    #hintSection button { padding: 8px 14px; margin: 4px; }
+    #hintDisplay { background: var(--u-soft-blue) !important; border: 2px solid var(--u-soft-blue-line) !important; border-radius: 20px !important; }
+    #hintTitle, #hintContent { color: var(--u-title) !important; }
+    #optionsGrid canvas { width: 100%; max-width: 240px; height: auto; }
+    #hintCanvas, #explanationCanvas { max-width: 100%; height: auto; }
+    #explanation { background: #fff !important; border: 3px dashed var(--u-line) !important; border-radius: 20px !important; }
+    #explanation h4, #explanationContent { color: var(--u-ink) !important; }
+    #result { border-radius: 20px !important; }
+    #result a { color: var(--u-sub); font-weight: 700; }
+    .final-nav { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
+    .final-nav button { width: 100%; max-width: 340px; padding: 12px; }
+    @media (max-width: 640px) {
+      body > .container { padding: 8px !important; }
+      body > .container > .bg-white { padding: 14px 10px !important; }
+      #optionsGrid { gap: 8px; }
+      #optionsGrid button { padding: 6px; }
+      .text-2xl.bg-indigo-50 { font-size: 1.3rem; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container mx-auto px-4 py-8">
+        <!-- ヘッダー -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">二次不等式グラフクイズ</h1>
+            <p class="text-lg text-gray-600">グラフとx軸の位置関係を考えよう！</p>
+        </div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/graph.js"></script>
+        <!-- レベル選択 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">レベル選択</h2>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="setLevel(0)" id="level0" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors">
+                    レベル0 (因数分解の練習)
+                </button>
+                <button onclick="setLevel(1)" id="level1" class="px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors">
+                    レベル1 (グラフ問題)
+                </button>
+                <button onclick="setLevel(2)" id="level2" class="px-6 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors">
+                    レベル2 (二次不等式を解く)
+                </button>
+            </div>
+        </div>
+
+        <!-- 問題表示エリア -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">問題 <span id="questionNumber">1</span></h3>
+                <div class="text-sm text-gray-600">
+                    レベル <span id="currentLevel">0</span> | 正解数: <span id="score">0</span>/<span id="totalQuestions">0</span>
+                </div>
+            </div>
+
+            <!-- 問題文と不等式表示 -->
+            <div class="text-center mb-6">
+                <p id="questionText" class="text-lg text-gray-700 mb-3">次の二次不等式が表す図として、正しいものを選びなさい。</p>
+                <div class="text-2xl font-bold text-indigo-800 bg-indigo-50 p-4 rounded-lg inline-block">
+                    <span id="inequality">x² - 4x + 3 > 0</span>
+                </div>
+                <div id="intersectionInfo" class="text-sm text-gray-600 mt-2"></div>
+            </div>
+
+
+
+            <!-- ヒントボタン（レベル0と2で表示） -->
+            <div id="hintSection" class="hidden mb-4 text-center">
+                <button onclick="showHint(1)" id="hint1Btn" class="px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors mr-2">
+                    ヒント1 💡
+                </button>
+                <button onclick="showHint(2)" id="hint2Btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors mr-2">
+                    ヒント2 📊
+                </button>
+                <button onclick="showHint(3)" id="hint3Btn" class="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors">
+                    ヒント3 🎯
+                </button>
+            </div>
+
+            <!-- ヒント表示（レベル0用：選択肢の上に表示） -->
+            <div id="hintDisplay" class="hidden mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 class="text-lg font-semibold text-yellow-800 mb-2" id="hintTitle">💡 ヒント</h4>
+                <div id="hintContent" class="text-yellow-700"></div>
+                <div id="hintGraph" class="flex justify-center mt-4">
+                    <canvas id="hintCanvas" width="300" height="200" class="border border-yellow-200 rounded bg-white"></canvas>
+                </div>
+                <div id="hintNavigation" class="hidden mt-4 text-center space-x-2">
+                    <button onclick="showHint(1)" id="backToHint1" class="px-3 py-1 bg-yellow-400 text-yellow-800 rounded font-medium hover:bg-yellow-500 transition-colors">
+                        ← ヒント1に戻る
+                    </button>
+                </div>
+            </div>
+
+            <!-- 選択肢 -->
+            <div id="optionsGrid" class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="selectAnswer(0)" id="option0" class="p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-400 transition-all">
+                    <canvas id="optionCanvas0" width="240" height="160" class="border border-gray-100 rounded bg-white mx-auto" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></canvas>
+                </button>
+                <button onclick="selectAnswer(1)" id="option1" class="p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-400 transition-all">
+                    <canvas id="optionCanvas1" width="240" height="160" class="border border-gray-100 rounded bg-white mx-auto" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></canvas>
+                </button>
+                <button onclick="selectAnswer(2)" id="option2" class="p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-400 transition-all">
+                    <canvas id="optionCanvas2" width="240" height="160" class="border border-gray-100 rounded bg-white mx-auto" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></canvas>
+                </button>
+                <button onclick="selectAnswer(3)" id="option3" class="p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-400 transition-all">
+                    <canvas id="optionCanvas3" width="240" height="160" class="border border-gray-100 rounded bg-white mx-auto" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;"></canvas>
+                </button>
+            </div>
+
+
+
+            <!-- 結果表示 -->
+            <div id="result" class="hidden mb-4 p-4 rounded-lg"></div>
+
+            <!-- 正解時の解説 -->
+            <div id="explanation" class="hidden mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="text-lg font-semibold text-blue-800 mb-3">📚 解説</h4>
+                <div id="explanationContent" class="text-blue-700 mb-4"></div>
+                <div class="flex justify-center">
+                    <canvas id="explanationCanvas" width="300" height="200" class="border border-blue-200 rounded bg-white"></canvas>
+                </div>
+            </div>
+
+            <!-- ボタンエリア -->
+            <div class="text-center space-x-4">
+                <button onclick="retryQuestion()" id="retryBtn" class="hidden px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                    もう一度挑戦
+                </button>
+                <button onclick="nextQuestion()" id="nextBtn" class="hidden px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                    次の問題
+                </button>
+                <button onclick="shuffleLevel1()" id="shuffleBtn" class="hidden px-6 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors">
+                    🔀 問題をランダムに
+                </button>
+            </div>
+        </div>
+
+        <!-- 説明（レベル1と2のみ表示） -->
+        <div id="explanationSection" class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">解き方のポイント</h3>
+            <ul class="space-y-2 text-gray-700">
+                <li>• <strong>f(x) > 0</strong>: グラフがx軸より上にある部分</li>
+                <li>• <strong>f(x) < 0</strong>: グラフがx軸より下にある部分</li>
+                <li>• <strong>f(x) ≥ 0</strong>: グラフがx軸より上 + x軸上の点</li>
+                <li>• <strong>f(x) ≤ 0</strong>: グラフがx軸より下 + x軸上の点</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 0;
+        let questionCount = 0;
+        let score = 0;
+        let currentQuestion = null;
+        let answered = false;
+        let shuffledProblems = {};
+        let missedThis = false;   // 【ブラッシュアップ】この問題でまちがえたか（一発正解だけを点にする）
+
+        // 配列をシャッフルする関数
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 問題データ
+        const problems = {
+            0: [ // レベル0: 因数分解の練習（12問）
+                {expression: "x² + 5x + 6", answer: "(x + 2)(x + 3)", hint1: "かけて6、たして5になる2つの数を探そう", hint2: "かけて6、たして5になるのは2と3だね！"},
+                {expression: "x² + 7x + 12", answer: "(x + 3)(x + 4)", hint1: "かけて12、たして7になる2つの数を探そう", hint2: "かけて12、たして7になるのは3と4だね！"},
+                {expression: "x² - 5x + 6", answer: "(x - 2)(x - 3)", hint1: "かけて6、たして-5になる2つの数を探そう", hint2: "かけて6、たして-5になるのは-2と-3だね！"},
+                {expression: "x² - 7x + 12", answer: "(x - 3)(x - 4)", hint1: "かけて12、たして-7になる2つの数を探そう", hint2: "かけて12、たして-7になるのは-3と-4だね！"},
+                {expression: "x² + x - 6", answer: "(x + 3)(x - 2)", hint1: "かけて-6、たして1になる2つの数を探そう", hint2: "かけて-6、たして1になるのは3と-2だね！"},
+                {expression: "x² - x - 6", answer: "(x - 3)(x + 2)", hint1: "かけて-6、たして-1になる2つの数を探そう", hint2: "かけて-6、たして-1になるのは-3と2だね！"},
+                {expression: "x² + 3x - 10", answer: "(x + 5)(x - 2)", hint1: "かけて-10、たして3になる2つの数を探そう", hint2: "かけて-10、たして3になるのは5と-2だね！"},
+                {expression: "x² - 3x - 10", answer: "(x - 5)(x + 2)", hint1: "かけて-10、たして-3になる2つの数を探そう", hint2: "かけて-10、たして-3になるのは-5と2だね！"},
+                {expression: "x² + 8x + 15", answer: "(x + 3)(x + 5)", hint1: "かけて15、たして8になる2つの数を探そう", hint2: "かけて15、たして8になるのは3と5だね！"},
+                {expression: "x² - 8x + 15", answer: "(x - 3)(x - 5)", hint1: "かけて15、たして-8になる2つの数を探そう", hint2: "かけて15、たして-8になるのは-3と-5だね！"},
+                {expression: "x² + 2x - 8", answer: "(x + 4)(x - 2)", hint1: "かけて-8、たして2になる2つの数を探そう", hint2: "かけて-8、たして2になるのは4と-2だね！"},
+                {expression: "x² - 2x - 8", answer: "(x - 4)(x + 2)", hint1: "かけて-8、たして-2になる2つの数を探そう", hint2: "かけて-8、たして-2になるのは-4と2だね！"}
+            ],
+            1: [ // レベル1: グラフ問題（16問）- ≤と≥を含む問題を追加
+                {a: 1, b: -4, c: 3, inequality: '=', answer: 3}, // (x-1)(x-3) = 0 → x=1,3
+                {a: 1, b: -4, c: 3, inequality: '>', answer: 0}, // (x-1)(x-3) > 0 → x<1, x>3
+                {a: 1, b: -4, c: 3, inequality: '<', answer: 1}, // (x-1)(x-3) < 0 → 1<x<3
+                {a: 1, b: -4, c: 3, inequality: '≥', answer: 2}, // (x-1)(x-3) ≥ 0 → x≤1, x≥3
+                {a: 1, b: -4, c: 3, inequality: '≤', answer: 3}, // (x-1)(x-3) ≤ 0 → 1≤x≤3
+                {a: 1, b: 0, c: -4, inequality: '=', answer: 3}, // x² - 4 = 0 → x=±2
+                {a: 1, b: 0, c: -4, inequality: '>', answer: 0}, // x² - 4 > 0 → x<-2, x>2
+                {a: 1, b: 0, c: -4, inequality: '<', answer: 1}, // x² - 4 < 0 → -2<x<2
+                {a: 1, b: 0, c: -4, inequality: '≥', answer: 2}, // x² - 4 ≥ 0 → x≤-2, x≥2
+                {a: 1, b: 0, c: -4, inequality: '≤', answer: 3}, // x² - 4 ≤ 0 → -2≤x≤2
+                {a: 1, b: -2, c: -3, inequality: '>', answer: 0}, // (x+1)(x-3) > 0 → x<-1, x>3
+                {a: 1, b: -2, c: -3, inequality: '<', answer: 1}, // (x+1)(x-3) < 0 → -1<x<3
+                {a: 1, b: -5, c: 6, inequality: '≥', answer: 2}, // (x-2)(x-3) ≥ 0 → x≤2, x≥3
+                {a: 1, b: -5, c: 6, inequality: '≤', answer: 3}, // (x-2)(x-3) ≤ 0 → 2≤x≤3
+                {a: 1, b: 1, c: -6, inequality: '>', answer: 0}, // (x+3)(x-2) > 0 → x<-3, x>2
+                {a: 1, b: 1, c: -6, inequality: '≤', answer: 3}, // (x+3)(x-2) ≤ 0 → -3≤x≤2
+            ],
+            2: [ // レベル2: 二次不等式を解く問題（16問）
+                {inequality: "x² - 5x + 6 > 0", factored: "(x-2)(x-3)", roots: [2, 3], answer: "x < 2 または x > 3", hint1: "因数分解すると (x-2)(x-3) > 0", hint2: "因数分解すると (x-2)(x-3) > 0\nx軸との交点は x = 2, 3", hint3: "グラフがx軸より上の部分が解"},
+                {inequality: "x² - 5x + 6 ≥ 0", factored: "(x-2)(x-3)", roots: [2, 3], answer: "x ≤ 2 または x ≥ 3", hint1: "因数分解すると (x-2)(x-3) ≥ 0", hint2: "因数分解すると (x-2)(x-3) ≥ 0\nx軸との交点は x = 2, 3", hint3: "グラフがx軸より上の部分と交点が解"},
+                {inequality: "x² - 4 < 0", factored: "(x-2)(x+2)", roots: [-2, 2], answer: "-2 < x < 2", hint1: "因数分解すると (x+2)(x-2) < 0", hint2: "因数分解すると (x+2)(x-2) < 0\nx軸との交点は x = -2, 2", hint3: "グラフがx軸より下の部分が解"},
+                {inequality: "x² - 4 ≤ 0", factored: "(x-2)(x+2)", roots: [-2, 2], answer: "-2 ≤ x ≤ 2", hint1: "因数分解すると (x+2)(x-2) ≤ 0", hint2: "因数分解すると (x+2)(x-2) ≤ 0\nx軸との交点は x = -2, 2", hint3: "グラフがx軸より下の部分と交点が解"},
+                {inequality: "x² + x - 6 > 0", factored: "(x+3)(x-2)", roots: [-3, 2], answer: "x < -3 または x > 2", hint1: "因数分解すると (x+3)(x-2) > 0", hint2: "因数分解すると (x+3)(x-2) > 0\nx軸との交点は x = -3, 2", hint3: "グラフがx軸より上の部分が解"},
+                {inequality: "x² + x - 6 ≥ 0", factored: "(x+3)(x-2)", roots: [-3, 2], answer: "x ≤ -3 または x ≥ 2", hint1: "因数分解すると (x+3)(x-2) ≥ 0", hint2: "因数分解すると (x+3)(x-2) ≥ 0\nx軸との交点は x = -3, 2", hint3: "グラフがx軸より上の部分と交点が解"},
+                {inequality: "x² + x - 6 < 0", factored: "(x+3)(x-2)", roots: [-3, 2], answer: "-3 < x < 2", hint1: "因数分解すると (x+3)(x-2) < 0", hint2: "因数分解すると (x+3)(x-2) < 0\nx軸との交点は x = -3, 2", hint3: "グラフがx軸より下の部分が解"},
+                {inequality: "x² + x - 6 ≤ 0", factored: "(x+3)(x-2)", roots: [-3, 2], answer: "-3 ≤ x ≤ 2", hint1: "因数分解すると (x+3)(x-2) ≤ 0", hint2: "因数分解すると (x+3)(x-2) ≤ 0\nx軸との交点は x = -3, 2", hint3: "グラフがx軸より下の部分と交点が解"},
+                {inequality: "x² - 9 > 0", factored: "(x-3)(x+3)", roots: [-3, 3], answer: "x < -3 または x > 3", hint1: "因数分解すると (x+3)(x-3) > 0", hint2: "因数分解すると (x+3)(x-3) > 0\nx軸との交点は x = -3, 3", hint3: "グラフがx軸より上の部分が解"},
+                {inequality: "x² - 9 ≥ 0", factored: "(x-3)(x+3)", roots: [-3, 3], answer: "x ≤ -3 または x ≥ 3", hint1: "因数分解すると (x+3)(x-3) ≥ 0", hint2: "因数分解すると (x+3)(x-3) ≥ 0\nx軸との交点は x = -3, 3", hint3: "グラフがx軸より上の部分と交点が解"},
+                {inequality: "x² + 2x - 8 < 0", factored: "(x+4)(x-2)", roots: [-4, 2], answer: "-4 < x < 2", hint1: "因数分解すると (x+4)(x-2) < 0", hint2: "因数分解すると (x+4)(x-2) < 0\nx軸との交点は x = -4, 2", hint3: "グラフがx軸より下の部分が解"},
+                {inequality: "x² + 2x - 8 ≤ 0", factored: "(x+4)(x-2)", roots: [-4, 2], answer: "-4 ≤ x ≤ 2", hint1: "因数分解すると (x+4)(x-2) ≤ 0", hint2: "因数分解すると (x+4)(x-2) ≤ 0\nx軸との交点は x = -4, 2", hint3: "グラフがx軸より下の部分と交点が解"},
+                {inequality: "x² - 6x + 9 > 0", factored: "(x-3)²", roots: [3], answer: "x ≠ 3", hint1: "因数分解すると (x-3)² > 0", hint2: "因数分解すると (x-3)² > 0\nx軸との交点は x = 3（接点）", hint3: "完全平方式でx=3以外は正"},
+                {inequality: "x² - 6x + 9 ≥ 0", factored: "(x-3)²", roots: [3], answer: "すべての実数", hint1: "因数分解すると (x-3)² ≥ 0", hint2: "因数分解すると (x-3)² ≥ 0\nx軸との交点は x = 3（接点）", hint3: "完全平方式なので常に0以上"},
+                {inequality: "x² + 1 > 0", factored: "x² + 1", roots: [], answer: "すべての実数", hint1: "x² + 1 > 0（因数分解できない）", hint2: "x² + 1 > 0（因数分解できない）\nx軸との交点はなし", hint3: "x²は常に0以上なので常に正"},
+                {inequality: "x² + 1 ≥ 0", factored: "x² + 1", roots: [], answer: "すべての実数", hint1: "x² + 1 ≥ 0（因数分解できない）", hint2: "x² + 1 ≥ 0（因数分解できない）\nx軸との交点はなし", hint3: "x²は常に0以上なので常に正"}
+            ]
+        };
+
+        function setLevel(level) {
+            currentLevel = level;
+            questionCount = 0;
+            score = 0;
+
+            // レベル1の場合は問題をシャッフル
+            if (level === 1) {
+                shuffledProblems[level] = shuffleArray(problems[level]);
+            } else {
+                shuffledProblems[level] = problems[level];
+            }
+
+            // レベルボタンの見た目を更新
+            document.querySelectorAll('[id^="level"]').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-offset-2');
+            });
+            document.getElementById(`level${level}`).classList.add('ring-4', 'ring-offset-2', 'ring-indigo-300');
+
+            document.getElementById('currentLevel').textContent = level;
+
+            // 解き方のポイントの表示/非表示
+            if (level === 0) {
+                document.getElementById('explanationSection').style.display = 'none';
+            } else {
+                document.getElementById('explanationSection').style.display = 'block';
+            }
+
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (questionCount >= shuffledProblems[currentLevel].length) {
+                showFinalResult();
+                return;
+            }
+
+            answered = false;
+            currentQuestion = Object.assign({}, shuffledProblems[currentLevel][questionCount]);   // 【ブラッシュアップ】写しを使う
+            missedThis = false;
+            questionCount++;
+
+            document.getElementById('questionNumber').textContent = questionCount;
+            document.getElementById('totalQuestions').textContent = shuffledProblems[currentLevel].length;
+
+            if (currentLevel === 0) {
+                // レベル0: 因数分解の練習
+                document.getElementById('inequality').textContent = currentQuestion.expression;
+                document.getElementById('questionText').textContent = '次の式を因数分解しなさい。';
+                document.getElementById('intersectionInfo').textContent = '';
+
+                // レベル0用の選択肢を表示
+                showLevel0Options();
+            } else if (currentLevel === 2) {
+                // レベル2: 二次不等式を解く問題
+                document.getElementById('inequality').textContent = currentQuestion.inequality;
+                document.getElementById('questionText').textContent = '次の二次不等式を解きなさい。';
+                document.getElementById('intersectionInfo').textContent = '';
+
+                // ヒントボタンを表示
+                document.getElementById('hintSection').classList.remove('hidden');
+
+                // レベル2用の選択肢を表示
+                showLevel2Options();
+            } else {
+                // レベル1: グラフ問題
+                const functionText = formatFunction(currentQuestion.a, currentQuestion.b, currentQuestion.c);
+                const inequalityText = `${functionText} ${currentQuestion.inequality} 0`;
+                document.getElementById('inequality').textContent = inequalityText;
+
+                // 問題文を動的に変更
+                const questionText = currentQuestion.inequality === '=' ?
+                    '次の二次方程式が表す図として、正しいものを選びなさい。' :
+                    '次の二次不等式が表す図として、正しいものを選びなさい。';
+                document.getElementById('questionText').textContent = questionText;
+
+                // 交点情報を表示
+                const intersectionText = getIntersectionInfo(currentQuestion.a, currentQuestion.b, currentQuestion.c);
+                document.getElementById('intersectionInfo').textContent = intersectionText;
+
+                // 全ての問題を4択に統一
+                const optionsGrid = document.getElementById('optionsGrid');
+                optionsGrid.className = 'grid grid-cols-2 gap-4 mb-6';
+                // 全ての選択肢を表示
+                document.getElementById('option2').style.display = 'block';
+                document.getElementById('option3').style.display = 'block';
+
+                // 選択肢のグラフを描画
+                drawOptionGraphs(currentQuestion.a, currentQuestion.b, currentQuestion.c, currentQuestion.inequality);
+            }
+
+            // 選択肢をリセット
+            document.querySelectorAll('[id^="option"]').forEach(btn => {
+                btn.classList.remove('bg-green-100', 'border-green-500', 'bg-red-100', 'border-red-500');
+                btn.classList.add('border-gray-200');
+                btn.disabled = false;
+            });
+
+            // 結果とボタンを非表示
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('hintDisplay').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+
+            // ヒント表示の制御
+            if (currentLevel === 0) {
+                // レベル0ではヒントボタンを表示（ヒント3は隠す）
+                document.getElementById('hintSection').classList.remove('hidden');
+                document.getElementById('hint3Btn').style.display = 'none';
+
+                // ヒントボタンをリセット
+                document.getElementById('hint1Btn').disabled = false;
+                document.getElementById('hint1Btn').classList.remove('opacity-50');
+                document.getElementById('hint2Btn').disabled = false;
+                document.getElementById('hint2Btn').classList.remove('opacity-50');
+            } else if (currentLevel === 1) {
+                // レベル1ではヒントを完全に隠す
+                document.getElementById('hintSection').classList.add('hidden');
+            } else {
+                // レベル2ではヒントボタンを表示
+                document.getElementById('hintSection').classList.remove('hidden');
+
+                // ヒントボタンをリセット
+                document.getElementById('hint1Btn').disabled = false;
+                document.getElementById('hint1Btn').classList.remove('opacity-50');
+                document.getElementById('hint2Btn').disabled = false;
+                document.getElementById('hint2Btn').classList.remove('opacity-50');
+                document.getElementById('hint3Btn').disabled = false;
+                document.getElementById('hint3Btn').classList.remove('opacity-50');
+                document.getElementById('hint3Btn').style.display = 'inline-block';
+            }
+        }
+
+        function formatFunction(a, b, c) {
+            let result = '';
+
+            if (a === 1) result += 'x²';
+            else if (a === -1) result += '-x²';
+            else result += `${a}x²`;
+
+            if (b > 0) result += ` + ${b}x`;
+            else if (b < 0) result += ` - ${Math.abs(b)}x`;
+
+            if (c > 0) result += ` + ${c}`;
+            else if (c < 0) result += ` - ${Math.abs(c)}`;
+
+            return result;
+        }
+
+        function getIntersectionInfo(a, b, c) {
+            const discriminant = b * b - 4 * a * c;
+
+            if (discriminant > 0) {
+                const x1 = (-b - Math.sqrt(discriminant)) / (2 * a);
+                const x2 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                return `x軸との交点は、x = ${Math.round(x1)} と x = ${Math.round(x2)} です。`;
+            } else if (discriminant === 0) {
+                const x1 = -b / (2 * a);
+                return `x軸との交点は、x = ${Math.round(x1)} です（接点）。`;
+            } else {
+                return 'x軸との交点はありません。';
+            }
+        }
+
+
+
+
+
+        function showLevel0Options() {
+            const correctAnswer = currentQuestion.answer;
+            const options = generateLevel0Options(correctAnswer);
+
+            for (let i = 0; i < 4; i++) {
+                const canvas = document.getElementById(`optionCanvas${i}`);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 背景を白に設定
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 選択肢番号を表示
+                ctx.fillStyle = '#6B7280';
+                ctx.font = 'bold 12px Noto Sans JP';
+                ctx.textAlign = 'left';
+                ctx.fillText(`選択肢${i + 1}`, 10, 20);
+
+                // 選択肢のテキストを表示
+                ctx.fillStyle = '#1F2937';
+                ctx.font = 'bold 24px Noto Sans JP';
+                ctx.textAlign = 'center';
+                ctx.fillText(options[i], canvas.width / 2, canvas.height / 2 + 15);
+            }
+
+            // 正解を設定
+            currentQuestion.answerText = correctAnswer;   // 【ブラッシュアップ】答えの式もとっておく
+            currentQuestion.answer = options.indexOf(correctAnswer);
+        }
+
+        function generateLevel0Options(correctAnswer) {
+            const options = [correctAnswer];
+
+            // 間違った選択肢を生成
+            const wrongOptions = [];
+
+            // 正解から数字を抽出して間違った選択肢を作成
+            const match = correctAnswer.match(/\(x [+-] \d+\)\(x [+-] \d+\)/);
+            if (match) {
+                const nums = correctAnswer.match(/\d+/g);
+                if (nums && nums.length >= 2) {
+                    const num1 = parseInt(nums[0]);
+                    const num2 = parseInt(nums[1]);
+
+                    // 符号を変えた選択肢
+                    wrongOptions.push(`(x - ${num1})(x + ${num2})`);
+                    wrongOptions.push(`(x + ${num1})(x - ${num2})`);
+
+                    // 数字を変えた選択肢
+                    wrongOptions.push(`(x + ${num1 + 1})(x + ${num2})`);
+                    wrongOptions.push(`(x - ${num1})(x - ${num2 + 1})`);
+                    wrongOptions.push(`(x + ${num1})(x + ${num2 + 1})`);
+                }
+            }
+
+            // 3つの間違った選択肢を追加
+            for (let i = 0; i < 3 && i < wrongOptions.length; i++) {
+                if (!options.includes(wrongOptions[i])) {
+                    options.push(wrongOptions[i]);
+                }
+            }
+
+            // 足りない場合は追加の選択肢を生成
+            while (options.length < 4) {
+                const additionalOptions = ['(x + 1)(x + 1)', '(x - 1)(x - 1)', '(x + 2)(x - 1)', '(x - 2)(x + 1)'];
+                for (const opt of additionalOptions) {
+                    if (!options.includes(opt)) {
+                        options.push(opt);
+                        break;
+                    }
+                }
+                if (options.length >= 4) break;
+            }
+
+            // 配列をシャッフル
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            return options;
+        }
+
+        function showLevel2Options() {
+            const correctAnswer = currentQuestion.answer;
+            const options = generateLevel2Options(correctAnswer);
+
+            for (let i = 0; i < 4; i++) {
+                const canvas = document.getElementById(`optionCanvas${i}`);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 背景を白に設定
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 選択肢番号を表示
+                ctx.fillStyle = '#6B7280';
+                ctx.font = 'bold 12px Noto Sans JP';
+                ctx.textAlign = 'left';
+                ctx.fillText(`選択肢${i + 1}`, 10, 20);
+
+                // 選択肢のテキストを表示
+                ctx.fillStyle = '#1F2937';
+                ctx.font = 'bold 16px Noto Sans JP';
+                ctx.textAlign = 'center';
+
+                // 長いテキストの場合は複数行に分割
+                const text = options[i];
+                if (text.length > 15) {
+                    const words = text.split(', ');
+                    if (words.length > 1) {
+                        ctx.fillText(words[0], canvas.width / 2, canvas.height / 2 - 5);
+                        ctx.fillText(words[1], canvas.width / 2, canvas.height / 2 + 15);
+                    } else {
+                        ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 5);
+                    }
+                } else {
+                    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 5);
+                }
+            }
+
+            // 正解を設定
+            currentQuestion.answerText = correctAnswer;   // 【ブラッシュアップ】答えの式もとっておく
+            currentQuestion.answer = options.indexOf(correctAnswer);
+        }
+
+        function generateLevel2Options(correctAnswer) {
+            const options = [correctAnswer];
+
+            // 間違った選択肢を生成（4つの異なるパターン）
+            const wrongOptions = [];
+
+            // 不等式の種類に応じて間違った選択肢を生成
+            if (correctAnswer.includes('または') && !correctAnswer.includes('≤')) {
+                // x < a または x > b の形の場合（例：x < 2 または x > 3）
+                const parts = correctAnswer.split(' または ');
+                const leftPart = parts[0]; // x < 2
+                const rightPart = parts[1]; // x > 3
+                const num1 = leftPart.match(/-?\d+/)[0];
+                const num2 = rightPart.match(/-?\d+/)[0];
+
+                wrongOptions.push(`${num1} < x < ${num2}`); // 2 < x < 3
+                wrongOptions.push(`x ≤ ${num1} または x ≥ ${num2}`); // x ≤ 2 または x ≥ 3
+                wrongOptions.push(`${num1} ≤ x ≤ ${num2}`); // 2 ≤ x ≤ 3
+                wrongOptions.push('解なし');
+            } else if (correctAnswer.includes('≤') && correctAnswer.includes('≥')) {
+                // x ≤ a または x ≥ b の形の場合（例：x ≤ 2 または x ≥ 3）
+                const parts = correctAnswer.split(' または ');
+                const leftPart = parts[0]; // x ≤ 2
+                const rightPart = parts[1]; // x ≥ 3
+                const num1 = leftPart.match(/-?\d+/)[0];
+                const num2 = rightPart.match(/-?\d+/)[0];
+
+                wrongOptions.push(`x < ${num1} または x > ${num2}`); // x < 2 または x > 3
+                wrongOptions.push(`${num1} < x < ${num2}`); // 2 < x < 3
+                wrongOptions.push(`${num1} ≤ x ≤ ${num2}`); // 2 ≤ x ≤ 3
+                wrongOptions.push('解なし');
+            } else if ((correctAnswer.includes('<') || correctAnswer.includes('≤')) && !correctAnswer.includes('>') && !correctAnswer.includes('≥')) {
+                // a < x < b または a ≤ x ≤ b の形の場合
+                const match = correctAnswer.match(/-?\d+/g);
+                if (match && match.length >= 2) {
+                    const num1 = match[0];
+                    const num2 = match[1];
+
+                    // < と ≤ を入れ替えた選択肢
+                    if (correctAnswer.includes('≤')) {
+                        wrongOptions.push(`${num1} < x < ${num2}`); // ≤ を < に変更
+                        wrongOptions.push(`x < ${num1}, x > ${num2}`); // 範囲を逆転
+                        wrongOptions.push(`x ≤ ${num1}, x ≥ ${num2}`); // 範囲を逆転（≤, ≥）
+                    } else {
+                        wrongOptions.push(`${num1} ≤ x ≤ ${num2}`); // < を ≤ に変更
+                        wrongOptions.push(`x < ${num1}, x > ${num2}`); // 範囲を逆転
+                        wrongOptions.push(`x ≤ ${num1}, x ≥ ${num2}`); // 範囲を逆転（≤, ≥）
+                    }
+                    wrongOptions.push('解なし');
+                } else {
+                    wrongOptions.push('解なし');
+                    wrongOptions.push('すべての実数');
+                    wrongOptions.push('x > 0');
+                }
+            } else if (correctAnswer === 'すべての実数') {
+                wrongOptions.push('解なし');
+                wrongOptions.push('x ≥ 0');
+                wrongOptions.push('x > 0');
+                wrongOptions.push('x = 0');
+            } else if (correctAnswer === '解なし') {
+                wrongOptions.push('すべての実数');
+                wrongOptions.push('x ≥ 0');
+                wrongOptions.push('x > 0');
+                wrongOptions.push('x = 0');
+            } else if (correctAnswer.includes('≠')) {
+                // x ≠ 4 の形の場合
+                const num = correctAnswer.match(/-?\d+/)[0];
+                wrongOptions.push('すべての実数');
+                wrongOptions.push('解なし');
+                wrongOptions.push(`x = ${num}`);
+                wrongOptions.push(`x > ${num}`);
+            } else {
+                // その他の場合
+                wrongOptions.push('解なし');
+                wrongOptions.push('すべての実数');
+                wrongOptions.push('x ≥ 0');
+                wrongOptions.push('x > 0');
+            }
+
+            // 3つの間違った選択肢を追加
+            for (let i = 0; i < 3 && i < wrongOptions.length; i++) {
+                if (!options.includes(wrongOptions[i])) {
+                    options.push(wrongOptions[i]);
+                }
+            }
+
+            // 足りない場合は追加の選択肢を生成
+            while (options.length < 4) {
+                const additionalOptions = ['x > 0', 'x < 0', 'x = 0', 'x ≥ 1', 'x ≤ -1', 'x ≠ 0'];
+                for (const opt of additionalOptions) {
+                    if (!options.includes(opt)) {
+                        options.push(opt);
+                        break;
+                    }
+                }
+                if (options.length >= 4) break;
+            }
+
+            // 配列をシャッフル
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            return options;
+        }
+
+        function formatSolutions(solutions) {
+            if (solutions.length === 1) {
+                return `x = ${solutions[0]}`;
+            } else {
+                return `x = ${solutions[0]}, ${solutions[1]}`;
+            }
+        }
+
+        function shuffleLevel1() {
+            // レベル1の問題をランダムに並び替え
+            shuffledProblems[1] = shuffleArray(problems[1]);
+
+            // 問題を最初からやり直し
+            questionCount = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+
+            // ボタンを隠す
+            document.getElementById('shuffleBtn').classList.add('hidden');
+
+            nextQuestion();
+        }
+
+        function drawOptionGraphs(a, b, c, inequality) {
+            // 正解を決定
+            let correctAnswer;
+            if (inequality === '=') {
+                correctAnswer = 3; // 点のみ
+            } else if (inequality === '>') {
+                if (a > 0) correctAnswer = 0; // 上に凸なら上の部分（白丸）
+                else correctAnswer = 1; // 下に凸なら下の部分（白丸）
+            } else if (inequality === '<') {
+                if (a > 0) correctAnswer = 1; // 上に凸なら下の部分（白丸）
+                else correctAnswer = 0; // 下に凸なら上の部分（白丸）
+            } else if (inequality === '≥') {
+                if (a > 0) correctAnswer = 2; // 上に凸なら上の部分（黒丸）
+                else correctAnswer = 3; // 下に凸なら下の部分（黒丸）
+            } else if (inequality === '≤') {
+                if (a > 0) correctAnswer = 3; // 上に凸なら下の部分（黒丸）
+                else correctAnswer = 2; // 下に凸なら上の部分（黒丸）
+            }
+
+            // 常に4つの異なるパターンを表示
+            const options = [
+                { id: 0, type: 'above', includePoints: false }, // x軸より上（白丸）
+                { id: 1, type: 'below', includePoints: false }, // x軸より下（白丸）
+                { id: 2, type: 'above', includePoints: true },  // x軸より上（黒丸）
+                { id: 3, type: 'below', includePoints: true }   // x軸より下（黒丸）
+            ];
+            // 【ブラッシュアップ】並びをまぜて、正解の位置を決める
+            for (let k = options.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [options[k], options[j]] = [options[j], options[k]]; }
+            currentQuestion.answer = options.findIndex(o => o.id === correctAnswer);
+
+            const numOptions = 4;
+
+            for (let i = 0; i < numOptions; i++) {
+                const canvas = document.getElementById(`optionCanvas${i}`);
+                const ctx = canvas.getContext('2d');
+
+                // キャンバスをクリア
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const option = options[i];
+                // 座標系の設定（問題に応じて調整）
+                let centerX = canvas.width / 2;
+                let centerY = canvas.height / 2;
+
+                // 標準的な軸配置を使用
+
+                // 問題に応じてスケールを調整
+                let scaleX = 15;
+                let scaleY = 15;
+
+                // 頂点が見えるようにスケールを調整
+                const vertex_x = -b / (2 * a);
+                const vertex_y = a * vertex_x * vertex_x + b * vertex_x + c;
+
+                if (Math.abs(vertex_y) > 4) {
+                    scaleY = Math.max(8, 60 / Math.abs(vertex_y));
+                }
+                if (Math.abs(vertex_x) > 4) {
+                    scaleX = Math.max(8, 60 / Math.abs(vertex_x));
+                }
+
+                // 軸を描画
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+
+                // x軸
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(canvas.width, centerY);
+                ctx.stroke();
+
+                // 交点の値のみを表示するため、ここでは何も描画しない
+
+                // 二次関数を描画（滑らかな曲線）
+                ctx.strokeStyle = '#3B82F6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                let firstPoint = true;
+                const range = Math.max(6, Math.abs(vertex_x) + 3);
+                for (let x = -range; x <= range; x += 0.05) {
+                    const y = a * x * x + b * x + c;
+                    const canvasX = centerX + x * scaleX;
+                    const canvasY = centerY - y * scaleY;
+
+                    if (canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                        if (firstPoint) {
+                            ctx.moveTo(canvasX, canvasY);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(canvasX, canvasY);
+                        }
+                    } else if (!firstPoint) {
+                        ctx.stroke();
+                        ctx.beginPath();
+                        firstPoint = true;
+                    }
+                }
+                if (!firstPoint) ctx.stroke();
+
+                // 関数の式を表示
+                const functionText = formatFunction(a, b, c);
+                ctx.fillStyle = '#3B82F6';
+                ctx.font = 'bold 10px Noto Sans JP';
+                ctx.fillText(`y = ${functionText}`, 5, 15);
+
+                // 該当する部分のグラフを赤で描画
+
+                // 二次方程式（=）の場合は特別処理
+                if (inequality === '=' && option.id === 3) {
+                    // 選択肢4は点のみ（何も描画しない、後で交点だけ描画）
+                } else {
+                    ctx.strokeStyle = '#EF4444';
+                    ctx.lineWidth = 4;
+
+                    ctx.beginPath();
+                    let firstPoint = true;
+                    for (let x = -range; x <= range; x += 0.05) {
+                        const y = a * x * x + b * x + c;
+                        const canvasX = centerX + x * scaleX;
+                        const canvasY = centerY - y * scaleY;
+
+                        let shouldHighlight = false;
+                        if (option.type === 'above' && y > 0) shouldHighlight = true;
+                        if (option.type === 'below' && y < 0) shouldHighlight = true;
+
+                        if (shouldHighlight && canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                            if (firstPoint) {
+                                ctx.moveTo(canvasX, canvasY);
+                                firstPoint = false;
+                            } else {
+                                ctx.lineTo(canvasX, canvasY);
+                            }
+                        } else if (!firstPoint) {
+                            // 線を切る
+                            ctx.stroke();
+                            ctx.beginPath();
+                            firstPoint = true;
+                        }
+                    }
+                    if (!firstPoint) ctx.stroke();
+                }
+
+                // x軸との交点を描画
+                const discriminant = b * b - 4 * a * c;
+                if (discriminant >= 0) {
+                    const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                    const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+
+                    const includePoints = option.includePoints;
+
+                    if (discriminant > 0) {
+                        // 2つの交点
+                        if (includePoints) {
+                            // 黒丸（点を含む）- 完全に塗りつぶし
+                            ctx.fillStyle = '#EF4444';
+                            ctx.beginPath();
+                            ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(centerX + x2 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            // 白丸（点を含まない）- 中が白で縁だけ赤
+                            ctx.strokeStyle = '#EF4444';
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.arc(centerX + x2 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+
+                        // 交点の値を表示（左の交点は左側下、右の交点は右側下に表示）
+                        ctx.fillStyle = '#1F2937';
+                        ctx.font = '12px Noto Sans JP';
+                        ctx.textAlign = 'center';
+                        const leftX = Math.min(x1, x2);
+                        const rightX = Math.max(x1, x2);
+                        // 左の交点は左側下に表示
+                        ctx.fillText(`${Math.round(leftX)}`, centerX + leftX * scaleX - 15, centerY + 20);
+                        // 右の交点は右側下に表示
+                        ctx.fillText(`${Math.round(rightX)}`, centerX + rightX * scaleX + 15, centerY + 20);
+                    } else {
+                        // 1つの交点（接点）
+                        if (includePoints) {
+                            // 黒丸（点を含む）- 完全に塗りつぶし
+                            ctx.fillStyle = '#EF4444';
+                            ctx.beginPath();
+                            ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                        } else {
+                            // 白丸（点を含まない）- 中が白で縁だけ赤
+                            ctx.strokeStyle = '#EF4444';
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+
+                        // 交点の値を表示（接点は下側に表示）
+                        ctx.fillStyle = '#1F2937';
+                        ctx.font = '12px Noto Sans JP';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${Math.round(x1)}`, centerX + x1 * scaleX, centerY + 20);
+                    }
+                }
+            }
+        }
+
+        function selectAnswer(choice) {
+            if (answered) return;
+
+            answered = true;
+            const correct = choice === currentQuestion.answer;
+
+            if (correct) {
+                if (!missedThis) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入っていた
+                document.getElementById('score').textContent = score;
+            } else {
+                missedThis = true;
+            }
+
+            // 選択した選択肢の色を変更
+            const selectedBtn = document.getElementById(`option${choice}`);
+            if (correct) {
+                selectedBtn.classList.add('bg-green-100', 'border-green-500');
+            } else {
+                selectedBtn.classList.add('bg-red-100', 'border-red-500');
+            }
+
+            // 全ての選択肢を無効化
+            document.querySelectorAll('[id^="option"]').forEach(btn => {
+                btn.disabled = true;
+            });
+
+            // 結果を表示
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden');
+            if (correct) {
+                resultDiv.className = 'mb-4 p-4 rounded-lg bg-green-100 border border-green-300';
+                resultDiv.innerHTML = '<div class="text-green-800 font-medium">🎉 正解です！</div>';
+
+                // 正解時は解説を表示
+                showExplanation();
+                document.getElementById('nextBtn').classList.remove('hidden');
+            } else {
+                resultDiv.className = 'mb-4 p-4 rounded-lg bg-red-100 border border-red-300';
+                const encouragement = getEncouragement();
+                const advice = getAdvice(currentQuestion, choice);
+                resultDiv.innerHTML = `<div class="text-red-800 font-medium">🌟 ${encouragement}</div><div class="text-red-700 mt-2">${advice}</div>`;
+
+                // 不正解時はもう一度挑戦ボタンを表示
+                document.getElementById('retryBtn').classList.remove('hidden');
+            }
+        }
+
+        function getEncouragement() {
+            const messages = [
+                "大丈夫！もう一度挑戦してみよう！",
+                "惜しい！きっと次は正解できるよ！",
+                "頑張ってる！諦めずに続けよう！",
+                "いい調子！もう少しで正解だよ！",
+                "素晴らしい挑戦！次こそ正解しよう！",
+                "よく考えてる！ヒントを使ってみよう！",
+                "その調子！間違いから学ぼう！",
+                "頑張ってる証拠！もう一度トライ！"
+            ];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        function retryQuestion() {
+            answered = false;
+
+            // 選択肢をリセット
+            document.querySelectorAll('[id^="option"]').forEach(btn => {
+                btn.classList.remove('bg-green-100', 'border-green-500', 'bg-red-100', 'border-red-500');
+                btn.classList.add('border-gray-200');
+                btn.disabled = false;
+            });
+
+            // 結果と解説を非表示
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+        }
+
+        function getAdvice(question, userChoice) {
+            if (currentLevel === 0) {
+                // レベル0: 因数分解のヒント（答えは教えない）
+                return 'ヒントボタンを押して、「かけていくつ、たしていくつ」を確認してみよう！因数分解は練習すればきっとできるようになるよ！';
+            } else if (currentLevel === 1) {
+                // レベル1: グラフ問題のアドバイス
+                const {a, b, c, inequality} = question;
+                const discriminant = b * b - 4 * a * c;
+
+                let advice = '';
+
+                // 判別式による場合分け
+                if (discriminant > 0) {
+                    advice += 'この二次関数はx軸と2点で交わります。';
+                } else if (discriminant === 0) {
+                    advice += 'この二次関数はx軸と1点で接します。';
+                } else {
+                    advice += 'この二次関数はx軸と交わりません。';
+                }
+
+                // 二次項の係数による向き
+                if (a > 0) {
+                    advice += ' グラフは下に凸（上向き）です。';
+                } else {
+                    advice += ' グラフは上に凸（下向き）です。';
+                }
+
+                // 不等号の意味
+                if (inequality === '>') {
+                    advice += ' f(x) > 0 は、グラフがx軸より上にある部分を表します。';
+                } else if (inequality === '<') {
+                    advice += ' f(x) < 0 は、グラフがx軸より下にある部分を表します。';
+                } else if (inequality === '≥') {
+                    advice += ' f(x) ≥ 0 は、グラフがx軸より上にある部分とx軸上の点を含みます。';
+                } else if (inequality === '≤') {
+                    advice += ' f(x) ≤ 0 は、グラフがx軸より下にある部分とx軸上の点を含みます。';
+                } else if (inequality === '=') {
+                    advice += ' f(x) = 0 は、グラフがx軸と交わる点を表します。';
+                }
+
+                advice += ' グラフの形と不等号の向きをよく確認してみましょう！';
+
+                return advice;
+            } else {
+                // レベル2: 二次不等式のヒント（答えは教えない）
+                return 'ヒントボタンを押して、因数分解から始めてみよう！グラフを思い浮かべながら考えると分かりやすいよ！';
+            }
+        }
+
+        function showExplanation() {
+            const explanationDiv = document.getElementById('explanation');
+            const contentDiv = document.getElementById('explanationContent');
+
+            let explanation = '';
+
+            if (currentLevel === 2) {
+                // レベル2の解説
+                explanation += `<strong>${currentQuestion.inequality}</strong> を解きます。<br><br>`;
+
+                // ヒント1を表示
+                explanation += `<strong>💡 ヒント1:</strong> ${currentQuestion.hint1}<br><br>`;
+
+                // ヒント2を表示
+                explanation += `<strong>📊 ヒント2:</strong> ${currentQuestion.hint2}<br><br>`;
+
+                // 解の説明
+                explanation += `<strong>解:</strong> ${currentQuestion.answerText}<br><br>`;
+
+                // 解法の説明
+                if (currentQuestion.roots.length === 2) {
+                    explanation += `グラフがx軸と2点で交わる場合、不等号の向きによって解の範囲が決まります。<br>`;
+                    explanation += `二次項の係数が正なので、グラフは下に凸です。`;
+                } else if (currentQuestion.roots.length === 1) {
+                    explanation += `グラフがx軸に接する場合、接点以外では常に正の値を取ります。`;
+                } else {
+                    explanation += `グラフがx軸と交わらない場合、常に正の値を取ります。`;
+                }
+
+                // グラフを描画
+                const canvas = document.getElementById('explanationCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 不等式のグラフを描画
+                drawLevel3Graph(ctx, currentQuestion);
+
+            } else if (currentLevel === 0) {
+                // レベル0の解説（因数分解）
+                explanation += `<strong>${currentQuestion.expression}</strong> の因数分解<br><br>`;
+                explanation += `<strong>💡 考え方:</strong> ${currentQuestion.hint1}<br><br>`;
+                explanation += `<strong>📊 答えの見つけ方:</strong> ${currentQuestion.hint2}<br><br>`;
+                explanation += `<strong>答え:</strong> ${currentQuestion.answerText}<br><br>`;
+                explanation += `因数分解は「かけていくつ、たしていくつ」を考えることがポイントです！<br>`;
+                explanation += `たくさん練習すれば必ずできるようになりますよ！`;
+
+                // レベル0では解説用のキャンバスは使わない
+                document.getElementById('explanationCanvas').style.display = 'none';
+            } else {
+                // レベル1の解説
+                const {a, b, c, inequality} = currentQuestion;
+                const discriminant = b * b - 4 * a * c;
+
+                // 関数の形を説明
+                const functionText = formatFunction(a, b, c);
+                explanation += `<strong>${functionText} ${inequality} 0</strong> の解を求めます。<br><br>`;
+
+                // 判別式による解説
+                if (discriminant > 0) {
+                    const x1 = (-b - Math.sqrt(discriminant)) / (2 * a);
+                    const x2 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                    explanation += `この二次関数はx軸と2点 (${Math.round(x1)}, 0) と (${Math.round(x2)}, 0) で交わります。<br>`;
+                } else if (discriminant === 0) {
+                    const x1 = -b / (2 * a);
+                    explanation += `この二次関数はx軸と1点 (${Math.round(x1)}, 0) で接します。<br>`;
+                } else {
+                    explanation += `この二次関数はx軸と交わりません。<br>`;
+                }
+
+                // グラフの向きと解の説明
+                if (a > 0) {
+                    explanation += `二次項の係数が正なので、グラフは下に凸（上向き）です。<br>`;
+                } else {
+                    explanation += `二次項の係数が負なので、グラフは上に凸（下向き）です。<br>`;
+                }
+
+                // 不等式の解の説明
+                if (inequality === '>') {
+                    explanation += `f(x) > 0 なので、グラフがx軸より上にある部分が解になります。`;
+                } else if (inequality === '<') {
+                    explanation += `f(x) < 0 なので、グラフがx軸より下にある部分が解になります。`;
+                } else if (inequality === '≥') {
+                    explanation += `f(x) ≥ 0 なので、グラフがx軸より上にある部分とx軸上の点が解になります。`;
+                } else if (inequality === '≤') {
+                    explanation += `f(x) ≤ 0 なので、グラフがx軸より下にある部分とx軸上の点が解になります。`;
+                } else if (inequality === '=') {
+                    explanation += `f(x) = 0 なので、グラフがx軸と交わる点が解になります。`;
+                }
+
+                // 解説用のグラフを描画
+                document.getElementById('explanationCanvas').style.display = 'block';
+                drawExplanationGraph(a, b, c, inequality);
+            }
+
+            contentDiv.innerHTML = explanation;
+            explanationDiv.classList.remove('hidden');
+        }
+
+        function drawLevel3Graph(ctx, question) {
+            const centerX = ctx.canvas.width / 2;
+            const centerY = ctx.canvas.height / 2;
+            const scaleX = 25;
+            const scaleY = 25;
+
+            // 軸を描画
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(ctx.canvas.width, centerY);
+            ctx.stroke();
+
+            // 放物線を描画
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            const roots = question.roots;
+            const range = Math.max(6, roots.length > 0 ? Math.max(...roots.map(Math.abs)) + 2 : 4);
+            let firstPoint = true;
+
+            for (let x = -range; x <= range; x += 0.1) {
+                let y;
+                if (roots.length === 0) {
+                    // x² + 1 の場合
+                    y = x * x + 1;
+                } else if (roots.length === 1) {
+                    // 重解の場合: (x - roots[0])²
+                    y = Math.pow(x - roots[0], 2);
+                } else {
+                    // 2つの解の場合: (x - roots[0])(x - roots[1])
+                    y = (x - roots[0]) * (x - roots[1]);
+                }
+
+                const canvasX = centerX + x * scaleX;
+                const canvasY = centerY - y * scaleY;
+
+                if (canvasY >= -10 && canvasY <= ctx.canvas.height + 10) {
+                    if (firstPoint) {
+                        ctx.moveTo(canvasX, canvasY);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                }
+            }
+            ctx.stroke();
+
+            // 解の範囲を赤で描画
+            const inequality = question.inequality;
+            if (!inequality.includes('すべて') && !inequality.includes('解なし')) {
+                ctx.strokeStyle = '#EF4444';
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                let firstPoint = true;
+                for (let x = -range; x <= range; x += 0.05) {
+                    let y;
+                    if (roots.length === 0) {
+                        y = x * x + 1;
+                    } else if (roots.length === 1) {
+                        y = Math.pow(x - roots[0], 2);
+                    } else {
+                        y = (x - roots[0]) * (x - roots[1]);
+                    }
+
+                    const canvasX = centerX + x * scaleX;
+                    const canvasY = centerY - y * scaleY;
+
+                    let shouldHighlight = false;
+                    if (inequality.includes('>') && y > 0) shouldHighlight = true;
+                    if (inequality.includes('<') && y < 0) shouldHighlight = true;
+                    if (inequality.includes('≥') && y >= 0) shouldHighlight = true;
+                    if (inequality.includes('≤') && y <= 0) shouldHighlight = true;
+
+                    if (shouldHighlight && canvasY >= -10 && canvasY <= ctx.canvas.height + 10) {
+                        if (firstPoint) {
+                            ctx.moveTo(canvasX, canvasY);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(canvasX, canvasY);
+                        }
+                    } else if (!firstPoint) {
+                        ctx.stroke();
+                        ctx.beginPath();
+                        firstPoint = true;
+                    }
+                }
+                if (!firstPoint) ctx.stroke();
+            }
+
+            // 交点を描画
+            ctx.fillStyle = '#EF4444';
+            roots.forEach(root => {
+                ctx.beginPath();
+                ctx.arc(centerX + root * scaleX, centerY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // 不等式を表示
+            ctx.fillStyle = '#3B82F6';
+            ctx.font = '14px Noto Sans JP';
+            ctx.fillText(question.inequality, 10, 20);
+        }
+
+        function drawExplanationGraph(a, b, c, inequality) {
+            const canvas = document.getElementById('explanationCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // キャンバスをクリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 座標系の設定
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scaleX = 20;
+            const scaleY = 20;
+
+            // 軸を描画
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+
+            // x軸
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+
+            // 解説グラフでは交点の値のみを表示するため、ここでは何も描画しない
+
+            // 二次関数を描画
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            let firstPoint = true;
+            for (let x = -7; x <= 7; x += 0.05) {
+                const y = a * x * x + b * x + c;
+                const canvasX = centerX + x * scaleX;
+                const canvasY = centerY - y * scaleY;
+
+                if (canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                    if (firstPoint) {
+                        ctx.moveTo(canvasX, canvasY);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                } else if (!firstPoint) {
+                    ctx.stroke();
+                    ctx.beginPath();
+                    firstPoint = true;
+                }
+            }
+            if (!firstPoint) ctx.stroke();
+
+            // 該当する部分のグラフを赤で描画
+            if (inequality !== '=') {
+                ctx.strokeStyle = '#EF4444';
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                let firstPoint = true;
+                for (let x = -7; x <= 7; x += 0.05) {
+                    const y = a * x * x + b * x + c;
+                    const canvasX = centerX + x * scaleX;
+                    const canvasY = centerY - y * scaleY;
+
+                    let shouldHighlight = false;
+                    if ((inequality === '>' || inequality === '≥') && y > 0) shouldHighlight = true;
+                    if ((inequality === '<' || inequality === '≤') && y < 0) shouldHighlight = true;
+
+                    if (shouldHighlight && canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                        if (firstPoint) {
+                            ctx.moveTo(canvasX, canvasY);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(canvasX, canvasY);
+                        }
+                    } else if (!firstPoint) {
+                        // 線を切る
+                        ctx.stroke();
+                        ctx.beginPath();
+                        firstPoint = true;
+                    }
+                }
+                if (!firstPoint) ctx.stroke();
+            }
+
+            // x軸との交点を描画
+            const discriminant = b * b - 4 * a * c;
+            if (discriminant >= 0) {
+                const x1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                const x2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+
+                // 不等式の種類に応じて交点の表示を変更
+                const includePoints = inequality.includes('≥') || inequality.includes('≤') || inequality === '=';
+
+                if (discriminant > 0) {
+                    // 2つの交点
+                    if (includePoints) {
+                        // 黒丸（点を含む）- 完全に塗りつぶし
+                        ctx.fillStyle = '#EF4444';
+                        ctx.beginPath();
+                        ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(centerX + x2 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else {
+                        // 白丸（点を含まない）- 中が白で縁だけ赤
+                        ctx.strokeStyle = '#EF4444';
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(centerX + x2 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+
+                    // 交点の値を表示（左の交点は左側、右の交点は右側に表示）
+                    ctx.fillStyle = '#1F2937';
+                    ctx.font = '12px Noto Sans JP';
+                    ctx.textAlign = 'center';
+                    const leftX = Math.min(x1, x2);
+                    const rightX = Math.max(x1, x2);
+                    // 左の交点は左側下に表示
+                    ctx.fillText(`${Math.round(leftX)}`, centerX + leftX * scaleX - 15, centerY + 20);
+                    // 右の交点は右側下に表示
+                    ctx.fillText(`${Math.round(rightX)}`, centerX + rightX * scaleX + 15, centerY + 20);
+                } else {
+                    // 1つの交点（接点）
+                    if (includePoints) {
+                        // 黒丸（点を含む）- 完全に塗りつぶし
+                        ctx.fillStyle = '#EF4444';
+                        ctx.beginPath();
+                        ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else {
+                        // 白丸（点を含まない）- 中が白で縁だけ赤
+                        ctx.strokeStyle = '#EF4444';
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(centerX + x1 * scaleX, centerY, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+
+                    // 交点の値を表示（接点は下側に表示）
+                    ctx.fillStyle = '#1F2937';
+                    ctx.font = '12px Noto Sans JP';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${Math.round(x1)}`, centerX + x1 * scaleX, centerY + 20);
+                }
+            }
+
+            // 関数の式を表示
+            const functionText = formatFunction(a, b, c);
+            ctx.fillStyle = '#3B82F6';
+            ctx.font = '14px Noto Sans JP';
+            ctx.fillText(`y = ${functionText}`, 10, 20);
+        }
+
+        function showFinalResult() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden');
+            const percentage = Math.round((score / shuffledProblems[currentLevel].length) * 100);
+
+            let congratsMessage = '';
+            if (percentage === 100) {
+                congratsMessage = '🌟 完璧です！本当に素晴らしい！あなたは二次不等式のマスターです！🌟';
+            } else if (percentage >= 90) {
+                congratsMessage = '🎉 素晴らしい！ほぼ完璧な理解度です！あなたの努力が実を結んでいます！';
+            } else if (percentage >= 80) {
+                congratsMessage = '👏 とても良くできました！しっかりと理解できています！';
+            } else if (percentage >= 70) {
+                congratsMessage = '📈 良い調子です！もう少しで完璧になりそうです！';
+            } else {
+                congratsMessage = '📚 頑張りました！復習してもう一度挑戦してみましょう！';
+            }
+
+            if (percentage >= 80) {
+                resultDiv.className = 'mb-4 p-6 rounded-lg bg-gradient-to-r from-green-100 to-blue-100 border border-green-300';
+                resultDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-green-800 font-bold text-xl mb-2">${congratsMessage}</div>
+                        <div class="text-green-700 text-lg">${score}/${shuffledProblems[currentLevel].length}問正解 (${percentage}%)</div>
+                        <div class="mt-4 space-x-4">
+                            <button onclick="setLevel(currentLevel)" class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                                もう一度挑戦
+                            </button>
+                            ${currentLevel === 1 ? `<button onclick="shuffleLevel1()" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                                🔀 問題をランダムに
+                            </button>` : ''}
+                            ${currentLevel < 2 ? `<button onclick="setLevel(${currentLevel + 1})" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                次のレベルに挑戦
+                            </button>` : ''}
+                            <button onclick="location.reload()" class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                                タイトルに戻る
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultDiv.className = 'mb-4 p-6 rounded-lg bg-yellow-100 border border-yellow-300';
+                resultDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-yellow-800 font-bold text-xl mb-2">${congratsMessage}</div>
+                        <div class="text-yellow-700 text-lg">${score}/${shuffledProblems[currentLevel].length}問正解 (${percentage}%)</div>
+                        <div class="mt-4 space-x-4">
+                            <button onclick="setLevel(currentLevel)" class="px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors">
+                                もう一度挑戦
+                            </button>
+                            ${currentLevel === 1 ? `<button onclick="shuffleLevel1()" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                                🔀 問題をランダムに
+                            </button>` : ''}
+                            <button onclick="location.reload()" class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                                タイトルに戻る
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 【ブラッシュアップ】結果のボタンを並べ直す
+            const total = shuffledProblems[currentLevel].length;
+            resultDiv.querySelector('.mt-4').outerHTML =
+                '<div class="final-nav">' +
+                (currentLevel < 2 ? '<button class="next" onclick="setLevel(' + (currentLevel + 1) + '); window.scrollTo(0, 0);">次のレベルに挑戦 ▶</button>' : '') +
+                '<button class="again" onclick="setLevel(currentLevel); window.scrollTo(0, 0);">同じレベルでもう一度</button>' +
+                (currentLevel === 1 ? '<button class="plain" onclick="shuffleLevel1(); window.scrollTo(0, 0);">🔀 問題をランダムに</button>' : '') +
+                '<a href="../remake.html">ほかの教材をえらぶ</a>' +
+                '</div>';
+            resultDiv.querySelector('.text-lg').textContent = '一発正解 ' + score + ' / ' + total + '問（' + Math.round(score / total * 100) + '%）';
+            // 既存のボタンを非表示
+            document.getElementById('nextBtn').classList.add('hidden');
+        }
+
+        function showHint(hintNumber) {
+            const hintDisplay = document.getElementById('hintDisplay');
+            const hintTitle = document.getElementById('hintTitle');
+            const hintContent = document.getElementById('hintContent');
+            const hintCanvas = document.getElementById('hintCanvas');
+
+            if (hintNumber === 1) {
+                if (currentLevel === 0) {
+                    // レベル0: 因数分解のヒント1
+                    hintTitle.textContent = '💡 ヒント1';
+
+                    // 式から係数を抽出してヒント1を生成
+                    const expression = currentQuestion.expression;
+                    const match = expression.match(/x² ([+-]) (\d+)x ([+-]) (\d+)/);
+                    if (match) {
+                        const bSign = match[1];
+                        const bValue = parseInt(match[2]);
+                        const cSign = match[3];
+                        const cValue = parseInt(match[4]);
+
+                        const b = bSign === '+' ? bValue : -bValue;
+                        const c = cSign === '+' ? cValue : -cValue;
+
+                        hintContent.innerHTML = `
+                            <div class="space-y-3">
+                                <p class="text-lg">たして${b}になる2つの数は？</p>
+                                <p class="text-lg">かけて${c}になる2つの数は？</p>
+                            </div>
+                        `;
+                    } else {
+                        hintContent.textContent = currentQuestion.hint1;
+                    }
+                } else {
+                    // レベル2: 二次不等式のヒント1
+                    hintTitle.textContent = '💡 ヒント1: 因数分解';
+                    hintContent.textContent = currentQuestion.hint1;
+                }
+
+                hintDisplay.classList.remove('hidden');
+
+                // ヒント1では図は表示しない
+                document.getElementById('hintGraph').style.display = 'none';
+
+                // ヒント1ボタンを無効化
+                document.getElementById('hint1Btn').disabled = true;
+                document.getElementById('hint1Btn').classList.add('opacity-50');
+
+                // ヒント1ではナビゲーションを隠す
+                document.getElementById('hintNavigation').classList.add('hidden');
+            } else if (hintNumber === 2) {
+                if (currentLevel === 0) {
+                    // レベル0: 因数分解のヒント2
+                    hintTitle.textContent = '📊 ヒント2';
+
+                    // 因数分解のヒント2を詳しく表示
+                    const expression = currentQuestion.expression;
+                    const match = expression.match(/x² ([+-]) (\d+)x ([+-]) (\d+)/);
+                    if (match) {
+                        const bSign = match[1];
+                        const bValue = parseInt(match[2]);
+                        const cSign = match[3];
+                        const cValue = parseInt(match[4]);
+
+                        const b = bSign === '+' ? bValue : -bValue;
+                        const c = cSign === '+' ? cValue : -cValue;
+
+                        const hint2Match = currentQuestion.hint2.match(/(-?\d+)と(-?\d+)/);   // 【ブラッシュアップ】マイナスもふくめて読む
+                        if (hint2Match) {
+                            const num1 = hint2Match[1];
+                            const num2 = hint2Match[2];
+
+                            hintContent.innerHTML = `
+                                <div class="space-y-3">
+                                    <p class="text-lg">たして${b}になる2つの数は？ → ${num1}と${num2}</p>
+                                    <p class="text-lg">かけて${c}になる2つの数は？ → ${num1}と${num2}</p>
+                                    <p class="text-lg text-green-700 font-semibold">両方の条件を満たすのは${num1}と${num2}です！</p>
+                                </div>
+                            `;
+                        } else {
+                            hintContent.innerHTML = currentQuestion.hint2.replace(/\n/g, '<br>');
+                        }
+                    } else {
+                        hintContent.innerHTML = currentQuestion.hint2.replace(/\n/g, '<br>');
+                    }
+
+                    // レベル0では図は表示しない
+                    document.getElementById('hintGraph').style.display = 'none';
+                } else {
+                    // レベル2: 二次不等式のヒント2
+                    hintTitle.textContent = '📊 ヒント2: グラフと交点';
+                    hintContent.innerHTML = currentQuestion.hint2.replace(/\n/g, '<br>');
+
+                    // ヒント2では図を表示
+                    document.getElementById('hintGraph').style.display = 'flex';
+                    drawHintGraph(currentQuestion, false);
+                }
+
+                hintDisplay.classList.remove('hidden');
+
+                // ヒント2ボタンを無効化
+                document.getElementById('hint2Btn').disabled = true;
+                document.getElementById('hint2Btn').classList.add('opacity-50');
+
+                // ヒント1に戻るボタンを表示
+                document.getElementById('hintNavigation').classList.remove('hidden');
+            } else if (hintNumber === 3) {
+                hintTitle.textContent = '🎯 ヒント3: 解の範囲';
+                hintContent.innerHTML = currentQuestion.hint3;
+                hintDisplay.classList.remove('hidden');
+
+                // ヒント3では赤いグラフを表示
+                document.getElementById('hintGraph').style.display = 'flex';
+                drawHintGraph(currentQuestion, true);
+
+                // ヒント3ボタンを無効化
+                document.getElementById('hint3Btn').disabled = true;
+                document.getElementById('hint3Btn').classList.add('opacity-50');
+            }
+        }
+
+        function drawHintGraph(question, showSolution) {
+            const canvas = document.getElementById('hintCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scaleX = 25;
+            const scaleY = 25;
+
+            // 軸を描画
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+
+            // 放物線を描画
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            const roots = question.roots;
+            const range = Math.max(6, roots.length > 0 ? Math.max(...roots.map(Math.abs)) + 2 : 4);
+            let firstPoint = true;
+
+            for (let x = -range; x <= range; x += 0.05) {
+                let y;
+                if (roots.length === 0) {
+                    // x² + 1 の場合
+                    y = x * x + 1;
+                } else if (roots.length === 1) {
+                    // 重解の場合: (x - roots[0])²
+                    y = Math.pow(x - roots[0], 2);
+                } else {
+                    // 2つの解の場合: (x - roots[0])(x - roots[1])
+                    y = (x - roots[0]) * (x - roots[1]);
+                }
+
+                const canvasX = centerX + x * scaleX;
+                const canvasY = centerY - y * scaleY;
+
+                if (canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                    if (firstPoint) {
+                        ctx.moveTo(canvasX, canvasY);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                } else if (!firstPoint) {
+                    ctx.stroke();
+                    ctx.beginPath();
+                    firstPoint = true;
+                }
+            }
+            ctx.stroke();
+
+            // ヒント3の場合は解の範囲を赤で描画
+            if (showSolution) {
+                const inequality = question.inequality;
+                ctx.strokeStyle = '#EF4444';
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                let firstPoint = true;
+                for (let x = -range; x <= range; x += 0.05) {
+                    let y;
+                    if (roots.length === 0) {
+                        y = x * x + 1;
+                    } else if (roots.length === 1) {
+                        y = Math.pow(x - roots[0], 2);
+                    } else {
+                        y = (x - roots[0]) * (x - roots[1]);
+                    }
+
+                    const canvasX = centerX + x * scaleX;
+                    const canvasY = centerY - y * scaleY;
+
+                    let shouldHighlight = false;
+                    if (inequality.includes('>') && y > 0) shouldHighlight = true;
+                    if (inequality.includes('<') && y < 0) shouldHighlight = true;
+                    if (inequality.includes('≥') && y >= 0) shouldHighlight = true;
+                    if (inequality.includes('≤') && y <= 0) shouldHighlight = true;
+
+                    if (shouldHighlight && canvasY >= 0 && canvasY <= canvas.height && canvasX >= 0 && canvasX <= canvas.width) {
+                        if (firstPoint) {
+                            ctx.moveTo(canvasX, canvasY);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(canvasX, canvasY);
+                        }
+                    } else if (!firstPoint) {
+                        ctx.stroke();
+                        ctx.beginPath();
+                        firstPoint = true;
+                    }
+                }
+                if (!firstPoint) ctx.stroke();
+            }
+
+            // 交点を描画（不等式の種類に応じて白丸または黒丸）
+            const includePoints = question.inequality.includes('≥') || question.inequality.includes('≤');
+
+            roots.forEach(root => {
+                if (includePoints) {
+                    // 黒丸（点を含む）- 完全に塗りつぶし
+                    ctx.fillStyle = '#EF4444';
+                    ctx.beginPath();
+                    ctx.arc(centerX + root * scaleX, centerY, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    // 白丸（点を含まない）- 中が白で縁だけ赤
+                    ctx.strokeStyle = '#EF4444';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(centerX + root * scaleX, centerY, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                // 交点の座標を表示
+                ctx.fillStyle = '#1F2937';
+                ctx.font = '12px Noto Sans JP';
+                ctx.fillText(`(${root}, 0)`, centerX + root * scaleX - 15, centerY + 20);
+            });
+
+            // 不等式を表示
+            ctx.fillStyle = '#3B82F6';
+            ctx.font = '14px Noto Sans JP';
+            ctx.fillText(question.inequality, 10, 20);
+        }
+
+        // 初期化
+        setLevel(1);
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   24. 2次不等式（因数分解の練習つき）
-     レベル0 … 因数分解の練習
-     レベル1 … グラフを見て、x軸より上・下になる範囲を読む
-     レベル2 … 2次不等式を解く
-
-   元教材から直した点：
-     ・選択肢が2つの大きな枠に押し込まれていて、左半分が空白のまま
-       右にはみ出すレイアウト崩れが起きていた。
-       → 選択肢は画面幅に応じて自動で折り返す並べ方に変えた。
-     ・「解説不十分」とメモされていたとおり、なぜその範囲になるのかが
-       示されていなかった。
-       → グラフと数直線をつけ、「x軸より上か下か」で説明するようにした。
-     ・不等号に等号がつく場合（≧ ≦）で、境界を含む・含まないの
-       区別が選択肢になく、どちらでも正解になっていた。
-       → 境界を含むかどうかを必ず区別して出題する。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt;
-
-  /* ---------- レベル0：因数分解の練習 ---------- */
-  function level0() {
-    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
-    var wrongs = [];
-    [A.paren(1, -it.a) + A.paren(1, it.b),
-     A.paren(1, it.a) + A.paren(1, -it.b),
-     A.paren(1, -it.a) + A.paren(1, -it.b)].forEach(function (w) {
-      if (wrongs.length < 3 && w !== it.factored && !MathCore.isEqual(F.plain(w), F.plain(it.expanded))) {
-        if (wrongs.indexOf(w) < 0) wrongs.push(w);
-      }
-    });
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 30) {
-      var w2 = A.paren(1, A.nz(-8, 8)) + A.paren(1, A.nz(-8, 8));
-      if (!MathCore.isEqual(F.plain(w2), F.plain(it.expanded)) && wrongs.indexOf(w2) < 0) wrongs.push(w2);
-    }
-    return {
-      tag: 'レベル0',
-      text: 'まずは因数分解の練習。次の式を因数分解しなさい。',
-      math: it.expanded,
-      type: 'choice',
-      choices: [it.factored].concat(wrongs),
-      correct: 0,
-      hint: 'かけて ' + it.prod + '、たして ' + it.sum + ' になる 2 数をさがします。',
-      explain: '答え： ' + it.factored
-    };
-  }
-
-  /* ---------- 2次不等式の材料を作る ---------- */
-  function makeInequality() {
-    var it = A.quadraticFromRoots({ lo: -7, hi: 7, allowSame: false });
-    var r = [-it.a, -it.b].sort(function (x, y) { return x - y; });
-    var op = Quiz.pick(['>', '<', '≧', '≦']);
-    var strict = (op === '>' || op === '<');
-    var isGreater = (op === '>' || op === '≧');
-
-    // 上に凸ではないので、> なら外側、< なら内側
-    var answer = isGreater
-      ? 'x ' + (strict ? '<' : '≦') + ' ' + r[0] + '　または　x ' + (strict ? '>' : '≧') + ' ' + r[1]
-      : r[0] + ' ' + (strict ? '<' : '≦') + ' x ' + (strict ? '<' : '≦') + ' ' + r[1];
-
-    return {
-      it: it, roots: r, op: op, strict: strict, isGreater: isGreater,
-      shown: it.expanded + ' ' + op + ' 0',
-      answer: answer
-    };
-  }
-
-  function wrongAnswers(q) {
-    var r = q.roots;
-    var s = q.strict, g = q.isGreater;
-    var lt = s ? '<' : '≦', gt = s ? '>' : '≧';
-    var ltO = s ? '≦' : '<', gtO = s ? '≧' : '>';
-
-    var cands = [
-      // 内側と外側を取りちがえた
-      g ? r[0] + ' ' + lt + ' x ' + lt + ' ' + r[1]
-        : 'x ' + lt + ' ' + r[0] + '　または　x ' + gt + ' ' + r[1],
-      // 等号のつけまちがい
-      g ? 'x ' + ltO + ' ' + r[0] + '　または　x ' + gtO + ' ' + r[1]
-        : r[0] + ' ' + ltO + ' x ' + ltO + ' ' + r[1],
-      // 符号のミス
-      g ? 'x ' + lt + ' ' + (-r[1]) + '　または　x ' + gt + ' ' + (-r[0])
-        : (-r[1]) + ' ' + lt + ' x ' + lt + ' ' + (-r[0])
-    ];
-    return cands.filter(function (c) { return c !== q.answer; });
-  }
-
-  /* ---------- レベル1：グラフから読む ---------- */
-  function level1() {
-    var q = makeInequality();
-    var r = q.roots;
-    return {
-      tag: 'レベル1',
-      text: 'グラフを見て考えよう。' +
-        (q.isGreater ? 'y の値が <b>0 より大きくなる</b>（x軸より上にある）' :
-                       'y の値が <b>0 より小さくなる</b>（x軸より下にある）') +
-        ' x の範囲はどれですか。',
-      math: 'y = ' + q.it.expanded,
-      figure: Graph.parabola({
-        a: 1, b: q.it.sum, c: q.it.prod,
-        points: r.map(function (x) { return { x: x, y: 0 }; })
-      }),
-      type: 'choice',
-      choices: [q.answer].concat(wrongAnswers(q).slice(0, 3)),
-      correct: 0,
-      hint: 'グラフが x 軸と交わるのは x = ' + r[0] + ' と x = ' + r[1] + '。' +
-        '下に凸の放物線なので、2 点の<b>間</b>ではグラフは x 軸より下、<b>外側</b>では上になります。',
-      explain: 'x軸との交点は ' + r[0] + ' と ' + r[1] + '。下に凸なので、' +
-        (q.isGreater ? '外側で y > 0 になります。' : '間で y < 0 になります。') +
-        '　答え： ' + q.answer +
-        '<br>' + Graph.numberLine({
-          lo: r[0] - 3, hi: r[1] + 3,
-          ranges: q.isGreater
-            ? [{ from: r[0] - 3, to: r[0] }, { from: r[1], to: r[1] + 3 }]
-            : [{ from: r[0], to: r[1] }],
-          points: [{ x: r[0], filled: !q.strict }, { x: r[1], filled: !q.strict }]
-        })
-    };
-  }
-
-  /* ---------- レベル2：2次不等式を解く ---------- */
-  function level2() {
-    var q = makeInequality();
-    var r = q.roots;
-    return {
-      tag: 'レベル2',
-      text: '次の二次不等式を解きなさい。',
-      math: q.shown,
-      type: 'choice',
-      choices: [q.answer].concat(wrongAnswers(q).slice(0, 3)),
-      correct: 0,
-      hint: 'まず因数分解して、x軸との交点を求めます。次にグラフの上下で範囲を決めます。',
-      explain: '因数分解すると ' + q.it.factored + ' ' + q.op + ' 0。' +
-        '交点は ' + r[0] + ' と ' + r[1] + ' なので、答えは ' + q.answer + ' です。' +
-        '<br>' + Graph.parabola({
-          a: 1, b: q.it.sum, c: q.it.prod,
-          points: r.map(function (x) { return { x: x, y: 0 }; })
-        })
-    };
-  }
-
-  Quiz.start({
-    title: '二次不等式グラフクイズ',
-    subtitle: 'グラフとx軸の位置関係を考えよう！',
-    modes: [
-      { id: '0', name: 'レベル0（因数分解の練習）', desc: 'まずはここから（10問）' },
-      { id: '1', name: 'レベル1（グラフ問題）', desc: 'グラフを見て範囲を読む（10問）' },
-      { id: '2', name: 'レベル2（二次不等式を解く）', desc: '式だけから解く（10問）' },
-      { id: 'mix', name: '総合', desc: 'レベル0〜2をまぜて（12問）' }
-    ],
-    build: function (id) {
-      var out = [], i;
-      if (id === '0') { for (i = 0; i < 10; i++) out.push(level0()); }
-      else if (id === '1') { for (i = 0; i < 10; i++) out.push(level1()); }
-      else if (id === '2') { for (i = 0; i < 10; i++) out.push(level2()); }
-      else {
-        for (i = 0; i < 4; i++) { out.push(level0()); out.push(level1()); out.push(level2()); }
-        out = Quiz.shuffle(out);
-      }
-      return out;
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "body > .container": "u-card",
+    "h1": "u-title",
+    "#level0": "u-btn",
+    "#level1": "u-btn",
+    "#level2": "u-btn",
+    "#option0": "u-choice",
+    "#option1": "u-choice",
+    "#option2": "u-choice",
+    "#option3": "u-choice",
+    "[id^=\"option\"].bg-green-100": "u-ok",
+    "[id^=\"option\"].bg-red-100": "u-ng",
+    "#hint1Btn": "u-btn",
+    "#hint2Btn": "u-btn",
+    "#hint3Btn": "u-btn",
+    "#backToHint1": "u-btn u-btn-plain",
+    "#retryBtn": "u-btn",
+    "#nextBtn": "u-btn u-btn-blue",
+    "#shuffleBtn": "u-btn u-btn-plain",
+    ".final-nav .again": "u-btn",
+    ".final-nav .next": "u-btn u-btn-blue",
+    ".final-nav .plain": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
