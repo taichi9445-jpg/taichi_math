@@ -7,7 +7,7 @@
     <!--
       12. 因数分解の練習（因数分解マスター Pro）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -96,8 +96,28 @@
       .btn-submit { font-size: 1.8rem; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #container { margin: 8px auto 24px; }
+    .menu-card { border: 3px solid var(--u-line) !important; background: #f8fafc; }
+    .card-title { border-bottom-color: var(--u-frame); color: var(--u-title-dark); }
+    .mode-row { background: #fff; border: 2px solid var(--u-line); }
+    .math-txt, #problem, .t-res { color: var(--u-ink); }
+    #tasuki-area { border-color: var(--u-soft-blue-line); background: var(--u-soft-blue); }
+    .t-sum-line { border-top-color: var(--u-ink); color: var(--u-ng); }
+    #ans-box { background: var(--u-soft-yellow); border: 4px dashed #fde68a; }
+    .tile-wrap { background: var(--u-soft-blue); }
+    .btn-tile { box-shadow: none; border: 2px solid var(--u-line-dark); border-bottom-width: 5px; color: var(--u-ink); }
+    #peek-modal { background: rgba(75, 44, 32, 0.55); }
+    .modal-content { padding: 26px 20px; }
+  
+    </style>
 </head>
-<body onkeydown="handleGlobalKey(event)">
+<body class="u-theme" onkeydown="handleGlobalKey(event)">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div id="container">
@@ -367,6 +387,23 @@
   }
   function openModal() { document.getElementById('peek-ans').innerText = qs[qIdx].sols[0]; document.getElementById('peek-modal').style.display='flex'; }
   function closeModal() { document.getElementById('peek-modal').style.display='none'; }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#container": "u-card",
+    ".menu-header": "u-title",
+    ".btn-start": "u-btn",
+    ".btn-group .btn-start:first-child": "u-btn-blue",
+    ".btn-choice": "u-choice",
+    ".btn-choice:disabled": "u-ng",
+    ".btn-submit": "u-btn",
+    ".btn-show-ans": "u-btn u-btn-plain",
+    ".btn-home": "u-btn u-btn-plain",
+    ".t-in": "u-input",
+    ".modal-content": "u-card",
+    ".modal-content button": "u-btn u-btn-blue"
+  });
 </script>
 </body>
 </html>

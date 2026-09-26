@@ -7,7 +7,7 @@
     <!--
       13. 共通因数の練習（共通因数パズル）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -78,8 +78,28 @@
       #message { font-size: 1.3rem; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .container { box-sizing: border-box; }
+    .menu-header { background: none; border: none; padding: 6px 0 10px; }
+    .menu-header h1 { font-size: min(2.2rem, 8vw); white-space: nowrap; }
+    .menu-header p { color: var(--u-sub); font-weight: 700; }
+    #q-info { color: var(--u-sub) !important; }
+    .problem-box { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-ink); }
+    .input-box { border-color: var(--u-soft-blue-line); }
+    .key { background: var(--u-soft-blue); border-bottom-color: var(--u-soft-blue-line); color: var(--u-ink); }
+    .key.exp { background: var(--u-soft-yellow); border-bottom-color: #fde68a; }
+    #message { color: var(--u-ink); }
+    #answer-note { color: var(--u-ng); }
+    #done h2 { color: var(--u-accent-text) !important; }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div class="container">
@@ -333,6 +353,19 @@ function success() {
 
 // 【ブラッシュアップ】alert をやめて、画面の中に答えを出す
 function showHint() { document.getElementById('answer-note').innerText = "答え： " + probs[qIdx].hint.replace(/\^/g, '²'); }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".menu-header h1": "u-title",
+    ".btn-grid .nav-card": "u-choice",
+    "#choice-list .nav-card": "u-choice",
+    "#choice-list .nav-card:disabled": "u-ng",
+    ".big-btn.submit": "u-btn",
+    ".big-btn.hint": "u-btn u-btn-plain",
+    "#done .nav .big-btn:not(.submit)": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>

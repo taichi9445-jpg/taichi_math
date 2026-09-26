@@ -6,7 +6,7 @@
     <!--
       16. ルートの計算全般（平方根タワー）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -415,8 +415,25 @@ function getQuizDataFixed() {
       .opt-btn { font-size: 22px; padding: 20px 10px; min-height: 70px; }
       .res-btn { width: 100%; font-size: 17px; padding: 16px; }
     }</style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    :root { --text-main: var(--u-ink); --accent-blue: var(--u-title); }
+    .u-theme .port-back { color: #b45309 !important; }
+    .subtitle, .loader { color: var(--u-sub) !important; font-weight: 700; }
+    #scr-quiz > div[style] { color: var(--u-sub) !important; font-weight: 700; }
+    #res-comment-text { color: var(--u-ink) !important; font-weight: 700; }
+    .floor-card { box-shadow: none; border-bottom: 6px solid rgba(0, 0, 0, 0.18); border-radius: 22px; color: #fff; }
+    .diff-btn { border-radius: 24px; border-bottom: 6px solid rgba(0, 0, 0, 0.2); }
+    .q-box { color: var(--u-ink); font-weight: 700; background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; padding: 16px; }
+    #explanation-area { background: #fff; border: 3px dashed var(--u-line); border-left: 6px solid var(--u-ok-line); color: var(--u-ink); line-height: 1.8; }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
   <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 
   <div class="container tex2jax_process">
@@ -784,5 +801,21 @@ function getQuizDataFixed() {
       actionsContainer.appendChild(otherLink);
     }
   </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    "h1.title": "u-title",
+    ".back-btn": "u-btn u-btn-plain",
+    ".progress-container": "u-progress",
+    ".opt-btn": "u-choice",
+    ".opt-btn.correct": "u-ok",
+    ".opt-btn.wrong": "u-ng",
+    ".action-btn": "u-btn u-btn-blue",
+    ".res-btn-next-level": "u-btn u-btn-blue",
+    ".res-btn-back-diff": "u-btn",
+    ".res-btn-home": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>
