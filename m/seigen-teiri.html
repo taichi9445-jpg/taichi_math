@@ -11,7 +11,7 @@
   <script src="../assets/port.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>正弦定理 穴埋め問題</title>
+  <title>正弦定理 練習問題</title>
   
   <style>
     body {
@@ -529,11 +529,59 @@
       .equation-line.no-wrap { flex-wrap: wrap; }
       .drop-zone { min-width: 50px; min-height: 40px; padding: 4px 8px; }
       .choices-area { padding: 8px; max-height: 34vh; overflow-y: auto; }
-      .choices-area h3 { font-size: 12px; margin-bottom: 6px; }
+      .choices-area h3 { display: none; }   /* 【ブラッシュアップ】スマホでは説明を消して選択肢を広く */
       .choices-container { gap: 6px; }
       .choice-item { padding: 6px 10px; font-size: 15px !important; }
       .button-group button { padding: 12px 18px; }
+      /* 【ブラッシュアップ】スマホ：問題文と図を上に、選択肢を下に固定して、式と同時に見えるようにする */
+      .problem-page.active { display: flex; flex-direction: column; }
+      .problem-header { position: sticky; top: 0; z-index: 6; flex-direction: row !important; align-items: center !important; gap: 6px !important; padding: 6px 8px !important; margin-bottom: 8px !important; border-width: 3px !important; }
+      .problem-text { width: auto; flex: 1; text-align: left; }
+      .problem-text h2 { display: none; }
+      .problem-text p { font-size: 13px !important; line-height: 1.5 !important; }
+      .triangle-diagram { flex-shrink: 0; }
+      .st-svg { width: 168px; }
+      .st-vtx { font-size: 27px; }
+      .st-side { font-size: 25px; }
+      .st-side.var { font-size: 30px; }
+      .st-ang { font-size: 22px; }
+      .st-o, .st-r { font-size: 20px; }
+      .pair-note { display: none; }
+      .formula-card { order: 1; font-size: 13px !important; padding: 4px 8px !important; margin-bottom: 8px !important; line-height: 1.7 !important; }
+      .formula-card .sub { font-size: 11px !important; }
+      .work-area { order: 2; }
+      .choices-area { order: 3; top: auto !important; bottom: 0; margin: 8px 0 0 !important; max-height: 30vh !important; }
+      .button-group { order: 4; }
+      .result-message { order: 5; }
+      .navigation { gap: 5px !important; }
+      .nav-button { padding: 5px 9px !important; font-size: 13px !important; }
     }
+    /* 【ブラッシュアップ】計算してかいた図・公式カード・考え方 */
+    .triangle-diagram { flex-direction: column; align-items: center; }
+    .st-svg { background: #fff; border-radius: 12px; max-width: 100%; height: auto; font-family: var(--u-font); }
+    .st-body { fill: #f1f5f9; stroke: #475569; stroke-width: 2.5; stroke-linejoin: round; }
+    .st-arc { fill: none; stroke: #64748b; stroke-width: 2; }
+    .st-arc.k { stroke: #2563eb; }
+    .st-arc.t { stroke: #ea580c; }
+    .st-right { fill: none; stroke: #64748b; stroke-width: 1.5; }
+    .st-vtx { font-size: 19px; font-weight: 800; fill: #334155; }
+    .st-ang { font-size: 15px; font-weight: 800; fill: #475569; }
+    .st-side { font-size: 18px; font-weight: 800; fill: var(--u-ink); }
+    .st-side.var { font-family: 'Times New Roman', serif; font-style: italic; font-size: 22px; }
+    .st-vtx.k, .st-ang.k, .st-side.k { fill: #2563eb; }
+    .st-vtx.t, .st-ang.t, .st-side.t { fill: #ea580c; }
+    .st-circle { fill: none; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .st-radius { stroke: #94a3b8; stroke-width: 1.5; }
+    .st-center { fill: #475569; }
+    .st-o, .st-r { font-size: 14px; font-weight: 800; fill: #475569; }
+    .st-vtx, .st-ang, .st-side, .st-o, .st-r { paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+    .pair-note { font-size: 12px; color: var(--u-sub); font-weight: 700; text-align: center; margin-top: 4px; }
+    .pair-note .k { color: #2563eb; }
+    .pair-note .t { color: #ea580c; }
+    .formula-card { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; padding: 8px 12px; margin: 0 0 16px; color: var(--u-title); font-weight: 700; text-align: center; line-height: 1.9; }
+    .formula-card .fraction-numerator, .formula-card .fraction-denominator { min-width: 0; padding-left: 2px; padding-right: 2px; }
+    .formula-card .sub { color: var(--u-ink); font-size: 13px; }
+    .result-message .point { display: inline-block; margin-top: 8px; font-size: 15px; color: var(--u-ink); font-weight: 700; line-height: 1.6; }
   
   </style>
 </head>
@@ -563,63 +611,99 @@
       return { type: 'fraction', numerator: num, denominator: denom };
     }
 
+    const Z = (id, answer) => ({ id, answer });   // 【ブラッシュアップ】空欄
     const problems = [
       {
-        id: 1,
-        title: "問題1",
-        description: "三角形ABCにおいて、角A = 45度、角B = 60度、b = 6 のとき、辺 a の長さを求めよ。",
-        triangle: { A: 45, B: 60, C: 75, a: "a", b: 6, c: "" },
+        id: 1, title: "問題1",
+        description: "△ABC において、A＝30°、B＝60°、b＝6 のとき、辺 a の長さを求めよ。",
+        point: "わかっている「辺 b と角 B」がペア。求める辺 a は角 A と向かい合う。だから a/sinA = b/sinB を使う。",
+        triangle: { A: 30, B: 60, C: 90, angles: { A: "30°", B: "60°" }, sides: { a: "a", b: "6" }, known: "b", target: "a" },
         lines: [
-          { template: [frac("a", "sin45°"), " = ", frac({ id: "1-0a", answer: "6" }, { id: "1-0b", answer: "sin60°" })] },
-          { template: ["a = ", frac("6", "sin60°"), " × sin45°"] },
-          { template: ["a = 6 ÷ sin60° × sin45°"], noWrap: true },
-          { template: ["sin45° = ", frac("1", "√2"), "、sin60° = ", frac("√3", "2"), "<br>", "を使うと"], isHint: true },
-          { template: ["a = 6 ÷ ", frac({ id: "1-1", answer: "√3" }, { id: "1-2", answer: "2" }), " × ", frac({ id: "1-3", answer: "1" }, { id: "1-4", answer: "√2" })] },
-          { template: ["a = 6 × ", frac({ id: "1-5", answer: "2" }, { id: "1-6", answer: "√3" }), " × ", frac({ id: "1-7", answer: "1" }, { id: "1-8", answer: "√2" })], columnBreak: true },
-          { template: ["a = ", frac({ id: "1-9", answer: "12" }, { id: "1-10", answer: "√6" })] },
+          { template: [frac("a", Z("1-1", "sin30°")), " = ", frac(Z("1-2", "6"), Z("1-3", "sin60°"))] },
+          { template: ["両辺に sin30° をかけて　a = ", frac(Z("1-4", "6"), Z("1-5", "sin60°")), " × ", Z("1-6", "sin30°")] },
+          { template: ["sin30° = ", frac("1", "2"), "、sin60° = ", frac("√3", "2"), " を代入すると"], isHint: true },
+          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "2")] },
+          { template: ["÷ 分数 は、逆数をかける"], isHint: true },
+          { template: ["a = 6 × ", frac(Z("1-7", "2"), Z("1-8", "√3")), " × ", frac(Z("1-9", "1"), Z("1-10", "2"))], columnBreak: true },
+          { template: ["a = ", frac(Z("1-11", "6"), Z("1-12", "√3"))] },
           { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["a = ", frac("12", "√6"), " × ", frac({ id: "1-11", answer: "√6" }, { id: "1-12", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
-          { template: ["a = ", frac({ id: "1-13", answer: "12√6" }, { id: "1-14", answer: "6" })] },
-          { template: ["a = "], isFinal: true, finalId: "1-15", finalAnswer: "2√6" }
+          { template: ["a = ", frac("6", "√3"), " × ", frac(Z("1-13", "√3"), Z("1-14", "√3")), "　（同じルートを分母と分子にかける）"] },
+          { template: ["a = ", frac(Z("1-15", "6√3"), "3")] },
+          { template: ["a = "], isFinal: true, finalId: "1-16", finalAnswer: "2√3" }
+        ],
+        finalChoices: ["2√3", "√3", "3√3", "6√3"],
+        choices: ["sin30°", "6", "sin60°", "2", "√3", "1", "6√3", "sin90°", "3", "√2"]
+      },
+      {
+        id: 2, title: "問題2",
+        description: "△ABC において、A＝30°、C＝45°、c＝4 のとき、辺 a の長さを求めよ。",
+        point: "わかっている「辺 c と角 C」がペア。求める a は A と向かい合うので a/sinA = c/sinC。",
+        triangle: { A: 30, B: 105, C: 45, angles: { A: "30°", C: "45°" }, sides: { a: "a", c: "4" }, known: "c", target: "a" },
+        lines: [
+          { template: [frac("a", Z("2-1", "sin30°")), " = ", frac(Z("2-2", "4"), Z("2-3", "sin45°"))] },
+          { template: ["a = ", frac(Z("2-4", "4"), Z("2-5", "sin45°")), " × ", Z("2-6", "sin30°")] },
+          { template: ["sin30° = ", frac(Z("2-7", "1"), Z("2-8", "2")), "、sin45° = ", frac(Z("2-9", "1"), Z("2-10", "√2")), "<br>", "を代入すると"], isHint: true },
+          { template: ["a = 4 ÷ ", frac("1", "√2"), " × ", frac("1", "2")] },
+          { template: ["÷ 分数 は、逆数をかける"], isHint: true },
+          { template: ["a = 4 × ", frac(Z("2-11", "√2"), Z("2-12", "1")), " × ", frac(Z("2-13", "1"), Z("2-14", "2"))], columnBreak: true },
+          { template: ["a = ", frac(Z("2-15", "4√2"), Z("2-16", "2"))] },
+          { template: ["a = "], isFinal: true, finalId: "2-17", finalAnswer: "2√2" }
+        ],
+        finalChoices: ["2√2", "√2", "4√2", "2"],
+        choices: ["sin30°", "4", "sin45°", "1", "2", "√2", "4√2", "sin105°", "sin60°", "√3"]
+      },
+      {
+        id: 3, title: "問題3",
+        description: "△ABC において、A＝45°、B＝60°、b＝6 のとき、辺 a の長さを求めよ。",
+        point: "わかっている「辺 b と角 B」がペア。a/sinA = b/sinB に入れる。最後は分母の √6 を有理化。",
+        triangle: { A: 45, B: 60, C: 75, angles: { A: "45°", B: "60°" }, sides: { a: "a", b: "6" }, known: "b", target: "a" },
+        lines: [
+          { template: [frac("a", Z("3-1", "sin45°")), " = ", frac(Z("3-2", "6"), Z("3-3", "sin60°"))] },
+          { template: ["a = ", frac(Z("3-4", "6"), Z("3-5", "sin60°")), " × ", Z("3-6", "sin45°")] },
+          { template: ["sin45° = ", frac(Z("3-7", "1"), Z("3-8", "√2")), "、sin60° = ", frac(Z("3-9", "√3"), Z("3-10", "2")), "<br>", "を代入すると"], isHint: true },
+          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "√2")] },
+          { template: ["a = 6 × ", frac(Z("3-11", "2"), Z("3-12", "√3")), " × ", frac(Z("3-13", "1"), Z("3-14", "√2"))], columnBreak: true },
+          { template: ["a = ", frac(Z("3-15", "12"), Z("3-16", "√6"))] },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["a = ", frac("12", "√6"), " × ", frac(Z("3-17", "√6"), Z("3-18", "√6"))] },
+          { template: ["a = ", frac(Z("3-19", "12√6"), Z("3-20", "6"))] },
+          { template: ["a = "], isFinal: true, finalId: "3-21", finalAnswer: "2√6" }
         ],
         finalChoices: ["2√6", "√6", "3√6", "4√6"],
-        choices: ["2", "√3", "1", "√2", "√6", "12", "12√6", "6", "sin60°"]
+        choices: ["sin45°", "6", "sin60°", "1", "√2", "√3", "2", "12", "√6", "12√6", "sin75°", "3"]
       },
       {
-        id: 2,
-        title: "問題2",
-        description: "三角形ABCにおいて、角A = 30度、角C = 45度、c = 4 のとき、辺 a の長さを求めよ。",
-        triangle: { A: 30, B: 105, C: 45, a: "a", b: "", c: 4 },
+        id: 4, title: "問題4",
+        description: "△ABC において、B＝60°、C＝45°、b＝12 のとき、辺 c の長さを求めよ。",
+        point: "わかっている「辺 b と角 B」がペア。求める c は C と向かい合うので c/sinC = b/sinB。",
+        triangle: { A: 75, B: 60, C: 45, angles: { B: "60°", C: "45°" }, sides: { b: "12", c: "c" }, known: "b", target: "c" },
         lines: [
-          { template: [frac("a", { id: "2-1", answer: "sin30°" }), " = ", frac({ id: "2-2", answer: "4" }, { id: "2-3", answer: "sin45°" })] },
-          { template: ["a = ", frac({ id: "2-4", answer: "4" }, { id: "2-5", answer: "sin45°" }), " × ", { id: "2-6", answer: "sin30°" }] },
-          { template: ["a = ", { id: "2-7", answer: "4" }, " ÷ ", { id: "2-8", answer: "sin45°" }, " × ", { id: "2-9", answer: "sin30°" }], noWrap: true },
-          { template: ["sin30° = ", frac({ id: "2-14", answer: "1" }, { id: "2-15", answer: "2" }), "、sin45° = ", frac({ id: "2-16", answer: "1" }, { id: "2-17", answer: "√2" }), "<br>", "を使うと"], isHint: true },
-          { template: ["a = 4 ÷ ", frac("1", "√2"), " × ", frac("1", "2")], columnBreak: true },
-          { template: ["a = 4 × ", frac({ id: "2-18", answer: "√2" }, { id: "2-19", answer: "1" }), " × ", frac({ id: "2-20", answer: "1" }, { id: "2-21", answer: "2" })] },
-          { template: ["a = ", frac({ id: "2-10", answer: "4√2" }, { id: "2-11", answer: "2" })] },
-          { template: ["a = "], isFinal: true, finalId: "2-13", finalAnswer: "2√2" }
-        ],
-        finalChoices: ["2√2", "√2", "4√2", "3√2"],
-        choices: ["sin30°", "4", "sin45°", "4√2", "2", "2√2", "1", "√2"]
-      },
-      {
-        id: 3,
-        title: "問題3",
-        description: "三角形ABCにおいて、角A = 60度、角B = 45度、a = 8 のとき、辺 b の長さを求めよ。",
-        triangle: { A: 60, B: 45, C: 75, a: 8, b: "b", c: "" },
-        lines: [
-          { template: [frac("b", { id: "3-1", answer: "sin45°" }), " = ", frac({ id: "3-2", answer: "8" }, { id: "3-3", answer: "sin60°" })] },
-          { template: ["b = ", frac({ id: "3-4", answer: "8" }, { id: "3-5", answer: "sin60°" }), " × ", { id: "3-6", answer: "sin45°" }] },
-          { template: ["b = ", { id: "3-7", answer: "8" }, " ÷ ", { id: "3-8", answer: "sin60°" }, " × ", { id: "3-9", answer: "sin45°" }], noWrap: true },
-          { template: ["sin60° = ", frac({ id: "3-17", answer: "√3" }, { id: "3-18", answer: "2" }), "、sin45° = ", frac({ id: "3-19", answer: "1" }, { id: "3-20", answer: "√2" }), "<br>", "を使うと"], isHint: true },
-          { template: ["b = 8 ÷ ", frac("√3", "2"), " × ", frac("1", "√2")] },
-          { template: ["b = 8 × ", frac({ id: "3-21", answer: "2" }, { id: "3-22", answer: "√3" }), " × ", frac("1", "√2")], columnBreak: true },
-          { template: ["b = ", frac({ id: "3-10", answer: "16" }, { id: "3-11", answer: "√6" })] },
+          { template: [frac("c", Z("4-1", "sin45°")), " = ", frac(Z("4-2", "12"), Z("4-3", "sin60°"))] },
+          { template: ["c = ", frac(Z("4-4", "12"), Z("4-5", "sin60°")), " × ", Z("4-6", "sin45°")] },
+          { template: ["c = 12 ÷ ", frac(Z("4-7", "√3"), Z("4-8", "2")), " × ", frac(Z("4-9", "1"), Z("4-10", "√2"))] },
+          { template: ["c = 12 × ", frac(Z("4-11", "2"), Z("4-12", "√3")), " × ", frac(Z("4-13", "1"), Z("4-14", "√2"))], columnBreak: true },
+          { template: ["c = ", frac(Z("4-15", "24"), Z("4-16", "√6"))] },
           { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["b = ", frac("16", "√6"), " × ", frac({ id: "3-12", answer: "√6" }, { id: "3-13", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
-          { template: ["b = ", frac({ id: "3-14", answer: "16√6" }, { id: "3-15", answer: "6" })] },
-          { template: ["b = "], isFinal: true, finalId: "3-16", finalAnswer: "8√6/3" }
+          { template: ["c = ", frac("24", "√6"), " × ", frac(Z("4-17", "√6"), Z("4-18", "√6"))] },
+          { template: ["c = ", frac(Z("4-19", "24√6"), Z("4-20", "6"))] },
+          { template: ["c = "], isFinal: true, finalId: "4-21", finalAnswer: "4√6" }
+        ],
+        finalChoices: ["6√6", "4√6", "2√6", "8√6"],
+        choices: ["sin45°", "12", "sin60°", "1", "2", "√2", "√3", "√6", "24", "24√6", "6", "sin75°", "12√6"]
+      },
+      {
+        id: 5, title: "問題5",
+        description: "△ABC において、A＝60°、B＝45°、a＝8 のとき、辺 b の長さを求めよ。",
+        point: "わかっている「辺 a と角 A」がペア。b/sinB = a/sinA。答えは約分して分数のまま。",
+        triangle: { A: 60, B: 45, C: 75, angles: { A: "60°", B: "45°" }, sides: { a: "8", b: "b" }, known: "a", target: "b" },
+        lines: [
+          { template: [frac("b", Z("5-1", "sin45°")), " = ", frac(Z("5-2", "8"), Z("5-3", "sin60°"))] },
+          { template: ["b = ", frac(Z("5-4", "8"), Z("5-5", "sin60°")), " × ", Z("5-6", "sin45°")] },
+          { template: ["b = 8 × ", frac(Z("5-7", "2"), Z("5-8", "√3")), " × ", frac(Z("5-9", "1"), Z("5-10", "√2"))] },
+          { template: ["b = ", frac(Z("5-11", "16"), Z("5-12", "√6"))] },
+          { template: ["b = ", frac("16", "√6"), " × ", frac(Z("5-13", "√6"), Z("5-14", "√6"))], columnBreak: true },
+          { template: ["b = ", frac(Z("5-15", "16√6"), Z("5-16", "6"))] },
+          { template: ["b = "], isFinal: true, finalId: "5-17", finalAnswer: "8√6/3" }
         ],
         finalChoices: [
           { type: 'fraction', numerator: "8√6", denominator: "3" },
@@ -627,48 +711,100 @@
           { type: 'fraction', numerator: "16√6", denominator: "3" },
           { type: 'fraction', numerator: "2√6", denominator: "3" }
         ],
-        choices: ["sin45°", "8", "sin60°", "√6", "16", "16√6", "6", "√3", "2", "1", "√2"]
+        choices: ["sin45°", "8", "sin60°", "√6", "16", "16√6", "6", "√3", "2", "1", "√2", "sin75°", "4√6"]
       },
       {
-        id: 4,
-        title: "問題4",
-        description: "三角形ABCにおいて、角A = 30度、角B = 60度、b = 6 のとき、辺 a の長さを求めよ。",
-        triangle: { A: 30, B: 60, C: 90, a: "a", b: 6, c: "" },
+        id: 6, title: "問題6",
+        description: "△ABC において、A＝105°、B＝45°、b＝4 のとき、辺 c の長さを求めよ。（まず C を求めよう）",
+        point: "c と向かい合う角 C がわからないので、まず C = 180° − (A + B) = 30°。そのあと c/sinC = b/sinB。",
+        triangle: { A: 105, B: 45, C: 30, angles: { A: "105°", B: "45°", C: "?" }, sides: { b: "4", c: "c" }, known: "b", target: "c" },
         lines: [
-          { template: [frac("a", { id: "4-1", answer: "sin30°" }), " = ", frac({ id: "4-2", answer: "6" }, { id: "4-3", answer: "sin60°" })] },
-          { template: ["a = ", frac({ id: "4-4", answer: "6" }, { id: "4-5", answer: "sin60°" }), " × ", { id: "4-6", answer: "sin30°" }] },
-          { template: ["a = ", { id: "4-7", answer: "6" }, " ÷ ", { id: "4-8", answer: "sin60°" }, " × ", { id: "4-9", answer: "sin30°" }], noWrap: true },
-          { template: ["sin30° = ", frac({ id: "4-14", answer: "1" }, { id: "4-15", answer: "2" }), "、sin60° = ", frac({ id: "4-16", answer: "√3" }, { id: "4-17", answer: "2" }), "<br>", "を使うと"], isHint: true },
-          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "2")] },
-          { template: ["a = 6 × ", frac({ id: "4-18", answer: "2" }, { id: "4-19", answer: "√3" }), " × ", frac({ id: "4-20", answer: "1" }, { id: "4-21", answer: "2" })], columnBreak: true },
-          { template: ["a = ", frac("6", "√3")] },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["a = ", frac("6", "√3"), " × ", frac({ id: "4-10", answer: "√3" }, { id: "4-11", answer: "√3" }), "　（同じルートを分母と分子にかける）"] },
-          { template: ["a = ", frac({ id: "4-12", answer: "6√3" }, "3")] },
-          { template: ["a = "], isFinal: true, finalId: "4-13", finalAnswer: "2√3" }
+          { template: ["C = 180° − (105° + 45°) = ", Z("6-1", "30°")] },
+          { template: [frac("c", Z("6-2", "sin30°")), " = ", frac(Z("6-3", "4"), Z("6-4", "sin45°"))] },
+          { template: ["c = ", frac(Z("6-5", "4"), Z("6-6", "sin45°")), " × ", Z("6-7", "sin30°")] },
+          { template: ["c = 4 ÷ ", frac(Z("6-8", "1"), Z("6-9", "√2")), " × ", frac(Z("6-10", "1"), Z("6-11", "2"))] },
+          { template: ["c = 4 × ", frac(Z("6-12", "√2"), Z("6-13", "1")), " × ", frac(Z("6-14", "1"), Z("6-15", "2"))], columnBreak: true },
+          { template: ["c = ", frac(Z("6-16", "4√2"), Z("6-17", "2"))] },
+          { template: ["c = "], isFinal: true, finalId: "6-18", finalAnswer: "2√2" }
         ],
-        finalChoices: ["2√3", "√3", "3√3", "6√3"],
-        choices: ["sin30°", "6", "sin60°", "√3", "6√3", "1", "2"]
+        finalChoices: ["2√2", "4√2", "√2", "2√6"],
+        choices: ["30°", "sin30°", "4", "sin45°", "1", "√2", "2", "4√2", "60°", "sin105°", "sin60°"]
       },
       {
-        id: 5,
-        title: "問題5",
-        description: "三角形ABCにおいて、角B = 60度、角C = 45度、b = 12 のとき、辺 c の長さを求めよ。",
-        triangle: { A: 75, B: 60, C: 45, a: "", b: 12, c: "c" },
+        id: 7, title: "問題7",
+        description: "△ABC において、a＝6、A＝30° のとき、外接円の半径 R を求めよ。",
+        point: "正弦定理の続き「= 2R」を使う。a/sinA = 2R なので、2R = 6 ÷ sin30° = 12、R = 6。",
+        triangle: { A: 30, B: 65, C: 85, angles: { A: "30°" }, sides: { a: "6" }, known: "a", circle: "R" },
         lines: [
-          { template: [frac("c", { id: "5-1", answer: "sin45°" }), " = ", frac({ id: "5-2", answer: "12" }, { id: "5-3", answer: "sin60°" })] },
-          { template: ["c = ", frac({ id: "5-4", answer: "12" }, { id: "5-5", answer: "sin60°" }), " × ", { id: "5-6", answer: "sin45°" }] },
-          { template: ["c = ", { id: "5-7", answer: "12" }, " ÷ ", { id: "5-8", answer: "sin60°" }, " × ", { id: "5-9", answer: "sin45°" }], noWrap: true },
-          { template: ["c = ", { id: "5-14", answer: "12" }, " ÷ ", frac({ id: "5-15", answer: "√3" }, { id: "5-16", answer: "2" }), " × ", frac({ id: "5-17", answer: "1" }, { id: "5-18", answer: "√2" })] },
-          { template: ["c = 12 × ", frac({ id: "5-19", answer: "2" }, { id: "5-20", answer: "√3" }), " × ", frac({ id: "5-21", answer: "1" }, { id: "5-22", answer: "√2" })] },
-          { template: ["c = ", frac({ id: "5-23", answer: "24" }, { id: "5-24", answer: "√6" })], columnBreak: true },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["c = ", frac("24", "√6"), " × ", frac({ id: "5-25", answer: "√6" }, { id: "5-26", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
-          { template: ["c = ", frac({ id: "5-27", answer: "24√6" }, { id: "5-28", answer: "6" })] },
-          { template: ["c = "], isFinal: true, finalId: "5-29", finalAnswer: "4√6" }
+          { template: [frac(Z("7-1", "6"), Z("7-2", "sin30°")), " = 2R"] },
+          { template: ["sin30° = ", frac(Z("7-3", "1"), Z("7-4", "2")), " より　2R = 6 ÷ ", frac("1", "2"), " = 6 × ", Z("7-5", "2"), " = ", Z("7-6", "12")] },
+          { template: ["R = "], isFinal: true, finalId: "7-7", finalAnswer: "6", columnBreak: true }
         ],
-        finalChoices: ["6√6", "4√6", "2√6", "8√6"],
-        choices: ["sin45°", "12", "sin60°", "1", "2", "√2", "√3", "√6", "24", "24√6", "6"]
+        finalChoices: ["6", "12", "3", "6√3"],
+        choices: ["6", "sin30°", "1", "2", "12", "sin60°", "√3", "3"]
+      },
+      {
+        id: 8, title: "問題8",
+        description: "△ABC の外接円の半径が R＝3、A＝45° のとき、辺 a の長さを求めよ。",
+        point: "a/sinA = 2R から a = 2R sinA = 6 × sin45° = 3√2。",
+        triangle: { A: 45, B: 75, C: 60, angles: { A: "45°" }, sides: { a: "a" }, target: "a", circle: "R＝3" },
+        lines: [
+          { template: [frac("a", Z("8-1", "sin45°")), " = 2R = 2 × 3 = ", Z("8-2", "6")] },
+          { template: ["a = ", Z("8-3", "6"), " × sin45° = 6 × ", frac(Z("8-4", "1"), Z("8-5", "√2")), " = ", frac(Z("8-6", "6"), Z("8-7", "√2"))] },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["a = ", frac("6", "√2"), " × ", frac(Z("8-8", "√2"), Z("8-9", "√2")), " = ", frac(Z("8-10", "6√2"), Z("8-11", "2"))], columnBreak: true },
+          { template: ["a = "], isFinal: true, finalId: "8-12", finalAnswer: "3√2" }
+        ],
+        finalChoices: ["3√2", "6√2", "3", "2√3"],
+        choices: ["sin45°", "6", "1", "√2", "6√2", "2", "sin60°", "3", "√3"]
+      },
+      {
+        id: 9, title: "問題9",
+        description: "△ABC において、a＝2√3、b＝2、A＝60° のとき、B を求めよ。",
+        point: "sin B = 1/2 になる B は 30° と 150° の 2 つ。でも B = 150° だと A + B = 210° となり三角形ができないので、B = 30°。",
+        triangle: { A: 60, B: 30, C: 90, angles: { A: "60°", B: "?" }, sides: { a: "2√3", b: "2" }, known: "a", target: "b" },
+        lines: [
+          { template: [frac(Z("9-1", "2√3"), "sin60°"), " = ", frac(Z("9-2", "2"), "sin B")] },
+          { template: ["sin B = ", frac("2 × sin60°", "2√3"), " = 2 × ", frac(Z("9-3", "√3"), Z("9-4", "2")), " ÷ 2√3 = ", frac(Z("9-5", "1"), Z("9-6", "2"))] },
+          { template: ["0° < B < 180° で sin B = ", frac("1", "2"), " となる B は 30° と 150°"], isHint: true },
+          { template: ["B = 150° とすると　A + B = 60° + 150° = ", Z("9-7", "210°")], columnBreak: true },
+          { template: ["180° をこえるので、B = 150° は三角形にならない"], isHint: true },
+          { template: ["B = "], isFinal: true, finalId: "9-8", finalAnswer: "30°" }
+        ],
+        finalChoices: ["30°", "150°", "30° または 150°", "60°"],
+        choices: ["2√3", "2", "√3", "1", "210°", "150°", "√2", "90°"]
+      },
+      {
+        id: 10, title: "問題10",
+        description: "△ABC において、a＝√2、b＝√3、A＝45° のとき、B を求めよ。",
+        point: "sin B = √3/2 になる B は 60° と 120°。どちらも A + B が 180° より小さいので、答えは 2 つ。",
+        triangle: { A: 45, B: 60, C: 75, angles: { A: "45°", B: "?" }, sides: { a: "√2", b: "√3" }, known: "a", target: "b" },
+        lines: [
+          { template: [frac(Z("10-1", "√2"), "sin45°"), " = ", frac(Z("10-2", "√3"), "sin B")] },
+          { template: ["sin B = ", frac("√3 × sin45°", "√2"), " = √3 × ", frac(Z("10-3", "1"), Z("10-4", "√2")), " ÷ √2 = ", frac(Z("10-5", "√3"), Z("10-6", "2"))] },
+          { template: ["0° < B < 180° で sin B = ", frac("√3", "2"), " となる B は 60° と 120°"], isHint: true },
+          { template: ["B = 60° のとき A + B = ", Z("10-7", "105°")], columnBreak: true },
+          { template: ["B = 120° のとき A + B = ", Z("10-8", "165°")] },
+          { template: ["どちらも 180° より小さいので、どちらも三角形になる"], isHint: true },
+          { template: ["B = "], isFinal: true, finalId: "10-9", finalAnswer: "60° または 120°" }
+        ],
+        finalChoices: ["60°", "120°", "60° または 120°", "45° または 135°"],
+        choices: ["√2", "√3", "1", "2", "105°", "165°", "225°", "√6"]
+      },
+      {
+        id: 11, title: "問題11",
+        description: "△ABC において、b＝3、c＝5、A＝120° のとき、辺 a の長さを求めよ。（どちらの定理を使う？）",
+        point: "「2辺とその間の角」がわかっているときは余弦定理。正弦定理は「向かい合う辺と角のペア」が 1 組わかっているときに使う。",
+        triangle: { A: 120, B: 21.786789298261798, C: 38.213210701738202, angles: { A: "120°" }, sides: { a: "a", b: "3", c: "5" } },
+        lines: [
+          { template: ["2辺とその間の角がわかっているので、使うのは ", Z("11-1", "余弦定理")] },
+          { template: ["a² = ", Z("11-2", "3"), "² + ", Z("11-3", "5"), "² − 2 × 3 × 5 × cos", Z("11-4", "120°")] },
+          { template: ["cos120° = ", frac(Z("11-5", "−1"), Z("11-6", "2"))] },
+          { template: ["a² = 9 + 25 + ", Z("11-7", "15"), " = ", Z("11-8", "49")], columnBreak: true },
+          { template: ["a > 0 より　a = "], isFinal: true, finalId: "11-9", finalAnswer: "7" }
+        ],
+        finalChoices: ["7", "49", "√19", "19"],
+        choices: ["余弦定理", "正弦定理", "3", "5", "120°", "−1", "2", "15", "49", "−15", "60°"]
       }
     ];
 
@@ -709,95 +845,74 @@
     }
 
     function drawTriangle(triangle, problem) {
-      const { A, B, C, a, b, c } = triangle;
-
-      const toRad = (deg) => deg * Math.PI / 180;
-
-      const baseLength = 180;
-
-      const Cx = 60;
-      const Cy = 200;
-
-      const Bx = Cx + baseLength;
-      const By = Cy;
-
-      const caLength = 140;
-      const Ax = Cx + caLength * Math.cos(toRad(C));
-      const Ay = Cy - caLength * Math.sin(toRad(C));
-
-      const description = problem.description;
-      const usedAngles = new Set();
-      const usedSides = new Set();
-
-      const angleMatches = description.matchAll(/角([ABC])\s*=\s*(\d+)/g);
-      for (const match of angleMatches) {
-        usedAngles.add(match[1]);
+      // 【ブラッシュアップ】元は BC と CA の長さを決め打ちして角 C だけで描いていたため、
+      //   角 A・B と辺の比が問題の数値と合っていなかった（105° が鋭角に描かれる、大きい角と小さい角が逆 など）。
+      //   正弦定理 BC : CA = sinA : sinB から形を計算し、画面に収まるように拡大してかく。
+      //   同じ色の辺と角が「向かい合うペア」（青：わかっているペア、オレンジ：求めるペア）。
+      const toRad = d => d * Math.PI / 180;
+      const { A, B, C } = triangle;
+      const ca = Math.sin(toRad(B)) / Math.sin(toRad(A));          // BC を 1 としたときの CA
+      const raw = { C: [0, 0], B: [1, 0], A: [ca * Math.cos(toRad(C)), ca * Math.sin(toRad(C))] };
+      const R0 = 1 / (2 * Math.sin(toRad(A)));                      // 外接円の半径（BC = 1 のとき）
+      const O0 = [0.5, Math.sqrt(Math.max(R0 * R0 - 0.25, 0)) * (A < 90 ? 1 : -1)];
+      const xs = [0, 1, raw.A[0]], ys = [0, 0, raw.A[1]];
+      if (triangle.circle) { xs.push(O0[0] - R0, O0[0] + R0); ys.push(O0[1] - R0, O0[1] + R0); }
+      const W = 250, H = 170, M = 36;
+      const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+      const k = Math.min(W / (maxx - minx), H / (maxy - miny));
+      const ox = M + (W - (maxx - minx) * k) / 2, oy = M + (H - (maxy - miny) * k) / 2;
+      const T = p => [ox + (p[0] - minx) * k, oy + (maxy - p[1]) * k];
+      const P = { A: T(raw.A), B: T(raw.B), C: T(raw.C) };
+      const G = [(P.A[0] + P.B[0] + P.C[0]) / 3, (P.A[1] + P.B[1] + P.C[1]) / 3];
+      const f = v => Math.round(v * 10) / 10;
+      const unit = (p, q) => { const x = q[0] - p[0], y = q[1] - p[1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+      const at = (p, u, d) => [f(p[0] + u[0] * d), f(p[1] + u[1] * d)];
+      const pair = L => {
+        const l = L.toLowerCase();
+        if (triangle.known && triangle.known === l) return ' k';
+        if (triangle.target && triangle.target === l) return ' t';
+        return '';
+      };
+      const text = (p, s, cls) => `<text x="${p[0]}" y="${p[1]}" class="${cls}" text-anchor="middle" dominant-baseline="central">${s}</text>`;
+      let svg = `<svg viewBox="0 0 ${W + 2 * M} ${H + 2 * M}" width="${W + 2 * M}" height="${H + 2 * M}" class="st-svg" data-pts="${[P.A, P.B, P.C].map(p => f(p[0]) + ',' + f(p[1])).join(' ')}">`;
+      svg += `<polygon points="${[P.A, P.B, P.C].map(p => f(p[0]) + ',' + f(p[1])).join(' ')}" class="st-body" />`;
+      if (triangle.circle) {   // 外接円（三角形の上にかいて、中心 O と半径 R が見えるように）
+        const O = T(O0), r = R0 * k;
+        svg += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="${f(r)}" class="st-circle" />`;
+        svg += `<line x1="${f(O[0])}" y1="${f(O[1])}" x2="${f(P.B[0])}" y2="${f(P.B[1])}" class="st-radius" />`;
+        svg += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="3" class="st-center" />`;
+        svg += text(at(O, unit(P.B, O), 12), 'O', 'st-o');
+        const mid = [(O[0] + P.B[0]) / 2, (O[1] + P.B[1]) / 2], u = unit(O, P.B);
+        svg += text(at(mid, [-u[1], u[0]], 14), triangle.circle, 'st-r');
       }
-
-      const sideMatches = description.matchAll(/([abc])\s*=\s*(\d+)/g);
-      for (const match of sideMatches) {
-        usedSides.add(match[1]);
-      }
-
-      const findSideMatch = description.match(/辺\s*([abc])\s*の/);
-      if (findSideMatch) {
-        usedSides.add(findSideMatch[1]);
-      }
-
-      const showA = usedAngles.has('A');
-      const showB = usedAngles.has('B');
-      const showC = usedAngles.has('C');
-      const showSideA = usedSides.has('a');
-      const showSideB = usedSides.has('b');
-      const showSideC = usedSides.has('c');
-
-      let angleAX, angleAY, angleBX, angleBY, angleCX, angleCY;
-
-      if (problem.id === 1) {
-        angleAX = 105; angleAY = 100;
-        angleBX = 200; angleBY = 190;
-        angleCX = Cx + 20; angleCY = Cy - 10;
-      } else if (problem.id === 2) {
-        angleAX = 160; angleAY = 135;
-        angleBX = Bx - 20; angleBY = By - 10;
-        angleCX = 95; angleCY = 190;
-      } else if (problem.id === 3) {
-        angleAX = 105; angleAY = 100;
-        angleBX = 200; angleBY = 190;
-        angleCX = Cx + 20; angleCY = Cy - 10;
-      } else if (problem.id === 4) {
-        angleAX = 80; angleAY = 100;
-        angleBX = 195; angleBY = 190;
-        angleCX = Cx + 20; angleCY = Cy - 10;
-      } else if (problem.id === 5) {
-        angleAX = Ax; angleAY = Ay + 20;
-        angleBX = 205; angleBY = 190;
-        angleCX = 95; angleCY = 190;
-      } else {
-        angleAX = Ax; angleAY = Ay + 20;
-        angleBX = Bx - 20; angleBY = By - 10;
-        angleCX = Cx + 20; angleCY = Cy - 10;
-      }
-
-      return `
-        <svg width="320" height="260" viewBox="0 0 320 260" style="background: white; border-radius: 8px; padding: 10px;">
-          <line x1="${Ax}" y1="${Ay}" x2="${Bx}" y2="${By}" stroke="#2d3748" stroke-width="2.5"/>
-          <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" stroke="#2d3748" stroke-width="2.5"/>
-          <line x1="${Cx}" y1="${Cy}" x2="${Ax}" y2="${Ay}" stroke="#2d3748" stroke-width="2.5"/>
-
-          <text x="${Ax}" y="${Ay - 10}" text-anchor="middle" font-size="20" font-weight="bold" fill="#2d3748">A</text>
-          <text x="${Bx + 15}" y="${By + 5}" text-anchor="start" font-size="20" font-weight="bold" fill="#2d3748">B</text>
-          <text x="${Cx - 15}" y="${Cy + 5}" text-anchor="end" font-size="20" font-weight="bold" fill="#2d3748">C</text>
-
-          ${showA ? `<text x="${angleAX}" y="${angleAY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${A}°</text>` : ''}
-          ${showB ? `<text x="${angleBX}" y="${angleBY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${B}°</text>` : ''}
-          ${showC ? `<text x="${angleCX}" y="${angleCY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${C}°</text>` : ''}
-
-          ${showSideA ? `<text x="${(Bx + Cx) / 2}" y="${(By + Cy) / 2 + 20}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${a || 'a'}</text>` : ''}
-          ${showSideB ? `<text x="${(Ax + Cx) / 2 - 20}" y="${(Ay + Cy) / 2}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${b || 'b'}</text>` : ''}
-          ${showSideC ? `<text x="${(Ax + Bx) / 2 + 20}" y="${(Ay + By) / 2}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${c || 'c'}</text>` : ''}
-        </svg>
-      `;
+      const others = { A: ['B', 'C'], B: ['C', 'A'], C: ['A', 'B'] };
+      ['A', 'B', 'C'].forEach(L => {
+        const V = P[L], u1 = unit(V, P[others[L][0]]), u2 = unit(V, P[others[L][1]]);
+        const lens = others[L].map(o => Math.hypot(P[o][0] - V[0], P[o][1] - V[1]));
+        const deg = triangle[L];
+        const label = triangle.angles && triangle.angles[L];
+        if (!label && Math.abs(deg - 90) < 0.01) {   // 直角のしるし
+          const s = 12, a1 = at(V, u1, s), a2 = at(V, u2, s), c = [f(V[0] + (u1[0] + u2[0]) * s), f(V[1] + (u1[1] + u2[1]) * s)];
+          svg += `<path d="M ${a1[0]},${a1[1]} L ${c[0]},${c[1]} L ${a2[0]},${a2[1]}" class="st-right" />`;
+        }
+        if (!label) return;
+        const r = Math.min(26, 0.28 * Math.min(...lens));
+        const a1 = at(V, u1, r), a2 = at(V, u2, r);
+        const sweep = (u1[0] * u2[1] - u1[1] * u2[0]) > 0 ? 1 : 0;
+        svg += `<path d="M ${a1[0]},${a1[1]} A ${f(r)},${f(r)} 0 0,${sweep} ${a2[0]},${a2[1]}" class="st-arc${pair(L)}" />`;
+        const bis = unit([0, 0], [u1[0] + u2[0], u1[1] + u2[1]]);
+        svg += text(at(V, bis, r + (deg > 90 ? 13 : 17)), label, 'st-ang' + pair(L));
+      });
+      const ends = { a: ['B', 'C'], b: ['C', 'A'], c: ['A', 'B'] };
+      Object.keys(triangle.sides || {}).forEach(l => {
+        const p = P[ends[l][0]], q = P[ends[l][1]], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+        let n = [-(q[1] - p[1]), q[0] - p[0]]; const len = Math.hypot(...n); n = [n[0] / len, n[1] / len];
+        if ((m[0] - G[0]) * n[0] + (m[1] - G[1]) * n[1] < 0) n = [-n[0], -n[1]];
+        const s = triangle.sides[l], w = 10 * s.length + 4;
+        svg += text(at(m, n, 8 + Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * 9), s, 'st-side' + (/^[abc]$/.test(s) ? ' var' : '') + pair(l));
+      });
+      ['A', 'B', 'C'].forEach(L => { svg += text(at(P[L], unit(G, P[L]), 17), L, 'st-vtx' + pair(L)); });
+      return svg + '</svg>';
     }
 
     function initializeProblems() {
@@ -825,8 +940,11 @@
             </div>
             <div class="triangle-diagram">
               ${drawTriangle(problem.triangle, problem)}
+              ${problem.triangle.known || problem.triangle.target ? '<div class="pair-note">同じ色の辺と角が向かい合うペア（<span class="k">青</span>：わかっている　<span class="t">オレンジ</span>：求める）</div>' : ''}
             </div>
           </div>
+          <!-- 【ブラッシュアップ】公式カード -->
+          <div class="formula-card">正弦定理：<span class="fraction"><span class="fraction-numerator">a</span><span class="fraction-denominator">sin A</span></span> = <span class="fraction"><span class="fraction-numerator">b</span><span class="fraction-denominator">sin B</span></span> = <span class="fraction"><span class="fraction-numerator">c</span><span class="fraction-denominator">sin C</span></span> = 2R<br><span class="sub">R：外接円の半径　／　余弦定理：a² = b² + c² − 2bc cos A（2辺とその間の角がわかるとき）</span></div>
 
           <div class="choices-area">
             <h3>選択肢（ドラッグまたはタップして空欄に入れてください）</h3>
@@ -1213,6 +1331,7 @@
     function handleDropZoneClick(e) {
       const dropZone = e.currentTarget;
       if (lockedMap[dropZone.dataset.problemId]) return;   // 【ブラッシュアップ】
+      if (dropZone.dataset.currentValue && dropZone.dataset.currentValue === dropZone.dataset.answer) return;   // 【ブラッシュアップ】正解した空欄は上書きしない
 
       if (waitingDropZone) {
         waitingDropZone.classList.remove('waiting-input');
@@ -1321,7 +1440,7 @@
 
         const choiceElement = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${choiceValue}"]`);
         if (choiceElement) {
-          if (currentUsed >= totalNeeded) {
+          if (totalNeeded > 0 && currentUsed >= totalNeeded) {   // 【ブラッシュアップ】
             choiceElement.classList.add('fully-used');
           } else {
             choiceElement.classList.remove('fully-used');
@@ -1448,7 +1567,7 @@
             '👏 お見事！完璧な答えです！'
           ];
           const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-          result.innerHTML = randomMessage;
+          result.innerHTML = randomMessage + (problem.point ? '<br><span class="point">💡 ' + problem.point + '</span>' : '');   // 【ブラッシュアップ】
           result.className = 'result-message correct';
           result.style.display = 'block';
 
@@ -1689,7 +1808,7 @@
 
       setTimeout(() => {
         const result = document.getElementById(`result-${problemId}`);
-        result.innerHTML = '💡 答えを表示しました！復習に役立ててください！';
+        result.innerHTML = '💡 答えを表示しました。復習に役立ててください！' + (problem.point ? '<br><span class="point">' + problem.point + '</span>' : '');   // 【ブラッシュアップ】
         result.className = 'result-message';
         result.style.display = 'block';
         result.style.background = '#fef5e7';
