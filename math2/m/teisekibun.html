@@ -471,6 +471,9 @@
     /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
 
     body { padding: 12px; display: block !important; min-height: 0 !important; }
+    /* 【ブラッシュアップ】式：文字は斜体、数・記号は立体、数式用の書体 */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; }
+    .m i { font-style: italic; padding-right: 0.04em; }
     .container { margin: 0 auto; padding: 24px 20px; box-sizing: border-box; }
     h1 { font-size: min(2.4rem, 8vw); white-space: nowrap; margin: 0 0 20px; text-shadow: none; }
     .mode-selection { gap: 12px; }
@@ -1293,7 +1296,54 @@
       document.getElementById('result-overlay').style.display = 'flex';
     }
 
-
+        const MATH_RUN = /[A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*[A-Za-zαβ0-9∫][A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .no-math, .level-badge, script, style, svg, button.tap, .sign-btn, .nb-sign, .op-btn')) continue;
+                if (/[A-Za-zαβ0-9∫]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    text.split(/([A-Za-zαβ]+)/).forEach((part, k) => {
+                        if (!part) return;
+                        if (k % 2) {
+                            // dx の d は立体、x は斜体
+                            const dx = part.match(/^d([a-z])$/);
+                            if (dx) span.appendChild(document.createTextNode('d'));
+                            const i = document.createElement('i');
+                            i.textContent = dx ? dx[1] : part;
+                            span.appendChild(i);
+                        } else {
+                            span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
+                        }
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        // 画面が書きかわるたびに、指定した場所の式を整える
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+        watchMath(['#question', '#options-container', '#input-container', '#feedback', '#explanation']);   // 【ブラッシュアップ】式の書き方
     function backToMenu() {
       runId++;   // 【ブラッシュアップ】
       window.scrollTo(0, 0);

@@ -587,6 +587,9 @@
     /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
 
     body { padding: 12px; }
+    /* 【ブラッシュアップ】式：文字は斜体、数・記号は立体、数式用の書体 */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; }
+    .m i { font-style: italic; padding-right: 0.04em; }
     .container { padding: 24px 20px; }
     .title { font-size: min(2rem, 6.2vw); white-space: nowrap; margin: 0 0 12px; }
     .mode-selection h2 { color: var(--u-title-dark); font-size: 1.3rem; }
@@ -605,6 +608,8 @@
     .graph-area { border: 3px solid var(--u-line); border-radius: 16px; min-height: 0; padding: 8px; margin: 10px 0; background: #fff; }
     .graph-holder { width: 100%; max-width: 440px; margin: 0 auto; }
     .graph-svg { width: 100%; height: auto; display: block; }
+    .graph-svg text { font-family: var(--u-math-font); }
+    .graph-svg .it { font-style: italic; }
     .graph-svg .grid { stroke: #eef2f7; stroke-width: 1; }
     .graph-svg .tick { stroke: #4b2c20; stroke-width: 1.2; }
     .graph-svg .tick-label { font-size: 14px; fill: #64748b; font-family: var(--u-math-font); }
@@ -706,7 +711,7 @@
      <button type="button" class="mode-btn" onclick="startFreeInputMode()">
       <div class="mode-btn-icon">🎯</div>
       <div class="mode-btn-title">面積を計算するモード</div>
-      <div class="mode-btn-desc">面積の値を計算して入れる（全5問・毎回ちがう問題）</div>
+      <div class="mode-btn-desc">面積の値を計算して入れる（全7問・毎回ちがう問題）</div>
      </button>
     </div>
    </div><!-- Quiz Container -->
@@ -886,6 +891,34 @@
                 ],
                 correct: 1,
                 explanation: "y = 2x - 4 は x = 0 から x = 2 で負の値を取るため、この区間では -∫₀² (2x - 4) dx、x = 2 から x = 3 では正の値なので ∫₂³ (2x - 4) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【応用】放物線 y = x² - 2x と x軸で囲まれた部分の面積を求める定積分はどれですか？",   // 【ブラッシュアップ】足した問題
+                graphType: "below1",
+                xMin: -1, xMax: 3, yMin: -2, yMax: 2,
+                integralMin: 0, integralMax: 2,
+                choices: [   // 値：−4/3, 4/3（正解）, 2/3, 20/3
+                    "∫₀² (x² - 2x) dx",
+                    "-∫₀² (x² - 2x) dx",
+                    "-∫₀¹ (x² - 2x) dx",
+                    "∫₀² (x² + 2x) dx"
+                ],
+                correct: 1,
+                explanation: "x² - 2x = 0 より x = 0, 2 で x軸と交わります。0 ≦ x ≦ 2 では y = x² - 2x は x軸より下にあるので、定積分の値は負になります。面積は「-」をつけて -∫₀² (x² - 2x) dx です。"
+            },
+            {
+                text: "【応用】放物線 y = -x² + 4x と x軸で囲まれた部分の面積を求める定積分はどれですか？",   // 【ブラッシュアップ】足した問題
+                graphType: "axis1",
+                xMin: -1, xMax: 5, yMin: -1, yMax: 5,
+                integralMin: 0, integralMax: 4,
+                choices: [   // 値：32/3（正解）, 16/3, −32/3, −32/3
+                    "∫₀⁴ (-x² + 4x) dx",
+                    "∫₀² (-x² + 4x) dx",
+                    "-∫₀⁴ (-x² + 4x) dx",
+                    "∫₀⁴ (x² - 4x) dx"
+                ],
+                correct: 0,
+                explanation: "-x² + 4x = 0 より x = 0, 4 で x軸と交わります。0 ≦ x ≦ 4 では x軸より上にあるので、面積は ∫₀⁴ (-x² + 4x) dx です。範囲は x軸との交点です。"
             },
             {
                 text: "【発展】y = x² と y = x で囲まれた面積を求める定積分はどれですか？",
@@ -1118,7 +1151,19 @@
                 { func: 'x**2-1', displayFunc: 'x²-1', lower: 0, upper: 2, answer: [2, 1], graphType: 'parabola2', level: 4 },
                 { func: 'x**2-4', displayFunc: 'x²-4', lower: 0, upper: 3, answer: [23, 3], graphType: 'parabola_mixed1', level: 4 },
             ],
-            level5: [
+            level5: [   // 【ブラッシュアップ】x軸より下だけ
+                { func: 'x**2-2*x', displayFunc: 'x²-2x', lower: 0, upper: 2, answer: [4, 3], graphType: 'below', level: 5 },
+                { func: 'x**2-4', displayFunc: 'x²-4', lower: -2, upper: 2, answer: [32, 3], graphType: 'below', level: 5 },
+                { func: 'x**2-3*x', displayFunc: 'x²-3x', lower: 0, upper: 3, answer: [9, 2], graphType: 'below', level: 5 },
+                { func: 'x**2-1', displayFunc: 'x²-1', lower: -1, upper: 1, answer: [4, 3], graphType: 'below', level: 5 },
+            ],
+            level6: [   // 【ブラッシュアップ】放物線と x軸で囲まれた部分
+                { func: '-x**2+4*x', displayFunc: '-x²+4x', lower: 0, upper: 4, answer: [32, 3], graphType: 'axis', level: 6 },
+                { func: '-x**2+2*x+3', displayFunc: '-x²+2x+3', lower: -1, upper: 3, answer: [32, 3], graphType: 'axis', level: 6 },
+                { func: '-x**2+1', displayFunc: '-x²+1', lower: -1, upper: 1, answer: [4, 3], graphType: 'axis', level: 6 },
+                { func: '-x**2+3*x', displayFunc: '-x²+3x', lower: 0, upper: 3, answer: [9, 2], graphType: 'axis', level: 6 },
+            ],
+            level7: [   // 先生の「レベル5（2つのグラフ）」
                 { func: 'between', displayFunc: 'x と x²', lower: 0, upper: 1, answer: [1, 6], graphType: 'between_curves1', level: 5, between: true, func1: 'x', func2: 'x**2' },
                 { func: 'between', displayFunc: '4 と x²', lower: -2, upper: 2, answer: [32, 3], graphType: 'between_curves_4', level: 5, between: true, func1: '4', func2: 'x**2' },
                 { func: 'between', displayFunc: 'x+2 と x²', lower: -1, upper: 2, answer: [9, 2], graphType: 'between_curves_new', level: 5, between: true, func1: 'x+2', func2: 'x**2' },
@@ -1202,9 +1247,22 @@
             linear_mixed1: ['x-1'], linear_mixed2: ['x-2'], linear_mixed3: ['2*x-4'],
             parabola2: ['x**2-1'], parabola_mixed1: ['x**2-4'],
             between_curves1: ['x', 'x**2'], between_curves2: ['8-x**2', 'x**2'],
-            between_curves_new: ['x+2', 'x**2'], between_curves_4: ['4', 'x**2']
+            between_curves_new: ['x+2', 'x**2'], between_curves_4: ['4', 'x**2'],
+            below1: ['x**2-2*x'], axis1: ['-x**2+4*x']   // 【ブラッシュアップ】足した問題
         };
         function curvesOf(q) { if (q.fn1) return [q.fn1, q.fn2]; if (q.fn) return [q.fn]; return GRAPH_FN[q.graphType]; }
+        // 放物線と x軸だけで囲まれた部分か（範囲の両端が x軸との交点）
+        function axisOnly(q) {
+            const cs = curvesOf(q);
+            if (cs.length > 1) return false;
+            const c = parsePoly(cs[0]);
+            return Math.abs(polyVal(c, q.integralMin)) < 1e-12 && Math.abs(polyVal(c, q.integralMax)) < 1e-12;
+        }
+        // 区間の中で x軸より下にあるか（交わらないとき）
+        function isBelow(q) {
+            const c = parsePoly(curvesOf(q)[0]);
+            return polyVal(c, (q.integralMin + q.integralMax) / 2) < 0;
+        }
         // x軸と交わる点（区間の中）。この教材の問題では整数
         function crossOf(q) {
             const cs = curvesOf(q);
@@ -1246,9 +1304,16 @@
             const A = antiOf(c);
             const m = crossOf(q);
             if (m === null) {
-                const Fb = FAt(A, b), Fa = FAt(A, a);
-                lines.push(`${pretty(a)} ≦ x ≦ ${pretty(b)} では ${labelOf(cs[0])} は x軸より上にあるので`);
-                lines.push(`S = ${intg(a, b, wrap(c))} = ${bracket(termsHTML(A), a, b)} = ${paren(Fb)} − ${paren(Fa)} = ${numHTML(subF(Fb, Fa))}`);
+                const Fb = FAt(A, b), Fa = FAt(A, a), V = subF(Fb, Fa);
+                const below = isBelow(q);
+                if (axisOnly(q)) lines.push(`x軸との交点の x 座標は、${coefHTML(c)} = 0 を解いて x = ${pretty(a)}, ${pretty(b)}`);
+                lines.push(`${pretty(a)} ≦ x ≦ ${pretty(b)} では ${labelOf(cs[0])} は x軸より${below ? '下' : '上'}にあるので`);
+                if (below) {
+                    lines.push(`S = −${intg(a, b, wrap(c))} = −${bracket(termsHTML(A), a, b)} = −{${paren(Fb)} − ${paren(Fa)}} = ${numHTML(negF(V))}`);
+                } else {
+                    lines.push(`S = ${intg(a, b, wrap(c))} = ${bracket(termsHTML(A), a, b)} = ${paren(Fb)} − ${paren(Fa)} = ${numHTML(V)}`);
+                }
+                if (axisOnly(q) && c.length === 3 && c[2]) lines.push(`（1/6公式：S = ${fracHTML(Math.abs(c[2]), 6)}(β − α)³ = ${fracHTML(Math.abs(c[2]), 6)}{${pretty(b)} − ${paren(fr(a))}}³ でも求められる）`);
                 return lines.join('<br>');
             }
             const Fa = FAt(A, a), Fm = FAt(A, m), Fb = FAt(A, b);
@@ -1261,7 +1326,7 @@
             return lines.join('<br>');
         }
 
-        const LEVEL_TEXT = { 1: '基本', 2: '基本', 3: '標準', 4: 'x軸の下', 5: '2つのグラフ' };
+        const LEVEL_TEXT = { 1: '基本', 2: '基本', 3: '標準', 4: 'x軸をまたぐ', 5: 'x軸より下', 6: '放物線とx軸', 7: '2つのグラフ' };
         function generateFreeInputProblem(level) {
             const templates = freeInputTemplates[`level${level}`];
             const template = templates[Math.floor(Math.random() * templates.length)];
@@ -1278,6 +1343,8 @@
             };
             if (template.between) {
                 q.text = `${curveName(template.func2)} と ${curveName(template.func1)} で囲まれた部分の面積 S を求めよう。` + badge;
+            } else if (axisOnly(q)) {
+                q.text = `${curveName(template.func)} と x軸で囲まれた部分の面積 S を求めよう。` + badge;
             } else {
                 const two = crossOf(q) !== null;
                 q.text = `${labelOf(template.func)} と x軸、2直線 x = ${template.lower}, x = ${template.upper} で囲まれた${two ? '2つの部分の面積の和' : '部分の面積'} S を求めよう。` + badge;
@@ -1394,6 +1461,8 @@
             currentQuestions.push(generateUniqueProblem(3));
             currentQuestions.push(generateUniqueProblem(4));
             currentQuestions.push(generateUniqueProblem(5));
+            currentQuestions.push(generateUniqueProblem(6));   // 【ブラッシュアップ】
+            currentQuestions.push(generateUniqueProblem(7));
 
             currentQuestion = 0;
             missedSet = new Set();   // 【ブラッシュアップ】
@@ -1436,6 +1505,9 @@
             return pretty(text).replace(/∫(₋?)([₀-₉])([⁰¹²³⁴-⁹])/g, (m, neg, lo, up) =>
                 `<span class="int">∫</span>${lim((neg ? '-' : '') + SUB.indexOf(lo), SUP.indexOf(up))}`);
         }
+
+        // 図の中の式：文字は斜体、数・記号はそのまま
+        function svgMath(s) { return String(s).replace(/[A-Za-z]+/g, w => `<tspan class="it">${w}</tspan>`); }
 
         function createGraph(question) {
             const NS = 'http://www.w3.org/2000/svg';
@@ -1486,8 +1558,8 @@
                 const neg = [pt(a, 0), ...xs.map(x => pt(x, Math.min(0, f(x)))), pt(b, 0)];
                 svg.push(`<polygon points="${pos.join(' ')}" class="area-fill" clip-path="url(#plotClip)"/>`);
                 svg.push(`<polygon points="${neg.join(' ')}" class="area-fill below" clip-path="url(#plotClip)"/>`);
-                // 直線 x = a, x = b（y軸と重なるときはかかない）
-                [a, b].forEach(v => {
+                // 直線 x = a, x = b（y軸と重なるとき・x軸との交点が範囲の端のときはかかない）
+                if (!axisOnly(question)) [a, b].forEach(v => {
                     if (v === 0) return;
                     svg.push(`<line x1="${fmt(sx(v))}" y1="${T}" x2="${fmt(sx(v))}" y2="${H - B}" class="boundary-line"/>`);
                     // （範囲の数は、x軸の目盛りの数字を太字にして示す）
@@ -1510,6 +1582,7 @@
             // 交点（2 曲線）・x軸との交点に点と座標
             const dots = [];
             if (fns.length > 1) { dots.push([a, fns[0](a)], [b, fns[0](b)]); }
+            else if (axisOnly(question)) { dots.push([a, 0], [b, 0]); }
             else { const m = crossOf(question); if (m !== null) dots.push([m, 0]); }
             const labels = curvesOf(question).map(labelOf);
             const used = [];
@@ -1523,7 +1596,7 @@
                     if (dots.some(([dx, dy]) => Math.abs(sx(dx) - sx(x)) < 70 && Math.abs(sy(dy) - Y) < 26)) continue;
                     used.push(Y);
                     const anchor = sx(x) > W - 90 ? 'end' : 'start';
-                    svg.push(`<text x="${fmt(sx(x) + (anchor === 'end' ? -4 : 6))}" y="${fmt(Y - 6)}" class="curve-label ${colors[i]}" text-anchor="${anchor}">${pretty(labels[i])}</text>`);
+                    svg.push(`<text x="${fmt(sx(x) + (anchor === 'end' ? -4 : 6))}" y="${fmt(Y - 6)}" class="curve-label ${colors[i]}" text-anchor="${anchor}">${svgMath(pretty(labels[i]))}</text>`);
                     break;
                 }
             });
@@ -1541,9 +1614,11 @@
 
 
         const MIXED = ['linear_mixed1', 'linear_mixed2', 'linear_mixed3', 'parabola2', 'parabola_mixed1'];
-        function kindOf(q) { return curvesOf(q).length > 1 ? 'between' : (crossOf(q) !== null ? 'cross' : 'simple'); }
+        function kindOf(q) { return curvesOf(q).length > 1 ? 'between' : (crossOf(q) !== null ? 'cross' : isBelow(q) ? 'below' : axisOnly(q) ? 'axis' : 'simple'); }
         function hintOf(q) {
             const k = kindOf(q);
+            if (k === 'below') return '💡 グラフが x軸より下にあるときは、定積分の値が負になる。− をつけて面積（正の値）にしよう。' + (axisOnly(q) ? '範囲は x軸との交点。' : '');
+            if (k === 'axis') return '💡 範囲は x軸との交点。y = 0 とおいて x を求めよう。';
             if (k === 'between') return '💡 （上にあるグラフの式）−（下にあるグラフの式）を、交点から交点まで積分しよう。交点は 2つの式を = でむすんで求める。';
             if (k === 'cross') return '💡 x軸より下の部分には「−」をつける。範囲は x軸との交点で分けよう。';
             if (currentMode === 'free-input') return `💡 x = ${pretty(q.integralMin)} から x = ${pretty(q.integralMax)} まで積分する。原始関数 F(x) を求めて F(${pretty(q.integralMax)}) − F(${pretty(q.integralMin)}) を計算しよう。`;
@@ -1855,7 +1930,54 @@
             finishQuestion();
         }
 
-
+        const MATH_RUN = /[A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*[A-Za-zαβ0-9∫][A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .no-math, .level-badge, script, style, svg, button.tap, .sign-btn, .nb-sign, .op-btn')) continue;
+                if (/[A-Za-zαβ0-9∫]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    text.split(/([A-Za-zαβ]+)/).forEach((part, k) => {
+                        if (!part) return;
+                        if (k % 2) {
+                            // dx の d は立体、x は斜体
+                            const dx = part.match(/^d([a-z])$/);
+                            if (dx) span.appendChild(document.createTextNode('d'));
+                            const i = document.createElement('i');
+                            i.textContent = dx ? dx[1] : part;
+                            span.appendChild(i);
+                        } else {
+                            span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
+                        }
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        // 画面が書きかわるたびに、指定した場所の式を整える
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+        watchMath(['#question-text', '#choices', '#integral-builder-container', '#input-help', '.input-label', '.area-answer', '#feedback', '#explanation']);   // 【ブラッシュアップ】式の書き方
         function nextQuestion() {
             currentQuestion++;
             if (currentQuestion >= currentQuestions.length) {
