@@ -1,165 +1,828 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>2次関数の平行移動</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    20. 2次関数の平行移動（2次関数の平行移動クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2次関数の平行移動クイズ</title>
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+        body { font-family: 'Noto Sans JP', sans-serif; }
+
+        .parabola {
+            transition: all 1s ease-in-out;
+        }
+
+        .celebration {
+            animation: bounce 0.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { background-image: none !important; }
+    .container.max-w-4xl { max-width: 52rem; margin-top: 8px; margin-bottom: 24px; }
+    h1 { font-size: min(2.2rem, 6.4vw) !important; white-space: nowrap; }
+    .container > .text-center p { color: var(--u-sub); font-weight: 700; }
+    .container .bg-white.shadow-md, .container .bg-white.shadow-lg { background: #f8fafc !important; border: 3px solid var(--u-line); box-shadow: none !important; border-radius: 24px !important; }
+    #translation-problem { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; border-radius: 20px !important; }
+    #original-function { color: var(--u-title) !important; }
+    #transformed-function { color: #dc2626 !important; }
+    #question-text { color: var(--u-title-dark) !important; }
+    .set-btn.ring-4 { box-shadow: 0 0 0 4px rgba(251,146,60,0.45) !important; }
+    .choice-btn { text-align: left; padding: 16px 18px; }
+    .choice-btn span:first-child { color: var(--u-accent-text) !important; }
+    #level-badge { background: var(--u-soft-yellow) !important; color: var(--u-soft-yellow-text) !important; }
+    #hint-section { background: var(--u-soft-blue) !important; border: 2px solid var(--u-soft-blue-line) !important; border-radius: 20px; }
+    #hint-section h3, #hint-text { color: var(--u-title) !important; }
+    #hint-section svg { width: 100%; max-width: 400px; height: auto; }
+    #correct-result { background: var(--u-ok-soft) !important; border: 3px solid var(--u-ok-line) !important; border-radius: 20px; }
+    #wrong-result { background: var(--u-ng-soft) !important; border: 3px solid var(--u-ng-line) !important; border-radius: 20px; }
+    #hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    #completion-modal > div { max-width: 28rem; }
+    #completion-modal h2 { color: var(--u-title) !important; }
+    #completion-modal a { display: block; margin-top: 10px; color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      .container.max-w-4xl { padding: 8px; }
+      .container .bg-white.shadow-lg { padding: 16px 12px !important; }
+      #translation-problem { padding: 14px 10px !important; }
+      .choice-btn { padding: 14px 12px; font-size: 1.1rem; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- ヘッダー -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">📊 2次関数の平行移動クイズ</h1>
+            <p class="text-gray-600">関数がどの方向にどれだけ移動するか答えてください</p>
+        </div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/graph.js"></script>
+        <!-- 問題セット選択 -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="text-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">問題セット選択</h3>
+                <div class="flex justify-center space-x-4">
+                    <button id="set1-btn" class="set-btn bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 ring-4 ring-green-400">
+                        セット1: 基本編
+                    </button>
+                    <button id="set2-btn" class="set-btn bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                        セット2: 基本編
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">現在の問題セット: <span id="current-set-display" class="font-semibold text-indigo-600">セット1</span></p>
+            </div>
+        </div>
+
+        <!-- スコア表示 -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6 text-center">
+            <div class="flex justify-center items-center space-x-8">
+                <div class="text-green-600">
+                    <span class="text-2xl font-bold" id="correct-count">0</span>
+                    <p class="text-sm">正解</p>
+                </div>
+                <div class="text-red-500">
+                    <span class="text-2xl font-bold" id="wrong-count">0</span>
+                    <p class="text-sm">不正解</p>
+                </div>
+                <div class="text-blue-600">
+                    <span class="text-2xl font-bold" id="total-count">0</span>
+                    <p class="text-sm">総問題数</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 問題カード -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2">問題 <span id="question-number">1</span></h2>
+                <div class="inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 bg-green-100 text-green-800" id="level-badge">
+                    <span id="level-text">基礎</span>
+                </div>
+                <!-- 平行移動問題 -->
+                <div id="translation-problem" class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <p class="text-lg text-gray-700 mb-2">元の関数：</p>
+                    <p class="text-2xl font-mono font-bold text-blue-600" id="original-function">y = x²</p>
+                    <p class="text-lg text-gray-700 mt-4 mb-2">変換後の関数：</p>
+                    <p class="text-2xl font-mono font-bold text-red-600" id="transformed-function">y = (x-2)² + 3</p>
+                </div>
+
+                <p class="text-lg font-medium text-gray-800" id="question-text">この変換は、元の関数をどのように平行移動したものですか？</p>
+
+                <!-- ヒントボタン -->
+                <div class="mt-4">
+                    <button id="hint-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
+                        💡 ヒントを見る
+                    </button>
+                </div>
+            </div>
+
+            <!-- ヒント表示 -->
+            <div id="hint-section" class="hidden mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-4">💡 ヒント：グラフの移動を見てみよう！</h3>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                    <svg width="400" height="300" viewBox="0 0 400 300" class="mx-auto">
+                        <!-- グリッド -->
+                        <defs>
+                            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="400" height="300" fill="url(#grid)" />
+
+                        <!-- 軸 -->
+                        <line x1="200" y1="0" x2="200" y2="300" stroke="#6b7280" stroke-width="2"/>
+                        <line x1="0" y1="200" x2="400" y2="200" stroke="#6b7280" stroke-width="2"/>
+
+                        <!-- 軸ラベル -->
+                        <text x="390" y="195" fill="#6b7280" font-size="14">x</text>
+                        <text x="205" y="15" fill="#6b7280" font-size="14">y</text>
+
+                        <!-- 元のグラフ -->
+                        <path id="original-graph" d="M 140 240 Q 200 160 260 240" fill="none" stroke="#3b82f6" stroke-width="3" class="parabola"/>
+                        <text id="original-label" x="270" y="235" fill="#3b82f6" font-weight="bold" font-size="14">元のグラフ</text>
+
+                        <!-- 変換後のグラフ -->
+                        <path id="transformed-graph" d="M 140 240 Q 200 160 260 240" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="5,5" class="parabola"/>
+                        <text id="transformed-label" x="270" y="255" fill="#ef4444" font-weight="bold" font-size="14">変換後</text>
+
+                        <!-- 移動の矢印 -->
+                        <g id="movement-arrow" class="hidden">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+                                </marker>
+                            </defs>
+                            <line id="arrow-line" x1="200" y1="150" x2="240" y2="110" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead)"/>
+                            <text id="arrow-text" x="245" y="105" fill="#10b981" font-weight="bold" font-size="12">移動</text>
+                        </g>
+                    </svg>
+                </div>
+                <p class="text-yellow-700" id="hint-text">ヒントが表示されます</p>
+            </div>
+
+            <!-- 選択肢 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <button class="choice-btn bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-lg p-4 text-left transition-all duration-200 hover:shadow-md" data-choice="0">
+                    <span class="font-semibold text-blue-800">A.</span>
+                    <span class="ml-2" id="choice-0">右に2、上に3</span>
+                </button>
+                <button class="choice-btn bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-lg p-4 text-left transition-all duration-200 hover:shadow-md" data-choice="1">
+                    <span class="font-semibold text-green-800">B.</span>
+                    <span class="ml-2" id="choice-1">左に2、上に3</span>
+                </button>
+                <button class="choice-btn bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 rounded-lg p-4 text-left transition-all duration-200 hover:shadow-md" data-choice="2">
+                    <span class="font-semibold text-yellow-800">C.</span>
+                    <span class="ml-2" id="choice-2">右に2、下に3</span>
+                </button>
+                <button class="choice-btn bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-lg p-4 text-left transition-all duration-200 hover:shadow-md" data-choice="3">
+                    <span class="font-semibold text-purple-800">D.</span>
+                    <span class="ml-2" id="choice-3">左に2、下に3</span>
+                </button>
+            </div>
+
+            <!-- 結果表示 -->
+            <div id="result" class="hidden mb-6">
+                <div id="correct-result" class="bg-green-100 border border-green-400 rounded-lg p-4 hidden">
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-3 celebration">🎉</span>
+                        <div>
+                            <p class="font-semibold text-green-800 text-xl" id="praise-text">素晴らしい！正解です！</p>
+                            <p class="text-green-700" id="explanation"></p>
+                        </div>
+                    </div>
+                </div>
+                <div id="wrong-result" class="bg-red-100 border border-red-400 rounded-lg p-4 hidden">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-3">💪</span>
+                        <div>
+                            <p class="font-semibold text-red-800">惜しい！もう一度挑戦してみよう！</p>
+                            <p class="text-red-700" id="wrong-explanation"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ボタン群 -->
+            <div class="text-center space-x-4">
+                <button id="retry-btn" class="hidden bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                    🔄 もう一度挑戦
+                </button>
+                <button id="next-btn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200">
+                    次の問題 →
+                </button>
+            </div>
+        </div>
+
+        <!-- 完了メッセージ -->
+        <div id="completion-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
+                <div class="text-6xl mb-4 celebration">🏆</div>
+                <h2 class="text-3xl font-bold text-indigo-800 mb-4">おめでとうございます！</h2>
+                <p class="text-lg text-gray-700 mb-2" id="completion-message">全ての問題をクリアしました！</p>
+                <p class="text-lg text-gray-700 mb-6" id="completion-praise">あなたは2次関数の平行移動をマスターしました！</p>
+                <div class="space-y-3">
+                    <button id="next-set-btn" class="hidden w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                        🚀 次のセットに挑戦
+                    </button>
+                    <button id="restart-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                        🔄 別の問題に挑戦
+                    </button>
+                    <button id="close-modal-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                        閉じる
+                    </button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 解説 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 平行移動のルール</h3>
+            <div class="space-y-2 text-gray-700">
+                <p><strong>y = (x - a)² + b</strong> の形の場合：</p>
+                <p>• <strong>x方向：</strong> (x - a) → 右にa移動、(x + a) → 左にa移動</p>
+                <p>• <strong>y方向：</strong> + b → 上にb移動、- b → 下にb移動</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const allProblems = {
+            set1: [
+                // 段階1: y軸方向のみ（3問）
+                {
+                    original: "y = x²",
+                    transformed: "y = x² + 3",
+                    choices: ["上に3", "下に3", "右に3", "左に3"],
+                    correct: 0,
+                    explanation: "+3はy軸方向に上に3の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = x² - 2",
+                    choices: ["上に2", "下に2", "右に2", "左に2"],
+                    correct: 1,
+                    explanation: "-2はy軸方向に下に2の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = x² + 5",
+                    choices: ["下に5", "上に5", "右に5", "左に5"],
+                    correct: 1,
+                    explanation: "+5はy軸方向に上に5の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                // 段階2: x軸方向のみ（3問）
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-2)²",
+                    choices: ["左に2", "右に2", "上に2", "下に2"],
+                    correct: 1,
+                    explanation: "(x-2)はx軸方向に右に2の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x+1)²",
+                    choices: ["右に1", "左に1", "上に1", "下に1"],
+                    correct: 1,
+                    explanation: "(x+1)はx軸方向に左に1の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-3)²",
+                    choices: ["左に3", "右に3", "上に3", "下に3"],
+                    correct: 1,
+                    explanation: "(x-3)はx軸方向に右に3の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                // 段階3: 2方向の移動（4問）
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-2)² + 3",
+                    choices: ["右に2、上に3", "左に2、上に3", "右に2、下に3", "左に2、下に3"],
+                    correct: 0,
+                    explanation: "(x-2)は右に2、+3は上に3の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x+1)² - 2",
+                    choices: ["右に1、下に2", "左に1、下に2", "右に1、上に2", "左に1、上に2"],
+                    correct: 1,
+                    explanation: "(x+1)は左に1、-2は下に2の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-1)² + 4",
+                    choices: ["左に1、上に4", "右に1、上に4", "左に1、下に4", "右に1、下に4"],
+                    correct: 1,
+                    explanation: "(x-1)は右に1、+4は上に4の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x+2)² - 1",
+                    choices: ["右に2、上に1", "左に2、下に1", "右に2、下に1", "左に2、上に1"],
+                    correct: 1,
+                    explanation: "(x+2)は左に2、-1は下に1の移動を表します。",
+                    level: "基礎",
+                    type: "translation"
+                }
+            ],
+            set2: [
+                // 段階1: y軸方向のみ（2問）- 数字を変更
+                {
+                    original: "y = x²",
+                    transformed: "y = x² + 4",
+                    choices: ["上に4", "下に4", "右に4", "左に4"],
+                    correct: 0,
+                    explanation: "+4はy軸方向に上に4の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = x² - 3",
+                    choices: ["上に3", "下に3", "右に3", "左に3"],
+                    correct: 1,
+                    explanation: "-3はy軸方向に下に3の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                },
+                // 段階2: x軸方向のみ（2問）- 数字を変更
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-4)²",
+                    choices: ["左に4", "右に4", "上に4", "下に4"],
+                    correct: 1,
+                    explanation: "(x-4)はx軸方向に右に4の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x+3)²",
+                    choices: ["右に3", "左に3", "上に3", "下に3"],
+                    correct: 1,
+                    explanation: "(x+3)はx軸方向に左に3の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                },
+                // 段階3: 2方向の移動（2問）- 数字を変更
+                {
+                    original: "y = x²",
+                    transformed: "y = (x-3)² + 2",
+                    choices: ["右に3、上に2", "左に3、上に2", "右に3、下に2", "左に3、下に2"],
+                    correct: 0,
+                    explanation: "(x-3)は右に3、+2は上に2の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                },
+                {
+                    original: "y = x²",
+                    transformed: "y = (x+2)² - 4",
+                    choices: ["右に2、下に4", "左に2、下に4", "右に2、上に4", "左に2、上に4"],
+                    correct: 1,
+                    explanation: "(x+2)は左に2、-4は下に4の移動を表します。",
+                    level: "基本",
+                    type: "translation"
+                }
+            ]
+        };
+
+        let currentSet = 1;
+        let problems = allProblems.set1;
+
+        let currentProblem = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let totalCount = 0;
+        let answered = false;
+        let completedProblems = new Set();
+        let order = [0, 1, 2, 3];          // 【ブラッシュアップ】選択肢を並べる順番（問題ごとにまぜる）
+        let missedProblems = new Set();    // 【ブラッシュアップ】一度まちがえた問題
+
+        const praises = [
+            "素晴らしい！正解です！",
+            "完璧です！よくできました！",
+            "すごい！その調子です！",
+            "お見事！正解です！",
+            "やったね！大正解！",
+            "素晴らしい理解力です！",
+            "パーフェクト！",
+            "天才的な答えです！"
+        ];
+
+        const perfectPraises = [
+            "🌟 完璧です！全問正解おめでとうございます！🌟",
+            "🎉 素晴らしい！あなたは真の天才です！🎉",
+            "✨ 驚異的な成績です！完璧な理解力ですね！✨",
+            "🏆 圧倒的な実力！全問正解は見事です！🏆",
+            "🎊 信じられない！パーフェクトスコアです！🎊"
+        ];
+
+        function selectSet(set) {
+            currentSet = set;
+            currentProblem = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            totalCount = 0;
+            completedProblems.clear();
+            missedProblems.clear();
+
+            // 問題を順序通りに設定
+            problems = allProblems[`set${set}`];
+
+            // セット表示を更新
+            document.getElementById('current-set-display').textContent = `セット${set}`;
+
+            // セットボタンのスタイル更新
+            document.querySelectorAll('.set-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-indigo-400');
+            });
+            document.getElementById(`set${set}-btn`).classList.add('ring-4', 'ring-indigo-400');
+
+            // スコアリセット
+            document.getElementById('correct-count').textContent = '0';
+            document.getElementById('wrong-count').textContent = '0';
+            document.getElementById('total-count').textContent = '0';
+
+            loadProblem();
+        }
+
+        function getGraphData(problem) {
+            // 問題に応じてグラフの座標を計算
+            const transformed = problem.transformed;
+
+            // SVGの座標系：中心が(200, 200)、1単位 = 20px
+            // 元のグラフは常に y = x² (頂点が軸から36px上)
+            const centerX = 200;
+            const centerY = 200 - 36; // グラフを軸から36px上に配置
+            const scale = 20; // 1単位 = 20px
+
+            // 元のグラフ y = x² の座標（頂点が原点）- 開き具合を狭く、先端を伸ばす
+            const originalPath = `M ${centerX - 1.5*scale} ${centerY + 4.5*scale - 10} Q ${centerX} ${centerY - 10} ${centerX + 1.5*scale} ${centerY + 4.5*scale - 10}`;
+
+            // x方向の移動量を計算（数学座標）
+            let xMove = 0;
+            if (transformed.includes('(x-1)')) xMove = 1;   // 右に1
+            else if (transformed.includes('(x-2)')) xMove = 2;   // 右に2
+            else if (transformed.includes('(x-3)')) xMove = 3;   // 右に3
+            else if (transformed.includes('(x-4)')) xMove = 4;   // 右に4
+            else if (transformed.includes('(x+1)')) xMove = -1;  // 左に1
+            else if (transformed.includes('(x+2)')) xMove = -2;  // 左に2
+            else if (transformed.includes('(x+3)')) xMove = -3;  // 左に3
+
+            // y方向の移動量を計算（数学座標）
+            let yMove = 0;
+            if (transformed.includes('+ 1')) yMove = 1;   // 上に1
+            else if (transformed.includes('+ 2')) yMove = 2;   // 上に2
+            else if (transformed.includes('+ 3')) yMove = 3;   // 上に3
+            else if (transformed.includes('+ 4')) yMove = 4;   // 上に4
+            else if (transformed.includes('+ 5')) yMove = 5;   // 上に5
+            else if (transformed.includes('- 1')) yMove = -1;  // 下に1
+            else if (transformed.includes('- 2')) yMove = -2;  // 下に2
+            else if (transformed.includes('- 3')) yMove = -3;  // 下に3
+            else if (transformed.includes('- 4')) yMove = -4;  // 下に4
+
+            // SVG座標系に変換（yは反転）
+            const xShift = xMove * scale;
+            const yShift = -yMove * scale; // SVGではy軸が下向きなので反転
+
+            // 変換後のグラフの座標を計算
+            const newCenterX = centerX + xShift;
+            const newCenterY = centerY + yShift;
+
+            const transformedPath = `M ${newCenterX - 1.5*scale} ${newCenterY + 4.5*scale - 10} Q ${newCenterX} ${newCenterY - 10} ${newCenterX + 1.5*scale} ${newCenterY + 4.5*scale - 10}`;
+
+            // 矢印の位置（頂点から頂点へ）- 38px下に移動
+            const arrowStart = { x: centerX, y: centerY + 38 };
+            const arrowEnd = { x: newCenterX, y: newCenterY + 38 };
+
+            return { originalPath, transformedPath, arrowStart, arrowEnd };
+        }
+
+        function showHint() {
+            const problem = problems[currentProblem];
+            const hintSection = document.getElementById('hint-section');
+            const hintText = document.getElementById('hint-text');
+
+            hintSection.classList.remove('hidden');
+
+            // 平行移動のグラフを表示
+            const graphData = getGraphData(problem);
+            document.getElementById('original-graph').setAttribute('d', graphData.originalPath);
+            document.getElementById('transformed-graph').setAttribute('d', graphData.transformedPath);
+
+            // グラフラベルの位置を調整（グラフの右端から5px横に配置）
+            const originalLabelX = 200 + 1.5 * 20 + 5; // 元のグラフの右端から5px
+            const transformedLabelX = graphData.arrowEnd.x + 1.5 * 20 + 5; // 変換後グラフの右端から5px
+            const originalLabelY = (200 - 36) + 4.5 * 20 - 10 + 5; // 元のグラフの下端付近
+            const transformedLabelY = graphData.arrowEnd.y - 36 + 4.5 * 20 - 10 + 5; // 変換後グラフの下端付近
+
+            document.getElementById('original-label').setAttribute('x', originalLabelX);
+            document.getElementById('original-label').setAttribute('y', originalLabelY);
+            document.getElementById('transformed-label').setAttribute('x', transformedLabelX);
+            document.getElementById('transformed-label').setAttribute('y', transformedLabelY);
+
+            // 矢印を表示
+            setTimeout(() => {
+                const arrow = document.getElementById('movement-arrow');
+                const arrowLine = document.getElementById('arrow-line');
+                const arrowText = document.getElementById('arrow-text');
+
+                arrowLine.setAttribute('x1', graphData.arrowStart.x);
+                arrowLine.setAttribute('y1', graphData.arrowStart.y);
+                arrowLine.setAttribute('x2', graphData.arrowEnd.x);
+                arrowLine.setAttribute('y2', graphData.arrowEnd.y);
+
+                // 矢印の中点付近にテキストを配置（先端から少し離す、5px右にずらす）
+                const midX = (graphData.arrowStart.x + graphData.arrowEnd.x) / 2 + 5;
+                const midY = (graphData.arrowStart.y + graphData.arrowEnd.y) / 2 - 15;
+                arrowText.setAttribute('x', midX);
+                arrowText.setAttribute('y', midY);
+
+                arrow.classList.remove('hidden');
+            }, 500);
+
+            // ヒントテキスト
+            let hintMessage = "";
+            if (problem.transformed.includes('+ ')) {
+                hintMessage += "プラス(+)があるので上に移動します。";
+            } else if (problem.transformed.includes('- ')) {
+                hintMessage += "マイナス(-)があるので下に移動します。";
+            }
+
+            if (problem.transformed.includes('(x-')) {
+                hintMessage += " (x-a)の形なので右に移動します。";
+            } else if (problem.transformed.includes('(x+')) {
+                hintMessage += " (x+a)の形なので左に移動します。";
+            }
+
+            hintText.textContent = hintMessage;
+        }
+
+        function loadProblem() {
+            const problem = problems[currentProblem];
+            document.getElementById('question-number').textContent = currentProblem + 1;
+
+            // レベル表示の更新
+            const levelBadge = document.getElementById('level-badge');
+            const levelText = document.getElementById('level-text');
+            levelText.textContent = problem.level;
+
+            if (problem.level === '基礎') {
+                levelBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 bg-green-100 text-green-800';
+            } else {
+                levelBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 bg-blue-100 text-blue-800';
+            }
+
+            document.getElementById('original-function').textContent = problem.original;
+            document.getElementById('transformed-function').textContent = problem.transformed;
+            document.getElementById('question-text').textContent = 'この変換は、元の関数をどのように平行移動したものですか？';
+
+            order = [0, 1, 2, 3];
+            for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`choice-${i}`).textContent = problem.choices[order[i]];
+            }
+
+            // リセット
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('retry-btn').classList.add('hidden');
+            document.getElementById('hint-section').classList.add('hidden');
+            document.getElementById('movement-arrow').classList.add('hidden');
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-400', 'ring-red-400', 'bg-green-200', 'bg-red-200');
+                btn.disabled = false;
+            });
+            answered = false;
+        }
+
+        function showResult(selectedChoice) {
+            if (answered) return;
+            answered = true;
+
+            const problem = problems[currentProblem];
+            const isCorrect = order[selectedChoice] === problem.correct;
+
+            // 選択肢のスタイル更新
+            document.querySelectorAll('.choice-btn').forEach((btn, index) => {
+                btn.disabled = true;
+                if (isCorrect && order[index] === problem.correct) {
+                    btn.classList.add('ring-4', 'ring-green-400', 'bg-green-200');
+                } else if (index === selectedChoice && !isCorrect) {
+                    btn.classList.add('ring-4', 'ring-red-400', 'bg-red-200');
+                }
+            });
+
+            // 結果表示
+            document.getElementById('result').classList.remove('hidden');
+
+            if (isCorrect) {
+                if (!completedProblems.has(currentProblem)) {
+                    // 【ブラッシュアップ】元はまちがえたあとに正解すると、問題数が 2 回数えられ、正解にも数えられていた
+                    if (!missedProblems.has(currentProblem)) { correctCount++; totalCount++; }
+                    completedProblems.add(currentProblem);
+                }
+
+                document.getElementById('correct-result').classList.remove('hidden');
+                document.getElementById('wrong-result').classList.add('hidden');
+
+                // 全問正解チェック
+                let randomPraise;
+                if (wrongCount === 0 && completedProblems.size === problems.length) {
+                    // 全問正解の場合は特別な褒め言葉
+                    randomPraise = perfectPraises[Math.floor(Math.random() * perfectPraises.length)];
+                } else {
+                    // 通常の褒め言葉
+                    randomPraise = praises[Math.floor(Math.random() * praises.length)];
+                }
+                document.getElementById('praise-text').textContent = randomPraise;
+                document.getElementById('explanation').textContent = problem.explanation;
+
+                // 次の問題ボタン表示
+                document.getElementById('next-btn').classList.remove('hidden');
+
+                // 全問題完了チェック
+                if (completedProblems.size === problems.length) {
+                    setTimeout(() => {
+                        showCompletionModal();
+                    }, 2000);
+                }
+            } else {
+                document.getElementById('wrong-result').classList.remove('hidden');
+                document.getElementById('correct-result').classList.add('hidden');
+                // 間違えた時は正解を表示しない
+                document.getElementById('wrong-explanation').textContent = "もう一度考えてみましょう！ヒントボタンを押すと参考になります。";
+
+                // リトライボタン表示
+                document.getElementById('retry-btn').classList.remove('hidden');
+
+                if (!completedProblems.has(currentProblem) && !missedProblems.has(currentProblem)) {
+                    wrongCount++;
+                    totalCount++;
+                    missedProblems.add(currentProblem);
+                }
+            }
+
+            // スコア更新
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+            document.getElementById('total-count').textContent = totalCount;
+        }
+
+        function retryProblem() {
+            // 結果をリセットして再挑戦
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('retry-btn').classList.add('hidden');
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-400', 'ring-red-400', 'bg-green-200', 'bg-red-200');
+                btn.disabled = false;
+            });
+            answered = false;
+        }
+
+        function nextProblem() {
+            // 【ブラッシュアップ】元は最後の問題のあと 1 問目に戻っていた
+            if (completedProblems.size === problems.length) { showCompletionModal(); return; }
+            currentProblem = (currentProblem + 1) % problems.length;
+            loadProblem();
+        }
+
+        function showCompletionModal() {
+            const modal = document.getElementById('completion-modal');
+            const nextSetBtn = document.getElementById('next-set-btn');
+            const completionMessage = document.getElementById('completion-message');
+            const completionPraise = document.getElementById('completion-praise');
+
+            if (currentSet === 1) {
+                completionMessage.textContent = 'セット1をクリアしました！（一発正解 ' + correctCount + ' / ' + problems.length + '）';
+                completionPraise.textContent = 'あなたは基本の平行移動をマスターしました！';
+                nextSetBtn.classList.remove('hidden');
+                nextSetBtn.textContent = '🚀 セット2に挑戦（基本編）';
+            } else {
+                completionMessage.textContent = '全セットクリア！（一発正解 ' + correctCount + ' / ' + problems.length + '）';
+                completionPraise.textContent = 'あなたは2次関数の平行移動の達人です！';
+                nextSetBtn.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            // 現在のセットで問題セットを最初から開始
+            problems = allProblems[`set${currentSet}`];
+            currentProblem = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            totalCount = 0;
+            completedProblems.clear();
+            missedProblems.clear();
+            document.getElementById('completion-modal').classList.add('hidden');
+
+            // スコアリセット
+            document.getElementById('correct-count').textContent = '0';
+            document.getElementById('wrong-count').textContent = '0';
+            document.getElementById('total-count').textContent = '0';
+
+            loadProblem();
+        }
+
+        function nextSet() {
+            if (currentSet < 2) {
+                selectSet(currentSet + 1);
+                document.getElementById('completion-modal').classList.add('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('completion-modal').classList.add('hidden');
+        }
+
+        // イベントリスナー
+        document.querySelectorAll('.choice-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => showResult(index));
+        });
+
+        document.getElementById('next-btn').addEventListener('click', nextProblem);
+        document.getElementById('retry-btn').addEventListener('click', retryProblem);
+        document.getElementById('hint-btn').addEventListener('click', showHint);
+        document.getElementById('restart-btn').addEventListener('click', restartQuiz);
+        document.getElementById('next-set-btn').addEventListener('click', nextSet);
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+
+        // セット選択ボタン
+        document.getElementById('set1-btn').addEventListener('click', () => selectSet(1));
+        document.getElementById('set2-btn').addEventListener('click', () => selectSet(2));
+
+        // 初期化
+        selectSet(1);
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   20. 2次関数の平行移動
-
-   元教材から直した点：
-     ・y = (x−3)² を「左に3」と答えても正解になることがあった
-       （選択肢の正解番号が問題データとずれていた）。
-       → 移動量から式を作り、そこから選択肢を作るので、ずれようがない。
-     ・「上に4」「下に4」「右に4」「左に4」の4択で、
-       上下と左右が混ざった移動が出題できず、内容が単調だった。
-       → 上下・左右・両方の3タイプを用意した。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt;
-
-  function baseShow(a) {
-    return 'y = ' + (a === 1 ? '' : a === -1 ? '-' : a) + 'x<sup>2</sup>';
-  }
-
-  /** y = a(x − p)² + q を表示用の文字列にする */
-  function movedShow(a, p, q) {
-    var head = (a === 1 ? '' : a === -1 ? '-' : a);
-    var inner = p === 0 ? 'x' : 'x ' + (p > 0 ? '- ' : '+ ') + Math.abs(p);
-    var body = p === 0 ? 'x<sup>2</sup>' : '(' + inner + ')<sup>2</sup>';
-    var tail = q === 0 ? '' : (q > 0 ? ' + ' : ' - ') + Math.abs(q);
-    return 'y = ' + head + body + tail;
-  }
-
-  function describe(p, q) {
-    var parts = [];
-    if (p !== 0) parts.push(p > 0 ? '右に' + p : '左に' + (-p));
-    if (q !== 0) parts.push(q > 0 ? '上に' + q : '下に' + (-q));
-    if (!parts.length) return '動かさない';
-    return parts.join('、');
-  }
-
-  /* ---------- 式 → 移動のようす を答える ---------- */
-  function fromFormula(kind) {
-    var a = Quiz.pick([1, 1, 1, 2, -1]);
-    var p = kind === 'v' ? 0 : A.nz(-5, 5);
-    var q = kind === 'h' ? 0 : A.nz(-5, 5);
-
-    var correct = describe(p, q);
-    var wrongs = [];
-    var cands = [describe(-p, q), describe(p, -q), describe(-p, -q), describe(q, p)];
-    cands.forEach(function (c) {
-      if (wrongs.length < 3 && c !== correct && wrongs.indexOf(c) < 0) wrongs.push(c);
-    });
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 30) {
-      var c2 = describe(A.nz(-5, 5), kind === 'h' ? 0 : A.nz(-5, 5));
-      if (c2 !== correct && wrongs.indexOf(c2) < 0) wrongs.push(c2);
-    }
-
-    return {
-      tag: kind === 'h' ? '左右' : kind === 'v' ? '上下' : '上下＋左右',
-      text: '元の関数　<b>' + baseShow(a) + '</b>　を平行移動して、次の関数になりました。<br>どのように動かしたものですか。',
-      math: movedShow(a, p, q),
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: '(x − p)² の p は「右へ p」、＋q は「上へ q」。' +
-        'かっこの中の符号は、動かす向きと逆になることに注意。' +
-        '<br>' + Graph.parabola({ a: a, b: -2 * a * p, c: a * p * p + q, markVertex: true }),
-      explain: '頂点は ( ' + p + ' , ' + q + ' ) に移っています。つまり ' + correct + ' 平行移動したものです。'
-    };
-  }
-
-  /* ---------- 移動のようす → 式 を答える ---------- */
-  function toFormula(kind) {
-    var a = Quiz.pick([1, 1, 2, -1]);
-    var p = kind === 'v' ? 0 : A.nz(-5, 5);
-    var q = kind === 'h' ? 0 : A.nz(-5, 5);
-
-    var correct = movedShow(a, p, q);
-    var wrongs = [];
-    [movedShow(a, -p, q), movedShow(a, p, -q), movedShow(a, -p, -q)].forEach(function (w) {
-      if (wrongs.length < 3 && w !== correct && wrongs.indexOf(w) < 0) wrongs.push(w);
-    });
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 30) {
-      var w2 = movedShow(a, A.nz(-5, 5), A.nz(-5, 5));
-      if (w2 !== correct && wrongs.indexOf(w2) < 0) wrongs.push(w2);
-    }
-
-    return {
-      tag: '式にする',
-      text: '<b>' + baseShow(a) + '</b> を <b>' + describe(p, q) + '</b> 平行移動した関数はどれですか。',
-      math: baseShow(a),
-      mathPlain: true,
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: '右へ p 動かすときは x を (x − p) に置きかえます。上へ q 動かすときは ＋q をつけます。',
-      explain: '答え： ' + correct + '　（頂点は ( ' + p + ' , ' + q + ' )）'
-    };
-  }
-
-  /* ---------- 頂点を答える ---------- */
-  function vertexQuestion() {
-    var a = Quiz.pick([1, 2, -1]);
-    var p = A.nz(-5, 5), q = A.nz(-5, 5);
-    var correct = '( ' + p + ' , ' + q + ' )';
-    var wrongs = ['( ' + (-p) + ' , ' + q + ' )', '( ' + p + ' , ' + (-q) + ' )', '( ' + q + ' , ' + p + ' )']
-      .filter(function (w) { return w !== correct; });
-
-    return {
-      tag: '頂点',
-      text: '次の2次関数のグラフの頂点の座標を答えなさい。',
-      math: movedShow(a, p, q),
-      type: 'choice',
-      choices: [correct].concat(wrongs.slice(0, 3)),
-      correct: 0,
-      hint: 'y = a(x − p)² + q の頂点は ( p , q ) です。',
-      explain: '頂点は ' + correct + ' です。' +
-        '<br>' + Graph.parabola({ a: a, b: -2 * a * p, c: a * p * p + q, markVertex: true })
-    };
-  }
-
-  function build(maker, kind, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(maker(kind));
-    return out;
-  }
-
-  Quiz.start({
-    title: '2次関数の平行移動',
-    subtitle: 'かっこの中の符号と、動かす向きの関係をつかもう。',
-    modes: [
-      { id: 'f:v', group: '式 → 動かし方', name: '基本（上下だけ）', desc: '10問' },
-      { id: 'f:h', group: '式 → 動かし方', name: '基本（左右だけ）', desc: '10問' },
-      { id: 'f:b', group: '式 → 動かし方', name: '応用（上下＋左右）', desc: '10問' },
-      { id: 't:v', group: '動かし方 → 式', name: '基本（上下だけ）', desc: '8問' },
-      { id: 't:h', group: '動かし方 → 式', name: '基本（左右だけ）', desc: '8問' },
-      { id: 't:b', group: '動かし方 → 式', name: '応用（上下＋左右）', desc: '8問' },
-      { id: 'v:b', group: '頂点', name: '頂点を求める', desc: '10問' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      if (p[0] === 'f') return build(fromFormula, p[1], 10);
-      if (p[0] === 't') return build(toFormula, p[1], 8);
-      return build(vertexQuestion, null, 10);
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container.max-w-4xl": "u-card",
+    "h1": "u-title",
+    ".set-btn": "u-btn u-btn-blue",
+    ".choice-btn": "u-choice",
+    ".choice-btn.bg-green-200": "u-ok",
+    ".choice-btn.bg-red-200": "u-ng",
+    "#hint-btn": "u-btn",
+    "#retry-btn": "u-btn u-btn-plain",
+    "#next-btn": "u-btn u-btn-blue",
+    "#completion-modal > div": "u-card",
+    "#next-set-btn": "u-btn",
+    "#restart-btn": "u-btn u-btn-blue",
+    "#close-modal-btn": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
