@@ -1,148 +1,962 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>最大値・最小値</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    21. 最大値・最小値（2次関数の最大値・最小値問題）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2次関数の最大値・最小値問題</title>
+    <style>
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .problem-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .question {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .choice-btn {
+            background: #e9ecef;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+            font-weight: bold;
+            white-space: pre-line;
+            text-align: center;
+        }
+
+        .choice-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .choice-btn.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .correct-result {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .incorrect-result {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .next-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+
+        .next-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        .stage-info {
+            text-align: center;
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .domain-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+
+        .level-selection {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .level-buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .level-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 30px 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .level-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .level-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .level-desc {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; }
+    .container { max-width: 760px; padding: 28px 24px; }
+    h1 { font-size: min(2rem, 5.2vw); white-space: nowrap; }
+    .level-selection h2 { color: var(--u-title-dark) !important; }
+    .level-btn { padding: 24px 28px; }
+    .level-btn .level-title { color: var(--u-title); }
+    .level-btn .level-desc { color: var(--u-sub); opacity: 1; font-weight: 700; }
+    .stage-info { background: var(--u-soft-blue); color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; font-weight: 700; }
+    .problem-section { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
+    canvas { max-width: 100%; height: auto; border: 3px solid var(--u-line); border-radius: 16px; }
+    .domain-info { background: var(--u-soft-yellow); border: 3px dashed #fde68a; color: var(--u-soft-yellow-text); border-radius: 16px; font-weight: 700; text-align: center; }
+    .question { color: var(--u-title-dark); text-align: center; }
+    .choice-btn { padding: 14px 10px; font-size: 1.15em; line-height: 1.6; }
+    .result { border-radius: 16px; }
+    .correct-result { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .incorrect-result { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .done-box { text-align: center; padding: 20px 8px; }
+    .done-box h2 { font-size: min(2.2rem, 8vw); color: var(--u-accent-text); white-space: nowrap; margin: 0 0 10px; }
+    .done-box p { color: var(--u-ink); font-weight: 700; }
+    .done-score { font-size: 1.3em; color: var(--u-title); margin: 12px 0 18px; }
+    .done-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; }
+    .done-nav a { color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 16px 12px; }
+      .problem-section { padding: 14px 10px; }
+      .level-buttons { gap: 12px; }
+      .level-btn { min-width: 0; width: 100%; }
+      .choices { grid-template-columns: 1fr 1fr; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <h1>📊 2次関数の最大値・最小値問題</h1>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/graph.js"></script>
+        <div id="levelSelection" class="level-selection">
+            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">レベルを選択してください</h2>
+            <div class="level-buttons">
+                <button class="level-btn" onclick="startLevel(1)">
+                    <div class="level-title">📚 レベル1</div>
+                    <div class="level-desc">基本的な最大値・最小値</div>
+                </button>
+                <button class="level-btn" onclick="startLevel(2)">
+                    <div class="level-title">🔥 レベル2</div>
+                    <div class="level-desc">定義域がある問題</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="stage-info" id="stageInfo" style="display: none;">
+            ステージ1: グラフから最大値・最小値を読み取ろう
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="problem-section" id="problemSection" style="display: none;">
+            <div class="graph-container">
+                <canvas id="graphCanvas" width="400" height="300"></canvas>
+            </div>
+
+            <div id="domainInfo" class="domain-info" style="display: none;">
+                <strong>定義域:</strong> <span id="domainText"></span>
+            </div>
+
+            <div class="question" id="questionText"></div>
+
+            <div class="choices" id="choicesContainer"></div>
+
+            <div id="result" class="result" style="display: none;"></div>
+
+            <div style="text-align: center;">
+                <button class="next-btn" id="nextBtn" onclick="nextProblem()" style="display: none;">次の問題</button>
+                <button class="next-btn" id="retryBtn" onclick="retry()" style="display: none;">もう一度</button>
+                <button class="next-btn" onclick="backToMenu()" style="background: #6c757d; margin-top: 10px;">メニューに戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStage = 1; // 1: 値のみ, 2: x座標も, 3: 定義域あり
+        let currentProblem = 0;
+        let totalProblems = 0;
+        let currentAnswer = null;
+        let currentFunction = null;
+        let domain = null;
+        // 【ブラッシュアップ】一発で正解できた問題の数
+        let firstTry = true, cleanCount = 0, solvedCount = 0;
+
+        const problems = {
+            stage1: [
+                { a: 1, b: -4, c: 3, type: 'min' },
+                { a: -1, b: 2, c: 3, type: 'max' },
+                { a: 2, b: -8, c: 5, type: 'min' },
+                { a: -0.5, b: 2, c: 1, type: 'max' },
+                { a: 1, b: -6, c: 9, type: 'min' }
+            ],
+            stage2: [
+                { a: 1, b: -6, c: 8, type: 'both' },
+                { a: -1, b: 4, c: -2, type: 'both' },
+                { a: 0.5, b: -2, c: 3, type: 'both' },
+                { a: 2, b: -4, c: 1, type: 'both' },
+                { a: -1, b: 2, c: 4, type: 'both' }
+            ],
+            stage3: [
+                { a: 1, b: -4, c: 3, domain: [-1, 3], type: 'max', question: 'max' },
+                { a: -1, b: 2, c: 5, domain: [0, 3], type: 'min', question: 'min' },
+                { a: 1, b: -6, c: 8, domain: [1, 4], type: 'max', question: 'max' },
+                { a: -2, b: 4, c: -1, domain: [-1, 2], type: 'min', question: 'min' },
+                { a: 1, b: -2, c: 0, domain: [2, 5], type: 'min', question: 'min' },
+                { a: -1, b: 4, c: -2, domain: [0, 3], type: 'max', question: 'max' }
+            ]
+        };
+
+        function initGame() {
+            // ゲーム開始時はレベル選択画面を表示
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('problemSection').style.display = 'none';
+            window.__problemHTML = document.getElementById('problemSection').innerHTML;   // 【ブラッシュアップ】元の問題の枠をとっておく
+        }
+
+        function startLevel(level) {
+            // 【ブラッシュアップ】問題の枠を元に戻してから始める
+            if (window.__problemHTML) document.getElementById('problemSection').innerHTML = window.__problemHTML;
+            firstTry = true; cleanCount = 0; solvedCount = 0;
+            window.scrollTo(0, 0);
+            document.getElementById('levelSelection').style.display = 'none';
+            document.getElementById('problemSection').style.display = 'block';
+            document.getElementById('stageInfo').style.display = 'block';
+
+            if (level === 1) {
+                currentStage = 1;
+            } else {
+                currentStage = 3; // レベル2は定義域問題
+            }
+
+            currentProblem = 0;
+            updateStageInfo();
+            generateProblem();
+        }
+
+        function updateStageInfo() {
+            const stageTexts = {
+                1: "ステージ1: グラフから最大値・最小値を読み取ろう",
+                2: "ステージ2: 最大値・最小値とそのx座標を答えよう",
+                3: "🔥 レベル2: 定義域がある場合の最大値・最小値"
+            };
+            document.getElementById('stageInfo').textContent = stageTexts[currentStage];
+
+            const currentProblems = problems[`stage${currentStage}`];
+            totalProblems = currentProblems.length;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = (currentProblem / totalProblems) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function generateProblem() {
+            const currentProblems = problems[`stage${currentStage}`];
+            if (currentProblem >= currentProblems.length) {
+                if (currentStage < 2) {
+                    currentStage++;
+                    currentProblem = 0;
+                    updateStageInfo();
+                    generateProblem();
+                    return;
+                } else if (currentStage === 2) {
+                    showCompletion();
+                    return;
+                } else {
+                    showLevel2Completion();
+                    return;
+                }
+            }
+
+            const problem = currentProblems[currentProblem];
+            currentFunction = problem;
+            domain = problem.domain || null;
+
+            drawGraph(problem.a, problem.b, problem.c, domain);
+            generateQuestion(problem);
+
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('retryBtn').style.display = 'none';
+
+            // 定義域の表示
+            const domainInfo = document.getElementById('domainInfo');
+            if (domain && currentStage === 3) {
+                domainInfo.style.display = 'block';
+                document.getElementById('domainText').textContent = `${domain[0]} ≤ x ≤ ${domain[1]}`;
+            } else {
+                domainInfo.style.display = 'none';
+            }
+        }
+
+        function drawGraph(a, b, c, domain = null) {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // グリッド描画
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i <= 20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 20, 0);
+                ctx.lineTo(i * 20, canvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i * 15);
+                ctx.lineTo(canvas.width, i * 15);
+                ctx.stroke();
+            }
+
+            // 軸描画
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+
+            // x軸
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            // y軸
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            // 目盛りと数値を描画
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+
+            // x軸の目盛り（2間隔）
+            for (let x = -10; x <= 10; x += 2) {
+                if (x !== 0) {
+                    const canvasX = (x + 10) * 20;
+                    // 目盛り線
+                    ctx.beginPath();
+                    ctx.moveTo(canvasX, canvas.height / 2 - 5);
+                    ctx.lineTo(canvasX, canvas.height / 2 + 5);
+                    ctx.stroke();
+                    // 数値
+                    ctx.fillText(x.toString(), canvasX, canvas.height / 2 + 18);
+                }
+            }
+
+            // y軸の目盛り（2間隔）
+            ctx.textAlign = 'right';
+            for (let y = -10; y <= 10; y += 2) {
+                if (y !== 0) {
+                    const canvasY = canvas.height / 2 - y * 15;
+                    // 目盛り線
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2 - 5, canvasY);
+                    ctx.lineTo(canvas.width / 2 + 5, canvasY);
+                    ctx.stroke();
+                    // 数値
+                    ctx.fillText(y.toString(), canvas.width / 2 - 8, canvasY + 4);
+                }
+            }
+
+            // 原点
+            ctx.textAlign = 'right';
+            ctx.fillText('0', canvas.width / 2 - 8, canvas.height / 2 + 15);
+
+            // 2次関数描画
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+
+            const xMin = domain ? domain[0] : -5;
+            const xMax = domain ? domain[1] : 5;
+
+            for (let x = -10; x <= 10; x += 0.1) {
+                const y = a * x * x + b * x + c;
+                const canvasX = (x + 10) * 20;
+                const canvasY = canvas.height / 2 - y * 15;
+
+                if (x === -10) {
+                    ctx.moveTo(canvasX, canvasY);
+                } else {
+                    ctx.lineTo(canvasX, canvasY);
+                }
+            }
+            ctx.stroke();
+
+            // 定義域の範囲をハイライト
+            if (domain) {
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+
+                for (let x = domain[0]; x <= domain[1]; x += 0.1) {
+                    const y = a * x * x + b * x + c;
+                    const canvasX = (x + 10) * 20;
+                    const canvasY = canvas.height / 2 - y * 15;
+
+                    if (x === domain[0]) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // 頂点をマーク
+            const vertexX = -b / (2 * a);
+            const vertexY = a * vertexX * vertexX + b * vertexX + c;
+            const vertexCanvasX = (vertexX + 10) * 20;
+            const vertexCanvasY = canvas.height / 2 - vertexY * 15;
+
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(vertexCanvasX, vertexCanvasY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function generateQuestion(problem) {
+            const { a, b, c, type } = problem;
+            const vertexX = -b / (2 * a);
+            const vertexY = a * vertexX * vertexX + b * vertexX + c;
+
+            let questionText = '';
+            let choices = [];
+
+            if (currentStage === 1) {
+                if (type === 'min') {
+                    questionText = 'このグラフの最小値は？';
+                    currentAnswer = Math.round(vertexY);
+                    choices = generateValueChoices(currentAnswer);
+                } else if (type === 'max') {
+                    questionText = 'このグラフの最大値は？';
+                    currentAnswer = Math.round(vertexY);
+                    choices = generateValueChoices(currentAnswer);
+                }
+            } else if (currentStage === 2) {
+                if (a > 0) {
+                    questionText = 'このグラフの最小値とそのx座標は？';
+                    currentAnswer = `x = ${Math.round(vertexX)}\n最小値 = ${Math.round(vertexY)}`;
+                    choices = generateCoordinateChoices(vertexX, vertexY, '最小値');
+                } else {
+                    questionText = 'このグラフの最大値とそのx座標は？';
+                    currentAnswer = `x = ${Math.round(vertexX)}\n最大値 = ${Math.round(vertexY)}`;
+                    choices = generateCoordinateChoices(vertexX, vertexY, '最大値');
+                }
+            } else if (currentStage === 3) {
+                // レベル2: 定義域での最大値・最小値
+                const [domainMin, domainMax] = domain;
+                const leftY = a * domainMin * domainMin + b * domainMin + c;
+                const rightY = a * domainMax * domainMax + b * domainMax + c;
+
+                let targetValue, targetX;
+
+                if (vertexX >= domainMin && vertexX <= domainMax) {
+                    // 頂点が定義域内
+                    if (problem.question === 'max') {
+                        if (a > 0) {
+                            // 下に凸：端点のうち大きい方が最大値
+                            targetValue = Math.max(leftY, rightY);
+                            targetX = leftY > rightY ? domainMin : domainMax;
+                        } else {
+                            // 上に凸：頂点が最大値
+                            targetValue = vertexY;
+                            targetX = vertexX;
+                        }
+                        questionText = 'この定義域での最大値とそのx座標は？';
+                        currentAnswer = `x = ${Math.round(targetX)}\n最大値 = ${Math.round(targetValue)}`;
+                        choices = generateCoordinateChoices(targetX, targetValue, '最大値');
+                    } else {
+                        if (a > 0) {
+                            // 下に凸：頂点が最小値
+                            targetValue = vertexY;
+                            targetX = vertexX;
+                        } else {
+                            // 上に凸：端点のうち小さい方が最小値
+                            targetValue = Math.min(leftY, rightY);
+                            targetX = leftY < rightY ? domainMin : domainMax;
+                        }
+                        questionText = 'この定義域での最小値とそのx座標は？';
+                        currentAnswer = `x = ${Math.round(targetX)}\n最小値 = ${Math.round(targetValue)}`;
+                        choices = generateCoordinateChoices(targetX, targetValue, '最小値');
+                    }
+                } else {
+                    // 頂点が定義域外
+                    if (problem.question === 'max') {
+                        targetValue = Math.max(leftY, rightY);
+                        targetX = leftY > rightY ? domainMin : domainMax;
+                        questionText = 'この定義域での最大値とそのx座標は？';
+                        currentAnswer = `x = ${Math.round(targetX)}\n最大値 = ${Math.round(targetValue)}`;
+                        choices = generateCoordinateChoices(targetX, targetValue, '最大値');
+                    } else {
+                        targetValue = Math.min(leftY, rightY);
+                        targetX = leftY < rightY ? domainMin : domainMax;
+                        questionText = 'この定義域での最小値とそのx座標は？';
+                        currentAnswer = `x = ${Math.round(targetX)}\n最小値 = ${Math.round(targetValue)}`;
+                        choices = generateCoordinateChoices(targetX, targetValue, '最小値');
+                    }
+                }
+            }
+
+            document.getElementById('questionText').textContent = questionText;
+            displayChoices(choices);
+        }
+
+        function generateValueChoices(correct) {
+            const choices = [correct];
+            // 【ブラッシュアップ】よくあるまちがい（頂点の x 座標を答える・y 切片を答える・符号ちがい）を入れる
+            const f = currentFunction || {};
+            const traps = [Math.round(-f.b / (2 * f.a)), f.c, -correct].filter(v => Number.isFinite(v) && Number.isInteger(v) && v !== correct);
+            shuffleArray([...new Set(traps)]).forEach(v => { if (choices.length < 3 && !choices.includes(v)) choices.push(v); });
+            while (choices.length < 4) {
+                const wrong = Math.round(correct + (Math.random() - 0.5) * 8);
+                if (!choices.includes(wrong)) {
+                    choices.push(wrong);
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function generateCoordinateChoices(correctX, correctY, type) {
+            const correct = `x = ${Math.round(correctX)}\n${type} = ${Math.round(correctY)}`;
+            const choices = [correct];
+            // 【ブラッシュアップ】よくあるまちがい（x と値の取りちがえ・定義域があるのに頂点を答える・反対の端を答える）を先に入れる
+            const f = currentFunction || {};
+            const fx = (x) => f.a * x * x + f.b * x + f.c;
+            const fmt = (x, y) => `x = ${Math.round(x)}\n${type} = ${Math.round(y)}`;
+            const traps = [];
+            if (Math.round(correctX) !== Math.round(correctY)) traps.push(fmt(correctY, correctX));
+            if (domain) {
+                const vx = -f.b / (2 * f.a);
+                if (Math.round(vx) !== Math.round(correctX)) traps.push(fmt(vx, fx(vx)));
+                const other = Math.round(correctX) === domain[0] ? domain[1] : domain[0];
+                if (other !== Math.round(correctX)) traps.push(fmt(other, fx(other)));
+            }
+            shuffleArray(traps).forEach(t => { if (choices.length < 3 && !choices.includes(t)) choices.push(t); });
+
+            // より似た選択肢を生成
+            // 1. x座標は正しいが、値が違う
+            const sameX = `x = ${Math.round(correctX)}\n${type} = ${Math.round(correctY + (Math.random() > 0.5 ? 2 : -2))}`;
+            if (!choices.includes(sameX) && choices.length < 4) {
+                choices.push(sameX);
+            }
+
+            // 2. 値は正しいが、x座標が違う
+            const sameY = `x = ${Math.round(correctX + (Math.random() > 0.5 ? 1 : -1))}\n${type} = ${Math.round(correctY)}`;
+            if (!choices.includes(sameY) && choices.length < 4) {
+                choices.push(sameY);
+            }
+
+            // 3. 両方とも少しずれている
+            while (choices.length < 4) {
+                const wrongX = Math.round(correctX + (Math.random() - 0.5) * 3);
+                const wrongY = Math.round(correctY + (Math.random() - 0.5) * 4);
+                const wrong = `x = ${wrongX}\n${type} = ${wrongY}`;
+                if (!choices.includes(wrong)) {
+                    choices.push(wrong);
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function generateDomainChoices(maxX, maxVal, minX, minVal) {
+            const correct = `最大値: x = ${Math.round(maxX)}, y = ${Math.round(maxVal)}\n最小値: x = ${Math.round(minX)}, y = ${Math.round(minVal)}`;
+            const choices = [correct];
+
+            while (choices.length < 4) {
+                const wrongMaxX = Math.round(maxX + (Math.random() - 0.5) * 3);
+                const wrongMaxY = Math.round(maxVal + (Math.random() - 0.5) * 6);
+                const wrongMinX = Math.round(minX + (Math.random() - 0.5) * 3);
+                const wrongMinY = Math.round(minVal + (Math.random() - 0.5) * 6);
+                const wrong = `最大値: x = ${wrongMaxX}, y = ${wrongMaxY}\n最小値: x = ${wrongMinX}, y = ${wrongMinY}`;
+                if (!choices.includes(wrong)) {
+                    choices.push(wrong);
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function generateNoValueChoices(correct) {
+            const choices = [correct];
+            const wrongValues = ['-2', '0', '2', '4', '-4', '1', '-1', '3'];
+
+            while (choices.length < 4) {
+                const wrong = wrongValues[Math.floor(Math.random() * wrongValues.length)];
+                if (!choices.includes(wrong)) {
+                    choices.push(wrong);
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function generateNoCoordinateChoices(correct) {
+            const choices = [correct];
+            const wrongChoices = [
+                'x = 2\n最小値 = 1',
+                'x = 3\n最大値 = 2',
+                'x = 1\n最小値 = 0',
+                'x = 4\n最大値 = 3',
+                'x = 0\n最小値 = -1',
+                'x = -1\n最大値 = 1'
+            ];
+
+            while (choices.length < 4) {
+                const wrong = wrongChoices[Math.floor(Math.random() * wrongChoices.length)];
+                if (!choices.includes(wrong)) {
+                    choices.push(wrong);
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function generateDomainChoicesWithNone(maxX, maxVal, minX, minVal, noneType) {
+            let correct;
+            if (noneType === 'min') {
+                correct = `最大値: x = ${Math.round(maxX)}, y = ${Math.round(maxVal)}\n最小値: なし`;
+            } else {
+                correct = `最大値: なし\n最小値: x = ${Math.round(minX)}, y = ${Math.round(minVal)}`;
+            }
+
+            const choices = [correct];
+
+            while (choices.length < 4) {
+                if (noneType === 'min') {
+                    const wrongMinX = Math.round((maxX || 0) + (Math.random() - 0.5) * 4);
+                    const wrongMinY = Math.round((maxVal || 0) + (Math.random() - 0.5) * 6);
+                    const wrong = `最大値: x = ${Math.round(maxX)}, y = ${Math.round(maxVal)}\n最小値: x = ${wrongMinX}, y = ${wrongMinY}`;
+                    if (!choices.includes(wrong)) {
+                        choices.push(wrong);
+                    }
+                } else {
+                    const wrongMaxX = Math.round((minX || 0) + (Math.random() - 0.5) * 4);
+                    const wrongMaxY = Math.round((minVal || 0) + (Math.random() - 0.5) * 6);
+                    const wrong = `最大値: x = ${wrongMaxX}, y = ${wrongMaxY}\n最小値: x = ${Math.round(minX)}, y = ${Math.round(minVal)}`;
+                    if (!choices.includes(wrong)) {
+                        choices.push(wrong);
+                    }
+                }
+            }
+            return shuffleArray(choices);
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function displayChoices(choices) {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+
+            choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                button.onclick = () => checkAnswer(choice, button);
+                container.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selected, button) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.onclick = null);
+
+            const result = document.getElementById('result');
+
+            if (selected === currentAnswer) {
+                if (firstTry) cleanCount++;   // 【ブラッシュアップ】
+                solvedCount++;
+                button.classList.add('correct');
+                result.className = 'result correct-result';
+                result.textContent = '🎉 正解です！';
+                result.style.display = 'block';
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                firstTry = false;   // 【ブラッシュアップ】
+                button.classList.add('incorrect');
+                result.className = 'result incorrect-result';
+                result.textContent = '❌ 不正解です。';
+                result.style.display = 'block';
+                document.getElementById('retryBtn').style.display = 'inline-block';
+            }
+        }
+
+        function nextProblem() {
+            firstTry = true;   // 【ブラッシュアップ】
+            currentProblem++;
+            updateProgress();
+            generateProblem();
+        }
+
+        function retry() {
+            generateProblem();
+        }
+
+        function showCompletion() {
+            // 【ブラッシュアップ】元は「もう一度」でページを読み込み直していた。その場で始め直し、ほかの教材も選べるようにした
+            document.getElementById('problemSection').innerHTML = `
+                <div class="done-box">
+                    <h2>🎊 レベル1クリア！</h2>
+                    <p>基本問題をマスターしました！</p>
+                    <div class="done-score">一発正解 ${cleanCount} / ${solvedCount} 問</div>
+                    <div class="done-nav">
+                        <button class="next" onclick="startLevel(2)">🚀 レベル2に挑戦</button>
+                        <button class="again" onclick="startLevel(1)">レベル1をもう一度</button>
+                        <button class="back" onclick="backToMenu()">レベル選択に戻る</button>
+                        <a href="../remake.html">ほかの教材をえらぶ</a>
+                    </div>
+                </div>
+            `;
+            return;
+            document.getElementById('problemSection').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #28a745; font-size: 2.5em;">🎊 レベル1クリア！</h2>
+                    <p style="font-size: 1.3em; margin: 20px 0;">基本問題をマスターしました！</p>
+                    <p style="color: #666;">次はより難しい定義域の問題に挑戦してみましょう。</p>
+                    <button class="next-btn" onclick="startLevel2()" style="margin-top: 20px; font-size: 1.2em; padding: 15px 30px; background: #ff6b6b;">
+                        🚀 レベル2に挑戦
+                    </button>
+                    <button class="next-btn" onclick="location.reload()" style="margin-top: 20px; font-size: 1.1em; padding: 12px 25px;">
+                        レベル1をもう一度
+                    </button>
+                </div>
+            `;
+        }
+
+        function startLevel2() {
+            // レベル2開始のために画面を再構築
+            document.getElementById('problemSection').innerHTML = `
+                <div class="graph-container">
+                    <canvas id="graphCanvas" width="400" height="300"></canvas>
+                </div>
+
+                <div id="domainInfo" class="domain-info" style="display: none;">
+                    <strong>定義域:</strong> <span id="domainText"></span>
+                </div>
+
+                <div class="question" id="questionText"></div>
+
+                <div class="choices" id="choicesContainer"></div>
+
+                <div id="result" class="result" style="display: none;"></div>
+
+                <div style="text-align: center;">
+                    <button class="next-btn" id="nextBtn" onclick="nextProblem()" style="display: none;">次の問題</button>
+                    <button class="next-btn" id="retryBtn" onclick="retry()" style="display: none;">もう一度</button>
+                    <button class="next-btn" onclick="backToMenu()" style="background: #6c757d; margin-top: 10px;">メニューに戻る</button>
+                </div>
+            `;
+
+            currentStage = 3; // レベル2開始
+            currentProblem = 0;
+            updateStageInfo();
+            generateProblem();
+        }
+
+        function showLevel2Completion() {
+            // 【ブラッシュアップ】クリア画面（同じレベル・レベル選択・ほかの教材）
+            document.getElementById('problemSection').innerHTML = `
+                <div class="done-box">
+                    <h2>🏆 レベル2クリア！</h2>
+                    <p>定義域の問題もマスターしました！2次関数の最大値・最小値の完全マスターです！</p>
+                    <div class="done-score">一発正解 ${cleanCount} / ${solvedCount} 問</div>
+                    <div class="done-nav">
+                        <button class="again" onclick="startLevel(2)">レベル2をもう一度</button>
+                        <button class="back" onclick="backToMenu()">レベル選択に戻る</button>
+                        <a href="../remake.html">ほかの教材をえらぶ</a>
+                    </div>
+                </div>
+            `;
+            return;
+            document.getElementById('problemSection').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #ff6b6b; font-size: 2.5em;">🏆 レベル2クリア！</h2>
+                    <p style="font-size: 1.3em; margin: 20px 0;">定義域の問題もマスターしました！</p>
+                    <p style="color: #666;">2次関数の最大値・最小値の完全マスターです！</p>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin: 20px 0;">
+                        <h3 style="margin: 0 0 10px 0;">🎯 習得したスキル</h3>
+                        <p style="margin: 5px 0;">✅ 基本的な最大値・最小値の読み取り</p>
+                        <p style="margin: 5px 0;">✅ x座標を含む完全な解答</p>
+                        <p style="margin: 5px 0;">✅ 定義域がある場合の計算</p>
+                    </div>
+                    <button class="next-btn" onclick="backToMenu()" style="margin-top: 20px; font-size: 1.2em; padding: 15px 30px;">
+                        メニューに戻る
+                    </button>
+                </div>
+            `;
+        }
+
+        function backToMenu() {
+            document.getElementById('levelSelection').style.display = 'block';
+            document.getElementById('problemSection').style.display = 'none';
+            document.getElementById('stageInfo').style.display = 'none';
+
+            // リセット
+            currentStage = 1;
+            currentProblem = 0;
+            currentAnswer = null;
+            currentFunction = null;
+            domain = null;
+        }
+
+        // ゲーム開始
+        initGame();
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   21. 最大値・最小値
-
-   元教材から直した点：
-     ・グラフの x 軸の目盛りが「0, -8, -6 …」の順に並ぶなど、
-       目盛りの表示が壊れていた。 → 座標変換を一本化して描き直した。
-     ・定義域が示されていても、放物線の強調部分がずれていた。
-       → 定義域は同じ座標変換で描くので必ず一致する。
-     ・頂点が定義域の外にあるとき、頂点の値を最大値としてしまう
-       まちがった正解が設定されていた。
-       → 定義域の端と頂点を全部比べて、機械的に最大・最小を決める。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt;
-
-  /** 定義域つきの2次関数を1つ作り、最大・最小を正しく求める */
-  function makeProblem(level) {
-    var a = Quiz.pick(level === 1 ? [1, -1] : [1, -1, 2, -2]);
-    var p = A.randInt(-3, 3);                 // 頂点の x
-    var q = A.randInt(-5, 5);                 // 頂点の y
-
-    // 定義域。レベル2以上では、頂点が定義域の外に出ることもある
-    var lo, hi;
-    if (level === 1) { lo = p - Quiz.randInt(1, 3); hi = p + Quiz.randInt(1, 3); }
-    else {
-      lo = p + Quiz.randInt(-4, 2);
-      hi = lo + Quiz.randInt(2, 5);
-    }
-
-    var f = function (x) { return a * (x - p) * (x - p) + q; };
-
-    // 候補は「定義域の両端」と、頂点が定義域に入っていれば「頂点」
-    var cands = [{ x: lo, y: f(lo) }, { x: hi, y: f(hi) }];
-    if (p >= lo && p <= hi) cands.push({ x: p, y: q });
-
-    var max = cands[0], min = cands[0];
-    cands.forEach(function (c) {
-      if (c.y > max.y) max = c;
-      if (c.y < min.y) min = c;
-    });
-
-    var show = 'y = ' + (a === 1 ? '' : a === -1 ? '-' : a) +
-      '(x ' + (p >= 0 ? '- ' + p : '+ ' + (-p)) + ')<sup>2</sup>' +
-      (q === 0 ? '' : (q > 0 ? ' + ' + q : ' - ' + (-q)));
-
-    return {
-      a: a, p: p, q: q, lo: lo, hi: hi,
-      show: show,
-      max: max, min: min,
-      // グラフ用に一般形の係数も出しておく
-      coef: { a: a, b: -2 * a * p, c: a * p * p + q },
-      vertexInside: (p >= lo && p <= hi)
-    };
-  }
-
-  function askQuestion(level, which) {
-    var it = makeProblem(level);
-    var target = which || (Math.random() < 0.5 ? 'max' : 'min');
-    var ans = it[target];
-    var word = target === 'max' ? '最大値' : '最小値';
-
-    var correct = 'x = ' + ans.x + '　' + word + ' = ' + ans.y;
-    var wrongSet = {};
-    wrongSet[correct] = true;
-    var wrongs = [];
-    var other = it[target === 'max' ? 'min' : 'max'];
-    [
-      'x = ' + other.x + '　' + word + ' = ' + other.y,
-      'x = ' + ans.x + '　' + word + ' = ' + (ans.y + Quiz.pick([1, 2, -1, -2])),
-      'x = ' + it.p + '　' + word + ' = ' + it.q,
-      'x = ' + (ans.x + 1) + '　' + word + ' = ' + ans.y
-    ].forEach(function (w) {
-      if (wrongs.length < 3 && !wrongSet[w]) { wrongSet[w] = true; wrongs.push(w); }
-    });
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 30) {
-      var w2 = 'x = ' + A.randInt(it.lo, it.hi) + '　' + word + ' = ' + A.randInt(-12, 12);
-      if (!wrongSet[w2]) { wrongSet[w2] = true; wrongs.push(w2); }
-    }
-
-    return {
-      tag: it.vertexInside ? '頂点が定義域の中' : '頂点が定義域の外',
-      text: '定義域 <b>' + it.lo + ' ≦ x ≦ ' + it.hi + '</b> のとき、この関数の <b>' + word + '</b> と、そのときの x を答えなさい。',
-      math: it.show,
-      figure: Graph.parabola({
-        a: it.coef.a, b: it.coef.b, c: it.coef.c,
-        domain: [it.lo, it.hi],
-        markVertex: true
-      }),
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: it.vertexInside
-        ? '頂点が定義域の中にあります。頂点と、定義域の両端の値を比べましょう。'
-        : '頂点は定義域の外にあります。この場合、最大・最小は定義域の端でとります。',
-      explain: '頂点は ( ' + it.p + ' , ' + it.q + ' )。' +
-        (it.vertexInside ? '定義域の中に頂点があります。' : '頂点は定義域の外なので使えません。') +
-        '　定義域の端は x = ' + it.lo + ' で y = ' + (it.a * (it.lo - it.p) * (it.lo - it.p) + it.q) +
-        '、x = ' + it.hi + ' で y = ' + (it.a * (it.hi - it.p) * (it.hi - it.p) + it.q) +
-        '。よって ' + word + ' は ' + ans.y + '（x = ' + ans.x + ' のとき）です。'
-    };
-  }
-
-  function build(level, which, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(askQuestion(level, which));
-    return out;
-  }
-
-  Quiz.start({
-    title: '最大値・最小値',
-    subtitle: '定義域つきの最大・最小。頂点が定義域に入っているかどうかが分かれ目。',
-    modes: [
-      { id: '1:max', group: '基本（頂点は定義域の中）', name: '最大値', desc: '8問' },
-      { id: '1:min', group: '基本（頂点は定義域の中）', name: '最小値', desc: '8問' },
-      { id: '1:', group: '基本（頂点は定義域の中）', name: '最大・最小まぜて', desc: '10問' },
-      { id: '2:max', group: '応用（頂点が外に出ることも）', name: '最大値', desc: '8問' },
-      { id: '2:min', group: '応用（頂点が外に出ることも）', name: '最小値', desc: '8問' },
-      { id: '2:', group: '応用（頂点が外に出ることも）', name: '最大・最小まぜて', desc: '10問' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      var which = p[1] || null;
-      return build(Number(p[0]), which, which ? 8 : 10);
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    "h1": "u-title",
+    ".level-btn": "u-choice",
+    ".progress": "u-progress",
+    ".choice-btn": "u-choice",
+    ".choice-btn.correct": "u-ok",
+    ".choice-btn.incorrect": "u-ng",
+    "#nextBtn": "u-btn u-btn-blue",
+    "#retryBtn": "u-btn",
+    ".next-btn[onclick=\"backToMenu()\"]": "u-btn u-btn-plain",
+    ".done-nav .again": "u-btn",
+    ".done-nav .next": "u-btn u-btn-blue",
+    ".done-nav .back": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
