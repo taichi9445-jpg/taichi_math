@@ -293,17 +293,24 @@
     .header h1 { font-size: min(2.4rem, 8vw); white-space: nowrap; margin: 0 0 6px; }
     .header p { color: var(--u-sub); font-weight: 700; }
     .level-selector { flex-wrap: wrap; gap: 8px; }
-    .level-btn { padding: 10px 16px; font-size: 1rem; }
+    .level-btn { padding: 10px 14px; font-size: 0.95rem; }
     .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
-    .question { color: var(--u-sub); font-weight: 800; font-size: 1.2rem; }
+    .question { color: var(--u-sub); font-weight: 800; font-size: 1.1rem; margin-bottom: 8px; }
     .math { background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 18px; color: var(--u-ink); font-weight: 700; }
-    .question-card span[style] { color: var(--u-ink); font-weight: 700; }
+    .ask { color: var(--u-ink); font-weight: 800; font-size: 1.25rem; font-family: 'Times New Roman', serif; }
     .choice-btn { font-size: 1.4rem; }
+    .choice-btn:disabled { cursor: default; }
+    .fraction { font-size: 0.8em; line-height: 1.15; margin: 0 2px; }
     .fraction .numerator { border-bottom-color: currentColor; }
-    .feedback { border-radius: 16px; }
+    .feedback { border-radius: 16px; margin: 14px 0 0; }
     .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .rule-hint { margin-top: 10px; background: #fff; color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 12px; padding: 8px 12px; font-size: 0.95rem; line-height: 1.7; }
+    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); padding: 10px 14px; }
+    .feedback.answer { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    .rule-hint { margin-top: 10px; background: #fff; color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 12px; padding: 8px 12px; font-size: 1rem; line-height: 1.9; text-align: left; font-family: 'Times New Roman', 'M PLUS Rounded 1c', serif; }
+    .hint-box { margin-top: 10px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.9; text-align: left; }
+    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
+    .btn-group { margin-top: 14px; flex-wrap: wrap; }
+    .hint-button { background: #fff; border: 2px solid var(--u-line); border-radius: 999px; padding: 8px 18px; font-weight: 700; color: var(--u-sub); cursor: pointer; font-family: inherit; font-size: 0.95rem; }
     .completion { background: #fff; color: var(--u-ink); border: 4px dashed var(--u-line); border-radius: 24px; padding: 28px 18px; }
     .completion h2 { color: var(--u-accent-text); font-size: min(2.2rem, 8vw); white-space: nowrap; margin: 0 0 10px; }
     .completion p { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
@@ -318,8 +325,9 @@
       .container { padding: 16px 12px; }
       .question-card { padding: 16px 10px; }
       .choices { gap: 8px; }
-      .choice-btn { padding: 14px 6px; }
-      .level-btn { flex: 1 1 40%; }
+      .choice-btn { padding: 14px 6px; font-size: 1.25rem; }
+      .level-btn { flex: 1 1 40%; padding: 8px 6px; font-size: 0.9rem; }
+      .math { font-size: 1.5rem; padding: 10px 14px; }
     }
   
   </style>
@@ -329,397 +337,330 @@
     <div class="container">
         <div class="header">
             <h1>🧮 微分クイズ</h1>
-            <p>微分の基本をマスターしよう！</p>
+            <p>f(x) を微分して f'(x) を求めよう！（5 レベル）</p>
         </div>
 
+        <!-- 【ブラッシュアップ】レベルを 3 → 5 にした。画面はレベルごとに同じ形なので、1 つの入れ物を使い回す -->
         <div class="level-selector">
-            <button class="level-btn active" onclick="selectLevel(1)">
-                レベル1: 基本の指数
-            </button>
-            <button class="level-btn" onclick="selectLevel(2)">
-                レベル2: 係数付き
-            </button>
-            <button class="level-btn" onclick="selectLevel(3)">
-                レベル3: 分数係数
-            </button>
+            <button class="level-btn active" onclick="selectLevel(1)">Lv1 基本（xⁿ・定数）</button>
+            <button class="level-btn" onclick="selectLevel(2)">Lv2 係数（＋・−）</button>
+            <button class="level-btn" onclick="selectLevel(3)">Lv3 分数の係数</button>
+            <button class="level-btn" onclick="selectLevel(4)">Lv4 多項式</button>
+            <button class="level-btn" onclick="selectLevel(5)">Lv5 展開・f'(a)</button>
         </div>
 
-        <div id="level1" class="quiz-container active">
+        <div id="quiz" class="quiz-container active">
             <div class="progress">
-                <div class="progress-bar" id="progress1" style="width: 0%"></div>
+                <div class="progress-bar" id="progress" style="width: 0%"></div>
             </div>
 
             <div class="question-card">
-                <div class="question">問題 <span id="questionNum1">1</span>/5</div>
-                <div style="text-align: center; margin: 20px 0;">
-                    <div class="math" id="problem1"></div>
-                    <span style="font-size: 1.3rem;">の微分は？</span>
+                <div class="question">問題 <span id="questionNum">1</span>/<span id="questionTotal">6</span></div>
+                <div style="text-align: center; margin: 12px 0 20px;">
+                    <div class="math" id="problem"></div>
+                    <div class="ask" id="ask"></div>
                 </div>
-                <div class="choices" id="choices1"></div>
+                <div class="choices" id="choices"></div>
+                <div class="feedback" id="feedback" style="display: none;"></div>
+                <div id="hints"></div>
                 <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="nextQuestion(1)" style="display: none;" id="next1">次の問題</button>
-                    <button class="btn btn-secondary" onclick="retryQuestion(1)" style="display: none;" id="retry1">もう一度</button>
+                    <button class="btn btn-secondary" onclick="nextQuestion()" style="display: none;" id="next">次の問題</button>
+                    <button class="hint-button" onclick="showNextHint()" id="hintBtn">💡 ヒント（方針）を見る</button>
                 </div>
-                <div class="feedback" id="feedback1" style="display: none;"></div>
             </div>
         </div>
 
-        <div id="level2" class="quiz-container">
-            <div class="progress">
-                <div class="progress-bar" id="progress2" style="width: 0%"></div>
-            </div>
-
-            <div class="question-card">
-                <div class="question">問題 <span id="questionNum2">1</span>/10</div>
-                <div style="text-align: center; margin: 20px 0;">
-                    <div class="math" id="problem2"></div>
-                    <span style="font-size: 1.3rem;">の微分は？</span>
-                </div>
-                <div class="choices" id="choices2"></div>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="nextQuestion(2)" style="display: none;" id="next2">次の問題</button>
-                    <button class="btn btn-secondary" onclick="retryQuestion(2)" style="display: none;" id="retry2">もう一度</button>
-                </div>
-                <div class="feedback" id="feedback2" style="display: none;"></div>
-            </div>
-        </div>
-
-        <div id="completion1" class="completion" style="display: none;">
-            <h2>🎉 素晴らしい！</h2>
-            <p>レベル1を完璧にクリアしました！</p>
+        <div id="completion" class="completion" style="display: none;">
+            <h2></h2>
+            <p></p>
             <div class="stats">
                 <div class="stat">
-                    <span class="stat-number" id="score1">10</span>
-                    <span class="stat-label">正解数</span>
+                    <span class="stat-number" id="score">0</span>
+                    <span class="stat-label">ヒントなしで一発正解</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">正解率</span>
+                    <span class="stat-number" id="rate">0%</span>
+                    <span class="stat-label">一発正解率</span>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="selectLevel(2)">レベル2に挑戦！</button>
-            <button class="btn btn-secondary" onclick="restartLevel(1)">もう一度挑戦</button>
-        </div>
-
-        <div id="level3" class="quiz-container">
-            <div class="progress">
-                <div class="progress-bar" id="progress3" style="width: 0%"></div>
-            </div>
-
-            <div class="question-card">
-                <div class="question">問題 <span id="questionNum3">1</span>/10</div>
-                <div style="text-align: center; margin: 20px 0;">
-                    <div class="math" id="problem3"></div>
-                    <span style="font-size: 1.3rem;">の微分は？</span>
-                </div>
-                <div class="choices" id="choices3"></div>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="nextQuestion(3)" style="display: none;" id="next3">次の問題</button>
-                    <button class="btn btn-secondary" onclick="retryQuestion(3)" style="display: none;" id="retry3">もう一度</button>
-                </div>
-                <div class="feedback" id="feedback3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <div id="completion2" class="completion" style="display: none;">
-            <h2>🏆 完璧です！</h2>
-            <p>レベル2も見事にクリア！微分マスターですね！</p>
-            <div class="stats">
-                <div class="stat">
-                    <span class="stat-number" id="score2">10</span>
-                    <span class="stat-label">正解数</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">正解率</span>
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="selectLevel(3)">レベル3に挑戦！</button>
-            <button class="btn btn-secondary" onclick="restartLevel(2)">レベル2をもう一度</button>
-        </div>
-
-        <div id="completion3" class="completion" style="display: none;">
-            <h2>🌟 最高です！</h2>
-            <p>レベル3も完璧！分数の微分もマスターしましたね！</p>
-            <div class="stats">
-                <div class="stat">
-                    <span class="stat-number" id="score3">10</span>
-                    <span class="stat-label">正解数</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">正解率</span>
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="restartLevel(1)">レベル1からやり直し</button>
-            <button class="btn btn-secondary" onclick="restartLevel(3)">レベル3をもう一度</button>
+            <div class="result-nav" id="resultNav"></div>
         </div>
     </div>
 
     <script>
-        // 問題データ
-        const level1Problems = [
-            { problem: "x", answer: "1", choices: ["1", "x", "0", "x²"] },
-            { problem: "x²", answer: "2x", choices: ["2x", "x", "x²", "2x²"] },
-            { problem: "x³", answer: "3x²", choices: ["3x²", "x²", "3x³", "x³"] },
-            { problem: "x⁴", answer: "4x³", choices: ["4x³", "x³", "4x⁴", "3x⁴"] },
-            { problem: "x⁵", answer: "5x⁴", choices: ["5x⁴", "x⁴", "5x⁵", "4x⁵"] }
+        // 【ブラッシュアップ】問題データ
+        //   元は 3 レベル（xⁿ・正の係数・分数の係数）の単項式だけで、定数・負の係数・多項式・展開・f'(a) がなかった。
+        //   5 レベルにし、先生の問題を中心に残して足した。式は [係数, 次数] の並びで書き、
+        //   正解（f'(x) や f'(a)）はページの中で計算する（手で書いた答えのまちがいが入らないように）。
+        //   係数は 3 のような数か、[分子, 分母]。wrong はまちがいの選択肢（式か数）。
+        //   show は問題の式をそのまま見せたいとき（展開する前のかっこの形など）
+        const LEVELS = [
+            { name: 'レベル1', kind: 'basic', problems: [
+                { f: [[1, 1]], wrong: [[[1, 1]], [[0, 0]], [[1, 2]]] },
+                { f: [[1, 2]], wrong: [[[1, 1]], [[1, 2]], [[2, 2]]] },
+                { f: [[1, 3]], wrong: [[[1, 2]], [[3, 3]], [[1, 3]]] },
+                { f: [[1, 4]], wrong: [[[1, 3]], [[4, 4]], [[3, 4]]] },
+                { f: [[1, 5]], wrong: [[[1, 4]], [[5, 5]], [[4, 5]]] },
+                { f: [[7, 0]], wrong: [[[7, 0]], [[1, 0]], [[7, 1]]] }
+            ] },
+            { name: 'レベル2', kind: 'coef', problems: [
+                { f: [[2, 1]], wrong: [[[2, 1]], [[0, 0]], [[1, 0]]] },
+                { f: [[3, 2]], wrong: [[[3, 2]], [[3, 1]], [[6, 0]]] },
+                { f: [[4, 3]], wrong: [[[4, 3]], [[12, 1]], [[4, 2]]] },
+                { f: [[5, 4]], wrong: [[[5, 4]], [[20, 1]], [[5, 3]]] },
+                { f: [[2, 5]], wrong: [[[2, 5]], [[10, 1]], [[2, 4]]] },
+                { f: [[-1, 2]], wrong: [[[2, 1]], [[-1, 1]], [[-2, 2]]] },
+                { f: [[-3, 2]], wrong: [[[6, 1]], [[-3, 1]], [[-6, 2]]] },
+                { f: [[-2, 3]], wrong: [[[6, 2]], [[-2, 2]], [[-6, 3]]] }
+            ] },
+            { name: 'レベル3', kind: 'frac', problems: [
+                { f: [[[1, 2], 2]], wrong: [[[[1, 2], 1]], [[[1, 2], 2]], [[2, 1]]] },
+                { f: [[[1, 3], 3]], wrong: [[[[1, 3], 2]], [[[1, 3], 3]], [[3, 2]]] },
+                { f: [[[2, 3], 3]], wrong: [[[[2, 3], 2]], [[6, 2]], [[2, 1]]] },
+                { f: [[[1, 4], 4]], wrong: [[[[1, 4], 3]], [[4, 3]], [[1, 4]]] },
+                { f: [[[3, 2], 2]], wrong: [[[[3, 2], 1]], [[6, 1]], [[3, 2]]] },
+                { f: [[[1, 6], 3]], wrong: [[[3, 2]], [[[1, 6], 2]], [[[1, 2], 3]]] },
+                { f: [[[2, 9], 3]], wrong: [[[[2, 3], 3]], [[6, 2]], [[[2, 9], 2]]] },
+                { f: [[[1, 4], 2]], wrong: [[[[1, 4], 1]], [[2, 1]], [[[1, 2], 2]]] }
+            ] },
+            { name: 'レベル4', kind: 'poly', problems: [
+                { f: [[1, 2], [3, 1]], wrong: [[[2, 1]], [[1, 1], [3, 0]], [[2, 1], [1, 0]]] },
+                { f: [[1, 3], [-2, 2]], wrong: [[[3, 2], [-2, 1]], [[3, 2], [4, 1]], [[1, 2], [-4, 1]]] },
+                { f: [[2, 3], [-4, 1], [1, 0]], wrong: [[[6, 2], [-3, 0]], [[6, 2], [-4, 1]], [[2, 2], [-4, 0]]] },
+                { f: [[1, 2], [-5, 1], [7, 0]], wrong: [[[2, 1], [2, 0]], [[2, 1], [5, 0]], [[1, 1], [-5, 0]]] },
+                { f: [[-1, 3], [3, 2], [-1, 1]], wrong: [[[3, 2], [6, 1], [-1, 0]], [[-3, 2], [6, 1]], [[-3, 2], [3, 1], [-1, 0]]] },
+                { f: [[3, 2], [2, 0]], wrong: [[[6, 1], [2, 0]], [[3, 1]], [[6, 2]]] },
+                { f: [[4, 1], [-3, 0]], wrong: [[[4, 1]], [[-3, 0]], [[1, 0]]] },
+                { f: [[1, 4], [-1, 2]], wrong: [[[4, 3], [-1, 1]], [[4, 3], [2, 1]], [[1, 3], [-1, 1]]] }
+            ] },
+            { name: 'レベル5', kind: 'expand', problems: [
+                { show: '(x + 1)²', f: [[1, 2], [2, 1], [1, 0]], wrong: [[[2, 1], [1, 0]], [[2, 1]], [[1, 2], [2, 1]]] },
+                { show: 'x(x − 3)', f: [[1, 2], [-3, 1]], wrong: [[[2, 1], [3, 0]], [[1, 1], [-3, 0]], [[2, 1], [-6, 0]]] },
+                { show: '(2x − 1)(x + 3)', f: [[2, 2], [5, 1], [-3, 0]], wrong: [[[2, 0]], [[4, 1], [-3, 0]], [[2, 1], [5, 0]]] },
+                { show: '(x − 2)²', f: [[1, 2], [-4, 1], [4, 0]], wrong: [[[2, 1], [4, 0]], [[2, 1]], [[2, 1], [-2, 0]]] },
+                { show: '(x + 1)(x − 1)', f: [[1, 2], [-1, 0]], wrong: [[[2, 1], [-1, 0]], [[1, 0]], [[1, 1]]] },
+                { f: [[1, 3], [-2, 1]], at: 2, wrong: [4, 12, 6] },
+                { f: [[1, 2], [4, 1]], at: -1, wrong: [-3, 6, -2] },
+                { f: [[2, 3], [-1, 2]], at: 1, wrong: [1, 8, 5] }
+            ] }
         ];
 
-        const level2Problems = [
-            { problem: "2x", answer: "2", choices: ["2", "2x", "0", "1"] },
-            { problem: "3x²", answer: "6x", choices: ["6x", "3x²", "3x", "6"] },
-            { problem: "4x³", answer: "12x²", choices: ["12x²", "4x³", "12x", "4x²"] },
-            { problem: "5x⁴", answer: "20x³", choices: ["20x³", "5x⁴", "20x", "5x³"] },
-            { problem: "2x⁵", answer: "10x⁴", choices: ["10x⁴", "2x⁵", "10x", "2x⁴"] },
-            { problem: "6x²", answer: "12x", choices: ["12x", "6x²", "6x", "12"] },
-            { problem: "8x³", answer: "24x²", choices: ["24x²", "8x³", "24x", "8x²"] },
-            { problem: "3x⁶", answer: "18x⁵", choices: ["18x⁵", "3x⁶", "18x", "3x⁵"] },
-            { problem: "7x⁴", answer: "28x³", choices: ["28x³", "7x⁴", "28x", "7x³"] },
-            { problem: "9x⁵", answer: "45x⁴", choices: ["45x⁴", "9x⁵", "45x", "9x⁴"] }
-        ];
+        // ---- 分数と式の道具 ----
+        const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
+        const R = (v) => { let [p, q] = Array.isArray(v) ? v : [v, 1]; if (q < 0) { p = -p; q = -q; } const g = gcd(p, q) || 1; return [p / g, q / g]; };
+        const rmul = (a, b) => R([a[0] * b[0], a[1] * b[1]]);
+        const radd = (a, b) => R([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
+        const MINUS = '−';
+        const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+        const sup = (n) => String(n).split('').map(d => SUP[d]).join('');
+        const frac = (p, q) => `<span class="fraction"><span class="numerator">${p}</span><span class="denominator">${q}</span></span>`;
+        const absR = (r) => (r[1] === 1 ? String(Math.abs(r[0])) : frac(Math.abs(r[0]), r[1]));
+        const numTxt = (r) => (r[0] < 0 ? MINUS : '') + absR(r);
+        const xpow = (n) => (n === 0 ? '' : n === 1 ? 'x' : 'x' + sup(n));
+        // 式を整える：同じ次数をまとめ、0 の項を消し、次数の高い順に
+        function norm(terms) {
+            const m = {};
+            terms.forEach(([c, n]) => { m[n] = radd(m[n] || [0, 1], R(c)); });
+            return Object.keys(m).map(Number).filter(n => m[n][0] !== 0).sort((a, b) => b - a).map(n => [m[n], n]);
+        }
+        function termTxt(c, n, first) {   // c は分数 [p, q]
+            const sign = c[0] < 0 ? (first ? MINUS : ` ${MINUS} `) : (first ? '' : ' + ');
+            const body = (n > 0 && c[0] !== 0 && Math.abs(c[0]) === 1 && c[1] === 1) ? xpow(n) : absR(c) + xpow(n);
+            return sign + body;
+        }
+        function polyTxt(terms) {
+            const t = norm(terms);
+            return t.length ? t.map(([c, n], i) => termTxt(c, n, i === 0)).join('') : '0';
+        }
+        const deriv = (terms) => norm(terms).filter(([, n]) => n > 0).map(([c, n]) => [rmul(c, [n, 1]), n - 1]);
+        const key = (terms) => JSON.stringify(norm(terms));
+        const valueAt = (terms, a) => norm(terms).reduce((s, [c, n]) => radd(s, rmul(c, [Math.pow(a, n), 1])), [0, 1]);
 
-        const level3Problems = [
-            {
-                problem: '<span class="fraction"><span class="numerator">1</span><span class="denominator">2</span></span>x²',
-                answer: 'x',
-                choices: ['x', '<span class="fraction"><span class="numerator">1</span><span class="denominator">2</span></span>x', '<span class="fraction"><span class="numerator">x²</span><span class="denominator">2</span></span>', '2x']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">1</span><span class="denominator">3</span></span>x³',
-                answer: 'x²',
-                choices: ['x²', '<span class="fraction"><span class="numerator">1</span><span class="denominator">3</span></span>x²', '<span class="fraction"><span class="numerator">x³</span><span class="denominator">3</span></span>', '3x²']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">2</span><span class="denominator">3</span></span>x³',
-                answer: '2x²',
-                choices: ['2x²', '<span class="fraction"><span class="numerator">2</span><span class="denominator">3</span></span>x²', '<span class="fraction"><span class="numerator">2x³</span><span class="denominator">3</span></span>', '6x²']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">1</span><span class="denominator">4</span></span>x⁴',
-                answer: 'x³',
-                choices: ['x³', '<span class="fraction"><span class="numerator">1</span><span class="denominator">4</span></span>x³', '<span class="fraction"><span class="numerator">x⁴</span><span class="denominator">4</span></span>', '4x³']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">3</span><span class="denominator">4</span></span>x⁴',
-                answer: '3x³',
-                choices: ['3x³', '<span class="fraction"><span class="numerator">3</span><span class="denominator">4</span></span>x³', '<span class="fraction"><span class="numerator">3x⁴</span><span class="denominator">4</span></span>', '12x³']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">1</span><span class="denominator">5</span></span>x⁵',
-                answer: 'x⁴',
-                choices: ['x⁴', '<span class="fraction"><span class="numerator">1</span><span class="denominator">5</span></span>x⁴', '<span class="fraction"><span class="numerator">x⁵</span><span class="denominator">5</span></span>', '5x⁴']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">2</span><span class="denominator">5</span></span>x⁵',
-                answer: '2x⁴',
-                choices: ['2x⁴', '<span class="fraction"><span class="numerator">2</span><span class="denominator">5</span></span>x⁴', '<span class="fraction"><span class="numerator">2x⁵</span><span class="denominator">5</span></span>', '10x⁴']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">3</span><span class="denominator">2</span></span>x²',
-                answer: '3x',
-                choices: ['3x', '<span class="fraction"><span class="numerator">3</span><span class="denominator">2</span></span>x', '<span class="fraction"><span class="numerator">3x²</span><span class="denominator">2</span></span>', '6x']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">5</span><span class="denominator">2</span></span>x²',
-                answer: '5x',
-                choices: ['5x', '<span class="fraction"><span class="numerator">5</span><span class="denominator">2</span></span>x', '<span class="fraction"><span class="numerator">5x²</span><span class="denominator">2</span></span>', '10x']
-            },
-            {
-                problem: '<span class="fraction"><span class="numerator">7</span><span class="denominator">3</span></span>x³',
-                answer: '7x²',
-                choices: ['7x²', '<span class="fraction"><span class="numerator">7</span><span class="denominator">3</span></span>x²', '<span class="fraction"><span class="numerator">7x³</span><span class="denominator">3</span></span>', '21x²']
+        // 途中式（1 項ずつの微分）
+        function termDeriv(c, n) {   // (kxⁿ)' = k·n xⁿ⁻¹
+            if (n === 0) return '0';
+            if (n === 1) return numTxt(c);   // (kx)' = k
+            const k = (Math.abs(c[0]) === 1 && c[1] === 1) ? (c[0] < 0 ? MINUS : '') : numTxt(c) + '·';
+            return `${k}${n}${xpow(n - 1)}`;
+        }
+        function midOf(q) {
+            const t = norm(q.f), d = deriv(q.f);
+            let s = '';
+            if (q.show) s += `展開すると f(x) = ${polyTxt(q.f)}。`;
+            if (t.length === 1) {
+                const [c, n] = t[0];
+                s += `f'(x) = (${termTxt(c, n, true)})' = ${termDeriv(c, n)}`;
+            } else {
+                s += `f'(x) = ` + t.map(([c, n], i) => (i === 0 ? (c[0] < 0 ? MINUS : '') : (c[0] < 0 ? ` ${MINUS} ` : ' + ')) + `(${termTxt([Math.abs(c[0]), c[1]], n, true)})'`).join('') +
+                    ' = ' + (t.filter(([, n]) => n > 0).map(([c, n], i) => (i === 0 ? '' : (c[0] < 0 ? ` ${MINUS} ` : ' + ')) + termDeriv([i === 0 ? c[0] : Math.abs(c[0]), c[1]], n)).join('') || '0');
             }
-        ];
+            if (q.at !== undefined) {
+                const a = q.at, A = a < 0 ? `(${MINUS}${-a})` : String(a);
+                if (!s.endsWith(polyTxt(d))) s += ` = ${polyTxt(d)}`;
+                s += ` なので、f'(${numTxt([a, 1])}) = ` +
+                    d.map(([c, n], i) => {
+                        const sign = c[0] < 0 ? (i === 0 ? MINUS : ` ${MINUS} `) : (i === 0 ? '' : ' + ');
+                        const k = absR(c);
+                        return sign + (n === 0 ? k : `${k}·${A}${n > 1 ? sup(n) : ''}`);
+                    }).join('');
+            }
+            return s;
+        }
+        const PLAN = {
+            basic: "(xⁿ)' = n xⁿ⁻¹（指数を前にかけて、指数を 1 つへらす）。x は x¹ と考えよう。数だけ（定数）を微分すると 0。",
+            coef: "(k xⁿ)' = k · n xⁿ⁻¹。係数 k（マイナスも）はそのまま残して、指数 n をかけよう。",
+            frac: "係数が分数でも同じ。(k xⁿ)' = k · n xⁿ⁻¹。かけたあと、約分しよう。",
+            poly: '1 つの項ずつ微分して、たし算・ひき算でつなぐ。定数の項は微分すると 0 になるよ。',
+            expand: 'かっこのままでは微分できない。まず展開して、1 つの項ずつ微分しよう。',
+            at: "まず f'(x) を求めてから、x の値を代入しよう。f(a) ではなく f'(a) だよ。"
+        };
+
+        // 問題を 1 問ぶん組み立てる：問題の式・聞き方・選択肢（正解は計算で作る）・ヒント
+        function build(level, q) {
+            const d = deriv(q.f);
+            const fTxt = q.show || polyTxt(q.f);
+            let answer, opts;
+            if (q.at !== undefined) {
+                const v = valueAt(d, q.at);
+                answer = numTxt(v);
+                opts = [{ text: answer, ok: true }].concat(q.wrong.map(w => ({ text: numTxt(R(w)), ok: R(w)[0] === v[0] && R(w)[1] === v[1] })));
+            } else {
+                answer = polyTxt(d);
+                opts = [{ text: answer, ok: true }].concat(q.wrong.map(w => ({ text: polyTxt(w), ok: key(w) === key(d) })));
+            }
+            const ask = q.at !== undefined ? `のとき、f'(${numTxt([q.at, 1])}) = ？` : "のとき、f'(x) = ？";
+            const plan = q.at !== undefined ? PLAN.at : PLAN[LEVELS[level - 1].kind];
+            return { fTxt, ask, answer, opts, plan, mid: midOf(q), at: q.at };
+        }
 
         let currentLevel = 1;
         let currentQuestion = 0;
         let correctAnswers = 0;
-        let missedThis = false;   // 【ブラッシュアップ】この問題でまちがえたか（一発正解だけを数える）
+        let order = [];       // 問題の順番（レベルの中でまぜる）
+        let optOrder = [];    // 選択肢の並び
+        let stage = 0;        // ヒントの段階（0：なし 1：方針 2：途中式 3：答え）
+        let answered = false;
+        let built = null;
         function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+        const total = () => LEVELS[currentLevel - 1].problems.length;
 
         function selectLevel(level) {
             currentLevel = level;
             currentQuestion = 0;
             correctAnswers = 0;
-
-            // レベルボタンの更新
-            document.querySelectorAll('.level-btn').forEach((btn, i) => btn.classList.toggle('active', i === level - 1));   // 【ブラッシュアップ】
+            order = shuffle(LEVELS[level - 1].problems.map((_, i) => i));
+            document.querySelectorAll('.level-btn').forEach((btn, i) => btn.classList.toggle('active', i === level - 1));
+            document.getElementById('quiz').classList.add('active');
+            document.getElementById('completion').style.display = 'none';
             window.scrollTo(0, 0);
-
-            // コンテナの表示切り替え
-            document.querySelectorAll('.quiz-container').forEach(container => container.classList.remove('active'));
-            document.getElementById(`level${level}`).classList.add('active');
-
-            // 完了画面を隠す
-            document.getElementById(`completion1`).style.display = 'none';
-            document.getElementById(`completion2`).style.display = 'none';
-            document.getElementById(`completion3`).style.display = 'none';
-
-            loadQuestion(level);
+            loadQuestion();
         }
 
-        function loadQuestion(level) {
-            const problems = level === 1 ? level1Problems : (level === 2 ? level2Problems : level3Problems);
-            const problem = problems[currentQuestion];
-            missedThis = false;   // 【ブラッシュアップ】
+        function loadQuestion() {
+            built = build(currentLevel, LEVELS[currentLevel - 1].problems[order[currentQuestion]]);
+            stage = 0;
+            answered = false;
+            document.getElementById('problem').innerHTML = 'f(x) = ' + built.fTxt;
+            document.getElementById('ask').innerHTML = built.ask;
+            document.getElementById('questionNum').textContent = currentQuestion + 1;
+            document.getElementById('questionTotal').textContent = total();
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next').style.display = 'none';
+            document.getElementById('hints').innerHTML = '';
+            const hintBtn = document.getElementById('hintBtn');
+            hintBtn.style.display = '';
+            hintBtn.textContent = '💡 ヒント（方針）を見る';
 
-            // 問題の表示（HTMLを含む場合はinnerHTMLを使用）
-            const problemElement = document.getElementById(`problem${level}`);
-            if (problem.problem.includes('<span')) {
-                problemElement.innerHTML = problem.problem;
-            } else {
-                problemElement.textContent = problem.problem;
-            }
-
-            document.getElementById(`questionNum${level}`).textContent = currentQuestion + 1;
-            document.getElementById(`feedback${level}`).style.display = 'none';
-            document.getElementById(`next${level}`).style.display = 'none';
-            document.getElementById(`retry${level}`).style.display = 'none';
-
-            // 選択肢の表示
-            const choicesContainer = document.getElementById(`choices${level}`);
-            choicesContainer.innerHTML = '';
-
-            shuffle([...problem.choices]).forEach((choice, index) => {   // 【ブラッシュアップ】並びをまぜる
+            const box = document.getElementById('choices');
+            box.innerHTML = '';
+            optOrder = shuffle(built.opts.map((_, i) => i));
+            optOrder.forEach((o, i) => {
                 const button = document.createElement('button');
                 button.className = 'choice-btn';
-
-                // 選択肢にHTMLが含まれる場合はinnerHTMLを使用
-                if (choice.includes('<span')) {
-                    button.innerHTML = choice;
-                } else {
-                    button.textContent = choice;
-                }
-
-                button.onclick = () => selectChoice(level, choice, button);
-                choicesContainer.appendChild(button);
+                button.innerHTML = built.opts[o].text;
+                button.onclick = () => selectChoice(i, button);
+                box.appendChild(button);
             });
-
-            // プログレスバーの更新
-            const totalQuestions = level === 1 ? 5 : 10;
-            const progress = (currentQuestion / totalQuestions) * 100;
-            document.getElementById(`progress${level}`).style.width = progress + '%';
+            document.getElementById('progress').style.width = (currentQuestion / total() * 100) + '%';
         }
 
+        function renderHints() {
+            let html = '';
+            if (stage >= 1) html += `<div class="hint-box"><span class="hint-tag">💡 方針</span>${built.plan}</div>`;
+            if (stage >= 2) html += `<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>${built.mid}</div>`;
+            document.getElementById('hints').innerHTML = html;
+            document.getElementById('hintBtn').textContent = stage === 0 ? '💡 ヒント（方針）を見る' : stage === 1 ? '✏️ 途中式を見る' : '👀 答えを見る';
+        }
+        function showNextHint() {
+            if (answered) return;
+            stage++;
+            if (stage >= 3) { finish(false); return; }
+            renderHints();
+        }
 
-
-        function selectChoice(level, selectedAnswer, buttonElement) {
-            const problems = level === 1 ? level1Problems : (level === 2 ? level2Problems : level3Problems);
-            const correctAnswer = problems[currentQuestion].answer;
-
-            // すべての選択肢ボタンを無効化
-            const allButtons = document.querySelectorAll(`#choices${level} .choice-btn`);
-            allButtons.forEach(btn => {
-                btn.classList.add('disabled');
-                btn.onclick = null;
-            });
-
-            const feedback = document.getElementById(`feedback${level}`);
+        function selectChoice(i, button) {
+            if (answered) return;
+            if (built.opts[optOrder[i]].ok) { finish(true); return; }
+            button.classList.add('incorrect');
+            button.disabled = true;
+            stage++;
+            if (stage >= 3) { finish(false); return; }
+            const feedback = document.getElementById('feedback');
             feedback.style.display = 'block';
-
-            // HTMLタグを除去して比較
-            const normalizeAnswer = (answer) => {
-                return answer.replace(/<[^>]*>/g, '').trim();
-            };
-
-            const normalizedSelected = normalizeAnswer(selectedAnswer);
-            const normalizedCorrect = normalizeAnswer(correctAnswer);
-
-            if (normalizedSelected === normalizedCorrect) {
-                buttonElement.classList.add('correct');
-                feedback.className = 'feedback correct';
-                feedback.textContent = '🎉 正解です！素晴らしい！';
-                if (!missedThis) correctAnswers++;   // 【ブラッシュアップ】
-
-                const totalQuestions = level === 1 ? 5 : 10;
-                if (currentQuestion < totalQuestions - 1) {
-                    document.getElementById(`next${level}`).style.display = 'inline-block';
-                } else {
-                    // 全問完了
-                    setTimeout(() => showCompletion(level), 1500);
-                }
-            } else {
-                buttonElement.classList.add('incorrect');
-                feedback.className = 'feedback incorrect';
-
-                // 正解の表示（HTMLが含まれる場合はそのまま表示）
-                missedThis = true;   // 【ブラッシュアップ】
-                feedback.innerHTML = '❌ 不正解です。もう一度挑戦してみましょう！' +
-                    '<div class="rule-hint">💡 xⁿ を微分すると n xⁿ⁻¹（指数を前にかけて、指数を 1 つへらす）。' +
-                    (level === 1 ? 'x は x¹ と考えよう。' : '係数は、前に出した指数とかけ算しよう。') +
-                    (level === 3 ? '分数の係数は約分できるよ。' : '') + '</div>';
-                document.getElementById(`retry${level}`).style.display = 'inline-block';
-            }
+            feedback.className = 'feedback incorrect';
+            feedback.textContent = `❌ ちがうよ。下の${stage === 1 ? '方針' : '途中式'}を見て、もう一度選ぼう。`;
+            renderHints();
         }
 
-        function nextQuestion(level) {
-            currentQuestion++;
-            loadQuestion(level);
-        }
-
-        function retryQuestion(level) {
-            document.getElementById(`feedback${level}`).style.display = 'none';
-            document.getElementById(`retry${level}`).style.display = 'none';
-
-            // 選択肢ボタンをリセット
-            const allButtons = document.querySelectorAll(`#choices${level} .choice-btn`);
-            allButtons.forEach(btn => {
-                btn.classList.remove('disabled', 'correct', 'incorrect');
-
-                // HTMLが含まれる場合とそうでない場合を区別
-                const choiceValue = btn.innerHTML.includes('<span') ? btn.innerHTML : btn.textContent;
-                btn.onclick = () => selectChoice(level, choiceValue, btn);
+        // 正解したとき・答えを見たとき：答えと解説を出して、次へ
+        function finish(correct) {
+            answered = true;
+            if (correct && stage === 0) correctAnswers++;
+            document.querySelectorAll('#choices .choice-btn').forEach((b, i) => {
+                b.disabled = true;
+                if (built.opts[optOrder[i]].ok) b.classList.add('correct');
             });
+            document.getElementById('hints').innerHTML = '';
+            document.getElementById('hintBtn').style.display = 'none';
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'block';
+            feedback.className = 'feedback ' + (correct ? 'correct' : 'answer');
+            feedback.innerHTML = (correct ? '⭕ 正解！' : '👀 答え：' + (built.at !== undefined ? `f'(${numTxt([built.at, 1])}) = ` : "f'(x) = ") + built.answer) +
+                `<div class="rule-hint">${built.mid}${built.mid.endsWith(built.answer) ? '' : ' = ' + built.answer}</div>`;
+            const last = currentQuestion >= total() - 1;
+            const next = document.getElementById('next');
+            next.textContent = last ? '結果を見る' : '次の問題';
+            next.style.display = 'inline-block';
         }
 
-        function showCompletion(level) {
-            document.getElementById(`level${level}`).classList.remove('active');
-            document.getElementById(`completion${level}`).style.display = 'block';
-            document.getElementById(`score${level}`).textContent = correctAnswers;
+        function nextQuestion() {
+            if (!answered) return;
+            if (currentQuestion >= total() - 1) { showCompletion(); return; }
+            currentQuestion++;
+            loadQuestion();
+        }
 
-            // プログレスバーを100%に
-            document.getElementById(`progress${level}`).style.width = '100%';
-
-            // 正解率の計算
-            const totalQuestions = level === 1 ? 5 : 10;
-            const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
-            const accuracyElement = document.querySelector(`#completion${level} .stat:nth-child(2) .stat-number`);
-            if (accuracyElement) {
-                accuracyElement.textContent = accuracy + '%';
-            }
-            // 【ブラッシュアップ】
-            const box = document.getElementById(`completion${level}`);
-            const perfect = correctAnswers === totalQuestions;
-            const perfectMessages = ['レベル1を完璧にクリアしました！', 'レベル2も見事にクリア！微分マスターですね！', 'レベル3も完璧！分数の微分もマスターしましたね！'];
-            box.querySelector('h2').textContent = perfect ? '🎉 全問一発正解！' : '👍 レベル' + level + ' クリア！';
-            box.querySelector('p').textContent = perfect ? perfectMessages[level - 1] : 'まちがえた問題は「指数を前にかけて、指数を 1 つへらす」を思い出そう！';
-            box.querySelector('.stat-label').textContent = '一発正解';
-            let nav = box.querySelector('.result-nav');
-            if (!nav) {
-                box.querySelectorAll(':scope > .btn').forEach(b => b.remove());
-                nav = document.createElement('div');
-                nav.className = 'result-nav';
-                box.appendChild(nav);
-            }
-            nav.innerHTML = (level < 3 ? `<button class="next" onclick="restartLevel(${level + 1})">レベル${level + 1}に挑戦 ▶</button>` : '') +
-                `<button class="again" onclick="restartLevel(${level})">レベル${level}をもう一度</button>` +
-                (level === 3 ? '<button class="plain" onclick="restartLevel(1)">レベル1からやり直す</button>' : '') +
+        function showCompletion() {
+            document.getElementById('quiz').classList.remove('active');
+            const box = document.getElementById('completion');
+            box.style.display = 'block';
+            const t = total();
+            document.getElementById('score').textContent = `${correctAnswers} / ${t}`;
+            document.getElementById('rate').textContent = Math.round(correctAnswers / t * 100) + '%';
+            const perfect = correctAnswers === t;
+            box.querySelector('h2').textContent = perfect ? '🎉 全問一発正解！' : `👍 レベル${currentLevel} クリア！`;
+            box.querySelector('p').textContent = perfect ? 'すばらしい！次のレベルに進もう。' : 'まちがえた問題は、解説の途中式をもう一度たどってみよう。';
+            const L = currentLevel;
+            document.getElementById('resultNav').innerHTML =
+                (L < LEVELS.length ? `<button class="next" onclick="selectLevel(${L + 1})">レベル${L + 1}に挑戦 ▶</button>` : '') +
+                `<button class="again" onclick="selectLevel(${L})">レベル${L}をもう一度</button>` +
+                (L === LEVELS.length ? '<button class="plain" onclick="selectLevel(1)">レベル1からやり直す</button>' : '') +
                 '<a href="../remake.html">ほかの教材をえらぶ</a>';
             window.scrollTo(0, 0);
         }
 
-        function restartLevel(level) {
-            currentQuestion = 0;
-            correctAnswers = 0;
-            document.getElementById(`completion${level}`).style.display = 'none';
-            selectLevel(level);
-        }
-
-
-
         // 初期化
-        loadQuestion(1);
+        selectLevel(1);
     </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける

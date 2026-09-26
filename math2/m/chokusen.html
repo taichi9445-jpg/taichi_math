@@ -379,16 +379,28 @@
     .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
     .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
     .question-text { color: var(--u-ink); font-weight: 800; }
-    .option { font-size: 1.25rem; font-weight: 700; text-align: center; }
+    .option { font-size: 1.25rem; font-weight: 700; text-align: center; width: 100%; font-family: 'Times New Roman', serif; }
+    .option:disabled { cursor: default; }
     .hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    .hint-btn.plain { background: #fff !important; border: 2px solid var(--u-line) !important; color: var(--u-sub) !important; }
+    .hint-buttons { justify-content: center; }
     .hint-content { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; }
     .hint-content h5, .hint-content p { color: var(--u-title); }
+    .hint-content p { font-size: 1.02rem; font-weight: 700; line-height: 1.9; }
     .success-message { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); border-radius: 16px; }
+    .answer-message { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); border-radius: 16px; padding: 14px; margin-top: 20px; text-align: center; font-size: 1.2rem; font-weight: 700; }
     .explanation { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; }
     .explanation h4, .explanation p { color: var(--u-ink); }
-    .wrong-explanation { background: var(--u-ng-soft); border: 3px solid var(--u-ng-line); border-radius: 16px; }
+    .explanation p { line-height: 1.9; }
+    .wrong-explanation { background: var(--u-ng-soft); border: 3px solid var(--u-ng-line); border-radius: 16px; padding: 12px 16px; }
     .wrong-explanation h4, .wrong-explanation p { color: var(--u-ng); }
+    .wrong-explanation h4 { margin-bottom: 4px; }
     .next-btn, .retry-btn { margin-top: 14px; }
+    .next-btn.show { display: block; width: 100%; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .progress-bar { width: 0%; }
+    .fraction { display: inline-block; vertical-align: middle; text-align: center; margin: 0 2px; font-size: 0.85em; line-height: 1.15; }
+    .fraction .numerator { display: block; border-bottom: 2px solid currentColor; padding: 0 2px; }
+    .fraction .denominator { display: block; padding: 0 2px; }
     .result-card { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
     .result-card h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
     .score { color: var(--u-title); }
@@ -402,8 +414,10 @@
       body { padding: 8px; }
       .container { padding: 14px 10px; }
       .question-card { padding: 16px 10px; }
-      .question-text { font-size: 1.15rem; }
-      .option { padding: 14px 8px; font-size: 1.15rem; }
+      .question-text { font-size: 1.1rem; margin-bottom: 14px; }
+      .options { gap: 10px; }
+      .option { padding: 12px 8px; font-size: 1.15rem; }
+      .hint-btn { padding: 10px 14px; font-size: 0.95rem; }
     }
   
   </style>
@@ -413,7 +427,7 @@
     <div class="container">
         <header class="header">
             <h1>📐 直線の方程式クイズ</h1>
-            <p>点と傾きから直線の方程式を求めよう！</p>
+            <p>点と傾き・2 点から、直線の方程式を求めよう！（全11問）</p>
         </header>
 
         <main class="quiz-container">
@@ -421,230 +435,8 @@
                 <div class="progress-bar" id="progressBar"></div>
             </div>
 
-            <!-- 問題1 -->
-            <div class="question-card active" id="question1">
-                <div class="question-number">問題 1/5</div>
-                <div class="question-text">点（1, 3）を通り、傾きが4の直線の方程式はどれか？</div>
-                <div class="options">
-                    <div class="option" data-answer="correct">y - 3 = 4(x - 1)</div>
-                    <div class="option" data-answer="incorrect">y - 1 = 4(x - 3)</div>
-                    <div class="option" data-answer="incorrect">y - 4 = 3(x - 1)</div>
-                    <div class="option" data-answer="incorrect">y - 3 = 1(x - 4)</div>
-                </div>
-                <div class="hint-buttons">
-                    <button class="hint-btn" onclick="showHint(1, 1)">💡 ヒント1</button>
-                    <button class="hint-btn" onclick="showHint(1, 2)">💡 ヒント2</button>
-                </div>
-                <div class="hint-content" id="hint1-1">
-                    <h5>💡 ヒント1</h5>
-                    <p>直線の方程式の公式を思い出してみましょう！<br>
-                    点（a, b）を通り、傾きがmの直線の方程式は：<br>
-                    <strong>y - b = m(x - a)</strong> です。</p>
-                </div>
-                <div class="hint-content" id="hint1-2">
-                    <h5>💡 ヒント2</h5>
-                    <p>この問題では：<br>
-                    • 通る点：（1, 3） → a = 1, b = 3<br>
-                    • 傾き：4 → m = 4<br>
-                    公式に代入すると：y - b = m(x - a)</p>
-                </div>
-                <div class="success-message">
-                    🎉 素晴らしい！完璧です！さすがですね！✨
-                </div>
-                <button class="next-btn" onclick="nextQuestion(2)">次の問題へ</button>
-                <button class="retry-btn" onclick="retryQuestion(1)">もう一度挑戦</button>
-                <div class="explanation">
-                    <h4>正解！</h4>
-                    <p>点（a, b）を通り傾きがmの直線の方程式は y - b = m(x - a) です。<br>
-                    点（1, 3）、傾き4なので、y - 3 = 4(x - 1) が正解です。</p>
-                </div>
-                <div class="wrong-explanation">
-                    <h4>もう一度考えてみましょう</h4>
-                    <p>公式をもう一度確認してみてください。<br>
-                    点（a, b）を通り傾きがmの直線の方程式は y - b = m(x - a) です。<br>
-                    この問題の数値を正しく当てはめてみましょう。</p>
-                </div>
-            </div>
-
-            <!-- 問題2 -->
-            <div class="question-card" id="question2">
-                <div class="question-number">問題 2/5</div>
-                <div class="question-text">点（-2, 5）を通り、傾きが-3の直線の方程式はどれか？</div>
-                <div class="options">
-                    <div class="option" data-answer="incorrect">y - 5 = 3(x + 2)</div>
-                    <div class="option" data-answer="correct">y - 5 = -3(x + 2)</div>
-                    <div class="option" data-answer="incorrect">y + 5 = -3(x - 2)</div>
-                    <div class="option" data-answer="incorrect">y - 2 = -3(x - 5)</div>
-                </div>
-                <div class="hint-buttons">
-                    <button class="hint-btn" onclick="showHint(2, 1)">💡 ヒント1</button>
-                    <button class="hint-btn" onclick="showHint(2, 2)">💡 ヒント2</button>
-                </div>
-                <div class="hint-content" id="hint2-1">
-                    <h5>💡 ヒント1</h5>
-                    <p>公式：y - b = m(x - a)<br>
-                    負の数が出てきても、同じ公式を使います。<br>
-                    x - (-2) = x + 2 になることに注意しましょう。</p>
-                </div>
-                <div class="hint-content" id="hint2-2">
-                    <h5>💡 ヒント2</h5>
-                    <p>この問題では：<br>
-                    • 通る点：（-2, 5） → a = -2, b = 5<br>
-                    • 傾き：-3 → m = -3<br>
-                    公式に代入：y - 5 = -3(x - (-2)) = -3(x + 2)</p>
-                </div>
-                <div class="success-message">
-                    🌟 やったー！正解です！頭がいいですね！🧠
-                </div>
-                <button class="next-btn" onclick="nextQuestion(3)">次の問題へ</button>
-                <button class="retry-btn" onclick="retryQuestion(2)">もう一度挑戦</button>
-                <div class="explanation">
-                    <h4>正解！</h4>
-                    <p>点（-2, 5）、傾き-3なので、y - 5 = -3(x - (-2)) = -3(x + 2) が正解です。<br>
-                    負の座標に注意しましょう。</p>
-                </div>
-                <div class="wrong-explanation">
-                    <h4>もう一度考えてみましょう</h4>
-                    <p>負の数の扱いに注意してください。<br>
-                    x - (-2) = x + 2 になります。<br>
-                    傾きの符号も確認してみましょう。</p>
-                </div>
-            </div>
-
-            <!-- 問題3 -->
-            <div class="question-card" id="question3">
-                <div class="question-number">問題 3/5</div>
-                <div class="question-text">点（0, -1）を通り、傾きが2の直線の方程式はどれか？</div>
-                <div class="options">
-                    <div class="option" data-answer="incorrect">y - 1 = 2(x - 0)</div>
-                    <div class="option" data-answer="correct">y + 1 = 2(x - 0)</div>
-                    <div class="option" data-answer="incorrect">y - 0 = 2(x + 1)</div>
-                    <div class="option" data-answer="incorrect">y - 2 = -1(x - 0)</div>
-                </div>
-                <div class="hint-buttons">
-                    <button class="hint-btn" onclick="showHint(3, 1)">💡 ヒント1</button>
-                    <button class="hint-btn" onclick="showHint(3, 2)">💡 ヒント2</button>
-                </div>
-                <div class="hint-content" id="hint3-1">
-                    <h5>💡 ヒント1</h5>
-                    <p>公式：y - b = m(x - a)<br>
-                    y座標が負の数の場合、y - (-1) = y + 1 になります。<br>
-                    x座標が0の場合も、(x - 0) の形で書きます。</p>
-                </div>
-                <div class="hint-content" id="hint3-2">
-                    <h5>💡 ヒント2</h5>
-                    <p>この問題では：<br>
-                    • 通る点：（0, -1） → a = 0, b = -1<br>
-                    • 傾き：2 → m = 2<br>
-                    公式に代入：y - (-1) = 2(x - 0) → y + 1 = 2(x - 0)</p>
-                </div>
-                <div class="success-message">
-                    🚀 すごい！天才的な解答です！感動しました！💫
-                </div>
-                <button class="next-btn" onclick="nextQuestion(4)">次の問題へ</button>
-                <button class="retry-btn" onclick="retryQuestion(3)">もう一度挑戦</button>
-                <div class="explanation">
-                    <h4>正解！</h4>
-                    <p>点（0, -1）、傾き2なので、y - (-1) = 2(x - 0) つまり y + 1 = 2(x - 0) が正解です。<br>
-                    y座標が負の場合は符号に注意しましょう。</p>
-                </div>
-                <div class="wrong-explanation">
-                    <h4>もう一度考えてみましょう</h4>
-                    <p>y座標が負の数の場合の処理に注意してください。<br>
-                    y - (-1) = y + 1 になります。<br>
-                    公式の形 y - b = m(x - a) を保ちましょう。</p>
-                </div>
-            </div>
-
-            <!-- 問題4 -->
-            <div class="question-card" id="question4">
-                <div class="question-number">問題 4/5</div>
-                <div class="question-text">点（3, -4）を通り、傾きが3の直線の方程式はどれか？</div>
-                <div class="options">
-                    <div class="option" data-answer="incorrect">y - 3 = 3(x + 4)</div>
-                    <div class="option" data-answer="incorrect">y + 3 = 3(x - 4)</div>
-                    <div class="option" data-answer="correct">y + 4 = 3(x - 3)</div>
-                    <div class="option" data-answer="incorrect">y - 4 = 3(x + 3)</div>
-                </div>
-                <div class="hint-buttons">
-                    <button class="hint-btn" onclick="showHint(4, 1)">💡 ヒント1</button>
-                    <button class="hint-btn" onclick="showHint(4, 2)">💡 ヒント2</button>
-                </div>
-                <div class="hint-content" id="hint4-1">
-                    <h5>💡 ヒント1</h5>
-                    <p>公式：y - b = m(x - a)<br>
-                    y座標が負の数の場合、y - (-4) = y + 4 になります。<br>
-                    x座標とy座標を間違えないように注意しましょう。</p>
-                </div>
-                <div class="hint-content" id="hint4-2">
-                    <h5>💡 ヒント2</h5>
-                    <p>この問題では：<br>
-                    • 通る点：（3, -4） → a = 3, b = -4<br>
-                    • 傾き：3 → m = 3<br>
-                    公式に代入：y - (-4) = 3(x - 3) → y + 4 = 3(x - 3)</p>
-                </div>
-                <div class="success-message">
-                    ⭐ 最高です！数学の才能がありますね！本当に素晴らしい！🎯
-                </div>
-                <button class="next-btn" onclick="nextQuestion(5)">次の問題へ</button>
-                <button class="retry-btn" onclick="retryQuestion(4)">もう一度挑戦</button>
-                <div class="explanation">
-                    <h4>正解！</h4>
-                    <p>点（3, -4）、傾き3なので、y - (-4) = 3(x - 3) つまり y + 4 = 3(x - 3) が正解です。<br>
-                    y座標が負の場合の処理がポイントでした。</p>
-                </div>
-                <div class="wrong-explanation">
-                    <h4>もう一度考えてみましょう</h4>
-                    <p>x座標とy座標を正しく識別してください。<br>
-                    点（3, -4）では、x座標が3、y座標が-4です。<br>
-                    y - (-4) = y + 4 になることに注意しましょう。</p>
-                </div>
-            </div>
-
-            <!-- 問題5 -->
-            <div class="question-card" id="question5">
-                <div class="question-number">問題 5/5</div>
-                <div class="question-text">点（-1, -2）を通り、傾きが-2の直線の方程式はどれか？</div>
-                <div class="options">
-                    <div class="option" data-answer="incorrect">y - 2 = -2(x - 1)</div>
-                    <div class="option" data-answer="correct">y + 2 = -2(x + 1)</div>
-                    <div class="option" data-answer="incorrect">y + 1 = -2(x + 2)</div>
-                    <div class="option" data-answer="incorrect">y - 1 = -2(x - 2)</div>
-                </div>
-                <div class="hint-buttons">
-                    <button class="hint-btn" onclick="showHint(5, 1)">💡 ヒント1</button>
-                    <button class="hint-btn" onclick="showHint(5, 2)">💡 ヒント2</button>
-                </div>
-                <div class="hint-content" id="hint5-1">
-                    <h5>💡 ヒント1</h5>
-                    <p>公式：y - b = m(x - a)<br>
-                    x座標もy座標も負の数の場合：<br>
-                    x - (-1) = x + 1、y - (-2) = y + 2 になります。</p>
-                </div>
-                <div class="hint-content" id="hint5-2">
-                    <h5>💡 ヒント2</h5>
-                    <p>この問題では：<br>
-                    • 通る点：（-1, -2） → a = -1, b = -2<br>
-                    • 傾き：-2 → m = -2<br>
-                    公式に代入：y - (-2) = -2(x - (-1)) → y + 2 = -2(x + 1)</p>
-                </div>
-                <div class="success-message">
-                    🏆 完璧！あなたは数学のマスターです！感激です！👑
-                </div>
-                <button class="next-btn" onclick="showResult()">結果を見る</button>
-                <button class="retry-btn" onclick="retryQuestion(5)">もう一度挑戦</button>
-                <div class="explanation">
-                    <h4>正解！</h4>
-                    <p>点（-1, -2）、傾き-2なので、y - (-2) = -2(x - (-1)) つまり y + 2 = -2(x + 1) が正解です。<br>
-                    両方の座標が負の場合も、公式通りに代入すれば大丈夫です。</p>
-                </div>
-                <div class="wrong-explanation">
-                    <h4>もう一度考えてみましょう</h4>
-                    <p>x座標とy座標の両方が負の数の場合の処理に注意してください。<br>
-                    x - (-1) = x + 1、y - (-2) = y + 2 になります。<br>
-                    符号を慎重に確認しましょう。</p>
-                </div>
-            </div>
+            <!-- 【ブラッシュアップ】問題はスクリプトの questions から作る -->
+            <div id="cards"></div>
 
             <!-- 結果画面 -->
             <div class="result-card" id="result">
@@ -662,170 +454,197 @@
     </div>
 
     <script>
-        let currentQuestion = 1;
-        let score = 0;
-        let selectedAnswers = {};
-        let missed = {};   // 【ブラッシュアップ】まちがえた問題（一発正解だけを点にする）
+        // 【ブラッシュアップ】問題を 5 問 → 11 問にし、段階をつけた
+        //   1〜5 ：点と傾き（先生の 5 問）
+        //   6    ：傾きが分数
+        //   7・8 ：傾き 0（y = b）と、x 軸に垂直な直線（x = a）
+        //   9〜11：2 点を通る直線（11 は傾きが分数）
+        //   答えは y = mx + n（x 軸に垂直なときは x = a）にそろえた。数は [分子, 分母] でも書ける。
+        //   wrong は まちがいの選択肢：[傾き, 切片] か { x: 数 }（x = 数 の直線）
+        const questions = [
+            { type: 'ps', p: [1, 3], m: 4,        wrong: [[4, -11], [3, 1], [4, 3]] },
+            { type: 'ps', p: [-2, 5], m: -3,      wrong: [[-3, 11], [3, 11], [-3, 5]] },
+            { type: 'ps', p: [0, -1], m: 2,       wrong: [[2, 1], [-1, 2], [2, 0]] },
+            { type: 'ps', p: [3, -4], m: 3,       wrong: [[3, -5], [3, 13], [3, -9]] },
+            { type: 'ps', p: [-1, -2], m: -2,     wrong: [[-2, 4], [-2, -3], [2, 0]] },
+            { type: 'ps', p: [4, 1], m: [1, 2],   wrong: [[[1, 2], -3], [2, -7], [[1, 2], 1]] },
+            { type: 'ps', p: [2, -3], m: 0,       wrong: [{ x: 2 }, [-3, 0], { x: -3 }] },
+            { type: '2p', p: [2, 1], r: [2, 5],   wrong: [[0, 2], [0, 3], [4, -7]] },
+            { type: '2p', p: [1, 2], r: [3, 8],   wrong: [[[1, 3], [5, 3]], [3, 2], [-3, 5]] },
+            { type: '2p', p: [-1, 4], r: [3, -4], wrong: [[2, 6], [[-1, 2], [7, 2]], [-2, 6]] },
+            { type: '2p', p: [1, 3], r: [4, 5],   wrong: [[[3, 2], [3, 2]], [[2, 3], 3], [[2, 3], [11, 3]]] }
+        ];
 
-        // 【ブラッシュアップ】選択肢の並びをまぜる（元は正解の位置がいつも同じだった）
-        function shuffleOptions() {
-            document.querySelectorAll('.options').forEach(box => {
-                const kids = [...box.children];
-                for (let i = kids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [kids[i], kids[j]] = [kids[j], kids[i]]; }
-                kids.forEach(k => box.appendChild(k));
-            });
+        // ---- 分数の計算（[分子, 分母]） ----
+        const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
+        const F = (v) => { let [p, q] = Array.isArray(v) ? v : [v, 1]; if (q < 0) { p = -p; q = -q; } const g = gcd(p, q) || 1; return [p / g, q / g]; };
+        const add = (a, b) => F([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
+        const mul = (a, b) => F([a[0] * b[0], a[1] * b[1]]);
+        const neg = (a) => [-a[0], a[1]];
+        const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
+        const MINUS = '−';
+        const frac = (p, q) => `<span class="fraction"><span class="numerator">${p}</span><span class="denominator">${q}</span></span>`;
+        const absTxt = (a) => (a[1] === 1 ? String(Math.abs(a[0])) : frac(Math.abs(a[0]), a[1]));
+        const numTxt = (a) => (a[0] < 0 ? MINUS : '') + absTxt(a);
+        const coefTxt = (a) => (a[0] === 1 && a[1] === 1 ? '' : a[0] === -1 && a[1] === 1 ? MINUS : numTxt(a));
+        const plusTxt = (a) => (a[0] < 0 ? ` ${MINUS} ` : ' + ') + absTxt(a);   // 2 項目以降の「+ 3」「− 3」
+        const shift = (v, name) => (v[0] === 0 ? name : name + plusTxt(neg(v)));   // x − a の形
+        const pt = (p) => `(${numTxt(F(p[0]))}, ${numTxt(F(p[1]))})`;
+
+        // 直線の表し方：{ m, n }（y = mx + n）か { x }（x = 数）
+        function lineTxt(L) {
+            if (L.x !== undefined) return 'x = ' + numTxt(L.x);
+            if (L.m[0] === 0) return 'y = ' + numTxt(L.n);
+            return 'y = ' + coefTxt(L.m) + 'x' + (L.n[0] === 0 ? '' : plusTxt(L.n));
         }
+        const toLine = (w) => (Array.isArray(w) ? { m: F(w[0]), n: F(w[1]) } : { x: F(w.x) });
+        const sameLine = (a, b) => (a.x !== undefined || b.x !== undefined)
+            ? (a.x !== undefined && b.x !== undefined && eq(a.x, b.x))
+            : (eq(a.m, b.m) && eq(a.n, b.n));
 
-        function selectOption(questionNum, element) {
-            const options = document.querySelectorAll(`#question${questionNum} .option`);
-            options.forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedAnswers[questionNum] = element;
-
-            // 自動で正誤判定
-            checkAnswer(questionNum);
-        }
-
-        function checkAnswer(questionNum) {
-            const selectedOption = selectedAnswers[questionNum];
-            if (!selectedOption) return;
-
-            const options = document.querySelectorAll(`#question${questionNum} .option`);
-            const nextBtn = document.querySelector(`#question${questionNum} .next-btn`);
-            const retryBtn = document.querySelector(`#question${questionNum} .retry-btn`);
-            const explanation = document.querySelector(`#question${questionNum} .explanation`);
-            const wrongExplanation = document.querySelector(`#question${questionNum} .wrong-explanation`);
-            const successMessage = document.querySelector(`#question${questionNum} .success-message`);
-
-            let isCorrect = false;
-
-            options.forEach(option => {
-                if (option === selectedOption) {
-                    if (option.dataset.answer === 'correct') {
-                        isCorrect = true;
-                        option.classList.add('correct');   // 【ブラッシュアップ】元は正解に色がつかなかった
-                        if (!missed[questionNum]) score++;
-                        successMessage.classList.add('show');
-                        nextBtn.classList.add('show');
-                        explanation.classList.add('show');
-                    } else {
-                        option.classList.add('incorrect');
-                        missed[questionNum] = true;   // 【ブラッシュアップ】
-                        retryBtn.classList.add('show');
-                        wrongExplanation.classList.add('show');
-                    }
+        // 問題ごとに、正解の直線・問題文・ヒント（方針 → 途中式 → 答え）を作る
+        function build(q) {
+            const a = F(q.p[0]), b = F(q.p[1]);
+            let line, text, plan, mid;
+            if (q.type === '2p' && q.p[0] === q.r[0]) {
+                line = { x: a };
+                text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
+                plan = '2 点の x 座標が同じだね。傾きの式の分母が 0 になるので、傾きは求められない。この直線は x 軸に垂直で、x = （一定の数）の形になるよ。';
+                mid = `どちらの点も x 座標が ${numTxt(a)} なので、この直線上の点はすべて x 座標が ${numTxt(a)}`;
+            } else {
+                let m;
+                if (q.type === '2p') {
+                    const dy = add(F(q.r[1]), neg(b)), dx = add(F(q.r[0]), neg(a));
+                    m = mul(dy, [dx[1], dx[0]]);
+                    text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
+                    plan = 'まず傾き m = ' + frac('y の増加量', 'x の増加量') + ' を求めよう。そのあと、点 (a, b) を通り傾き m の直線 y − b = m(x − a) に入れて、y = mx + n の形に整理しよう。';
+                    mid = `傾きは ${frac(numTxt(F(q.r[1])) + ' ' + MINUS + ' ' + (q.p[1] < 0 ? '(' + numTxt(b) + ')' : numTxt(b)), numTxt(F(q.r[0])) + ' ' + MINUS + ' ' + (q.p[0] < 0 ? '(' + numTxt(a) + ')' : numTxt(a)))} = ${numTxt(m)}。点 ${pt(q.p)} を通るので `;
+                } else {
+                    m = F(q.m);
+                    text = `点 ${pt(q.p)} を通り、傾きが ${numTxt(m)} の直線の方程式はどれか？`;
+                    plan = m[0] === 0
+                        ? '傾きが 0 の直線は x 軸に平行で、y = （一定の数）の形になるよ。公式 y − b = m(x − a) に入れてみよう。'
+                        : '点 (a, b) を通り傾き m の直線は y − b = m(x − a)。代入してから、y = mx + n の形に整理しよう。';
+                    mid = '';
                 }
-                option.style.pointerEvents = 'none';
-            });
-
-            if (isCorrect) {
-                updateProgress();
+                const n = add(mul(neg(m), a), b);
+                line = { m, n };
+                if (m[0] === 0) {
+                    mid += `${shift(b, 'y')} = 0·(${shift(a, 'x')})、つまり ${shift(b, 'y')} = 0`;
+                } else {
+                    const ma = mul(neg(m), a);   // −ma
+                    mid += `${shift(b, 'y')} = ${a[0] === 0 ? coefTxt(m) + 'x' : coefTxt(m) + '(' + shift(a, 'x') + ')'}、` +
+                        `y = ${coefTxt(m)}x${ma[0] === 0 ? '' : plusTxt(ma)}${b[0] === 0 ? '' : plusTxt(b)}`;
+                }
             }
+            const answer = lineTxt(line);
+            const opts = [{ text: answer, ok: true }].concat(q.wrong.map(w => { const L = toLine(w); return { text: lineTxt(L), ok: sameLine(L, line) }; }));
+            return { text, plan, mid, answer, opts };
         }
 
-        function showHint(questionNum, hintNum) {
-            const hintElement = document.getElementById(`hint${questionNum}-${hintNum}`);
-            hintElement.classList.add('show');
+        let currentQuestion = 0;
+        let score = 0;
+        let stage = 0;       // 【ブラッシュアップ】この問題のヒントの段階（0：なし 1：方針 2：途中式 3：答え）
+        let answered = false;
+        let built = null;
+        let order = [];
+
+        function renderQuestion() {
+            built = build(questions[currentQuestion]);
+            order = built.opts.map((_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+            stage = 0;
+            answered = false;
+            document.getElementById('cards').innerHTML = `
+                <div class="question-card active">
+                    <div class="question-number">問題 ${currentQuestion + 1}/${questions.length}</div>
+                    <div class="question-text">${built.text}</div>
+                    <div class="options">
+                        ${order.map((o, i) => `<button class="option" id="opt${i}" onclick="selectOption(${i})">${built.opts[o].text}</button>`).join('')}
+                    </div>
+                    <div id="feedback"></div>
+                    <div class="hint-content" id="hint1"><h5>💡 ヒント1（方針）</h5><p>${built.plan}</p></div>
+                    <div class="hint-content" id="hint2"><h5>✏️ ヒント2（途中式）</h5><p>${built.mid}</p></div>
+                    <div class="hint-buttons" id="hintButtons">
+                        <button class="hint-btn" onclick="showHint(1)">💡 ヒント1（方針）</button>
+                        <button class="hint-btn" onclick="showHint(2)">✏️ ヒント2（途中式）</button>
+                        <button class="hint-btn plain" onclick="showHint(3)">👀 答えを見る</button>
+                    </div>
+                </div>`;
+            updateProgress();
+            window.scrollTo(0, 0);
         }
 
-        function retryQuestion(questionNum) {
-            const options = document.querySelectorAll(`#question${questionNum} .option`);
-            const nextBtn = document.querySelector(`#question${questionNum} .next-btn`);
-            const retryBtn = document.querySelector(`#question${questionNum} .retry-btn`);
-            const explanation = document.querySelector(`#question${questionNum} .explanation`);
-            const wrongExplanation = document.querySelector(`#question${questionNum} .wrong-explanation`);
-            const successMessage = document.querySelector(`#question${questionNum} .success-message`);
+        // ヒントを見る（まちがえたときは自動で 1 段ずつすすむ）。3 段目は答え
+        function showHint(n) {
+            if (answered) return;
+            stage = Math.max(stage, n);
+            if (stage >= 3) { finish(false); return; }
+            for (let i = 1; i <= 2; i++) document.getElementById('hint' + i).classList.toggle('show', i <= stage);
+        }
 
-            // リセット
-            options.forEach(opt => {
-                opt.classList.remove('selected', 'incorrect', 'correct');
-                opt.style.pointerEvents = 'auto';
+        function selectOption(i) {
+            if (answered) return;
+            const btn = document.getElementById('opt' + i);
+            if (built.opts[order[i]].ok) { finish(true, btn); return; }
+            btn.classList.add('incorrect');
+            btn.disabled = true;
+            const next = stage + 1;
+            document.getElementById('feedback').innerHTML = next >= 3 ? '' :
+                `<div class="wrong-explanation show"><h4>ちがうよ</h4><p>すぐ下の${next === 1 ? 'ヒント1（方針）' : 'ヒント2（途中式）'}を見て、もう一度考えよう。</p></div>`;
+            showHint(next);
+        }
+
+        function finish(correct, btn) {
+            answered = true;
+            if (correct && stage === 0) score++;
+            document.querySelectorAll('#cards .option').forEach((b, i) => {
+                b.disabled = true;
+                if (built.opts[order[i]].ok) b.classList.add('correct');
             });
-
-            nextBtn.classList.remove('show');
-            retryBtn.classList.remove('show');
-            explanation.classList.remove('show');
-            wrongExplanation.classList.remove('show');
-            successMessage.classList.remove('show');
-
-            delete selectedAnswers[questionNum];
+            document.getElementById('hintButtons').style.display = 'none';
+            document.getElementById('hint1').classList.remove('show');
+            document.getElementById('hint2').classList.remove('show');
+            const last = currentQuestion >= questions.length - 1;
+            document.getElementById('feedback').innerHTML = `
+                <div class="${correct ? 'success-message' : 'answer-message'} show">${correct ? '⭕ 正解！' : '👀 答え：' + built.answer}</div>
+                <div class="explanation show"><h4>解説</h4><p>${built.mid}。<br>よって <strong>${built.answer}</strong></p></div>
+                <button class="next-btn show" onclick="${last ? 'showResult()' : 'nextQuestion()'}">${last ? '結果を見る' : '次の問題へ'}</button>`;
+            updateProgress(true);
         }
 
-        function nextQuestion(nextNum) {
-            document.getElementById(`question${currentQuestion}`).classList.remove('active');
-            if (nextNum <= 5) {
-                document.getElementById(`question${nextNum}`).classList.add('active');
-                currentQuestion = nextNum;
-                window.scrollTo(0, 0);
-            }
+        function nextQuestion() {
+            currentQuestion++;
+            renderQuestion();
         }
 
         function showResult() {
-            document.getElementById(`question${currentQuestion}`).classList.remove('active');
+            document.getElementById('cards').innerHTML = '';
             document.getElementById('result').classList.add('show');
-
-            document.getElementById('scoreDisplay').innerHTML = `${score}/5<div class="score-label">一発で正解した数</div>`;   // 【ブラッシュアップ】
-
+            document.getElementById('scoreDisplay').innerHTML = `${score}/${questions.length}<div class="score-label">ヒントなしで一発正解した数</div>`;
             let message = '';
-            if (score === 5) {
-                message = '🎊 信じられない！全問正解です！あなたは本当に天才です！数学の神様ですね！これほど完璧な解答は見たことがありません！感動で涙が出そうです！🏆✨👑';
-            } else if (score >= 3) {
-                message = '素晴らしい成績です！あなたの数学力に感動しました！もう少し練習すれば完璧になりますね！👍✨';
-            } else {
-                message = '挑戦してくれてありがとう！基本をもう一度復習して、また挑戦してくださいね！応援しています！📚💪';
-            }
-
+            if (score === questions.length) message = '🎊 全問、ヒントなしで一発正解！完璧です！';
+            else if (score >= Math.ceil(questions.length * 0.6)) message = 'よくできました！まちがえた問題は、解説の途中式をもう一度たどってみよう。';
+            else message = '「傾き → 公式 y − b = m(x − a) → 整理」の順番を確認して、もう一度挑戦しよう！';
             document.getElementById('resultMessage').textContent = message;
+            updateProgress(true);
+            window.scrollTo(0, 0);
         }
 
-        function updateProgress() {
-            const progress = (currentQuestion / 5) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
+        // 【ブラッシュアップ】元は最初から 20% になっていて、1 問目に正解しても 20% のままだった。解き終えた問題の数で進める
+        function updateProgress(done) {
+            const n = currentQuestion + (done ? 1 : 0);
+            document.getElementById('progressBar').style.width = (n / questions.length * 100) + '%';
         }
 
         function restartQuiz() {
-            currentQuestion = 1;
+            currentQuestion = 0;
             score = 0;
-            selectedAnswers = {};
-            missed = {};   // 【ブラッシュアップ】
-            shuffleOptions();
-            window.scrollTo(0, 0);
-
-            // リセット
-            document.querySelectorAll('.question-card').forEach(card => {
-                card.classList.remove('active');
-                const options = card.querySelectorAll('.option');
-                options.forEach(opt => {
-                    opt.classList.remove('selected', 'incorrect', 'correct');
-                    opt.style.pointerEvents = 'auto';
-                });
-                card.querySelector('.next-btn').classList.remove('show');
-                card.querySelector('.retry-btn').classList.remove('show');
-                card.querySelector('.explanation').classList.remove('show');
-                card.querySelector('.wrong-explanation').classList.remove('show');
-                card.querySelector('.success-message').classList.remove('show');
-
-                // ヒントもリセット
-                const hints = card.querySelectorAll('.hint-content');
-                hints.forEach(hint => hint.classList.remove('show'));
-            });
-
-            document.getElementById('question1').classList.add('active');
             document.getElementById('result').classList.remove('show');
-            document.getElementById('progressBar').style.width = '20%';
+            renderQuestion();
         }
 
-        // オプションクリックイベント
-        document.addEventListener('DOMContentLoaded', function() {
-            shuffleOptions();   // 【ブラッシュアップ】
-            document.querySelectorAll('.option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const questionCard = this.closest('.question-card');
-                    const questionNum = parseInt(questionCard.id.replace('question', ''));
-                    selectOption(questionNum, this);
-                });
-            });
-        });
+        document.addEventListener('DOMContentLoaded', renderQuestion);
     </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
@@ -835,9 +654,8 @@
     ".option": "u-choice",
     ".option.correct": "u-ok",
     ".option.incorrect": "u-ng",
-    ".hint-btn": "u-btn",
+    ".hint-btn:not(.plain)": "u-btn",
     ".next-btn": "u-btn u-btn-blue",
-    ".retry-btn": "u-btn",
     ".result-nav .again": "u-btn",
     ".result-nav .next": "u-btn u-btn-blue"
   });

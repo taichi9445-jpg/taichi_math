@@ -172,8 +172,15 @@
     header h1 { font-size: min(2rem, 8vw) !important; }
     #menu-screen p.text-blue-500, #menu-screen p.text-gray-400 { color: var(--u-sub) !important; }
     .math-display { color: var(--u-ink); background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; }
+    .task-text { color: var(--u-ink); font-weight: 800; font-size: 1.1rem; margin: 0 0 8px; }
     .answer-slot { border-color: var(--u-line-dark); background: var(--u-soft-yellow); }
     .tile { border-color: var(--u-line-dark); color: var(--u-ink); }
+    .choice-btn.wrong-choice { background: var(--u-ng-soft) !important; border-color: var(--u-ng-line) !important; opacity: 0.7; }
+    .miss-note { margin-top: 14px; background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); border-radius: 16px; padding: 10px 14px; font-weight: 800; text-align: center; }
+    .hint-box { margin-top: 10px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.8; }
+    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
+    .give-up { display: block; width: 100%; margin-top: 10px; padding: 10px; font-weight: 700; color: var(--u-sub); background: #fff; border: 2px solid var(--u-line); border-radius: 999px; }
+    #answer-area > button.bg-orange-500 { position: sticky; bottom: 8px; z-index: 5; }
     #result-screen p.text-gray-400 { color: var(--u-sub) !important; }
     #final-result { color: var(--u-title) !important; }
     @media (max-width: 640px) {
@@ -188,7 +195,7 @@
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div id="app">
         <header class="text-center py-4">
-            <h1 class="text-2xl font-black text-blue-600 tracking-tight">数学パズル</h1>
+            <h1 class="text-2xl font-black text-blue-600 tracking-tight">3乗の展開・因数分解</h1>
         </header>
 
         <!-- メニュー画面 -->
@@ -208,6 +215,7 @@
                         <button onclick="startQuiz('sq')" class="bubble-btn bg-emerald-400 text-white py-5 rounded-2xl font-black text-xl hover:bg-emerald-500">🌱 2乗の公式</button>
                         <button onclick="startQuiz('cb_exp')" class="bubble-btn bg-sky-400 text-white py-5 rounded-2xl font-black text-xl hover:bg-sky-500">🚀 3乗の展開</button>
                         <button onclick="startQuiz('cb_fac')" class="bubble-btn bg-indigo-500 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-600">💎 3乗の因数分解</button>
+                        <button onclick="startQuiz('cb_adv')" class="bubble-btn bg-rose-500 text-white py-5 rounded-2xl font-black text-xl hover:bg-rose-600">🔥 3乗の応用（係数・2文字）</button>
                     </div>
                 </div>
             </div>
@@ -221,7 +229,7 @@
         <!-- 結果画面 -->
         <div id="result-screen" class="hidden card fade-in text-center py-10">
             <div class="text-6xl mb-6">🎉</div>
-            <h2 class="text-2xl font-black">All Done!</h2>
+            <h2 class="text-2xl font-black">おわり！</h2>
             <!-- 【ブラッシュアップ】元は「解きなおす」で正解しても点に入り、いつも 5 / 5 になっていた。一発で正解した数を出す -->
             <p class="text-sm font-bold text-gray-400 mt-6">一発で正解できた問題</p>
             <div class="text-7xl font-black text-blue-500 mt-2 mb-8" id="final-result"></div>
@@ -244,29 +252,29 @@
         let currentMode = 'sq';
         let answered = false;     // 【ブラッシュアップ】答えたあとの連打で、点が 2 回入らないように
         let missedThis = false;   // 【ブラッシュアップ】この問題で一度まちがえたか（一発正解だけを数える）
+        let missCount = 0;        // 【ブラッシュアップ】この問題でまちがえた回数（ヒントの段階：1 方針 → 2 途中式 → 3 答え）
         let orderNote = '';       // 【ブラッシュアップ】順番のちがう正解のときに出す一言
-        const COURSES = ['sq', 'cb_exp', 'cb_fac'];
-        const COURSE_NAMES = { sq: '🌱 2乗の公式', cb_exp: '🚀 3乗の展開', cb_fac: '💎 3乗の因数分解' };
+        const COURSES = ['sq', 'cb_exp', 'cb_fac', 'cb_adv'];
+        const COURSE_NAMES = { sq: '🌱 2乗の公式', cb_exp: '🚀 3乗の展開', cb_fac: '💎 3乗の因数分解', cb_adv: '🔥 3乗の応用' };
 
         function shuffleArr(a) {
             for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
             return a;
         }
 
-        // 【ブラッシュアップ】式の値を計算する（x に数を入れて、2 つの式が同じかどうかを確かめるため）
-        function evalExpr(s, x) {
-            if (!/^[0-9x+\-()^]+$/.test(s)) return NaN;
+        // 【ブラッシュアップ】式の値を計算する（x, y に数を入れて、2 つの式が同じかどうかを確かめるため）
+        function evalExpr(s, x, y) {
+            if (!/^[0-9xy+\-()^]+$/.test(s)) return NaN;
             const e = s.replace(/(^|\()-/g, '$10-')
                        .replace(/\^/g, '**')
-                       .replace(/(\d)(x|\()/g, '$1*$2')
-                       .replace(/\)(\(|x|\d)/g, ')*$1')
-                       .replace(/x(\(|x|\d)/g, 'x*$1');
-            try { const v = Function('x', 'return (' + e + ');')(x); return typeof v === 'number' ? v : NaN; }
+                       .replace(/([0-9xy)])(?=[xy(])/g, '$1*')
+                       .replace(/\)(?=\d)/g, ')*');
+            try { const v = Function('x', 'y', 'return (' + e + ');')(x, y); return typeof v === 'number' ? v : NaN; }
             catch (err) { return NaN; }
         }
         function sameValue(a, b) {
-            return [1.3, -0.7, 2.9, -2.2, 0.4].every(x => {
-                const va = evalExpr(a, x), vb = evalExpr(b, x);
+            return [[1.3, 0.7], [-0.7, 1.9], [2.9, -1.1], [-2.2, -0.6], [0.4, 2.3]].every(([x, y]) => {
+                const va = evalExpr(a, x, y), vb = evalExpr(b, x, y);
                 return isFinite(va) && isFinite(vb) && Math.abs(va - vb) < 1e-6;
             });
         }
@@ -277,9 +285,9 @@
             s.replace(/\(([^()]+)\)(?:\^(\d))?/g, (m, inner, k) => { for (let i = 0; i < (k ? +k : 1); i++) out.push(inner); return m; });
             return out;
         }
-        // 展開した式の各項の次数（同じ次数の項が 2 つあれば、まだまとめきれていない）
-        function termPowers(s) {
-            return s.split(/[+-]/).filter(Boolean).map(t => t.includes('x') ? ((t.match(/\^(\d)/) || [0, '1'])[1]) : '0');
+        // 展開した式の各項の文字の部分（同じ形の項が 2 つあれば、まだまとめきれていない）
+        function termKeys(s) {
+            return s.split(/[+-]/).filter(Boolean).map(t => t.replace(/^\d+/, '') || '1');
         }
         // 並べた答えが、正解と同じ式か（順番がちがうだけなら正解にする）
         function isEquivalentAnswer(s, canon) {
@@ -290,7 +298,7 @@
                 return fs.every(f => { const i = rest.findIndex(g => sameValue(f, g)); if (i < 0) return false; rest.splice(i, 1); return true; });
             }
             if (/[()]/.test(s)) return false;
-            const ps = termPowers(s), pc = termPowers(canon);
+            const ps = termKeys(s), pc = termKeys(canon);
             return ps.length === pc.length && new Set(ps).size === ps.length && sameValue(s, canon);
         }
 
@@ -304,6 +312,7 @@
         //   また 3乗は「和」の形しか出なかった。数をランダムにし、(x−a)³ と x³−a³ の形も入れた。
         //   選択肢も、元は「答えのうしろに x を付けたもの」「x²+1」などだったので、
         //   まちがえやすい形（2 や 3 を忘れる・符号を取りちがえる など）にした。
+        //   task は問題文（展開しなさい／因数分解しなさい）、ab は公式の a・b に当たるもの（ヒントの「方針」に使う）
         function mono(c, p) {   // 係数 c・次数 p の項。係数の 1 と x^1 の ^1 は書かない
             if (p === 0) return String(c);
             return (c === 1 ? '' : String(c)) + 'x' + (p === 1 ? '' : '^' + p);
@@ -314,14 +323,15 @@
                 return sign + mono(Math.abs(t[0]), t[1]);
             }).join('');
         }
-        // 答えの式を、並べるタイルに分ける（元の parts と同じ分け方）
-        function tokenize(s) { return s.match(/\(|\)|[+-]|\^\d|\d*x(\^\d)?|\d+/g) || []; }
+        // 答えの式を、並べるタイルに分ける（元の parts と同じ分け方。係数つきの項・y をふくむ項は 1 枚）
+        function tokenize(s) { return s.match(/\(|\)|[+-]|\^\d|\d*[xy](\^\d)?([xy](\^\d)?)?|\d+/g) || []; }
         // まちがいの選択肢を 3 つ（正解と同じ値になるものは除く）
         function pickDummies(ans, list) {
             const out = [];
             shuffleArr(list.slice()).forEach(d => { if (out.length < 3 && !out.includes(d) && !sameValue(d, ans)) out.push(d); });
             return out;
         }
+        const EXPAND = '展開しなさい', FACTOR = '因数分解しなさい';
 
         const Generator = {
             sq: (step, n) => {
@@ -329,25 +339,25 @@
                 const n2 = n * n;
                 if (type === 'plus') {
                     const ans = poly([[1, 2], [2 * n, 1], [n2, 0]]);
-                    return { q: `(x+${n})^2`, a: ans, h: "(a+b)^2 = a^2+2ab+b^2", fn: "和の平方",
+                    return { q: `(x+${n})^2`, a: ans, h: "(a+b)^2 = a^2+2ab+b^2", fn: "和の平方", task: EXPAND, ab: ['x', n],
                         steps: [{ t: "公式", d: `x^2 + 2 \\cdot x \\cdot ${n} + ${n}^2` }, { t: "計算", d: ans }],
                         parts: tokenize(ans), dummy: [mono(n, 1)],
                         wrongs: [poly([[1, 2], [n, 1], [n2, 0]]), poly([[1, 2], [n2, 0]]), poly([[1, 2], [2 * n, 1], [2 * n, 0]]), poly([[1, 2], [-2 * n, 1], [n2, 0]])] };
                 } else if (type === 'minus') {
                     const ans = poly([[1, 2], [-2 * n, 1], [n2, 0]]);
-                    return { q: `(x-${n})^2`, a: ans, h: "(a-b)^2 = a^2-2ab+b^2", fn: "差の平方",
+                    return { q: `(x-${n})^2`, a: ans, h: "(a-b)^2 = a^2-2ab+b^2", fn: "差の平方", task: EXPAND, ab: ['x', n],
                         steps: [{ t: "公式", d: `x^2 - 2 \\cdot x \\cdot ${n} + ${n}^2` }, { t: "計算", d: ans }],
                         parts: tokenize(ans), dummy: [mono(n, 1)],
                         wrongs: [poly([[1, 2], [-2 * n, 1], [-n2, 0]]), poly([[1, 2], [-n2, 0]]), poly([[1, 2], [-n, 1], [n2, 0]]), poly([[1, 2], [2 * n, 1], [n2, 0]])] };
                 } else if (type === 'diff') {
                     const ans = `(x+${n})(x-${n})`;
-                    return { q: `x^2 - ${n2}`, a: ans, h: "a^2-b^2 = (a+b)(a-b)", fn: "平方の差",
+                    return { q: `x^2 - ${n2}`, a: ans, h: "a^2-b^2 = (a+b)(a-b)", fn: "平方の差", task: FACTOR, ab: ['x', n],
                         steps: [{ t: "変形", d: `x^2 - ${n}^2` }, { t: "完成", d: ans }],
                         parts: tokenize(ans), dummy: ["^2"],
                         wrongs: [`(x-${n})^2`, `(x+${n})^2`, `(x+${n2})(x-${n2})`] };
                 } else {
                     const ans = `(x+${n})^2`;
-                    return { q: poly([[1, 2], [2 * n, 1], [n2, 0]]), a: ans, h: "a^2+2ab+b^2 = (a+b)^2", fn: "因数分解",
+                    return { q: poly([[1, 2], [2 * n, 1], [n2, 0]]), a: ans, h: "a^2+2ab+b^2 = (a+b)^2", fn: "和の平方", task: FACTOR, ab: ['x', n],
                         steps: [{ t: "確認", d: `x^2 + 2 \\cdot ${n} \\cdot x + ${n}^2` }, { t: "完成", d: ans }],
                         parts: tokenize(ans), dummy: [String(2 * n)],
                         wrongs: [`(x+${2 * n})^2`, `(x-${n})^2`, `(x+${n})(x-${n})`, `(x+${n2})^2`] };
@@ -357,14 +367,14 @@
                 const n2 = n * n, n3 = n * n * n;
                 if (step % 2 === 0) {
                     const ans = poly([[1, 3], [3 * n, 2], [3 * n2, 1], [n3, 0]]);
-                    return { q: `(x+${n})^3`, a: ans, h: "(a+b)^3=a^3+3a^2b+3ab^2+b^3", fn: "3乗の展開（和）",
+                    return { q: `(x+${n})^3`, a: ans, h: "(a+b)^3=a^3+3a^2b+3ab^2+b^3", fn: "3乗の展開（和）", task: EXPAND, ab: ['x', n],
                         steps: [{ t: "適用", d: `x^3+3 \\cdot x^2 \\cdot ${n}+3 \\cdot x \\cdot ${n}^2+${n}^3` }, { t: "計算", d: ans }],
                         parts: tokenize(ans), dummy: [mono(n, 2)],
                         wrongs: [poly([[1, 3], [n3, 0]]), poly([[1, 3], [n, 2], [n2, 1], [n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n, 1], [n3, 0]]),
                                  poly([[1, 3], [3 * n2, 2], [3 * n, 1], [n3, 0]]), poly([[1, 3], [-3 * n, 2], [3 * n2, 1], [-n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n2, 1], [3 * n, 0]])] };
                 } else {
                     const ans = poly([[1, 3], [-3 * n, 2], [3 * n2, 1], [-n3, 0]]);
-                    return { q: `(x-${n})^3`, a: ans, h: "(a-b)^3=a^3-3a^2b+3ab^2-b^3", fn: "3乗の展開（差）",
+                    return { q: `(x-${n})^3`, a: ans, h: "(a-b)^3=a^3-3a^2b+3ab^2-b^3", fn: "3乗の展開（差）", task: EXPAND, ab: ['x', n],
                         steps: [{ t: "適用", d: `x^3-3 \\cdot x^2 \\cdot ${n}+3 \\cdot x \\cdot ${n}^2-${n}^3` }, { t: "計算", d: ans }],
                         parts: tokenize(ans), dummy: [mono(n, 2)],
                         wrongs: [poly([[1, 3], [-n3, 0]]), poly([[1, 3], [-3 * n, 2], [-3 * n2, 1], [-n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n2, 1], [n3, 0]]),
@@ -372,24 +382,72 @@
                 }
             },
             cb_fac: (step, r) => {
-                const r2 = r * r, r3 = r * r * r;
+                const r2 = r * r, r3 = r * r * r, rx = mono(r, 1);
                 if (step % 2 === 0) {
                     const ans = `(x+${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`;
-                    return { q: `x^3 + ${r3}`, a: ans, h: "a^3+b^3=(a+b)(a^2-ab+b^2)", fn: "3乗の因数分解（和）",
-                        steps: [{ t: "変形", d: `x^3 + ${r}^3` }, { t: "適用", d: `(x+${r})(x^2 - x \\cdot ${r} + ${r}^2)` }],
+                    return { q: `x^3 + ${r3}`, a: ans, h: "a^3+b^3=(a+b)(a^2-ab+b^2)", fn: "3乗の因数分解（和）", task: FACTOR, ab: ['x', r],
+                        steps: [{ t: "変形", d: `x^3 + ${r}^3` }, { t: "適用", d: `(x+${r})(x^2 - ${rx} + ${r}^2)` }],
                         parts: tokenize(ans), dummy: [mono(2 * r, 1)],
                         wrongs: [`(x+${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`, `(x-${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`,
                                  `(x+${r})(${poly([[1, 2], [-2 * r, 1], [r2, 0]])})`, `(x+${r})^3`] };
                 } else {
                     const ans = `(x-${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`;
-                    return { q: `x^3 - ${r3}`, a: ans, h: "a^3-b^3=(a-b)(a^2+ab+b^2)", fn: "3乗の因数分解（差）",
-                        steps: [{ t: "変形", d: `x^3 - ${r}^3` }, { t: "適用", d: `(x-${r})(x^2 + x \\cdot ${r} + ${r}^2)` }],
+                    return { q: `x^3 - ${r3}`, a: ans, h: "a^3-b^3=(a-b)(a^2+ab+b^2)", fn: "3乗の因数分解（差）", task: FACTOR, ab: ['x', r],
+                        steps: [{ t: "変形", d: `x^3 - ${r}^3` }, { t: "適用", d: `(x-${r})(x^2 + ${rx} + ${r}^2)` }],
                         parts: tokenize(ans), dummy: [mono(2 * r, 1)],
                         wrongs: [`(x-${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`, `(x+${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`,
                                  `(x-${r})(${poly([[1, 2], [2 * r, 1], [r2, 0]])})`, `(x-${r})^3`] };
                 }
+            },
+            // 【ブラッシュアップ】「3乗の応用」：係数のある式・2 文字の式・展開の逆向き（教科書の例題の形）
+            //   5 問 = 展開 2 問（ADV.exp から）＋ 和・差の因数分解 2 問（ADV.fac）＋ 3乗の形にまとめる 1 問（ADV.rev）
+            cb_adv: (step, pick) => {
+                const src = step < 2 ? ADV.exp : step < 4 ? ADV.fac : ADV.rev;
+                const d = src[pick];
+                return Object.assign({ parts: tokenize(d.a) }, d);
             }
         };
+        const F_SUM = "a^3+b^3=(a+b)(a^2-ab+b^2)", F_DIF = "a^3-b^3=(a-b)(a^2+ab+b^2)";
+        const E_SUM = "(a+b)^3=a^3+3a^2b+3ab^2+b^3", E_DIF = "(a-b)^3=a^3-3a^2b+3ab^2-b^3";
+        const ADV = {
+            exp: [
+                { q: "(2x+1)^3", a: "8x^3+12x^2+6x+1", h: E_SUM, fn: "3乗の展開（和）", task: EXPAND, ab: ['2x', 1],
+                  steps: [{ t: "適用", d: "(2x)^3+3 \\cdot (2x)^2 \\cdot 1+3 \\cdot 2x \\cdot 1^2+1^3" }, { t: "計算", d: "8x^3+12x^2+6x+1" }],
+                  dummy: ["2x^3"], wrongs: ["2x^3+6x^2+6x+1", "8x^3+1", "8x^3+6x^2+3x+1", "2x^3+12x^2+6x+1"] },
+                { q: "(x-2y)^3", a: "x^3-6x^2y+12xy^2-8y^3", h: E_DIF, fn: "3乗の展開（差）", task: EXPAND, ab: ['x', '2y'],
+                  steps: [{ t: "適用", d: "x^3-3 \\cdot x^2 \\cdot 2y+3 \\cdot x \\cdot (2y)^2-(2y)^3" }, { t: "計算", d: "x^3-6x^2y+12xy^2-8y^3" }],
+                  dummy: ["2y^3"], wrongs: ["x^3-8y^3", "x^3-6x^2y+6xy^2-8y^3", "x^3-2x^2y+4xy^2-8y^3", "x^3+6x^2y+12xy^2+8y^3"] },
+                { q: "(3x-1)^3", a: "27x^3-27x^2+9x-1", h: E_DIF, fn: "3乗の展開（差）", task: EXPAND, ab: ['3x', 1],
+                  steps: [{ t: "適用", d: "(3x)^3-3 \\cdot (3x)^2 \\cdot 1+3 \\cdot 3x \\cdot 1^2-1^3" }, { t: "計算", d: "27x^3-27x^2+9x-1" }],
+                  dummy: ["9x^2"], wrongs: ["27x^3-1", "3x^3-9x^2+9x-1", "27x^3-9x^2+3x-1", "27x^3+27x^2+9x+1"] },
+                { q: "(x+3y)^3", a: "x^3+9x^2y+27xy^2+27y^3", h: E_SUM, fn: "3乗の展開（和）", task: EXPAND, ab: ['x', '3y'],
+                  steps: [{ t: "適用", d: "x^3+3 \\cdot x^2 \\cdot 3y+3 \\cdot x \\cdot (3y)^2+(3y)^3" }, { t: "計算", d: "x^3+9x^2y+27xy^2+27y^3" }],
+                  dummy: ["9y^3"], wrongs: ["x^3+27y^3", "x^3+3x^2y+9xy^2+27y^3", "x^3+9x^2y+9xy^2+27y^3", "x^3+9x^2y+27xy^2+9y^3"] }
+            ],
+            fac: [
+                { q: "8x^3+27", a: "(2x+3)(4x^2-6x+9)", h: F_SUM, fn: "3乗の因数分解（和）", task: FACTOR, ab: ['2x', 3],
+                  steps: [{ t: "変形", d: "(2x)^3+3^3" }, { t: "適用", d: "(2x+3)\\{(2x)^2-2x \\cdot 3+3^2\\}" }],
+                  dummy: ["12x"], wrongs: ["(2x+3)(4x^2+6x+9)", "(2x-3)(4x^2+6x+9)", "(2x+3)(4x^2-12x+9)", "(2x+3)(2x^2-6x+9)"] },
+                { q: "x^3-8y^3", a: "(x-2y)(x^2+2xy+4y^2)", h: F_DIF, fn: "3乗の因数分解（差）", task: FACTOR, ab: ['x', '2y'],
+                  steps: [{ t: "変形", d: "x^3-(2y)^3" }, { t: "適用", d: "(x-2y)\\{x^2+x \\cdot 2y+(2y)^2\\}" }],
+                  dummy: ["4xy"], wrongs: ["(x-2y)(x^2-2xy+4y^2)", "(x+2y)(x^2-2xy+4y^2)", "(x-2y)(x^2+4xy+4y^2)", "(x-2y)^3"] },
+                { q: "27x^3-64y^3", a: "(3x-4y)(9x^2+12xy+16y^2)", h: F_DIF, fn: "3乗の因数分解（差）", task: FACTOR, ab: ['3x', '4y'],
+                  steps: [{ t: "変形", d: "(3x)^3-(4y)^3" }, { t: "適用", d: "(3x-4y)\\{(3x)^2+3x \\cdot 4y+(4y)^2\\}" }],
+                  dummy: ["24xy"], wrongs: ["(3x-4y)(9x^2-12xy+16y^2)", "(3x+4y)(9x^2-12xy+16y^2)", "(3x-4y)(9x^2+24xy+16y^2)", "(3x-4y)(3x^2+12xy+4y^2)"] }
+            ],
+            rev: [
+                { q: "x^3+6x^2+12x+8", a: "(x+2)^3", h: "a^3+3a^2b+3ab^2+b^3=(a+b)^3", fn: "3乗の形にまとめる", task: FACTOR, ab: ['x', 2],
+                  steps: [{ t: "確認", d: "x^3+3 \\cdot x^2 \\cdot 2+3 \\cdot x \\cdot 2^2+2^3" }, { t: "完成", d: "(x+2)^3" }],
+                  dummy: ["^2"], wrongs: ["(x+2)(x^2-2x+4)", "(x-2)^3", "(x+4)^3", "(x+8)^3"] },
+                { q: "x^3-9x^2+27x-27", a: "(x-3)^3", h: "a^3-3a^2b+3ab^2-b^3=(a-b)^3", fn: "3乗の形にまとめる", task: FACTOR, ab: ['x', 3],
+                  steps: [{ t: "確認", d: "x^3-3 \\cdot x^2 \\cdot 3+3 \\cdot x \\cdot 3^2-3^3" }, { t: "完成", d: "(x-3)^3" }],
+                  dummy: ["^2"], wrongs: ["(x+3)^3", "(x-3)(x^2+3x+9)", "(x-9)^3", "(x-27)^3"] },
+                { q: "8x^3-12x^2+6x-1", a: "(2x-1)^3", h: "a^3-3a^2b+3ab^2-b^3=(a-b)^3", fn: "3乗の形にまとめる", task: FACTOR, ab: ['2x', 1],
+                  steps: [{ t: "確認", d: "(2x)^3-3 \\cdot (2x)^2 \\cdot 1+3 \\cdot 2x \\cdot 1^2-1^3" }, { t: "完成", d: "(2x-1)^3" }],
+                  dummy: ["^2"], wrongs: ["(2x+1)^3", "(8x-1)^3", "(2x-1)(4x^2+2x+1)", "(4x-1)^3"] }
+            ]
+        };
+
 
         function setMethod(method) {
             answerMethod = method;
@@ -399,7 +457,10 @@
 
         function startQuiz(mode) {
             currentMode = mode;
-            const nums = shuffleArr(mode === 'sq' ? [2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5]);
+            // 【ブラッシュアップ】「3乗の応用」は、展開 2 問・因数分解 2 問・3乗の形にまとめる 1 問を、それぞれの中からえらぶ
+            const nums = mode === 'cb_adv'
+                ? (() => { const e = shuffleArr([0, 1, 2, 3]), f = shuffleArr([0, 1, 2]), r = shuffleArr([0, 1, 2]); return [e[0], e[1], f[0], f[1], r[0]]; })()
+                : shuffleArr(mode === 'sq' ? [2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5]);
             currentQuestions = Array.from({length: 5}, (_, i) => Generator[mode](i, nums[i]));
             qIndex = 0; correctCount = 0; missedThis = false;
             document.getElementById('result-screen').classList.add('hidden');
@@ -411,6 +472,7 @@
         function showQuestion() {
             selectedTiles = [];
             answered = false;
+            missCount = 0;
             orderNote = '';
             const data = currentQuestions[qIndex];
             const content = document.getElementById('dynamic-content');
@@ -421,15 +483,18 @@
                     <span class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-black tracking-widest">${qIndex + 1} / 5</span>
                     <button onclick="exitQuiz()" class="text-xs font-bold text-gray-400 hover:text-red-400 transition-colors">中断する</button>
                 </div>
-                <div class="text-center py-6">
+                <div class="text-center py-4">
+                    <!-- 【ブラッシュアップ】元は式だけで、展開するのか因数分解するのかが書かれていなかった -->
+                    <p class="task-text">次の式を${data.task}。</p>
                     <div class="math-display">\\[ ${data.q} \\]</div>
                 </div>
                 <div id="answer-area" class="fade-in"></div>
+                <div id="miss-area"></div>
                 <div id="hint-area" class="mt-6 p-4 bg-orange-50 border-2 border-dashed border-orange-200 rounded-xl text-lg text-center hidden">
-                    <div class="text-orange-500 font-bold text-xs mb-2 uppercase tracking-tighter">Hint Formula</div>
+                    <div class="text-orange-500 font-bold text-xs mb-2">使う公式</div>
                     \\[ ${data.h} \\]
                 </div>
-                <button onclick="toggleHint()" class="mt-6 w-full text-xs text-orange-400 font-bold tracking-widest uppercase py-2">Show Hint</button>
+                <button onclick="toggleHint()" class="mt-6 w-full text-sm text-orange-400 font-bold py-2">💡 使う公式を見る</button>
             `;
             renderAnswerArea(data);
             renderMath();
@@ -451,7 +516,7 @@
                     const b = document.createElement('button');
                     b.className = "bubble-btn choice-btn";
                     b.innerHTML = `\\[ ${opt} \\]`;
-                    b.onclick = () => (opt === data.a) ? handleCorrect() : handleWrong();
+                    b.onclick = () => (opt === data.a) ? handleCorrect() : handleWrong(b);   // 【ブラッシュアップ】まちがえたボタンを赤くするため
                     area.appendChild(b);
                 });
             } else {
@@ -464,7 +529,7 @@
                 
                 // タイルのソートロジック
                 const getPriority = (str) => {
-                    if (str.includes('x')) {
+                    if (/[xy]/.test(str)) {   // 【ブラッシュアップ】
                         const match = str.match(/\^(\d+)/);
                         const power = match ? parseInt(match[1]) : 1;
                         return power + 100; // 文字式（次数の高い順に後で反転）
@@ -535,22 +600,31 @@
             renderFeedback(true);
         }
 
-        function handleWrong() {
+        // 【ブラッシュアップ】元はまちがえると問題ごと画面が消えて「おしい！」だけになり、何を選んだか見えなかった。
+        //   問題の画面のまま、1 回目は「方針」（使う公式と a・b）、2 回目は「途中式」、3 回目は答えと解説を出す。
+        //   えらぶ：まちがえた選択肢は赤くして押せなくする。つなげる：並べたタイルはそのまま直せる。
+        function handleWrong(btn) {
+            if (answered) return;
+            missedThis = true;
+            missCount++;
+            if (btn) { btn.disabled = true; btn.classList.add('wrong-choice'); }
+            if (missCount >= 3) { giveUp(); return; }
+            const q = currentQuestions[qIndex];
+            const box = document.getElementById('miss-area');
+            box.innerHTML =
+                `<div class="miss-note">❌ ちがうよ。下の${missCount === 1 ? '方針' : '途中式'}を見て、もう一度！</div>` +
+                `<div class="hint-box"><span class="hint-tag">💡 方針</span>「${q.fn}」の公式で、$a = ${q.ab[0]}$、$b = ${q.ab[1]}$ とみよう。\\[ ${q.h} \\]</div>` +
+                (missCount >= 2 ? `<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>\\[ ${q.steps[0].d} \\]</div>` : '') +
+                `<button onclick="giveUp()" class="give-up">👀 答えと解説を見る</button>`;
+            renderMath();
+        }
+        function giveUp() {
             if (answered) return;
             answered = true;
             missedThis = true;
-            const content = document.getElementById('dynamic-content');
-            content.innerHTML = `
-                <div class="text-center py-8 fade-in">
-                    <div class="text-7xl mb-6">🤔</div>
-                    <h3 class="text-2xl font-black text-slate-700">おしい！</h3>
-                    <p class="text-gray-500 mt-2 font-bold">もう一度考えてみよう</p>
-                    <div class="mt-10 space-y-4">
-                        <button onclick="showQuestion()" class="w-full bubble-btn bg-blue-600 text-white py-5 rounded-2xl text-xl font-bold">解きなおす</button>
-                        <button onclick="renderFeedback(false)" class="text-sm text-gray-400 font-bold block w-full py-4">答えと解説を見る</button>
-                    </div>
-                </div>`;
+            renderFeedback(false);
         }
+
 
         function renderFeedback(isCorrect) {
             const q = currentQuestions[qIndex];
@@ -566,7 +640,7 @@
                         </div>
                         ${q.steps.map(s => `<div class="step-box"><p class="font-bold text-[10px] text-gray-400 uppercase mb-1">${s.t}</p>\\[ ${s.d} \\]</div>`).join("")}
                         <div class="bg-slate-50 p-5 rounded-2xl text-center">
-                            <p class="text-xs text-gray-400 font-bold uppercase mb-1">Answer</p>
+                            <p class="text-xs text-gray-400 font-bold mb-1">答え</p>
                             <div class="text-2xl font-black text-blue-600">\\[ ${q.a} \\]</div>
                         </div>
                     </div>

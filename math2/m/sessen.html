@@ -265,8 +265,6 @@
 
     html, body { height: auto; }
     body { padding: 12px; }
-    body.u-theme.correct-background { background: var(--u-ok-soft) !important; }
-    body.u-theme.incorrect-background { background: var(--u-ng-soft) !important; }
     .container { overflow: visible; padding: 20px 16px; }
     .header { background: none; color: var(--u-ink); padding: 4px 4px 0; }
     .header h1 { font-size: min(2.3rem, 7vw); white-space: nowrap; margin: 0 0 6px; }
@@ -275,15 +273,22 @@
     .score-display { color: var(--u-soft-yellow-text); font-weight: 800; }
     .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
     .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
-    .question-text { background: none !important; -webkit-text-fill-color: var(--u-ink); color: var(--u-ink); font-size: 1.25rem; }
-    .math-expression { background: var(--u-soft-yellow); border: 3px dashed #fde68a; color: var(--u-ink); font-weight: 700; }
+    .question-text { background: none !important; -webkit-text-fill-color: var(--u-ink); color: var(--u-ink); font-size: 1.2rem; margin-bottom: 12px; }
+    .math-expression { background: var(--u-soft-yellow); border: 3px dashed #fde68a; color: var(--u-ink); font-weight: 700; margin: 8px 0; }
     .option::before { display: none; }
-    .option { font-size: 1.3rem; font-weight: 700; text-align: center; }
+    .option { font-size: 1.25rem; font-weight: 700; text-align: center; width: 100%; font-family: 'Times New Roman', serif; }
+    .option:disabled { cursor: default; }
+    .options { margin-top: 16px; gap: 12px; }
     .feedback { border-radius: 16px; line-height: 1.7; }
     .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .feedback small { display: block; margin-top: 6px; color: var(--u-ink); font-size: 0.95rem; }
+    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); padding: 10px 14px; }
+    .feedback.answer { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    .feedback small { display: block; margin-top: 6px; color: var(--u-ink); font-size: 0.95rem; text-align: left; }
     .next-button { margin-top: 12px; }
+    .hint-box { margin-top: 10px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.8; text-align: left; }
+    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
+    .hint-row { text-align: center; margin-top: 14px; }
+    .hint-button { background: #fff; border: 2px solid var(--u-line); border-radius: 999px; padding: 8px 18px; font-weight: 700; color: var(--u-sub); cursor: pointer; font-family: inherit; font-size: 0.95rem; }
     .final-score { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; padding: 28px 16px; }
     .final-score h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
     .final-score div[style] { color: var(--u-title) !important; font-weight: 800; }
@@ -295,10 +300,10 @@
       body { padding: 8px; }
       .container { padding: 14px 10px; }
       .question-card { padding: 16px 10px; }
-      .question-text { font-size: 1.1rem; }
-      .math-expression { font-size: 1.25rem; padding: 10px 12px; margin-bottom: 8px; }
-      .options { gap: 10px; margin-top: 16px; }
-      .option { padding: 14px 8px; font-size: 1.2rem; }
+      .question-text { font-size: 1.05rem; }
+      .math-expression { font-size: 1.25rem; padding: 10px 12px; }
+      .options { gap: 10px; margin-top: 12px; }
+      .option { padding: 12px 6px; font-size: 1.1rem; }
     }
   
   </style>
@@ -308,7 +313,7 @@
     <div class="container">
         <header class="header">
             <h1>📐 接線の方程式クイズ</h1>
-            <p>微分を使って接線の方程式を求めよう！</p>
+            <p>微分を使って接線の方程式を求めよう！（全10問）</p>
         </header>
 
         <main class="quiz-container">
@@ -317,7 +322,7 @@
             </div>
 
             <div class="score-display">
-                <span id="scoreDisplay">一発正解: 0 / 5</span>
+                <span id="scoreDisplay">ヒントなしで一発正解: 0 / 10</span>
             </div>
 
             <div id="quizContent"></div>
@@ -325,84 +330,101 @@
     </div>
 
     <script>
+        // 【ブラッシュアップ】問題を 5 問 → 10 問にし、段階をつけた
+        //   1〜5：接点が与えられる（元の 5 問をもとに、1 問目を足した）
+        //   6・7：x 座標だけが与えられる（接点の y 座標も自分で求める）
+        //   8・9：傾きが与えられる（接点を自分で求める。9 は接線が 2 本）
+        //   10  ：曲線の外の点から引く接線（接点が与えられない）
+        //   答えはすべて y = mx + n の形にそろえた。f は係数（次数の高い順）。
+        //   wrong は まちがいの選択肢の [傾き, 切片]（2 本の答えの問題は [[傾き, 切片], ...]）
         const questions = [
-            {
-                question: "曲線 y = x³ - 6x 上の点(2, -4)における接線の方程式を求めなさい。",
-                curve: "y = x³ - 6x",
-                point: "(2, -4)",
-                options: [
-                    "y = 6x - 16",
-                    "y = 3x - 10",
-                    "y = 12x - 28",
-                    "y = 9x - 22"
-                ],
-                correct: 0,
-                explanation: "f'(x) = 3x² - 6 なので、x = 2での傾きは f'(2) = 12 - 6 = 6。点(2, -4)を通る直線の方程式は y - (-4) = 6(x - 2) より y = 6x - 16"
-            },
-            {
-                question: "曲線 y = 3x² - 12x + 5 上の点(1, -4)における接線の方程式を求めなさい。",
-                curve: "y = 3x² - 12x + 5",
-                point: "(1, -4)",
-                options: [
-                    "y = -6x + 2",
-                    "y = -3x - 1",
-                    "y = 6x - 10",
-                    "y = 3x - 7"
-                ],
-                correct: 0,
-                explanation: "f'(x) = 6x - 12 なので、x = 1での傾きは f'(1) = 6 - 12 = -6。点(1, -4)を通る直線の方程式は y - (-4) = -6(x - 1) より y = -6x + 2"
-            },
-            {
-                question: "曲線 y = x² + 4x - 1 上の点(-1, -4)における接線の方程式を求めなさい。",
-                curve: "y = x² + 4x - 1",
-                point: "(-1, -4)",
-                options: [
-                    "y = 2x - 2",
-                    "y = -2x - 6",
-                    "y = 4x",
-                    "y = x - 3"
-                ],
-                correct: 0,
-                explanation: "f'(x) = 2x + 4 なので、x = -1での傾きは f'(-1) = -2 + 4 = 2。点(-1, -4)を通る直線の方程式は y - (-4) = 2(x - (-1)) より y = 2x - 2"
-            },
-            {
-                question: "曲線 y = -2x² + 8x - 6 上の点(2, 2)における接線の方程式を求めなさい。",
-                curve: "y = -2x² + 8x - 6",
-                point: "(2, 2)",
-                options: [
-                    "y = 2",
-                    "y = 4x - 6",
-                    "y = -4x + 10",
-                    "y = 8x - 14"
-                ],
-                correct: 0,
-                explanation: "f'(x) = -4x + 8 なので、x = 2での傾きは f'(2) = -8 + 8 = 0。点(2, 2)を通る水平線の方程式は y = 2"
-            },
-            {
-                question: "曲線 y = x³ + 3x² - 9x + 1 上の点(1, -4)における接線の方程式を求めなさい。",
-                curve: "y = x³ + 3x² - 9x + 1",
-                point: "(1, -4)",
-                options: [
-                    "y = -4",
-                    "y = 3x - 7",
-                    "y = 6x - 10",
-                    "y = -3x - 1"
-                ],
-                correct: 0,
-                explanation: "f'(x) = 3x² + 6x - 9 なので、x = 1での傾きは f'(1) = 3 + 6 - 9 = 0。点(1, -4)を通る水平線の方程式は y = -4"
-            }
+            { type: 'pt', f: [1, -2, 0], a: 3,         wrong: [[6, -15], [4, -15], [3, -6]] },
+            { type: 'pt', f: [1, 0, -6, 0], a: 2,      wrong: [[3, -10], [12, -28], [9, -22]] },
+            { type: 'pt', f: [3, -12, 5], a: 1,        wrong: [[-3, -1], [6, -10], [3, -7]] },
+            { type: 'pt', f: [1, 4, -1], a: -1,        wrong: [[-2, -6], [4, 0], [1, -3]] },
+            { type: 'pt', f: [-2, 8, -6], a: 2,        wrong: [[4, -6], [-4, 10], [8, -14]] },
+            { type: 'x',  f: [1, 0, 0, 0], a: -1,      wrong: [[3, 4], [-3, -4], [3, -4]] },
+            { type: 'x',  f: [1, 3, -9, 1], a: 1,      wrong: [[0, 4], [18, -22], [-9, 5]] },
+            { type: 'slope', f: [1, -3, 0], k: 1, xs: [2],
+              wrong: [[[1, -3]], [[1, 0]], [[-1, 0]]],
+              mid: "f'(x) = 2x − 3 = 1 より x = 2。接点は (2, f(2)) = (2, −2)。接線は y + 2 = 1·(x − 2)" },
+            { type: 'slope', f: [1, 0, -3, 0], k: 9, xs: [2, -2],
+              wrong: [[[9, -16]], [[9, 16]], [[9, -20], [9, 20]]],
+              mid: "f'(x) = 3x² − 3 = 9 より x² = 4、x = 2, −2。接点は (2, 2) と (−2, −2)。接線は y − 2 = 9(x − 2) と y + 2 = 9(x + 2)" },
+            { type: 'ext', f: [1, 0, 0], p: [1, -3], ts: [3, -1],
+              wrong: [[[2, -5]], [[6, -9]], [[-6, -9], [2, -1]]],
+              mid: "接点を (t, t²) とすると、f'(t) = 2t なので接線は y − t² = 2t(x − t)、つまり y = 2tx − t²。これが点 (1, −3) を通るので −3 = 2t − t²、t² − 2t − 3 = 0、(t − 3)(t + 1) = 0 より t = 3, −1" }
         ];
+
+        // ---- 式を扱う道具 ----
+        const MINUS = '−';
+        const SUP = ['', '', '²', '³', '⁴', '⁵'];
+        const eva = (f, x) => f.reduce((s, c) => s * x + c, 0);            // f(x) の値
+        const der = (f) => f.slice(0, -1).map((c, i) => c * (f.length - 1 - i));   // f'(x) の係数
+        const num = (v) => (v < 0 ? MINUS + (-v) : String(v));
+        function fmtPoly(f) {   // [1, 0, -6, 0] → "x³ − 6x"
+            const deg = f.length - 1;
+            let out = '';
+            f.forEach((c, i) => {
+                if (c === 0) return;
+                const p = deg - i, abs = Math.abs(c);
+                const body = p === 0 ? String(abs) : (abs === 1 ? '' : abs) + 'x' + SUP[p];
+                out += out === '' ? (c < 0 ? MINUS : '') + body : (c < 0 ? ' ' + MINUS + ' ' : ' + ') + body;
+            });
+            return out || '0';
+        }
+        function fmtLine(m, n) {   // y = mx + n
+            let s = m === 0 ? '' : (m === 1 ? 'x' : m === -1 ? MINUS + 'x' : num(m) + 'x');
+            if (n !== 0 || s === '') s += s === '' ? num(n) : (n < 0 ? ' ' + MINUS + ' ' + (-n) : ' + ' + n);
+            return 'y = ' + s;
+        }
+        const shift = (v, name) => (v === 0 ? name : v < 0 ? `${name} + ${-v}` : `${name} ${MINUS} ${v}`);   // x − a の形
+        const fmtLines = (ls) => ls.map(l => fmtLine(l[0], l[1])).join(' と ');
+        const sameLines = (a, b) => a.length === b.length && a.every(l => b.some(k => k[0] === l[0] && k[1] === l[1]));
+
+        // 問題ごとに、正解の接線・問題文・ヒント（方針 → 途中式 → 答え）を作る
+        function build(q) {
+            const df = der(q.f);
+            const curve = 'y = ' + fmtPoly(q.f);
+            let lines, text, plan, mid;
+            if (q.type === 'pt' || q.type === 'x') {
+                const b = eva(q.f, q.a), m = eva(df, q.a);
+                lines = [[m, b - m * q.a]];
+                text = q.type === 'pt'
+                    ? `曲線 ${curve} 上の点 (${num(q.a)}, ${num(b)}) における接線の方程式を求めなさい。`
+                    : `曲線 ${curve} 上の x = ${num(q.a)} の点における接線の方程式を求めなさい。`;
+                plan = (q.type === 'x' ? `まず接点の y 座標 f(${num(q.a)}) を求めよう。` : '') +
+                    `接線の傾きは f'(${num(q.a)})。点 (a, f(a)) における接線は y − f(a) = f'(a)(x − a) だよ。`;
+                mid = (q.type === 'x' ? `f(${num(q.a)}) = ${num(b)} なので接点は (${num(q.a)}, ${num(b)})。` : '') +
+                    `f'(x) = ${fmtPoly(df)} なので、傾きは f'(${num(q.a)}) = ${num(m)}。` +
+                    `接線は ${shift(b, 'y')} = ${m === 0 ? '0' : num(m)}${m === 0 ? '·' : ''}(${shift(q.a, 'x')})`;
+            } else if (q.type === 'slope') {
+                lines = q.xs.map(x => { const b = eva(q.f, x); return [q.k, b - q.k * x]; });
+                text = `曲線 ${curve} の接線のうち、傾きが ${num(q.k)} であるものの方程式を求めなさい。`;
+                plan = `接点の x 座標を t とすると、傾きは f'(t)。f'(t) = ${num(q.k)} を解いて接点を求めよう。`;
+                mid = q.mid;
+            } else {
+                lines = q.ts.map(t => { const m = eva(df, t); return [m, eva(q.f, t) - m * t]; });
+                text = `点 (${num(q.p[0])}, ${num(q.p[1])}) から曲線 ${curve} に引いた接線の方程式を求めなさい。`;
+                plan = `点 (${num(q.p[0])}, ${num(q.p[1])}) は曲線の上にないので、接点ではない。接点を (t, f(t)) とおいて接線の式を作り、それが点 (${num(q.p[0])}, ${num(q.p[1])}) を通る条件から t を求めよう。`;
+                mid = q.mid;
+            }
+            const answer = fmtLines(lines);
+            const many = lines.length > 1;
+            const opts = [{ text: answer, ok: true }].concat(q.wrong.map(w => {
+                const ls = Array.isArray(w[0]) ? w : [w];
+                return { text: fmtLines(ls) + (many && ls.length === 1 ? ' のみ' : ''), ok: sameLines(ls, lines) };
+            }));
+            return { curve, text, plan, mid, answer, lines, opts };
+        }
 
         let currentQuestion = 0;
         let score = 0;
         let answered = false;
-        // 【ブラッシュアップ】選択肢の並び・この問題でまちがえたか
+        // 【ブラッシュアップ】選択肢の並び・この問題のヒントの段階（0：なし 1：方針 2：途中式 3：答え）
         let order = [0, 1, 2, 3];
-        let missedThis = false;
-        // まちがえたときのヒント：元は解説をそのまま出していて、答えの式まで見えていた。傾きを求めるところまでにする
-        function hintOf(q) {
-            return q.explanation.split('。')[0] + '。この傾きと点を y − b = m(x − a) に入れてみよう。';
-        }
+        let stage = 0;
+        let built = null;
 
         function updateProgress() {
             const progress = ((currentQuestion) / questions.length) * 100;
@@ -410,99 +432,112 @@
         }
 
         function updateScore() {
-            document.getElementById('scoreDisplay').textContent = `一発正解: ${score} / ${questions.length}`;
+            document.getElementById('scoreDisplay').textContent = `ヒントなしで一発正解: ${score} / ${questions.length}`;
         }
 
         function displayQuestion() {
-            const question = questions[currentQuestion];
+            built = build(questions[currentQuestion]);
             const quizContent = document.getElementById('quizContent');
-            // 【ブラッシュアップ】並びをまぜる
-            order = question.options.map((_, i) => i);
+            order = built.opts.map((_, i) => i);
             for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-            missedThis = false;
+            stage = 0;
+            answered = false;
             window.scrollTo(0, 0);
 
+            // 【ブラッシュアップ】元は問題文と同じ曲線・点を、下の囲みでもう一度出していた。囲みは曲線だけにした
             quizContent.innerHTML = `
                 <div class="question-card">
                     <div class="question-number">問題 ${currentQuestion + 1} / ${questions.length}</div>
-                    <div class="question-text">${question.question}</div>
-                    <div class="math-expression">曲線: ${question.curve}</div>
-                    <div class="math-expression">点: ${question.point}</div>
+                    <div class="question-text">${built.text}</div>
+                    <div class="math-expression">f(x) = ${built.curve.slice(4)}</div>
                     <div class="options" id="options">
                         ${order.map((orig, index) =>
-                            `<div class="option" onclick="selectAnswer(${index})" id="option${index}">
-                                ${question.options[orig]}
-                            </div>`
+                            `<button class="option" onclick="selectAnswer(${index})" id="option${index}">${built.opts[orig].text}</button>`
                         ).join('')}
                     </div>
                     <div id="feedback"></div>
+                    <div id="hints"></div>
+                    <div class="hint-row"><button class="hint-button" id="hintBtn" onclick="showNextHint()">💡 ヒント（方針）を見る</button></div>
                 </div>
             `;
-
-            answered = false;
             updateProgress();
+        }
+
+        // 【ブラッシュアップ】まちがえるたびに、方針 → 途中式 → 答え の順にヒントを出す
+        function renderHints() {
+            const h = document.getElementById('hints');
+            let html = '';
+            if (stage >= 1) html += `<div class="hint-box"><span class="hint-tag">💡 方針</span>${built.plan}</div>`;
+            if (stage >= 2) html += `<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>${built.mid}</div>`;
+            h.innerHTML = html;
+            const btn = document.getElementById('hintBtn');
+            if (btn) {
+                btn.textContent = stage === 0 ? '💡 ヒント（方針）を見る' : stage === 1 ? '✏️ 途中式を見る' : '👀 答えを見る';
+                btn.parentNode.style.display = answered ? 'none' : '';
+            }
+        }
+        function showNextHint() {
+            if (answered) return;
+            stage++;
+            if (stage >= 3) { revealAnswer(); return; }
+            renderHints();
+        }
+        function explain() {
+            return `${built.mid}。よって <strong>${built.answer}</strong>`;
+        }
+        function nextButton() {
+            return currentQuestion < questions.length - 1
+                ? '<button class="next-button" onclick="nextQuestion()">次の問題へ</button>'
+                : '<button class="next-button" onclick="showFinalScore()">結果を見る</button>';
+        }
+        function finishQuestion() {
+            answered = true;
+            document.querySelectorAll('.option').forEach(o => { o.disabled = true; });
+            renderHints();
+        }
+        function revealAnswer() {
+            stage = 3;
+            finishQuestion();
+            const i = order.findIndex(o => built.opts[o].ok);
+            document.getElementById(`option${i}`).classList.add('correct');
+            document.getElementById('hints').innerHTML = '';
+            document.getElementById('feedback').innerHTML = `
+                <div class="feedback answer">
+                    👀 答え：${built.answer}<br>
+                    <small>${explain()}</small>
+                    ${nextButton()}
+                </div>`;
         }
 
         function selectAnswer(selectedIndex) {
             if (answered) return;
-
-            answered = true;
-            const question = questions[currentQuestion];
-            const options = document.querySelectorAll('.option');
-            const feedback = document.getElementById('feedback');
-
-            // すべてのオプションを無効化
-            options.forEach(option => option.classList.add('disabled'));
-
-            if (order[selectedIndex] === question.correct) {   // 【ブラッシュアップ】
-                // 正解の場合
-                document.getElementById(`option${selectedIndex}`).classList.add('correct');
-                document.body.classList.add('correct-background');
-                feedback.innerHTML = `
+            const btn = document.getElementById(`option${selectedIndex}`);
+            if (built.opts[order[selectedIndex]].ok) {
+                btn.classList.add('correct');
+                if (stage === 0) score++;
+                finishQuestion();
+                document.getElementById('hints').innerHTML = '';
+                document.getElementById('feedback').innerHTML = `
                     <div class="feedback correct">
-                        🎉 正解です！<br>
-                        <small>${question.explanation}</small>
-                        ${currentQuestion < questions.length - 1 ?
-                            '<button class="next-button" onclick="nextQuestion()">次の問題へ</button>' :
-                            '<button class="next-button" onclick="showFinalScore()">結果を見る</button>'
-                        }
-                    </div>
-                `;
-                if (!missedThis) score++;   // 【ブラッシュアップ】
+                        ⭕ 正解！<br>
+                        <small>${explain()}</small>
+                        ${nextButton()}
+                    </div>`;
                 updateScore();
             } else {
-                // 不正解の場合
-                document.getElementById(`option${selectedIndex}`).classList.add('incorrect');
-                missedThis = true;   // 【ブラッシュアップ】
-                document.body.classList.add('incorrect-background');
-                feedback.innerHTML = `
-                    <div class="feedback incorrect">
-                        ❌ 不正解です。もう一度挑戦してみましょう！<br>
-                        <small>ヒント: ${hintOf(question)}</small>
-                    </div>
-                `;
-
-                // 0.5秒後に再挑戦可能にする（メッセージは残す）
-                setTimeout(() => {
-                    answered = false;
-                    document.body.classList.remove('incorrect-background');
-                    options.forEach(option => {
-                        option.classList.remove('disabled', 'incorrect');
-                    });
-                    // フィードバックメッセージは残しておく
-                    feedback.innerHTML = `
-                        <div class="feedback incorrect">
-                            ❌ 不正解です。もう一度挑戦してみましょう！<br>
-                            <small>ヒント: ${hintOf(question)}</small>
-                        </div>
-                    `;
-                }, 500);
+                // まちがえた選択肢は押せなくして、ヒントを 1 段すすめる（元は解説をそのまま出していて、答えまで見えていた）
+                btn.classList.add('incorrect');
+                btn.disabled = true;
+                stage++;
+                if (stage >= 3) { revealAnswer(); return; }
+                document.getElementById('feedback').innerHTML =
+                    `<div class="feedback incorrect">❌ ちがうよ。下の${stage === 1 ? '方針' : '途中式'}を見て、もう一度考えよう。</div>`;
+                renderHints();
             }
         }
 
         function nextQuestion() {
             currentQuestion++;
-            document.body.classList.remove('correct-background', 'incorrect-background');
             displayQuestion();
         }
 
@@ -512,21 +547,20 @@
 
             let message = '';
             if (percentage === 100) {
-                message = '🏆 完璧です！素晴らしい！';
+                message = '🏆 完璧です！';
             } else if (percentage >= 80) {
-                message = '🎉 とても良くできました！';
+                message = '🎉 よくできました！';
             } else if (percentage >= 60) {
-                message = '👍 良い結果です！';
+                message = '👍 その調子！';
             } else {
-                message = '📚 もう少し練習してみましょう！';
+                message = '📚 ヒントを見直して、もう一度！';
             }
 
             quizContent.innerHTML = `
                 <div class="final-score">
                     <h2>${message}</h2>
                     <div style="font-size: 3rem; margin: 20px 0;">${score} / ${questions.length}</div>
-                    <div style="font-size: 1.2rem; color: #666; margin-bottom: 10px;">一発正解率: ${percentage}%</div>
-                    <!-- 【ブラッシュアップ】次の教材・ほかの教材も選べるようにした -->
+                    <div style="font-size: 1.2rem; color: #666; margin-bottom: 10px;">ヒントなしで一発正解した問題</div>
                     <div class="result-nav">
                         <button class="again" onclick="restartQuiz()">もう一度挑戦</button>
                         <a class="next" href="zougen.html">つぎは「増減表」へ ▶</a>
@@ -536,13 +570,13 @@
             `;
 
             document.getElementById('progressBar').style.width = '100%';
+            window.scrollTo(0, 0);
         }
 
         function restartQuiz() {
             currentQuestion = 0;
             score = 0;
             answered = false;
-            document.body.classList.remove('correct-background', 'incorrect-background');
             updateScore();
             displayQuestion();
         }

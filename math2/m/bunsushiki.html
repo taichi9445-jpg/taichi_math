@@ -174,6 +174,14 @@
     #tile-pool { background: var(--u-soft-blue) !important; }
     #feedback-overlay { background: rgba(75, 44, 32, 0.55) !important; }
     #feedback-card { border: 8px solid var(--u-frame); }
+    .task-text { color: var(--u-ink); font-weight: 800; font-size: 1.1rem; text-align: center; margin: 0 0 8px; }
+    .hint-box { margin: 10px 0; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.8; text-align: left; }
+    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
+    /* 【ブラッシュアップ】つなげる：「消す」「答え合わせ」を画面の下に固定（スマホでタイルの下に隠れないように） */
+    #drag-area > div.flex:last-child { position: sticky; bottom: 0; background: #fff; padding: 10px 0 8px; margin-top: 12px !important; z-index: 5; }
+    /* 【ブラッシュアップ】いまタイルが入る枠がわかるように */
+    .drop-zone.active { box-shadow: 0 0 0 4px var(--u-soft-blue-line); }
+    .drop-zone.active::after { content: '▲ タイルはここに入る'; width: 100%; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--u-title); }
     @media (max-width: 640px) {
       #app { padding: 12px 10px 18px; }
     }
@@ -186,7 +194,7 @@
     <div id="app" class="max-w-3xl mx-auto">
         <header class="text-center mb-6">
             <h1 class="text-3xl font-black text-blue-700 tracking-tight">分数式マスター Pro</h1>
-            <p class="text-slate-500 font-bold text-sm">解くたびに問題が変わる！ランダム演習</p>
+            <p class="text-slate-500 font-bold text-sm">約分・かけ算・わり算・たし算・ひき算（各コース 10 問ほどから 5 問）</p>
         </header>
 
         <!-- メニュー -->
@@ -200,7 +208,7 @@
                     </div>
                 </div>
 
-                <p class="text-center text-xs font-black text-slate-400 mb-4 tracking-widest uppercase">2. 学習コース（ランダム5問）</p>
+                <p class="text-center text-xs font-black text-slate-400 mb-4 tracking-widest uppercase">2. 学習コース（5問）</p>
                 <div class="grid gap-4">
                     <button onclick="initQuiz('reduce')" class="bubble-btn bg-emerald-500 text-white py-6 rounded-2xl font-black text-xl hover:bg-emerald-600">✂️ 約分の基礎〜応用</button>
                     <button onclick="initQuiz('multiply')" class="bubble-btn bg-sky-500 text-white py-6 rounded-2xl font-black text-xl hover:bg-sky-600">✖️ かけ算・わり算</button>
@@ -217,6 +225,7 @@
                     <button onclick="backToMenu()" class="text-slate-400 font-bold hover:text-red-500">終了</button>
                 </div>
 
+                <p id="task-text" class="task-text"></p>
                 <div id="question-container" class="text-center py-6 math-xl overflow-x-auto min-h-[140px] flex items-center justify-center"></div>
 
                 <div id="answer-section" class="mt-4">
@@ -271,6 +280,13 @@
         let answered = false;     // 【ブラッシュアップ】答えたあとの連打で、点が 2 回入らないように
         let missedThis = false;   // 【ブラッシュアップ】この問題で一度まちがえたか（一発正解だけを数える）
         let orderNote = '';       // 【ブラッシュアップ】書き方のちがう正解のときに出す一言
+        let missCount = 0;        // 【ブラッシュアップ】この問題でまちがえた回数（ヒントの段階：1 方針 → 2 途中式 → 3 答え）
+        const TASK = { reduce: '次の式を約分しなさい。', multiply: '次の式を計算しなさい。', add: '次の式を計算しなさい。' };
+        const PLAN = {
+            reduce: '分子と分母をそれぞれ因数分解して、共通な因数で約分しよう。',
+            multiply: '÷ は逆数の × に直す。それぞれ因数分解してから、分子と分母の共通な因数で約分しよう。',
+            add: '分母が同じなら、そのまま分子を計算。ちがうときは通分する（分母が因数分解できるときは、先に因数分解）。最後に約分できないか確かめよう。'
+        };
         const COURSES = ['reduce', 'multiply', 'add'];
         const COURSE_NAMES = { reduce: '✂️ 約分', multiply: '✖️ かけ算・わり算', add: '➕ たし算・ひき算' };
 
@@ -309,19 +325,30 @@
             ],
             multiply: [
                 { q: "\\frac{x}{y} \\times \\frac{y^2}{x^2}", a_num: ["y"], a_den: ["x"], display: "\\frac{y}{x}", steps: ["分子と分母の$x$を約分して分母に$x$が残ります。","分子と分母の$y$を約分して分子に$y$が残ります。"], choices: ["\\frac{y}{x}", "\\frac{x}{y}", "xy", "1"] },
-                { q: "\\frac{2a}{3b} \\div \\frac{4a^2}{9b}", a_num: ["3"], a_den: ["2a"], display: "\\frac{3}{2a}", steps: ["逆数の掛け算にします：$\\frac{2a}{3b} \\times \\frac{9b}{4a^2}$","係数を約分：$18/12 = 3/2$","文字を約分：$ab / ba^2 = 1/a$"], choices: ["\\frac{3}{2a}", "\\frac{2a}{3}", "\\frac{3b}{2a}", "\\frac{1}{2a}"] },
+                { q: "\\frac{2a}{3b} \\div \\frac{4a^2}{9b}", a_num: ["3"], a_den: ["2a"], display: "\\frac{3}{2a}", steps: ["逆数の掛け算にします：$\\frac{2a}{3b} \\times \\frac{9b}{4a^2}$","係数を約分：$\\frac{18}{12} = \\frac{3}{2}$","文字を約分：$\\frac{ab}{a^2b} = \\frac{1}{a}$"], choices: ["\\frac{3}{2a}", "\\frac{2a}{3}", "\\frac{3b}{2a}", "\\frac{1}{2a}"] },
                 { q: "\\frac{x+2}{x-1} \\times \\frac{x^2-1}{x^2-4}", a_num: ["x+1"], a_den: ["x-2"], display: "\\frac{x+1}{x-2}", steps: ["因数分解します：$\\frac{x+2}{x-1} \\times \\frac{(x+1)(x-1)}{(x+2)(x-2)}$","$(x+2)$と$(x-1)$を約分します。"], choices: ["\\frac{x+1}{x-2}", "\\frac{x-1}{x+2}", "\\frac{x+2}{x-1}", "1"] },
                 { q: "\\frac{a-b}{4} \\div \\frac{a^2-b^2}{8}", a_num: ["2"], a_den: ["a+b"], display: "\\frac{2}{a+b}", steps: ["逆数にします：$\\frac{a-b}{4} \\times \\frac{8}{(a+b)(a-b)}$","$(a-b)$を約分し、$8/4=2$となります。"], choices: ["\\frac{2}{a+b}", "\\frac{a+b}{2}", "2(a-b)", "\\frac{1}{a+b}"] },
                 { q: "\\frac{x^2+3x}{x-2} \\times \\frac{x^2-4}{x+3}", a_num: ["x(x+2)"], a_den: ["1"], display: "x(x+2)", steps: ["各部分を因数分解：$\\frac{x(x+3)}{x-2} \\times \\frac{(x+2)(x-2)}{x+3}$","$(x+3)$と$(x-2)$を約分します。"], choices: ["x(x+2)", "x+2", "x(x-2)", "x^2+2"] },
-                { q: "\\frac{x-3}{x^2-1} \\div \\frac{x^2-9}{x+1}", a_num: ["1"], a_den: ["(x-1)(x+3)"], display: "\\frac{1}{(x-1)(x+3)}", steps: ["逆数の掛け算：$\\frac{x-3}{(x+1)(x-1)} \\times \\frac{x+1}{(x+3)(x-3)}$","$(x-3)$と$(x+1)$を約分します。"], choices: ["\\frac{1}{(x-1)(x+3)}", "\\frac{1}{(x+1)(x-3)}", "x+3", "1"] }
+                { q: "\\frac{x-3}{x^2-1} \\div \\frac{x^2-9}{x+1}", a_num: ["1"], a_den: ["(x-1)(x+3)"], display: "\\frac{1}{(x-1)(x+3)}", steps: ["逆数の掛け算：$\\frac{x-3}{(x+1)(x-1)} \\times \\frac{x+1}{(x+3)(x-3)}$","$(x-3)$と$(x+1)$を約分します。"], choices: ["\\frac{1}{(x-1)(x+3)}", "\\frac{1}{(x+1)(x-3)}", "x+3", "1"] },
+                // 【ブラッシュアップ】追加
+                { q: "\\frac{x^2-x}{x+2} \\times \\frac{x+2}{x^2-1}", a_num: ["x"], a_den: ["x+1"], display: "\\frac{x}{x+1}", steps: ["因数分解：$\\frac{x(x-1)}{x+2} \\times \\frac{x+2}{(x+1)(x-1)}$","$(x+2)$と$(x-1)$を約分します。"], choices: ["\\frac{x}{x+1}", "\\frac{x}{x-1}", "\\frac{x-1}{x+1}", "\\frac{1}{x+1}"] },
+                { q: "\\frac{x^2+2x}{x^2-9} \\div \\frac{x}{x-3}", a_num: ["x+2"], a_den: ["x+3"], display: "\\frac{x+2}{x+3}", steps: ["逆数の掛け算：$\\frac{x(x+2)}{(x+3)(x-3)} \\times \\frac{x-3}{x}$","$x$と$(x-3)$を約分します。"], choices: ["\\frac{x+2}{x+3}", "\\frac{x+2}{x-3}", "\\frac{x(x+2)}{x+3}", "\\frac{x+3}{x+2}"] },
+                { q: "\\frac{2x-6}{x+1} \\times \\frac{x^2-1}{x-3}", a_num: ["2(x-1)"], a_den: ["1"], display: "2(x-1)", steps: ["因数分解：$\\frac{2(x-3)}{x+1} \\times \\frac{(x+1)(x-1)}{x-3}$","$(x-3)$と$(x+1)$を約分します。"], choices: ["2(x-1)", "2(x+1)", "x-1", "\\frac{2}{x-1}"] },
+                { q: "\\frac{x^2-4}{x+1} \\div (x-2) \\times \\frac{x+1}{x+2}", a_num: ["1"], a_den: ["1"], display: "1", steps: ["$\\div (x-2)$ は $\\times \\frac{1}{x-2}$ にします。","因数分解：$\\frac{(x+2)(x-2)}{x+1} \\times \\frac{1}{x-2} \\times \\frac{x+1}{x+2}$","すべて約分されて 1 になります。"], choices: ["1", "\\frac{x+2}{x-2}", "x+2", "\\frac{1}{x+2}"] }
             ],
             add: [
                 { q: "\\frac{a}{x} + \\frac{b}{x}", a_num: ["a+b"], a_den: ["x"], display: "\\frac{a+b}{x}", steps: ["分母が同じなので分子をそのまま足します。"], choices: ["\\frac{a+b}{x}", "\\frac{ab}{x}", "\\frac{a+b}{2x}", "a+b"] },
                 { q: "\\frac{3x+1}{x-2} - \\frac{2x+3}{x-2}", a_num: ["1"], a_den: ["1"], display: "1", steps: ["分子を引きます：$(3x+1) - (2x+3) = x-2$","$\\frac{x-2}{x-2}$なので1になります。"], choices: ["1", "\\frac{x+4}{x-2}", "x+4", "0"] },
-                { q: "\\frac{1}{x-1} + \\frac{1}{x+1}", a_num: ["2x"], a_den: ["(x-1)(x+1)"], display: "\\frac{2x}{x^2-1}", steps: ["通分します：$\\frac{(x+1) + (x-1)}{(x-1)(x+1)}$","分子を計算すると$2x$になります。"], choices: ["\\frac{2x}{x^2-1}", "\\frac{2}{x^2-1}", "\\frac{x}{x^2-1}", "2x"] },
+                { q: "\\frac{1}{x-1} + \\frac{1}{x+1}", a_num: ["2x"], a_den: ["(x-1)(x+1)"], display: "\\frac{2x}{(x-1)(x+1)}", steps: ["通分します：$\\frac{(x+1) + (x-1)}{(x-1)(x+1)}$","分子を計算すると$2x$になります。"], choices: ["\\frac{2x}{(x-1)(x+1)}", "\\frac{2}{(x-1)(x+1)}", "\\frac{x}{(x-1)(x+1)}", "2x"] },
                 { q: "\\frac{2}{x} - \\frac{1}{x+1}", a_num: ["x+2"], a_den: ["x(x+1)"], display: "\\frac{x+2}{x(x+1)}", steps: ["通分します：$\\frac{2(x+1) - x}{x(x+1)}$","分子を展開：$2x+2-x = x+2$"], choices: ["\\frac{x+2}{x(x+1)}", "\\frac{x-2}{x(x+1)}", "\\frac{1}{x(x+1)}", "x+2"] },
                 { q: "\\frac{x}{x-3} + \\frac{3}{3-x}", a_num: ["1"], a_den: ["1"], display: "1", steps: ["$3-x$ は $-(x-3)$ と等しいです。","$\\frac{x}{x-3} - \\frac{3}{x-3} = \\frac{x-3}{x-3} = 1$"], choices: ["1", "-1", "\\frac{x+3}{x-3}", "0"] },
-                { q: "\\frac{x+1}{x^2+x} + \\frac{1}{x}", a_num: ["2"], a_den: ["x"], display: "\\frac{2}{x}", steps: ["左の項を約分：$\\frac{x+1}{x(x+1)} = \\frac{1}{x}$","$\\frac{1}{x} + \\frac{1}{x} = \\frac{2}{x}$"], choices: ["\\frac{2}{x}", "\\frac{x+2}{x}", "2x", "\\frac{1}{x}"] }
+                { q: "\\frac{x+1}{x^2+x} + \\frac{1}{x}", a_num: ["2"], a_den: ["x"], display: "\\frac{2}{x}", steps: ["左の項を約分：$\\frac{x+1}{x(x+1)} = \\frac{1}{x}$","$\\frac{1}{x} + \\frac{1}{x} = \\frac{2}{x}$"], choices: ["\\frac{2}{x}", "\\frac{x+2}{x}", "2x", "\\frac{1}{x}"] },
+                // 【ブラッシュアップ】追加
+                { q: "\\frac{2}{x+1} + \\frac{3}{x-2}", a_num: ["5x-1"], a_den: ["(x+1)(x-2)"], display: "\\frac{5x-1}{(x+1)(x-2)}", steps: ["通分します：$\\frac{2(x-2) + 3(x+1)}{(x+1)(x-2)}$","分子を計算：$2x-4+3x+3 = 5x-1$"], choices: ["\\frac{5x-1}{(x+1)(x-2)}", "\\frac{5}{(x+1)(x-2)}", "\\frac{5x+1}{(x+1)(x-2)}", "\\frac{5}{2x-1}"] },
+                { q: "\\frac{1}{x+1} - \\frac{1}{x+2}", a_num: ["1"], a_den: ["(x+1)(x+2)"], display: "\\frac{1}{(x+1)(x+2)}", steps: ["通分します：$\\frac{(x+2) - (x+1)}{(x+1)(x+2)}$","分子を計算すると 1 になります。"], choices: ["\\frac{1}{(x+1)(x+2)}", "\\frac{-1}{(x+1)(x+2)}", "\\frac{2x+3}{(x+1)(x+2)}", "0"] },
+                { q: "\\frac{1}{x^2-x} - \\frac{1}{x^2-1}", a_num: ["1"], a_den: ["x(x-1)(x+1)"], display: "\\frac{1}{x(x-1)(x+1)}", steps: ["分母を因数分解：$\\frac{1}{x(x-1)} - \\frac{1}{(x+1)(x-1)}$","通分します：$\\frac{(x+1) - x}{x(x-1)(x+1)}$","分子を計算すると 1 になります。"], choices: ["\\frac{1}{x(x-1)(x+1)}", "\\frac{2x+1}{x(x-1)(x+1)}", "\\frac{-1}{x(x-1)(x+1)}", "0"] },
+                { q: "\\frac{1}{x-1} - \\frac{1}{1-x}", a_num: ["2"], a_den: ["x-1"], display: "\\frac{2}{x-1}", steps: ["$1-x = -(x-1)$ なので、$-\\frac{1}{1-x} = +\\frac{1}{x-1}$","$\\frac{1}{x-1} + \\frac{1}{x-1} = \\frac{2}{x-1}$"], choices: ["\\frac{2}{x-1}", "0", "\\frac{2}{1-x}", "\\frac{2x}{x-1}"] },
+                { q: "\\frac{1-\\frac{1}{x}}{1-\\frac{1}{x^2}}", a_num: ["x"], a_den: ["x+1"], display: "\\frac{x}{x+1}", steps: ["分子と分母に$x^2$をかけます：$\\frac{x^2-x}{x^2-1}$","因数分解：$\\frac{x(x-1)}{(x+1)(x-1)}$","$(x-1)$を約分します。"], choices: ["\\frac{x}{x+1}", "\\frac{x+1}{x}", "\\frac{x}{x-1}", "\\frac{1}{x+1}"] }
             ]
         };
 
@@ -358,9 +385,11 @@
             selectedNum = []; selectedDen = []; activeZone = 'num';
             answered = false;
             orderNote = '';
+            missCount = 0;
             const q = currentQuestions[qIndex];
             document.getElementById('progress-text').innerText = `${qIndex + 1} / ${currentQuestions.length}`;
             document.getElementById('question-container').innerHTML = `\\[ ${q.q} \\]`;
+            document.getElementById('task-text').textContent = TASK[currentMode];   // 【ブラッシュアップ】
             
             if (answerMethod === 'select') showSelectMode();
             else showDragMode();
@@ -397,9 +426,13 @@
             let q = currentQuestions[qIndex];
             let qParts = [...q.a_num, ...q.a_den];
             
-            let allParts = [...new Set([...qParts, ...base.sort(() => Math.random() - 0.5).slice(0, 8)])];
-            allParts = allParts.filter(p => p !== NO_DENOMINATOR && p !== "1");
-            allParts.push("1", NO_DENOMINATOR);
+            // 【ブラッシュアップ】上の base・qParts は使わない（答えのかたまりを入れない）
+            const letters = (q.q + q.display).replace(/\\[a-z]+/g, '');
+            let allParts = ["1", "2", "3", "4", "5", "6", "+", "-"];
+            if (/x/.test(letters)) allParts.push("x", "x^2", "(x+1)", "(x-1)", "(x+2)", "(x-2)", "(x+3)", "(x-3)");
+            if (/y/.test(letters)) allParts.push("y", "y^2", "xy");
+            if (/[ab]/.test(letters)) allParts.push("a", "b", "a^2", "b^2", "(a+b)", "(a-b)");
+            allParts.push(NO_DENOMINATOR);
             
             allParts.sort((a,b) => {
                 if(a === NO_DENOMINATOR) return 1;
@@ -539,6 +572,8 @@
             overlay.classList.remove('hidden');
             
             const qaBlock = getQABlockHtml(q);
+            // 【ブラッシュアップ】3 回まちがえたら、答えと解説を出す
+            if (!isCorrect && ++missCount >= 3) { showExplanation(); return; }
 
             if (isCorrect) {
                 card.innerHTML = `
@@ -558,7 +593,10 @@
                 card.innerHTML = `
                     <div class="text-6xl mb-4">🤔</div>
                     <h2 class="text-3xl font-black text-slate-700 mb-2">おしい！</h2>
-                    <p class="text-slate-500 font-bold mb-8">どこで間違えたか確認しよう。</p>
+                    <p class="text-slate-500 font-bold mb-4">${missCount === 1 ? '方針' : '途中式'}を見て、もう一度考えよう。</p>
+                    <div class="hint-box"><span class="hint-tag">💡 方針</span>${PLAN[currentMode]}</div>
+                    ${missCount >= 2 ? `<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>${(q.steps.length > 1 ? q.steps.slice(0, -1) : q.steps).join('<br>')}</div>` : ''}
+                    <div class="mb-6"></div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button onclick="closeFeedback()" class="bubble-btn bg-slate-200 text-slate-700 py-5 rounded-2xl font-black text-lg">もう一度解く</button>
                         <button onclick="showExplanation()" class="bubble-btn bg-orange-500 text-white py-5 rounded-2xl font-black text-lg">正解・解説を見る</button>

@@ -105,11 +105,12 @@
     .hint-btn { background: #eee; color: #666; box-shadow: 0 5px 0 #ccc; }
     .next-btn { background: var(--correct); color: white; box-shadow: 0 5px 0 #047857; display: none; }
 
-    #msg { font-size: 1.6rem; margin-top: 15px; text-align: center; font-weight: bold; height: 30px; }
+    #msg { font-size: 1.6rem; margin-top: 15px; text-align: center; font-weight: bold; min-height: 30px; }
 
     /* 【ブラッシュアップ】 */
     .port-back { width: 100%; max-width: 1000px; }
     .choice-btn.picked { background: var(--line-blue); color: white; }
+    .grid-quartic { grid-template-columns: repeat(5, 110px); grid-template-rows: 80px 100px 15px 100px; }
     .finish-panel { display: none; text-align: center; padding: 20px 0; }
     .container.finished > *:not(#finish) { display: none !important; }
     .container.finished #finish { display: block; }
@@ -132,6 +133,7 @@
       .division-area { margin-right: 0; gap: 6px 4px; }
       .grid-cubic { grid-template-columns: repeat(4, min(17vw, 100px)); grid-template-rows: var(--cellh) var(--cellh) 4px var(--cellh); }
       .grid-quadratic { grid-template-columns: repeat(3, min(22vw, 110px)); grid-template-rows: var(--cellh) var(--cellh) 4px var(--cellh); }
+      .grid-quartic { grid-template-columns: repeat(5, min(13vw, 84px)); grid-template-rows: var(--cellh) var(--cellh) 4px var(--cellh); }
       .num-display { font-size: calc(var(--cellh) * 0.6); height: var(--cellh); }
       .input-box { width: 100%; height: var(--cellh); font-size: calc(var(--cellh) * 0.5); box-sizing: border-box; border-radius: 8px; padding: 0; }
       .divisor-container { position: static; width: min(14vw, 80px); height: calc(var(--cellh) * 2 + 6px); font-size: calc(var(--cellh) * 0.6); box-sizing: border-box; }
@@ -157,10 +159,17 @@
     .container { box-sizing: border-box; }
     .level-badge { display: inline-block; padding: 4px 16px; }
     .problem-box { background: var(--u-soft-yellow); border-color: #fde68a; color: var(--u-ink); }
+    .div-note { font-size: 0.95rem; color: var(--u-sub); font-weight: 700; margin: -18px 0 16px; line-height: 1.6; }
     .label-tag { color: var(--u-title); font-weight: 800; }
+    .hint-box { margin: 10px auto 0; max-width: 640px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-size: 1rem; line-height: 1.8; text-align: left; }
+    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
+    .theorem { margin: 10px auto 0; max-width: 640px; background: #fff; border: 3px dashed var(--u-line); color: var(--u-ink); border-radius: 16px; padding: 10px 14px; font-size: 1.1rem; line-height: 1.8; }
+    .theorem small { font-size: 0.9rem; color: var(--u-sub); }
+    .container.reveal .ans-overlay { display: block !important; }
     .finish-title { color: var(--u-accent-text); }
     .finish-label { color: var(--u-sub); font-weight: 700; }
     .finish-score { color: var(--u-title); }
+    @media (max-width: 960px) { .div-note { margin: -6px 0 12px; font-size: 0.85rem; } }
   
     </style>
 </head>
@@ -170,6 +179,7 @@
 <div class="container">
   <div class="level-badge" id="level-text">第 1 問 / 5</div>
   <div class="problem-box" id="problem-display"></div>
+  <p class="div-note" id="div-note"></p>
 
   <div class="division-row">
     <div class="division-area" id="grid"></div>
@@ -199,7 +209,6 @@
     <button class="btn next-btn" id="next-btn" onclick="nextLevel()">次の問題へ</button>
   </div>
   <div id="msg"></div>
-
   <!-- 【ブラッシュアップ】元は 5 問目のあと、何も言わずに 1 問目に戻っていた。クリア画面を出して、次を選べるようにした -->
   <div id="finish" class="finish-panel">
     <div id="finish-title" class="finish-title"></div>
@@ -223,13 +232,17 @@
     { q: "x³ + 2x² - 5x - 6", div: 2, coefs: [1, 2, -5, -6], divDisp: "2", type: 3, allBlank: false, qTxt: "x²+4x+3", rTxt: "0" },
     { q: "x³ - 7x - 6", div: -1, coefs: [1, 0, -7, -6], divDisp: "-1", type: 3, allBlank: false, qTxt: "x²-x-6", rTxt: "0" },
     { q: "x² + 3x + 5", div: -1, coefs: [1, 3, 5], divDisp: "-1", type: 2, allBlank: true, qTxt: "x+2", rTxt: "3" },
-    { q: "x³ - 2x² + 4x + 1", div: 2, coefs: [1, -2, 4, 1], divDisp: "2", type: 3, allBlank: true, qTxt: "x²+4", rTxt: "9" }
+    { q: "x³ - 2x² + 4x + 1", div: 2, coefs: [1, -2, 4, 1], divDisp: "2", type: 3, allBlank: true, qTxt: "x²+4", rTxt: "9" },
+    // 【ブラッシュアップ】追加
+    { q: "x³ + 2x + 1", div: -1, coefs: [1, 0, 2, 1], divDisp: "-1", type: 3, allBlank: true, qTxt: "x²-x+3", rTxt: "-2" },
+    { q: "2x³ - 3x² + 4", div: 2, coefs: [2, -3, 0, 4], divDisp: "2", type: 3, allBlank: true, qTxt: "2x²+x+2", rTxt: "8" },
+    { q: "x⁴ - 1", div: 1, coefs: [1, 0, 0, 0, -1], divDisp: "1", type: 4, allBlank: true, qTxt: "x³+x²+x+1", rTxt: "0" }
   ];
-
   // 【ブラッシュアップ】
-  let problems = problemBank;   // いま解いている 5 問
-  let quizMode = 'basic';       // 'basic'（この 5 問）/ 'random'（ランダム 5 問）
+  let problems = problemBank;   // いま解いている問題
+  let quizMode = 'basic';       // 'basic'（先生の問題＋追加）/ 'random'（ランダム 5 問）
   let missThis = false;         // この問題で、まちがえた・答えを見た
+  let missCount = 0;            // この問題で表をまちがえた回数（ヒントの段階：1 方針 → 2 途中式 → 3 答え）
   let cleanCount = 0;           // ヒントなし・一発でできた問題の数
 
   function shuffleArr(a) {
@@ -257,22 +270,23 @@
     return b;
   }
   // 【ブラッシュアップ】ランダム問題：（x − c）×（商）＋ 余り から、わられる式を作る
+  //   2 次・3 次・4 次をまぜ、3・4 問目は最高次の係数が 1 でない式にする（いちばん左の「おろす」数も練習になるように）
   function makeRandomProblems() {
     const ri = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
     const list = [];
-    [2, 2, 3, 3, 3].forEach((type, i) => {
+    [2, 3, 3, 3, 4].forEach((type, i) => {
       for (let tries = 0; tries < 500; tries++) {
         const c = [-3, -2, -1, 1, 2, 3][ri(0, 5)];
-        const qc = [1];
+        const qc = [(i === 2 || i === 3) ? [2, 3, -1, -2][ri(0, 3)] : 1];
         for (let k = 1; k < type; k++) qc.push(ri(-4, 5));
         const r = (i % 2 === 0) ? 0 : (ri(-6, 9) || 3);   // 割り切れる問題と、余りが出る問題をまぜる
-        const a = [1];
+        const a = [qc[0]];
         for (let k = 1; k < type; k++) a.push(qc[k] - c * qc[k - 1]);
         a.push(r - c * qc[type - 1]);
         if (a.some(v => Math.abs(v) > 15)) continue;
         const q = fmtPoly(a, true);
         if (list.some(p => p.q === q)) continue;
-        list.push({ q: q, div: c, coefs: a, divDisp: String(c), type: type, allBlank: i >= 3, qTxt: fmtPoly(qc), rTxt: String(r) });
+        list.push({ q: q, div: c, coefs: a, divDisp: String(c), type: type, allBlank: i >= 2, qTxt: fmtPoly(qc), rTxt: String(r) });
         break;
       }
     });
@@ -287,11 +301,12 @@
     window.scrollTo(0, 0);
   }
   function showFinish() {
+    const n = problems.length;
     document.querySelector('.container').classList.add('finished');
-    document.getElementById('finish-title').innerText = quizMode === 'random' ? '🎉 ランダム 5 問クリア！' : '🎉 5 問ぜんぶクリア！';
-    document.getElementById('finish-score').innerText = cleanCount + ' / ' + problems.length;
+    document.getElementById('finish-title').innerText = quizMode === 'random' ? '🎉 ランダム 5 問クリア！' : `🎉 ${n} 問ぜんぶクリア！`;
+    document.getElementById('finish-score').innerText = cleanCount + ' / ' + n;
     document.getElementById('finish-random').innerText = quizMode === 'random' ? 'もう一度ランダム 5 問 ▶' : 'ランダム問題 5 問にチャレンジ ▶';
-    document.getElementById('finish-again').innerText = quizMode === 'random' ? '最初の 5 問にもどる' : '同じ 5 問をもう一度';
+    document.getElementById('finish-again').innerText = quizMode === 'random' ? '最初の問題にもどる' : `同じ ${n} 問をもう一度`;
     window.scrollTo(0, 0);
   }
   // 全角の数字や、いろいろなマイナス記号も受け付ける
@@ -300,21 +315,22 @@
       .replace(/[−－ー―‐]/g, '-').replace(/＋/g, '+').replace(/\s/g, '');
   }
 
+  // 【ブラッシュアップ】表の答え（ans1, ans3, … が下の段、ans2, ans4, … が 2 段目、いちばん右が余り）を、次数に合わせて計算する
   function initProblem() {
     currentProblem = JSON.parse(JSON.stringify(problems[currentLevel - 1]));
     isStep2 = false;
     missThis = false;
-    document.querySelector('.container').classList.remove('finished');
+    missCount = 0;
+    document.querySelector('.container').classList.remove('finished', 'reveal');
     const c = currentProblem.div;
     const a = currentProblem.coefs;
+    const n = currentProblem.type;
     const ans = { divVal: currentProblem.divDisp };
-    
-    if (currentProblem.type === 2) {
-      ans.c1 = a[0]; ans.c2 = a[1]; ans.c3 = a[2];
-      ans.ans1 = a[0]; ans.ans2 = a[0] * c; ans.ans3 = a[1] + ans.ans2; ans.ans4 = ans.ans3 * c; ans.ans5 = a[2] + ans.ans4;
-    } else {
-      ans.c1 = a[0]; ans.c2 = a[1]; ans.c3 = a[2]; ans.c4 = a[3];
-      ans.ans1 = a[0]; ans.ans2 = a[0] * c; ans.ans3 = a[1] + ans.ans2; ans.ans4 = ans.ans3 * c; ans.ans5 = a[2] + ans.ans4; ans.ans6 = ans.ans5 * c; ans.ans7 = a[3] + ans.ans6;
+    for (let i = 0; i <= n; i++) ans['c' + (i + 1)] = a[i];
+    ans.ans1 = a[0];
+    for (let k = 1; k <= n; k++) {
+      ans['ans' + 2 * k] = ans['ans' + (2 * k - 1)] * c;
+      ans['ans' + (2 * k + 1)] = a[k] + ans['ans' + 2 * k];
     }
     currentProblem.fullAnswers = ans;
     renderGrid();
@@ -330,62 +346,63 @@
     const sign = currentProblem.div > 0 ? '-' : '+';
     const absDiv = Math.abs(currentProblem.div);
     document.getElementById("problem-display").innerHTML = `問題： (${currentProblem.q}) ÷ (x ${sign} ${absDiv})`;
-    
+    // 【ブラッシュアップ】右の「割る数」の欄に何を書くのか（元は説明がなかった）
+    document.getElementById("div-note").innerHTML = currentProblem.allBlank
+      ? `右上の欄には、<b>x ${sign} ${absDiv} = 0</b> となる x の値を書こう。上の段には、わられる式の係数を次数の高い順に（ない次数の項は 0）。`
+      : `右の <b>${currentProblem.divDisp}</b> は、x ${sign} ${absDiv} = 0 となる x の値だよ。`;
+
     const divWrapper = document.getElementById("divisor-area-wrapper");
     const grid = document.getElementById("grid");
     const a = currentProblem.coefs;
     const ans = currentProblem.fullAnswers;
     const isAB = currentProblem.allBlank;
+    const n = currentProblem.type;
+    const cell = (id, tab) => `<div class="cell-wrapper"><input type="text" class="input-box" id="${id}" tabindex="${tab}" autocomplete="off"><div class="ans-overlay">${ans[id]}</div></div>`;
 
-    divWrapper.innerHTML = isAB ? 
-      `<div class="divisor-container"><div class="cell-wrapper"><input type="text" class="input-box" id="divVal" tabindex="1" style="width:80px; height:70px;"><div class="ans-overlay">${ans.divVal}</div></div></div>` :
+    divWrapper.innerHTML = isAB ?
+      `<div class="divisor-container"><div class="cell-wrapper"><input type="text" class="input-box" id="divVal" tabindex="1" autocomplete="off" style="width:80px; height:70px;"><div class="ans-overlay">${ans.divVal}</div></div></div>` :
       `<div id="divisor-box" class="divisor-container">${currentProblem.divDisp}</div>`;
 
-    if (currentProblem.type === 2) {
-      grid.className = "division-area grid-quadratic";
-      grid.innerHTML = `
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c1" tabindex="2"><div class="ans-overlay">${ans.c1}</div></div>` : `<div class="num-display">${a[0]}</div>`}
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c2" tabindex="3"><div class="ans-overlay">${ans.c2}</div></div>` : `<div class="num-display">${a[1]}</div>`}
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c3" tabindex="4"><div class="ans-overlay">${ans.c3}</div></div>` : `<div class="num-display">${a[2]}</div>`}
-        <div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans2" tabindex="${isAB?6:2}"><div class="ans-overlay">${ans.ans2}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans4" tabindex="${isAB?8:4}"><div class="ans-overlay">${ans.ans4}</div></div>
-        <div class="main-line" style="grid-column: 1 / 4;"></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans1" tabindex="${isAB?5:1}"><div class="ans-overlay">${ans.ans1}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans3" tabindex="${isAB?7:3}"><div class="ans-overlay">${ans.ans3}</div></div>
-        <div class="remainder-wrapper"><div class="remainder-line"></div>
-          <div class="cell-wrapper"><input type="text" class="input-box" id="ans5" tabindex="${isAB?9:5}"><div class="ans-overlay">${ans.ans5}</div></div>
-        </div>
-      `;
-    } else {
-      grid.className = "division-area grid-cubic";
-      grid.innerHTML = `
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c1" tabindex="2"><div class="ans-overlay">${ans.c1}</div></div>` : `<div class="num-display">${a[0]}</div>`}
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c2" tabindex="3"><div class="ans-overlay">${ans.c2}</div></div>` : `<div class="num-display">${a[1]}</div>`}
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c3" tabindex="4"><div class="ans-overlay">${ans.c3}</div></div>` : `<div class="num-display">${a[2]}</div>`}
-        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c4" tabindex="5"><div class="ans-overlay">${ans.c4}</div></div>` : `<div class="num-display">${a[3]}</div>`}
-        <div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans2" tabindex="${isAB?7:2}"><div class="ans-overlay">${ans.ans2}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans4" tabindex="${isAB?9:4}"><div class="ans-overlay">${ans.ans4}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans6" tabindex="${isAB?11:6}"><div class="ans-overlay">${ans.ans6}</div></div>
-        <div class="main-line" style="grid-column: 1 / 5;"></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans1" tabindex="${isAB?6:1}"><div class="ans-overlay">${ans.ans1}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans3" tabindex="${isAB?8:3}"><div class="ans-overlay">${ans.ans3}</div></div>
-        <div class="cell-wrapper"><input type="text" class="input-box" id="ans5" tabindex="${isAB?10:5}"><div class="ans-overlay">${ans.ans5}</div></div>
-        <div class="remainder-wrapper"><div class="remainder-line"></div>
-          <div class="cell-wrapper"><input type="text" class="input-box" id="ans7" tabindex="${isAB?12:7}"><div class="ans-overlay">${ans.ans7}</div></div>
-        </div>
-      `;
-    }
+    grid.className = "division-area " + ({ 2: 'grid-quadratic', 3: 'grid-cubic', 4: 'grid-quartic' }[n]);
+    const base = isAB ? n + 2 : 0;   // 入れる順番（割る数 → 上の段 → 下の段の左から）
+    let html = '';
+    for (let i = 0; i <= n; i++) html += isAB ? cell('c' + (i + 1), i + 2) : `<div class="num-display">${a[i]}</div>`;
+    html += '<div></div>';
+    for (let k = 1; k <= n; k++) html += cell('ans' + 2 * k, base + 2 * k);
+    html += `<div class="main-line" style="grid-column: 1 / ${n + 2};"></div>`;
+    for (let k = 0; k < n; k++) html += cell('ans' + (2 * k + 1), base + 2 * k + 1);
+    html += `<div class="remainder-wrapper"><div class="remainder-line"></div>${cell('ans' + (2 * n + 1), base + 2 * n + 1)}</div>`;
+    grid.innerHTML = html;
+
+    // 【ブラッシュアップ】Enter で次のマスへ（最後のマスなら答えあわせ）
+    const inputs = [...document.querySelectorAll('.container .input-box')].sort((p, q) => p.tabIndex - q.tabIndex);
+    inputs.forEach((el, i) => el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      if (inputs[i + 1]) inputs[i + 1].focus(); else checkAnswer();
+    }));
+
     document.getElementById("msg").innerText = "";
     document.getElementById("next-btn").style.display = "none";
     document.getElementById("check-btn").style.display = "inline-block";
   }
 
+
+  // 【ブラッシュアップ】まちがえたら、1 回目は手順（方針）、2 回目はまちがえたマスの計算（途中式）、3 回目は答えを表に出す
+  function explainCell(id) {
+    const p = currentProblem, ans = p.fullAnswers, c = p.div;
+    const par = (v) => (v < 0 ? `(${v})` : String(v));
+    if (id === 'divVal') return `割る数：x ${c > 0 ? '-' : '+'} ${Math.abs(c)} = 0 となる x は ${c}`;
+    if (id[0] === 'c') return `上の段は、わられる式の係数を次数の高い順に：${p.coefs.join(', ')}（ない次数の項は 0）`;
+    const k = Number(id.slice(3));
+    if (k === 1) return `いちばん左は、上の ${p.coefs[0]} をそのまま下へおろす`;
+    if (k % 2 === 0) return `2 段目：左下の ${par(ans['ans' + (k - 1)])} × ${par(c)} = ${ans[id]}`;
+    return `下の段：上の ${par(p.coefs[(k - 1) / 2])} + ${par(ans['ans' + (k - 1)])} = ${ans[id]}`;
+  }
   function checkAnswer() {
     const userAns = currentProblem.fullAnswers;
     const msg = document.getElementById("msg");
-    let isAllCorrect = true, hasWrong = false;
+    let isAllCorrect = true, hasWrong = false, firstWrong = null;
     for (let id in userAns) {
       const input = document.getElementById(id);
       if (!input) continue;
@@ -402,6 +419,7 @@
       } else {
         isAllCorrect = false;
         hasWrong = true;
+        if (!firstWrong) firstWrong = id;
         input.style.borderColor = "var(--accent)";
         input.style.background = "#FFEAEA";
       }
@@ -409,13 +427,22 @@
     if (!isAllCorrect) {
       if (hasWrong) {
         missThis = true;
-        msg.innerText = "組み立て除法がちがうよ！";
+        missCount++;
+        if (missCount === 1) {
+          msg.innerHTML = '赤いマスがちがうよ。<div class="hint-box"><span class="hint-tag">💡 方針</span>① いちばん左の数をそのまま下へ　② 下の数 × 割る数 を右どなりの 2 段目へ　③ 上と 2 段目をたして下へ … をくり返す。いちばん右が余り。</div>';
+        } else if (missCount === 2) {
+          msg.innerHTML = `赤いマスがちがうよ。<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>${explainCell(firstWrong)}</div>`;
+        } else {
+          document.querySelector('.container').classList.add('reveal');
+          msg.innerHTML = '<div class="hint-box"><span class="hint-tag">👀 答え</span>マスの中に赤い数字で答えを出したよ。そのとおりに直して、もう一度「答えあわせ」を押そう。</div>';
+        }
       } else {
         msg.innerText = "まだ空いているマスがあるよ（0 のときも 0 と書こう）";
       }
       msg.style.color = "var(--accent)";
       return;
     }
+    document.querySelector('.container').classList.remove('reveal');
     if (!isStep2) {
       isStep2 = true;
       msg.innerText = "正解！下の【商】と【余り】を選んでね！";
@@ -434,28 +461,40 @@
     if (qSlot === currentProblem.qTxt && rSlot === currentProblem.rTxt) {
       if (!missThis) cleanCount++;
       const last = currentLevel >= problems.length;
-      msg.innerHTML = last ? "✨ 完璧です！ 5 問クリア！ ✨" : "✨ 完璧です！ ✨";
+      // 【ブラッシュアップ】最後に「わられる式 = 割る式 × 商 + 余り」と、余り = P(c)（剰余の定理）を確かめる
+      const p = currentProblem, c = p.div, r = Number(p.rTxt);
+      const divisor = `(x ${c > 0 ? '-' : '+'} ${Math.abs(c)})`;
+      const form = `${p.q} = ${divisor}(${p.qTxt})${r === 0 ? '' : (r < 0 ? ' - ' + (-r) : ' + ' + r)}`;
+      const theorem = r === 0
+        ? `P(${c}) = 0 なので、${divisor} で割り切れる（因数定理）`
+        : `x = ${c} を代入した P(${c}) も ${r} になる（剰余の定理）`;
+      msg.innerHTML = `✨ 完璧です！${last ? ` ${problems.length} 問クリア！` : ''} ✨<div class="theorem">${form}<br><small>${theorem}</small></div>`;
       msg.style.color = "var(--correct)";
       document.getElementById("next-btn").innerText = last ? "結果を見る" : "次の問題へ";
       document.getElementById("next-btn").style.display = "inline-block";
       document.getElementById("check-btn").style.display = "none";
     } else {
       missThis = true;
-      msg.innerText = "商か余りがちがうみたい。よく見て選ぼう！";
+      msg.innerText = "商か余りがちがうみたい。下の段の数が、商の係数と余りだよ。";
       msg.style.color = "var(--accent)";
     }
   }
+
 
   function setupStep2() {
     document.getElementById("result-step").style.display = "block";
     createChoices("quotient", currentProblem.qTxt);
     createChoices("remainder", currentProblem.rTxt);
+    // 【ブラッシュアップ】スマホでは選択肢が画面の下に出るので、そこまで動かす
+    document.getElementById("result-step").scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
 
   // 【ブラッシュアップ】選択肢の作り方
   //   元は余りの選択肢で「0」が 2 つ並ぶことがあり（0 と、その符号を変えた -0 → 0）、
   //   商の選択肢も「x+4x+3」のような形や、関係のない値が多かった。
-  //   まちがえやすい答え（割る数の符号をまちがえた・次数を下げ忘れた・符号の取りちがえ）を入れる。
+  //   まちがえやすい答え（割る数の符号をまちがえた・次数を下げ忘れた・符号の取りちがえ・係数を 1 つずらした）を入れる。
+  //   【商】【余り】を両方選んだら、そのまま答えあわせする。
   function createChoices(type, correct) {
     const area = document.getElementById(`choices-${type}`);
     area.innerHTML = "";
@@ -466,7 +505,8 @@
     if (type === "quotient") {
       const qc = b.slice(0, -1);
       cands = [fmtPoly(bw.slice(0, -1)), fmtPoly([...qc, 0]), fmtPoly(qc.map((v, i) => i === 0 ? v : -v))];
-      fallback = ["x-1", "x+1", "x²+x+1", "x²-1", "x+2", "x-2"];
+      fallback = [];
+      qc.forEach((_, i) => [1, -1].forEach(d => { if (i > 0 || qc[0] + d !== 0) fallback.push(fmtPoly(qc.map((w, j) => (j === i ? w + d : w)))); }));
     } else {
       const r = b[b.length - 1];
       cands = [String(bw[bw.length - 1]), String(-r), String(b[b.length - 2]), String(r + 1)];
@@ -482,10 +522,14 @@
       btn.onclick = () => {
         document.getElementById(`slot-${type}`).childNodes[0].nodeValue = c;
         area.querySelectorAll('.choice-btn').forEach(x => x.classList.toggle('picked', x === btn));
+        const qs = document.getElementById("slot-quotient").childNodes[0].nodeValue;
+        const rs = document.getElementById("slot-remainder").childNodes[0].nodeValue;
+        if (qs !== "選んでね" && rs !== "選んでね") checkAnswer();
       };
       area.appendChild(btn);
     });
   }
+
 
   function clearSlot(type) {
     document.getElementById(`slot-${type}`).childNodes[0].nodeValue = "選んでね";
