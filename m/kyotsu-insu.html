@@ -110,6 +110,9 @@
     /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書の書き方） */
     .m { font-family: var(--u-math-font); font-size: 1.08em; font-style: normal; }
     .m i { font-style: italic; padding-right: 0.04em; }
+    /* 【ブラッシュアップ】問いの文。＋・− のまわりの空きを、問題・選択肢・答えの欄でそろえる */
+    .q-instr { text-align: center; font-weight: 700; color: var(--u-soft-yellow-text); margin: 4px 0 0; font-size: 1.05rem; }
+    .ans-char.op, .char-span.op { padding: 0 0.12em; }
     .problem-box, #choice-list .nav-card, .key, #editor { font-family: var(--u-math-font) !important; }
     .key.key-del { font-family: var(--u-font) !important; }
   
@@ -140,6 +143,8 @@
 
   <div id="game" class="hidden">
     <div id="q-info" style="text-align:center; color:#546E7A; font-weight:bold;">第 1 問 / 5</div>
+    <!-- 【ブラッシュアップ】問いの文（元は式だけだった） -->
+    <div class="q-instr">次の式の共通因数をくくり出して、因数分解しなさい。</div>
     <div class="problem-box" id="problem"></div>
 
     <div id="choice-mode" class="hidden">
@@ -226,7 +231,7 @@ function monoHTML(t, first, tight) {
   const abs = Math.abs(t.c);
   let s = (abs === 1 && vs.length) ? '' : String(abs);
   vs.forEach(k => { s += k + (t.v[k] > 1 ? '<sup>' + t.v[k] + '</sup>' : ''); });
-  const sp = tight ? '' : ' ';
+  const sp = '\u202F';   // 【ブラッシュアップ】＋・− の前後の空きを、問題・選択肢・答えでそろえる（小さな空き）
   const sign = t.c < 0 ? (first ? '−' : sp + '−' + sp) : (first ? '' : sp + '+' + sp);
   return sign + s;
 }
@@ -295,7 +300,7 @@ function makeProblem(level, i) {
   }
   const f = { head: head, groups: groups };
   const poly = expand(f);
-  return { f: f, poly: poly, q: q || polyHTML(poly), ans: factHTML(f) };
+  return { f: f, poly: poly, q: (q || polyHTML(poly)).replace(/ ([+−]) /g, '\u202F$1\u202F'), ans: factHTML(f) };
 }
 
 // --- 4択の誤答（よくあるまちがい） ---
@@ -406,7 +411,8 @@ function renderEdit() {
     if(i==cursor) ed.innerHTML += '<div class="cursor"></div>';
     let span = document.createElement('span');
     span.className = 'char-span';
-    span.innerHTML = c=='^' ? '<sup>2</sup>' : c=='-' ? '−' : c;   // 【ブラッシュアップ】
+    span.innerHTML = c=='^' ? '<sup>2</sup>' : c=='-' ? '−' : c;
+    if (c == '+' || c == '-') span.classList.add('op');   // 【ブラッシュアップ】＋・− の前後に空き   // 【ブラッシュアップ】
     ed.appendChild(span);
   });
   if(cursor==input.length) ed.innerHTML += '<div class="cursor"></div>';

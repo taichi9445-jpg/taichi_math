@@ -339,6 +339,11 @@
     .back-btn { font-weight: 700; padding: 8px 14px; }
     .feedback { border: 3px solid transparent; border-radius: 20px; }
     .completion-nav a { color: var(--u-sub); }
+    /* 【ブラッシュアップ】日本語を言葉の切れ目で改行し、見出しは行の長さをそろえる（スマホで言葉の途中で切れないように） */
+    body.u-theme { word-break: auto-phrase; line-break: strict; }
+    h1, h2 { text-wrap: balance; }
+    .nw { display: inline-block; white-space: nowrap; }
+
     /* 【ブラッシュアップ】スコアを1行に・正誤の表示を問題のすぐ下に・まちがえた問題の一覧 */
     .score-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-weight: 700; }
     .card .feedback { margin: 0 0 14px; padding: 10px 12px; font-size: 1.25rem; }
@@ -414,12 +419,12 @@
                 <!-- 【ブラッシュアップ】高校の計算（因数分解・約分・平方根）につなぐ練習を追加 -->
                 <button class="level-btn" onclick="startLevel(10, 'random')">
                     <div class="level-number">🔁</div>
-                    <div class="level-name">逆九九（□×7＝56）</div>
+                    <div class="level-name"><span class="nw">逆九九</span><span class="nw">（□×7＝56）</span></div>
                     <div class="level-character">🧩</div>
                 </button>
                 <button class="level-btn" onclick="startLevel(11, 'random')">
                     <div class="level-number">x²</div>
-                    <div class="level-name">11〜19 の 2 乗</div>
+                    <div class="level-name"><span class="nw">11〜19 の</span><span class="nw">2 乗</span></div>
                     <div class="level-character">🏔️</div>
                 </button>
             </div>

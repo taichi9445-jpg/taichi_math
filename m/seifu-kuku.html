@@ -160,6 +160,13 @@
     #result-comment { color: var(--u-ink) !important; }
     #hint-panel { background: var(--u-soft-blue) !important; border-color: var(--u-soft-blue-line) !important; }
     #hint-panel .text-indigo-600 { color: var(--u-title) !important; }
+    /* 【ブラッシュアップ】日本語を言葉の切れ目で改行し、見出しは行の長さをそろえる（スマホで言葉の途中で切れないように） */
+    body.u-theme { word-break: auto-phrase; line-break: strict; }
+    h1, h2 { text-wrap: balance; }
+    .nw { display: inline-block; white-space: nowrap; }
+    /* ふりがなが長いとき、親の字の間が広がらないように（「入　カ」のようになっていた） */
+    ruby { ruby-align: center; }
+
     /* 【ブラッシュアップ】問題の種類・こたえ方をえらぶ段、まちがえたときのヒント */
     .select-row { margin-bottom: 14px; }
     .select-label { font-weight: 800; color: var(--u-sub); font-size: .95rem; margin-bottom: 6px; }
@@ -169,6 +176,7 @@
     .problem-text sup { font-size: .55em; }
     #hint-pow { flex-basis: 100%; }
     .choice-btn:disabled { opacity: .55; }
+    .problem-text.long { font-size: clamp(1.7rem, 7.4vw, 5rem); white-space: nowrap; }
   
     </style>
 </head>
@@ -426,6 +434,7 @@
             currentProblem = makeProblem(problemKind);
             currentAnswer = currentProblem.answer;
             document.getElementById('problem-display').innerHTML = currentProblem.html;
+            document.getElementById('problem-display').classList.toggle('long', currentProblem.kind === 'mul3');   // 3つのかけ算は字を小さめに（スマホで折り返さないように）
             document.getElementById('feedback').innerText = "";
             document.getElementById('answer-input').value = "";
             isWaiting = false;

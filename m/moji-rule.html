@@ -107,6 +107,8 @@
 
         /* 見出しの「せいかい！」は途中で改行させない */
         .badge-main { white-space: nowrap; }
+        /* 【ブラッシュアップ】見出しを言葉のかたまりの途中で切らない */
+        .nw { display: inline-block; white-space: nowrap; }
         .badge-sub { display: block; font-size: .5em; margin-top: .3em; }
 
         /* ------------------------------------------------------------------
@@ -131,7 +133,7 @@
             #start-screen { padding-top: 18px; padding-bottom: 12px; }
             #start-screen > * + * { margin-top: 22px; }
             #start-screen .text-6xl { font-size: 4.2rem; }
-            #start-screen h1 { font-size: 2.35rem; }
+            #start-screen h1 { font-size: min(2.35rem, 8.6vw); }
             #start-screen p { font-size: 1.1rem; }
             #start-screen button { font-size: 2.2rem; padding: 26px 0; }
 
@@ -156,7 +158,8 @@
             #result-badge { font-size: min(2.6rem, 9vw); }   /* 1行に収まる大きさまで自動で縮める */
             #correct-answer-math { font-size: 2.6rem; }
             #explanation-screen > .bg-slate-50 { padding: 16px 14px; border-radius: 22px; margin-bottom: 16px; }
-            #explanation-text p.text-2xl { font-size: 1.3rem; line-height: 1.6; }
+            #explanation-text p.text-2xl { font-size: 1.12rem; line-height: 1.6; }
+            #explanation-text .ex-steps { font-size: 1.1rem; }
             #explanation-text .text-4xl { font-size: 1.6rem; }
             #explanation-text .text-xl { font-size: 1rem; }
             #explanation-text .p-5 { padding: 12px; }
@@ -199,7 +202,8 @@
         <!-- スタート画面 -->
         <div id="start-screen" class="text-center space-y-8 py-10 relative z-10">
             <div class="text-6xl mb-4 float-icon">✏️</div>
-            <h1 class="text-4xl font-extrabold text-blue-600 leading-tight">文字式のルールを<br>マスターしよう！</h1>
+            <!-- 【ブラッシュアップ】言葉のかたまりごとに改行（スマホで「マスターしよ／う！」と切れていた） -->
+            <h1 class="text-4xl font-extrabold text-blue-600 leading-tight"><span class="nw">文字式の</span><span class="nw">ルールを</span><br><span class="nw">マスターしよう！</span></h1>
             <p class="text-lg text-slate-500 font-bold">ルール通りに書けるかな？ (全<span id="total-count">12</span>問)</p>
             <button onclick="startGame()" class="bubble-btn w-full py-6 bg-orange-400 hover:bg-orange-500 text-white rounded-3xl text-3xl font-black shadow-lg border-orange-600">
                 スタート！
@@ -340,7 +344,7 @@
                 ]
             },
             { // 【ブラッシュアップ】ルール⑦: ×÷がまざる・＋−は残す・( )・小数
-                desc: "×÷がまざるときは左から順に。÷ のうしろだけが分母へ。＋・− の記号は、はぶけません。",
+                desc: "×÷がまざるときは左から順に。÷ のうしろだけが分母へ。＋・− の記号は省略できません。",
                 questions: [
                     { q: "a \\times b \\div c", a: ["\\frac{ab}{c}"], opts: ["\\frac{ab}{c}", "\\frac{a}{bc}", "abc", "\\frac{c}{ab}"], ex: "a \\times b \\div c = ab \\div c = \\frac{ab}{c}" },
                     { q: "a \\div b \\times c", a: ["\\frac{ac}{b}"], opts: ["\\frac{ac}{b}", "\\frac{a}{bc}", "\\frac{b}{ac}", "abc"], ex: "a \\div b \\times c = \\frac{a}{b} \\times c = \\frac{ac}{b}",
@@ -531,12 +535,13 @@
                     ⚠️ ${currentQ.note}
                 </div>` : "";
 
+            // 【ブラッシュアップ】手順の式は、カードの横幅いっぱいに出す（スマホで式が枠からはみ出さないように）
             document.getElementById('explanation-text').innerHTML = `
+                ${exInfo}
                 <div class="flex items-start gap-3">
                     <span class="text-4xl">💡</span>
                     <div class="flex-1 min-w-0">
                         <p class="font-bold text-2xl mb-2 text-blue-600">${currentQ.levelDesc}</p>
-                        ${exInfo}
                         ${extraInfo}
                         ${noteInfo}
                     </div>

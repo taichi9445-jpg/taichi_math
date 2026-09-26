@@ -458,6 +458,9 @@ function getRandomQuestions(mode, subMode) {
     .modal-overlay { background: rgba(75, 44, 32, 0.55); }
     /* 【ブラッシュアップ】まちがえたときの理由・自力で正解できた数 */
     .advice { display: block; margin-top: 6px; font-size: 15px; line-height: 1.6; color: var(--u-ink); font-weight: 700; }
+    .m { font-family: var(--u-math-font); white-space: nowrap; font-size: 1.06em; }
+    .m i { font-style: italic; padding-right: .04em; }
+    .modal-body { font-family: var(--u-font) !important; }
     .clear-score { font-size: 1.15rem; font-weight: 800; color: var(--u-title); margin: 10px 0 0; }
   
     </style>
@@ -968,6 +971,60 @@ function getRandomQuestions(mode, subMode) {
 
   // 【ブラッシュアップ】MathJax が 6 秒たっても読み込めなければ、数式を読める文字に直して表示する
   PortMath.fallbackAfter(6000);
+
+        // 【ブラッシュアップ】式の書き方を教科書にそろえる：文字（x, y, a, p, q, f, D, k など）は斜体、
+        //   数字・記号はまっすぐ。どちらも数式の書体（var(--u-math-font)）で、日本語は普通の書体のまま。
+        //   式のひとかたまり（「0 ≦ x ≦ 2」など）は途中で改行しない（長い式は「=」の前で分ける）。
+        //   画面の文字はマイナスを「−」にする以外は変えないので、答え合わせには影響しない。
+        //   画面が書きかわるたびに、指定した場所に当て直す。
+        const MATH_RUN = /[A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*[A-Za-z0-9][A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .math, i, script, style, svg, input, textarea, mjx-container, .MathJax')) continue;
+                if (/\\|\$\$/.test(n.nodeValue)) continue;   // MathJax がまだ組んでいない式（\( … \) など）にはさわらない
+                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+                else if (/-/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/-/g, '−');   // 「-(」など記号だけの部分もマイナスは「−」
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    // 長い式は「 = 」の前で区切り、区切りのところだけで改行できるようにする
+                    const pieces = text.length > 22 ? text.split(/(?= = )/) : [text];
+                    pieces.forEach((piece, k) => {
+                        if (k) frag.appendChild(document.createTextNode(' '));
+                        const span = document.createElement('span');
+                        span.className = 'm';
+                        piece.trim().split(/([A-Za-z]+)/).forEach((part, j) => {
+                            if (!part) return;
+                            if (j % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                            else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));
+                        });
+                        frag.appendChild(span);
+                    });
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+
+  // MathJax で書いた式（問題・選択肢・解説）はそのまま。それ以外の式を教科書の書き方に
+  watchMath(['#equation-box', '#exp-area', '.choice-btn', '.formula-line', '.advice', '[id^="fb-"]', '#modal-answer-text', '#hint-box', '.menu-card p', '.step-title', '#clear-score']);
 </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける

@@ -57,15 +57,16 @@
     .container > .text-center p { color: var(--u-sub); font-weight: 700; }
     .container .bg-white.shadow-md, .container .bg-white.shadow-lg { background: #f8fafc !important; border: 3px solid var(--u-line); box-shadow: none !important; border-radius: 24px !important; }
     #translation-problem { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; border-radius: 20px !important; }
-    #original-function, #transformed-function { font-family: 'Times New Roman', serif !important; }
     #original-function { color: var(--u-title) !important; }
     #transformed-function { color: #dc2626 !important; }
     #question-text { color: var(--u-title-dark) !important; }
     .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; margin: 0 auto; }
     .set-row .set-btn { font-size: 15px; padding: 10px 6px; }
     .set-btn.ring-4 { box-shadow: 0 0 0 4px rgba(251,146,60,0.55) !important; }
-    .choice-btn { text-align: left; padding: 14px 18px; font-family: 'Times New Roman', 'M PLUS Rounded 1c', serif; font-size: 1.15rem; }
-    .choice-btn span:first-child { color: var(--u-accent-text) !important; font-family: var(--u-font); }
+    .choice-btn { text-align: left; padding: 14px 18px; font-size: 1.15rem; }
+    .m { font-family: var(--u-math-font); white-space: nowrap; font-size: 1.06em; }
+    .m i { font-style: italic; padding-right: .04em; }
+    .choice-btn > span:first-child { color: var(--u-accent-text) !important; font-family: var(--u-font); }   /* A. B. … の記号（式ではないので立てたまま） */
     .choice-sub { display: block; font-size: .8rem; color: var(--u-sub); font-family: var(--u-font); margin-top: 2px; }
     #level-badge { background: var(--u-soft-yellow) !important; color: var(--u-soft-yellow-text) !important; }
     #hint-section { background: var(--u-soft-blue) !important; border: 2px solid var(--u-soft-blue-line) !important; border-radius: 20px; }
@@ -1352,8 +1353,16 @@
             const v0 = o ? { x: -o.b / (2 * o.a), y: o.c - o.b * o.b / (4 * o.a) } : null;
             // 移動後の頂点の左右 2.5 と、元の頂点が入る範囲（広げすぎると縦に長くなって見にくい）
             const lo = Math.min(v1.x - 2.5, v0 ? v0.x - 1 : v1.x), hi = Math.max(v1.x + 2.5, v0 ? v0.x + 1 : v1.x);
-            let svg = window.Graph ? Graph.parabola({ a: m.a, b: m.b, c: m.c, xmin: lo, xmax: hi, markVertex: true }) : '';
-            box.innerHTML = addOriginal(svg, o, v0, v1, m.a);
+            // graph.js の機能で描く：元のグラフ（点線, extra）・頂点の移動（arrows）・頂点の座標（points）・軸 x = p（axisLine）
+            const lab = (v) => '(' + fmt(v.x) + ', ' + fmt(v.y) + ')';
+            const moved0 = o && (Math.abs(v0.x - v1.x) + Math.abs(v0.y - v1.y) > 0.5);
+            const pts = [];
+            if (o && (v0.x !== 0 || v0.y !== 0)) pts.push({ x: v0.x, y: v0.y, color: '#94a3b8', labelColor: '#64748b', label: lab(v0) });
+            else if (o) pts.push({ x: v0.x, y: v0.y, color: '#94a3b8' });
+            pts.push({ x: v1.x, y: v1.y, color: '#e79b16', labelColor: '#b45309', label: lab(v1) });
+            box.innerHTML = window.Graph ? Graph.parabola({ a: m.a, b: m.b, c: m.c, xmin: lo, xmax: hi, axisLine: true,
+                extra: o ? [{ a: o.a, b: o.b, c: o.c }] : [], points: pts,
+                arrows: moved0 ? [{ x1: v0.x, y1: v0.y, x2: v1.x, y2: v1.y }] : [] }) : '';
             const s = box.querySelector('svg');
             if (s) { s.removeAttribute('width'); s.style.width = '100%'; s.style.maxWidth = '440px'; s.style.height = 'auto'; }
 
@@ -1366,45 +1375,7 @@
             document.getElementById('hint-legend').style.display = o && graphNow ? '' : 'none';
         }
 
-        // graph.js の図から座標の変換を読みとり、元のグラフ（点線）・頂点の座標・矢印を足す
-        function addOriginal(svg, o, v0, v1, a) {
-            const xt = [...svg.matchAll(/<text x="([\d.]+)" y="[\d.]+" font-size="10" fill="#8896aa" text-anchor="middle">(-?\d+)<\/text>/g)].map(r => [+r[2], +r[1]]);
-            const yt = [...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" font-size="10" fill="#8896aa" text-anchor="end">(-?\d+)<\/text>/g)].map(r => [+r[2], +r[1] - 3.5]);
-            if (xt.length < 2 || yt.length < 2) return svg;
-            const kx = (xt[1][1] - xt[0][1]) / (xt[1][0] - xt[0][0]), sx = (x) => xt[0][1] + (x - xt[0][0]) * kx;
-            const ky = (yt[1][1] - yt[0][1]) / (yt[1][0] - yt[0][0]), sy = (y) => yt[0][1] + (y - yt[0][0]) * ky;
-            const top = 26, bottom = 274;   // graph.js の描く範囲（上下のすきま 26）
-            const lab = (v) => '(' + fmt(v.x) + ', ' + fmt(v.y) + ')';
-            let add = '<defs><marker id="mv-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#10a05a"/></marker></defs>';
-            if (o) {
-                let d = '', first = true;
-                const lo = (xt[0][1] - 26) / -kx + xt[0][0], hi = lo + (360 - 52) / kx;
-                for (let i = 0; i <= 160; i++) {
-                    const x = lo + (hi - lo) * i / 160, y = o.a * x * x + o.b * x + o.c, Y = sy(y);
-                    if (Y < top || Y > bottom) { first = true; continue; }
-                    d += (first ? 'M ' : 'L ') + sx(x).toFixed(1) + ' ' + Y.toFixed(1) + ' ';
-                    first = false;
-                }
-                add += '<path d="' + d + '" fill="none" stroke="#94a3b8" stroke-width="2.2" stroke-dasharray="6,5"/>';
-                add += '<circle cx="' + sx(v0.x).toFixed(1) + '" cy="' + sy(v0.y).toFixed(1) + '" r="4.5" fill="#94a3b8"/>';
-                if (Math.abs(v0.x - v1.x) + Math.abs(v0.y - v1.y) > 0.5) {
-                    add += '<line x1="' + sx(v0.x).toFixed(1) + '" y1="' + sy(v0.y).toFixed(1) + '" x2="' + sx(v1.x).toFixed(1) + '" y2="' + sy(v1.y).toFixed(1) +
-                        '" stroke="#10a05a" stroke-width="2.5" marker-end="url(#mv-arrow)"/>';
-                }
-                if (v0.x !== 0 || v0.y !== 0) add += textAt(sx(v0.x), sy(v0.y), lab(v0), '#64748b', a);
-            }
-            add += textAt(sx(v1.x), sy(v1.y), lab(v1), '#b45309', a);
-            // 軸 x = p（点線）
-            add += '<line x1="' + sx(v1.x).toFixed(1) + '" y1="' + top + '" x2="' + sx(v1.x).toFixed(1) + '" y2="' + bottom + '" stroke="#e79b16" stroke-width="1.2" stroke-dasharray="3,4"/>';
-            add += '<text x="' + (sx(v1.x) + 4).toFixed(1) + '" y="' + (a > 0 ? top + 10 : bottom - 4) + '" font-size="11" fill="#b45309" stroke="#fff" stroke-width="3" paint-order="stroke">軸 x = ' + fmt(v1.x) + '</text>';
-            return svg.replace('</svg>', add + '</svg>');
-        }
         function fmt(n) { n = Math.round(n * 100) / 100; return n < 0 ? '−' + Math.abs(n) : String(n); }
-        // 頂点の座標：下に凸なら頂点の下、上に凸なら上に書く（白いふちどりで線と重なっても読める）
-        function textAt(X, Y, t, color, a) {
-            const y = a > 0 ? Y + 18 : Y - 10;
-            return '<text x="' + (X + 6).toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="bold" fill="' + color + '" stroke="#fff" stroke-width="3" paint-order="stroke">' + t + '</text>';
-        }
 
         function showCompletionModal() {
             const modal = document.getElementById('completion-modal');
@@ -1435,6 +1406,60 @@
         function closeModal() {
             document.getElementById('completion-modal').classList.add('hidden');
         }
+
+
+        // 【ブラッシュアップ】式の書き方を教科書にそろえる：文字（x, y, a, p, q, f, D, k など）は斜体、
+        //   数字・記号はまっすぐ。どちらも数式の書体（var(--u-math-font)）で、日本語は普通の書体のまま。
+        //   式のひとかたまり（「0 ≦ x ≦ 2」など）は途中で改行しない（長い式は「=」の前で分ける）。
+        //   画面の文字はマイナスを「−」にする以外は変えないので、答え合わせには影響しない。
+        //   画面が書きかわるたびに、指定した場所に当て直す。
+        const MATH_RUN = /[A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*[A-Za-z0-9][A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .math, i, script, style, svg, input, textarea, mjx-container, .MathJax')) continue;
+                if (/\\|\$\$/.test(n.nodeValue)) continue;   // MathJax がまだ組んでいない式（\( … \) など）にはさわらない
+                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+                else if (/-/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/-/g, '−');   // 「-(」など記号だけの部分もマイナスは「−」
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    // 長い式は「 = 」の前で区切り、区切りのところだけで改行できるようにする
+                    const pieces = text.length > 22 ? text.split(/(?= = )/) : [text];
+                    pieces.forEach((piece, k) => {
+                        if (k) frag.appendChild(document.createTextNode(' '));
+                        const span = document.createElement('span');
+                        span.className = 'm';
+                        piece.trim().split(/([A-Za-z]+)/).forEach((part, j) => {
+                            if (!part) return;
+                            if (j % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                            else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));
+                        });
+                        frag.appendChild(span);
+                    });
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+
+        watchMath(['#translation-problem', '#question-text', '[id^="choice-"]', '#explanation', '#wrong-explanation', '#hint-text', '.rule-box', '.hint-legend']);
 
         // イベントリスナー
         document.querySelectorAll('.choice-btn').forEach((btn, index) => {

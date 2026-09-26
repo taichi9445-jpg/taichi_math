@@ -416,8 +416,11 @@ function getQuizData(type, level) {
     .result-nav a { color: #7f8c8d; }
     .btn-grid.three { grid-template-columns: repeat(3, 1fr); gap: 10px; }
     /* 式は教科書と同じ書体（x は斜体、マイナスは「−」） */
-    .math { font-family: 'Times New Roman', serif; }
+    .math, .option-btn.math { font-family: var(--u-math-font) !important; }   /* ボタンは書体を受けつぐ設定になっているので !important */
+    .m { font-family: var(--u-math-font); white-space: nowrap; font-size: 1.06em; }
+    .m i, .math i { font-style: italic; }
     .math i { font-style: italic; padding: 0 .12em; }
+    .nw { white-space: nowrap; }
     .problem-lead { display: block; font-size: 15px; color: #a16207; font-weight: 700; margin-bottom: 4px; font-family: inherit; }
     .answer-line { padding: 2px 8px; text-align: center; }
     .answer-line.guide { font-size: 17px; font-weight: 700; }
@@ -587,7 +590,8 @@ function getQuizData(type, level) {
   // 【ブラッシュアップ】式を教科書の書き方で表示する（マイナスは「−」、x は斜体）
   function mathHTML(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/-/g, '−').replace(/x/g, '<i>x</i>');
+      .replace(/-/g, '−').replace(/x/g, '<i>x</i>')
+      .split(' , ').map((p) => '<span class="nw">' + p + '</span>').join(', ');   // 連立不等式は 1 つずつ改行しないかたまりに
   }
 
   function showQuestion() {
@@ -605,7 +609,7 @@ function getQuizData(type, level) {
       q.type === 'inequality' ? "③ 答えをえらぶ（不等号の向きに注意）" : "③ 答えをえらぶ"];
     for (var i = 0; i < 3; i++) {
       var line = document.getElementById('line-' + i);
-      line.innerHTML = mathText(guides[i]);
+      line.innerHTML = '<span>' + mathText(guides[i]) + '</span>';   // 欄は flex なので、中身を 1 つにまとめる（文字と式がばらばらに並ばないように）
       line.className = 'answer-line guide';
     }
 
@@ -651,7 +655,7 @@ function getQuizData(type, level) {
       showFeedback(true, okMessage(q, currentStepIndex));
 
       let line = document.getElementById('line-' + currentStepIndex);
-      line.innerHTML = mathHTML(opt.t);
+      line.innerHTML = '<span>' + mathHTML(opt.t) + '</span>';
       line.className = 'answer-line done math';
 
       currentStepIndex++;
@@ -869,6 +873,60 @@ function getQuizData(type, level) {
     w.push({ t: q.steps[step].replace(/(-?\d+)$/, (d) => String(Number(d) + 1)), ok: false, why: '計算をもう一度見直そう' });
     return w;
   }
+
+
+        // 【ブラッシュアップ】式の書き方を教科書にそろえる：文字（x, y, a, p, q, f, D, k など）は斜体、
+        //   数字・記号はまっすぐ。どちらも数式の書体（var(--u-math-font)）で、日本語は普通の書体のまま。
+        //   式のひとかたまり（「0 ≦ x ≦ 2」など）は途中で改行しない（長い式は「=」の前で分ける）。
+        //   画面の文字はマイナスを「−」にする以外は変えないので、答え合わせには影響しない。
+        //   画面が書きかわるたびに、指定した場所に当て直す。
+        const MATH_RUN = /[A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*[A-Za-z0-9][A-Za-z0-9²³±√≦≧<>=+\-−·×÷\/.,()|' ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .math, i, script, style, svg, input, textarea, mjx-container, .MathJax')) continue;
+                if (/\\|\$\$/.test(n.nodeValue)) continue;   // MathJax がまだ組んでいない式（\( … \) など）にはさわらない
+                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+                else if (/-/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/-/g, '−');   // 「-(」など記号だけの部分もマイナスは「−」
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    // 長い式は「 = 」の前で区切り、区切りのところだけで改行できるようにする
+                    const pieces = text.length > 22 ? text.split(/(?= = )/) : [text];
+                    pieces.forEach((piece, k) => {
+                        if (k) frag.appendChild(document.createTextNode(' '));
+                        const span = document.createElement('span');
+                        span.className = 'm';
+                        piece.trim().split(/([A-Za-z]+)/).forEach((part, j) => {
+                            if (!part) return;
+                            if (j % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                            else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));
+                        });
+                        frag.appendChild(span);
+                    });
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+
+  watchMath(['#feedback-message', '.answer-line.guide']);
 
   function invertSign(sign) {
     if (sign === '>') return '<';

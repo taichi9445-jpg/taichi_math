@@ -97,13 +97,24 @@
     #message-box { color: var(--u-ng) !important; }
     #screen-result h2 { -webkit-text-stroke: 0 !important; color: var(--u-accent-text) !important; white-space: nowrap; font-size: min(2.2rem, 9vw); }
     #final-stats { border: 4px dashed var(--u-line) !important; box-shadow: none !important; color: var(--u-ink); }
+    /* 【ブラッシュアップ】日本語を言葉の切れ目で改行し、見出しは行の長さをそろえる（スマホで言葉の途中で切れないように） */
+    body.u-theme { word-break: auto-phrase; line-break: strict; }
+    h1, h2 { text-wrap: balance; }
+    .nw { display: inline-block; white-space: nowrap; }
+
     /* 【ブラッシュアップ】解説の枠・ヒント・Lv.4 のボタン */
     .explain-box { margin-top: 12px; padding: 10px 14px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; color: var(--u-ink); font-size: 1.05rem; line-height: 1.8; text-align: left; }
     .explain-box b { color: var(--u-title-dark); }
     #btn-explain-next { display: block; width: 100%; margin-top: 10px; padding: 12px 0; font-size: 1.3rem; }
     #message-box { height: auto !important; min-height: 2rem; }
     #message-box .hint-line { display: inline-block; margin-top: 4px; font-size: 1rem; color: var(--u-title); font-weight: 700; }
-    #question-formula.math-font, #solved-text.math-font { font-style: normal; }   /* 数字は立てて、文字だけ斜体 */
+    /* 【ブラッシュアップ】式は全体を数式の書体（var(--u-math-font)）で。数字は立て、文字だけ斜体。
+       元は選択肢ボタンが flex で、「6」「a」「+ 8」が別々の部品になり、書体がまざって + の前のすきまも消えていた */
+    #question-formula.math-font, #solved-text.math-font { font-style: normal; }
+    .fx { font-family: var(--u-math-font) !important; font-style: normal; font-weight: 700; white-space: normal; }
+    .fx .math-font { font-family: inherit; font-style: italic; font-weight: 700; }
+    .choice-btn .fx { font-size: 1.15em; }
+    #question-formula .fx { font-size: 1.15em; }
     @media (max-width: 640px) {
       .game-container { padding: 14px 10px; }
     }
@@ -225,7 +236,8 @@
          */
         function formatMath(t) {
             if (!t) return "";
-            return t.toString()
+            // 【ブラッシュアップ】式全体を span.fx で包む（選択肢ボタンの中で書体とすきまがそろうように）
+            return '<span class="fx">' + t.toString()
                 .replace(/\b1([a-z])/g, '$1')        // 1x -> x
                 .replace(/\+ -/g, "- ")              // + - -> -
                 .replace(/- 1([a-z])/g, "- $1")      // - 1x -> - x
@@ -235,9 +247,9 @@
                 .replace(/\^(\d+)/g, (m, d) => d.split('').map(n => '⁰¹²³⁴⁵⁶⁷⁸⁹'[n]).join(''))   // 【ブラッシュアップ】5乗以上も
                 .replace(/\s*[+-]\s*$/, '')          // 末尾の記号を削除
                 .replace(/-/g, '−')                  // 【ブラッシュアップ】マイナスは「−」で表示
-                .replace(/([a-z⁰¹²³⁴⁵⁶⁷⁸⁹])/g, '<span class="math-font">$1</span>')
+                .replace(/([a-z])/g, '<span class="math-font">$1</span>')   // 【ブラッシュアップ】斜体にするのは文字だけ（指数の数字は立てる）
                 .replace(/\s+/g, ' ')                // 余計なスペースを削除
-                .trim();
+                .trim() + '</span>';
         }
 
         // 【ブラッシュアップ】ここから：解説・ヒント・よくあるまちがいのダミー・Lv.4 のための関数
@@ -318,7 +330,7 @@
             if (kind === 'deg') {
                 if (terms.length === 1) {
                     const parts = Object.keys(terms[0].vars).map(k => `<i>${k}</i> が ${terms[0].vars[k]} 個`);
-                    const sum = parts.length > 1 ? '　' + Object.values(terms[0].vars).join('＋') + '＝' + terms[0].deg : '';
+                    const sum = parts.length > 1 ? '　' + F(Object.values(terms[0].vars).join(' + ') + ' = ' + terms[0].deg) : '';
                     return `かけ合わされている文字の個数が<b>次数</b>。${parts.join('、')}${sum} → <b>${terms[0].deg}</b>`;
                 }
                 const list = terms.map(t => `${F(termText(t))} は ${t.deg} 次`).join('、');
@@ -331,7 +343,7 @@
                 const oc = orig.filter(t => t.deg === 0);
                 let s = '文字をふくまない項が<b>定数項</b>。';
                 if (currentMode === 3 && oc.length > 1) {
-                    s += `${F(buildRaw(oc.map(t => ({ coef: t.c, v: '' }))))} ＝ <b>${numText(task.answer)}</b>`;
+                    s += `<b>${F(buildRaw(oc.map(t => ({ coef: t.c, v: '' }))) + ' = ' + task.answer)}</b>`;
                     if (task.answer === '0') s += '（定数の項は消えるので、定数項は 0）';
                     return s;
                 }
@@ -344,7 +356,7 @@
                 const sum = g.reduce((s, t) => s + t.c, 0);
                 const left = buildRaw(g.map(t => ({ coef: t.c, v: vstr(t.vars) })));
                 const right = sum === 0 ? '0' : buildRaw([{ coef: sum, v: vstr(g[0].vars) }]);
-                return `${F(left)} ＝ ${F(right)}`;
+                return F(left + ' = ' + right);
             });
             return '文字も指数も同じ項（同類項）どうしをまとめる：<br>' + lines.join('<br>') + `<br>→ ${F(task.answer)}`;
         }
@@ -460,7 +472,7 @@
                     { label: `すべての文字に着目したときの${J}を答えよ`, answer: String(m + p), kind: 'deg',
                       dummies: [String(m), String(p), String(m * p)],
                       hint: 'a の個数と x の個数をたそう',
-                      ex: `a が ${m} 個、x が ${p} 個 → ${m}＋${p}＝<b>${m + p}</b> 次` }
+                      ex: `a が ${m} 個、x が ${p} 個 → <b>${F(m + ' + ' + p + ' = ' + (m + p))}</b> 次` }
                 ];
             } else if (qIdx === 2) {                // 例：4x³y − 5xy² + 3
                 const e1 = rnd(2, 3), f = e1 === 2 ? 3 : 2;
@@ -496,7 +508,7 @@
                     { label: `${X('x')} について整理したときの、x の${K}を答えよ`, answer: lin, isFormula: true, kind: 'coef',
                       dummies: [buildFormula([{ coef: b1, v: 'y' }, { coef: -b0, v: '' }]), buildFormula([{ coef: b1, v: 'y' }]), String(b0)],
                       hint: 'x が1個の項（xy の項と x の項）を集めて、x でくくろう',
-                      ex: `x が1個の項を集めると ${F(buildRaw([{ coef: b1, v: 'xy' }, { coef: b0, v: 'x' }]))} ＝ ${F('(' + lin + ')x')}。x の係数は ${F(lin)}<br>整理した式：${F(org)}` },
+                      ex: `x が1個の項を集めると ${F(buildRaw([{ coef: b1, v: 'xy' }, { coef: b0, v: 'x' }]) + ' = (' + lin + ')x')}。x の係数は ${F(lin)}<br>整理した式：${F(org)}` },
                     { label: `${X('x')} について整理したときの${T}を答えよ`, answer: cst, isFormula: true, kind: 'const',
                       dummies: [String(k), 'y^2', buildFormula([{ coef: 1, v: 'y^2' }, { coef: -k, v: '' }])],
                       hint: 'x をふくまない項は、y がついていても定数項あつかい',
@@ -514,7 +526,7 @@
                     { label: `${X('x')} について整理したときの、x の${K}を答えよ`, answer: xc, isFormula: true, kind: 'coef',
                       dummies: [buildFormula([{ coef: -B, v: 'y' }, { coef: C, v: '' }]), buildFormula([{ coef: B, v: 'y' }]), String(A)],
                       hint: 'x が1個の項（xy の項と x の項）を集めよう',
-                      ex: `${F(buildRaw([{ coef: B, v: 'xy' }, { coef: C, v: 'x' }]))} ＝ ${F('(' + xc + ')x')} → x の係数は ${F(xc)}<br>整理した式：${F(org)}` },
+                      ex: `${F(buildRaw([{ coef: B, v: 'xy' }, { coef: C, v: 'x' }]) + ' = (' + xc + ')x')} → x の係数は ${F(xc)}<br>整理した式：${F(org)}` },
                     { label: `${X('x')} について整理したときの${T}を答えよ`, answer: xk, isFormula: true, kind: 'const',
                       dummies: [String(E), buildFormula([{ coef: 1, v: 'y^2' }, { coef: E, v: '' }]), buildFormula([{ coef: 1, v: 'y^2' }, { coef: -D, v: 'y' }, { coef: E, v: '' }])],
                       hint: 'x をふくまない項を全部集めよう（y の項もふくむ）',

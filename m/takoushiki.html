@@ -218,8 +218,24 @@
     #finish h2 { color: var(--u-accent-text) !important; }
     #feedback .card { border-color: var(--u-ok-line); background: var(--u-ok-soft); }
     #feedback h2 { color: var(--u-ok) !important; white-space: nowrap; font-size: min(1.9rem, 6.5vw); }
+    /* 【ブラッシュアップ】日本語を言葉の切れ目で改行し、見出しは行の長さをそろえる（スマホで言葉の途中で切れないように） */
+    body.u-theme { word-break: auto-phrase; line-break: strict; }
+    h1, h2 { text-wrap: balance; }
+    .nw { display: inline-block; white-space: nowrap; }
+
     /* 【ブラッシュアップ】ひっ算の表・モード1の解説 */
-    .hissan-table { border-collapse: collapse; font-size: 1.35rem; font-weight: 700; background: #fff; }
+    .hissan-table { border-collapse: collapse; font-size: 1.35rem; font-weight: 700; background: #fff; font-family: var(--u-math-font); }
+    /* 【ブラッシュアップ】式は全体を数式の書体で（数字は立て、文字だけ斜体）。元は丸ゴシックの数字と斜体の文字がまざっていた */
+    .fx { font-family: var(--u-math-font); font-style: normal; font-weight: 700; }
+    .fx i { font-style: italic; }
+    .step-box .math-text, .hissan-table td { font-family: var(--u-math-font); }
+    .input-hole { font-family: var(--u-math-font); }
+    #problem-header .fx { font-size: 1.1em; }
+    .choice-btn .fx { font-size: 1.3em; }
+    /* 途中式の1行目は長いので、スマホでは折り返す。符号の前後にすきまを */
+    .step-box > span.math-text:only-child { flex-shrink: 1 !important; min-width: 0; white-space: normal; }
+    .step-box .mx-0\.5 { margin: 0 .3em !important; }
+    .step-box > span.math-text:first-child:not(:only-child) { margin-right: .3em; }
     .hissan-table td { padding: 3px 8px; text-align: right; white-space: nowrap; min-width: 2.2em; }
     .hissan-table td.op { text-align: left; color: var(--u-sub); min-width: 1.8em; }
     .hissan-table tr.sum td { border-top: 3px solid var(--u-ink); }
@@ -354,7 +370,16 @@
         }
         function typeLabel(p) { return String(p.type).replace('-', ' − ').replace('+', ' + '); }
         // 表示用：マイナスは「−」、文字は斜体
-        function mt(s) { return String(s).replace(/-/g, '−').replace(/([a-z])/g, '<i>$1</i>'); }
+        // 【ブラッシュアップ】式の部分（日本語でないところ）を span.fx で包み、数式の書体で表示する。
+        //   数字は立て、文字だけ斜体。マイナスは「−」。日本語の説明はそのまま
+        function mt(s) {
+            return String(s).replace(/[^　-ヿ㐀-鿿＀-￯]+/g, seg => {
+                const core = seg.trim();
+                if (!core) return seg;
+                const at = seg.indexOf(core);
+                return seg.slice(0, at) + '<span class="fx">' + core.replace(/-/g, '−').replace(/([a-zA-Z])/g, '<i>$1</i>') + '</span>' + seg.slice(at + core.length);
+            });
+        }
         let revealedThis = false;   // 「答えを見る」を使ったか
 
         // ひっ算：次数（文字の部分）ごとに列をそろえた表。抜けている次数は空けておく
@@ -370,7 +395,7 @@
                     let cell = '';
                     if (c !== 0) {
                         const abs = Math.abs(c);
-                        cell = (c < 0 ? '−' : (first ? '' : '+')) + ((abs === 1 && u !== '') ? '' : abs) + mt(u);
+                        cell = mt((c < 0 ? '−' : (first ? '' : '+')) + ((abs === 1 && u !== '') ? '' : abs) + u);
                         first = false;
                     }
                     h += `<td>${cell}</td>`;
@@ -440,8 +465,8 @@
             } else {
                 const A_str = formatPoly(currentProblem.a);
                 const B_str = formatPoly(currentProblem.b);
-                document.getElementById('problem-header').innerHTML = `<i>A</i> = ${mt(A_str)}<br><i>B</i> = ${mt(B_str)}`;
-                document.getElementById('problem-instruction').innerText = `${typeLabel(currentProblem)} の計算をしよう！`;
+                document.getElementById('problem-header').innerHTML = mt('A = ' + A_str) + '<br>' + mt('B = ' + B_str);   // 【ブラッシュアップ】
+                document.getElementById('problem-instruction').innerHTML = mt(typeLabel(currentProblem)) + ' の計算をしよう！';
                 renderInputModes();
             }
         }
@@ -496,7 +521,7 @@
             const kStr = (k) => (Math.abs(k) === 1 ? '' : Math.abs(k));
 
             // 【ブラッシュアップ】1 行目の左辺を書く（元は「= (…) - (…)」で、何の計算かが書かれていなかった）
-            area.innerHTML += `<div class="step-box"><span class="math-text flex-shrink-0">${mt(typeLabel(p))} = ${ka === 1 ? '' : ka}(${mt(formatPoly(p.a))}) ${kb < 0 ? '−' : '+'} ${kStr(kb)}(${mt(formatPoly(p.b))})</span></div>`;
+            area.innerHTML += `<div class="step-box"><span class="math-text flex-shrink-0">${mt(typeLabel(p) + ' = ' + (ka === 1 ? '' : ka) + '(' + formatPoly(p.a) + ') ' + (kb < 0 ? '−' : '+') + ' ' + kStr(kb) + '(' + formatPoly(p.b) + ')')}</span></div>`;
 
             const step2 = document.createElement('div');
             step2.className = "step-box";
@@ -689,7 +714,7 @@
 
             if (currentMode === 1) {
                 // 【ブラッシュアップ】答えだけでなく、どの項どうしをまとめたかを書く
-                area.innerHTML = `<div class="math-text p-4 bg-slate-50 rounded-xl mb-4 text-center">${mt(p.display)}<br>= <span class="text-rose-600 font-black underline">${mt(p.answer || formatPoly(res))}</span></div>`
+                area.innerHTML = `<div class="math-text p-4 bg-slate-50 rounded-xl mb-4 text-center">${mt(p.display)}<br>${mt('=')} <span class="text-rose-600 font-black underline">${mt(p.answer || formatPoly(res))}</span></div>`
                     + (p.ex ? `<ul class="ex-list">${p.ex.map(l => '<li>' + mt(l) + '</li>').join('')}</ul>` : '');
                 return;
             }
@@ -710,10 +735,10 @@
             let stepHtml = `<div class="mb-8">
                 <p class="font-black text-xl text-sky-700 mb-4 border-l-4 border-sky-400 pl-3">① 横書きで計算する</p>
                 <div class="math-text space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div>${mt(typeLabel(p))} = ${ka === 1 ? '' : ka}(${mt(formatPoly(p.a))}) ${kb < 0 ? '−' : '+'} ${kStr(kb)}(${mt(formatPoly(p.b))})</div>
-                    <div>= ${mt(formatPoly(aK))} ${mt(formatPoly(bK, true))} <span class="text-sm text-gray-500 font-normal">（かっこを外す）</span></div>
-                    <div>= ${mt(group)} <span class="text-sm text-gray-500 font-normal">（同類項を集める）</span></div>
-                    <div class="text-rose-600 underline font-black">= ${mt(formatPoly(res))}</div>
+                    <div>${mt(typeLabel(p) + ' = ' + (ka === 1 ? '' : ka) + '(' + formatPoly(p.a) + ') ' + (kb < 0 ? '−' : '+') + ' ' + kStr(kb) + '(' + formatPoly(p.b) + ')')}</div>
+                    <div>${mt('= ' + formatPoly(aK) + ' ' + formatPoly(bK, true))} <span class="text-sm text-gray-500 font-normal">（かっこを外す）</span></div>
+                    <div>${mt('= ' + group)} <span class="text-sm text-gray-500 font-normal">（同類項を集める）</span></div>
+                    <div class="text-rose-600 underline font-black">${mt('= ' + formatPoly(res))}</div>
                 </div>
             </div>`;
 
@@ -731,7 +756,7 @@
                 hissanHtml += `</div>`;
             } else {
                 hissanHtml += '<div class="hissan-wrap">' + hissanTable([{ coeffs: aK }, { op: '+)', coeffs: bK, cls: kb < 0 ? 'flip' : '' }, { line: true, coeffs: res, cls: 'res' }], U) + '</div>';
-                hissanHtml += `</div><p class="text-rose-600 font-bold mt-4 bg-rose-50 p-3 rounded-lg">💡 先に ${mt(ka + 'A')} ＝ ${mt(formatPoly(aK))}、${mt(kb + 'B')} ＝ ${mt(formatPoly(bK))} を作ってから、たし算のひっ算にする。${kb < 0 ? '引く方の式は、符号が全部逆になる！' : ''}</p>`;
+                hissanHtml += `</div><p class="text-rose-600 font-bold mt-4 bg-rose-50 p-3 rounded-lg">💡 先に ${mt(ka + 'A = ' + formatPoly(aK))}、${mt(kb + 'B = ' + formatPoly(bK))} を作ってから、たし算のひっ算にする。${kb < 0 ? '引く方の式は、符号が全部逆になる！' : ''}</p>`;
             }
             hissanHtml += `</div>`;
 
