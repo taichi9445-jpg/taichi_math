@@ -807,6 +807,9 @@
     body.mobile-mode .step-line { flex-wrap: wrap; white-space: normal; overflow-x: visible; }
     body.mobile-mode .options { grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); max-width: none; gap: 6px; }
     body.mobile-mode .option { font-size: 0.95rem; }
+    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書と同じ） */
+    .m { font-family: var(--u-math-font); font-size: 1.12em; font-weight: 700; white-space: nowrap; letter-spacing: 0.01em; }
+    .m i { font-style: italic; padding-right: 0.06em; }
     @media (max-width: 700px) {
       body { padding: 8px; }
       .container { padding: 16px 10px; }
@@ -1550,6 +1553,52 @@
     }
     autoDevice();
     window.addEventListener('resize', autoDevice);
+    // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・a・A・θ など）は斜体、数字・記号・sin／cos／tan は立体、書体は数式用。
+    //   画面の文字（textContent）は変えずに、英数字のまとまりを <span class="m"> で包み、文字だけを <i> にする（日本語はふつうの書体のまま）。
+    //   画面が書きかわるたびに、指定した場所の式を整え直す
+    const MATH_RUN = /[A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*[A-Za-z0-9θ][A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*/g;
+    function mathify(root) {
+        if (!root) return;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) {
+            const n = walker.currentNode, p = n.parentElement;
+            if (!p || p.closest('.m, .no-math, svg, canvas, script, style, textarea, input')) continue;
+            if (/[A-Za-z0-9θ]/.test(n.nodeValue)) nodes.push(n);
+        }
+        nodes.forEach(n => {
+            const s = n.nodeValue, frag = document.createDocumentFragment();
+            let last = 0;
+            s.replace(MATH_RUN, (run, at) => {
+                const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                if (!text) return run;
+                frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                const span = document.createElement('span');
+                span.className = 'm';
+                const parts = text.split(/(sin|cos|tan|[A-Za-zθ])/);
+                parts.forEach((part, k) => {
+                    if (!part) return;
+                    const upright = k % 2 === 0 || /^(sin|cos|tan)$/.test(part) ||
+                        (part === 'm' && /\d\s*$/.test(parts[k - 1] || '') && !/^[A-Za-z]/.test(parts[k + 1] || ''));   // 36.4 m の単位
+                    if (upright) span.appendChild(document.createTextNode(part));
+                    else { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                });
+                frag.appendChild(span);
+                last = at + lead + text.length;
+                return run;
+            });
+            frag.appendChild(document.createTextNode(s.slice(last)));
+            n.parentNode.replaceChild(frag, n);
+        });
+    }
+    function watchMath(selectors) {
+        let queued = false;
+        const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+        run();
+        new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+            .observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    watchMath(['.top-features', '.problem-text', '.solution-steps', '.options', '.explanation', '.result', '.final-celebration']);
   </script>
  <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける

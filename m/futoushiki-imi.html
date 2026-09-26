@@ -241,7 +241,15 @@
     .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; }
     .result-nav a { color: var(--u-sub); font-weight: 700; }
     .result-nav button, .result-nav a.next { padding: 14px; font-size: 1.1rem; }
+    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書と同じ） */
+    .m { font-family: var(--u-math-font); font-size: 1.12em; font-weight: 700; white-space: nowrap; letter-spacing: 0.01em; }
+    .m i { font-style: italic; padding-right: 0.06em; }
     @media (max-width: 600px) {
+      .title { font-size: 1.5rem; margin: 0 0 4px; }
+      .subtitle { font-size: 0.85rem; margin-bottom: 10px; }
+      .progress { margin-bottom: 10px; }
+      .question-number { margin-bottom: 8px; }
+      .question-text { margin-bottom: 14px; }
       body { padding: 8px; }
       .quiz-container { padding: 18px 14px; margin: 0; }
       .question-card { padding: 18px 12px; }
@@ -418,7 +426,7 @@
             let s = '<svg class="nl" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="数直線">';
             s += '<line x1="8" y1="' + y + '" x2="' + (W - 14) + '" y2="' + y + '" stroke="#4b2c20" stroke-width="2"/>';
             s += '<path d="M ' + (W - 14) + ' ' + (y - 6) + ' L ' + (W - 4) + ' ' + y + ' L ' + (W - 14) + ' ' + (y + 6) + ' Z" fill="#4b2c20"/>';
-            s += '<text x="' + (W - 10) + '" y="' + (y + 24) + '" font-size="16" font-style="italic" text-anchor="middle" fill="#4b2c20">x</text>';
+            s += '<text x="' + (W - 10) + '" y="' + (y + 24) + '" font-size="19" font-style="italic" font-family="Times New Roman, serif" text-anchor="middle" fill="#4b2c20">x</text>';
             const seg = (x1, x2) => { s += '<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="' + col + '" stroke-width="6" stroke-linecap="butt"/>'; };
             if (f.type === 'in') seg(X(f.a), X(f.b));
             if (f.type === 'out' || f.type === 'left') seg(10, X(f.a));
@@ -427,7 +435,7 @@
             [[f.a, f.aIn], [f.b, f.bIn]].forEach(([v, inc]) => {
                 if (v === undefined) return;
                 s += '<circle cx="' + X(v) + '" cy="' + y + '" r="7" fill="' + (inc ? col : '#fff') + '" stroke="' + col + '" stroke-width="3"/>';
-                s += '<text x="' + X(v) + '" y="' + (y + 28) + '" font-size="17" font-weight="bold" text-anchor="middle" fill="#4b2c20">' + num(v) + '</text>';
+                s += '<text x="' + X(v) + '" y="' + (y + 28) + '" font-size="19" font-weight="bold" font-family="Times New Roman, serif" text-anchor="middle" fill="#4b2c20">' + num(v) + '</text>';
             });
             return s + '</svg>';
         }
@@ -498,6 +506,53 @@
         }
 
         function retryQuestion() { }   // 【ブラッシュアップ】使わなくなった（えらび直しはそのままできる）
+
+        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・a・A・θ など）は斜体、数字・記号・sin／cos／tan は立体、書体は数式用。
+        //   画面の文字（textContent）は変えずに、英数字のまとまりを <span class="m"> で包み、文字だけを <i> にする（日本語はふつうの書体のまま）。
+        //   画面が書きかわるたびに、指定した場所の式を整え直す
+        const MATH_RUN = /[A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*[A-Za-z0-9θ][A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .no-math, svg, canvas, script, style, textarea, input')) continue;
+                if (/[A-Za-z0-9θ]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    if (!text) return run;
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    const parts = text.split(/(sin|cos|tan|[A-Za-zθ])/);
+                    parts.forEach((part, k) => {
+                        if (!part) return;
+                        const upright = k % 2 === 0 || /^(sin|cos|tan)$/.test(part) ||
+                            (part === 'm' && /\d\s*$/.test(parts[k - 1] || '') && !/^[A-Za-z]/.test(parts[k + 1] || ''));   // 36.4 m の単位
+                        if (upright) span.appendChild(document.createTextNode(part));
+                        else { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+        watchMath(['.subtitle', '#questionText', '#options', '#feedback']);
 
         function nextQuestion() {
             currentQuestion++;

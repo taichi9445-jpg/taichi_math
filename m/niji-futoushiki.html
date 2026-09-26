@@ -60,8 +60,30 @@
     #result a { color: var(--u-sub); font-weight: 700; }
     .final-nav { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
     .final-nav button { width: 100%; max-width: 340px; padding: 12px; }
+    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書と同じ） */
+    .m { font-family: var(--u-math-font); font-size: 1.12em; font-weight: 700; white-space: nowrap; letter-spacing: 0.01em; }
+    .m i { font-style: italic; padding-right: 0.06em; }
+    /* 【ブラッシュアップ】レベル選択は 1 行の小さいボタンにして、問題がすぐ見えるようにする */
+    body > .container { padding-top: 12px !important; }
+    body > .container > .text-center { margin-bottom: 12px !important; }
+    #levelPanel { padding: 10px 14px !important; margin-bottom: 12px !important; display: flex; align-items: center; gap: 12px; }
+    #levelPanel h2 { font-size: 1rem !important; margin: 0 !important; white-space: nowrap; }
+    #levelPanel .flex { gap: 8px !important; flex-wrap: nowrap !important; flex: 1; }
+    #levelPanel button { padding: 8px 12px !important; font-size: 0.95rem; flex: 1; border-bottom-width: 4px !important; }
+    .lv-s { display: none; }
+    #explanationSection summary { cursor: pointer; color: var(--u-title-dark); font-weight: 800; }
     @media (max-width: 640px) {
       body > .container { padding: 8px !important; }
+      h1 { font-size: 1.4rem !important; margin-bottom: 2px !important; }
+      body > .container > .text-center p { font-size: 0.85rem !important; }
+      body > .container > .text-center { margin-bottom: 8px !important; }
+      #levelPanel { padding: 6px !important; margin-bottom: 8px !important; }
+      #levelPanel h2, .lv-l { display: none; }
+      .lv-s { display: inline; }
+      #levelPanel .flex { gap: 5px !important; }
+      #levelPanel button { padding: 6px 2px !important; font-size: 0.8rem; line-height: 1.25; }
+      #questionText { font-size: 0.95rem !important; margin-bottom: 8px !important; }
+      #explanationSection summary { font-size: 1rem; }
       body > .container > .bg-white { padding: 14px 10px !important; }
       #optionsGrid { gap: 8px; }
       #optionsGrid button { padding: 6px; }
@@ -83,17 +105,17 @@
         </div>
 
         <!-- レベル選択 -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div id="levelPanel" class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-4">レベル選択</h2>
             <div class="flex flex-wrap gap-4">
                 <button onclick="setLevel(0)" id="level0" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors">
-                    レベル0 (因数分解の練習)
+                    <span class="lv-l">レベル0 (因数分解の練習)</span><span class="lv-s">Lv0 因数分解</span>
                 </button>
                 <button onclick="setLevel(1)" id="level1" class="px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors">
-                    レベル1 (グラフ問題)
+                    <span class="lv-l">レベル1 (グラフ問題)</span><span class="lv-s">Lv1 グラフ</span>
                 </button>
                 <button onclick="setLevel(2)" id="level2" class="px-6 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors">
-                    レベル2 (2次不等式を解く)
+                    <span class="lv-l">レベル2 (2次不等式を解く)</span><span class="lv-s">Lv2 解く</span>
                 </button>
             </div>
         </div>
@@ -174,16 +196,16 @@
         </div>
 
         <!-- 説明（レベル1と2のみ表示） -->
-        <div id="explanationSection" class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-3">解き方のポイント</h3>
-            <ul class="space-y-2 text-gray-700">
+        <details id="explanationSection" class="bg-white rounded-xl shadow-lg p-6">
+            <summary class="text-xl font-semibold text-gray-800">解き方のポイント</summary>
+            <ul class="space-y-2 text-gray-700 mt-3">
                 <li>• <strong>f(x) &gt; 0</strong>：グラフが x 軸より上にある部分の x（共有点はふくまない ○）</li>
                 <li>• <strong>f(x) &lt; 0</strong>：グラフが x 軸より下にある部分の x（共有点はふくまない ○）</li>
                 <li>• <strong>f(x) ≧ 0</strong>：グラフが x 軸より上、または x 軸との共有点（●）</li>
                 <li>• <strong>f(x) ≦ 0</strong>：グラフが x 軸より下、または x 軸との共有点（●）</li>
                 <li>• x² の係数が負のときは、両辺に −1 をかけて正にしてから考える（不等号の向きが逆になる）</li>
             </ul>
-        </div>
+        </details>
     </div>
 
     <script>
@@ -374,12 +396,12 @@
                 document.getElementById('inequality').textContent = formatQuad(p.a, p.b, p.c) + ' ' + SIGN[p.s] + ' 0';
                 if (currentLevel === 1) {
                     document.getElementById('questionText').textContent = p.s === '=' ?
-                        'y = ' + formatQuad(p.a, p.b, p.c) + ' のグラフを使って、次の 2 次方程式の解を x 軸上に表した図をえらびなさい。' :
-                        'y = ' + formatQuad(p.a, p.b, p.c) + ' のグラフを使って、次の 2 次不等式の解を x 軸上に表した図をえらびなさい。';
+                        'y = ' + formatQuad(p.a, p.b, p.c) + ' のグラフを使って、次の2次方程式の解を x 軸上に表した図をえらびなさい。' :
+                        'y = ' + formatQuad(p.a, p.b, p.c) + ' のグラフを使って、次の2次不等式の解を x 軸上に表した図をえらびなさい。';
                     info.textContent = '太線と ● ○ が「解の範囲」（● はその数をふくむ、○ はふくまない）';
                     showGraphOptions(q);
                 } else {
-                    document.getElementById('questionText').textContent = '次の 2 次不等式を解きなさい。';
+                    document.getElementById('questionText').textContent = '次の2次不等式を解きなさい。';
                     showTextOptions(q.opts.map(o => setText(o, q.L)));
                 }
             }
@@ -481,6 +503,17 @@
             else { axisY = H * (a > 0 ? 0.82 : 0.18); sy = (H * 0.3) / Math.abs(vy); }
             return { f, X: x => cx + x * sx, Y: y => axisY - y * sy, axisY, xMin: -cx / sx, xMax: (W - cx) / sx, r, D, a };
         }
+        // canvas に式を書く：文字は斜体、数字・記号・sin／cos／tan は立体（数式用の書体）
+        function mathText(ctx, str, x, y, px, align, color) {
+            const parts = String(str).split(/(sin|cos|tan|[A-Za-zθ])/).filter(Boolean);
+            const fontOf = t => (/^[A-Za-zθ]$/.test(t) ? 'italic ' : '') + 'bold ' + px + 'px "Times New Roman", serif';
+            let w = 0;
+            parts.forEach(t => { ctx.font = fontOf(t); w += ctx.measureText(t).width; });
+            let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = color;
+            parts.forEach(t => { ctx.font = fontOf(t); ctx.fillText(t, cx, y); cx += ctx.measureText(t).width; });
+        }
         // o.range：x 軸の上にかく解の範囲 / o.hl：放物線のうち「x 軸より上（'up'）・下（'down'）」を赤くする
         // o.pointsOnly：共有点だけ（範囲なし）/ o.label：左上に書く式 / o.big：選択肢用（文字を大きく）
         function drawGraph(ctx, W, H, q, o) {
@@ -493,7 +526,7 @@
             ctx.beginPath(); ctx.moveTo(4, F.axisY); ctx.lineTo(W - 8, F.axisY); ctx.stroke();
             ctx.fillStyle = '#94a3b8';
             ctx.beginPath(); ctx.moveTo(W - 2, F.axisY); ctx.lineTo(W - 12, F.axisY - 5); ctx.lineTo(W - 12, F.axisY + 5); ctx.closePath(); ctx.fill();
-            ctx.fillStyle = ink; ctx.font = 'italic ' + (o.big ? 17 : 15) + 'px serif'; ctx.textAlign = 'right';
+            ctx.fillStyle = ink; ctx.font = 'italic ' + (o.big ? 19 : 16) + 'px "Times New Roman", serif'; ctx.textAlign = 'right';
             ctx.fillText('x', W - 4, F.axisY + (q.a > 0 ? 20 : -8));   // 放物線の腕と反対側に
             // 放物線
             const path = (test, color, width) => {
@@ -530,30 +563,28 @@
                 ctx.fillStyle = inc ? red : '#fff'; ctx.fill();
                 ctx.strokeStyle = red; ctx.lineWidth = 2.5; ctx.stroke();
             });
-            // 共有点の x の値：放物線とかさならない側に書く
-            ctx.fillStyle = ink; ctx.font = 'bold ' + (o.big ? 22 : 15) + 'px sans-serif';
+            // 共有点の x の値：放物線とかさならない側に書く（数式用の書体）
+            const px = o.big ? 22 : 16;
             const below = F.axisY + (o.big ? 24 : 19), above = F.axisY - (o.big ? 12 : 10);
             const labelX = (o.L || pts.map(num));
             if (F.r.length === 2) {
                 // 下に凸なら外側の下、上に凸なら内側の下
                 if (q.a > 0) {
-                    ctx.textAlign = 'right'; ctx.fillText(labelX[0], F.X(pts[0]) - 5, below);
-                    ctx.textAlign = 'left'; ctx.fillText(labelX[1], F.X(pts[1]) + 5, below);
+                    mathText(ctx, labelX[0], F.X(pts[0]) - 5, below, px, 'right', ink);
+                    mathText(ctx, labelX[1], F.X(pts[1]) + 5, below, px, 'left', ink);
                 } else {
-                    ctx.textAlign = 'left'; ctx.fillText(labelX[0], F.X(pts[0]) + 5, below);
-                    ctx.textAlign = 'right'; ctx.fillText(labelX[1], F.X(pts[1]) - 5, below);
+                    mathText(ctx, labelX[0], F.X(pts[0]) + 5, below, px, 'left', ink);
+                    mathText(ctx, labelX[1], F.X(pts[1]) - 5, below, px, 'right', ink);
                 }
             } else if (F.r.length === 1 || (d && (d.kind === 'point' || d.kind === 'allBut'))) {
-                ctx.textAlign = 'center';
-                ctx.fillText(labelX[0], F.X(pts[0]), q.a > 0 ? below : above);
+                mathText(ctx, labelX[0], F.X(pts[0]), q.a > 0 ? below : above, px, 'center', ink);
             }
             if (d && d.kind === 'none' && !o.label) {
                 ctx.textAlign = 'left'; ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#64748b';
                 ctx.fillText('（太線なし）', 8, q.a > 0 ? H - 6 : 18);
             }
             if (o.label) {
-                ctx.textAlign = 'left'; ctx.font = '15px sans-serif'; ctx.fillStyle = blue;
-                ctx.fillText(o.label, 8, q.a > 0 ? H - 8 : 20);   // 放物線とかさならない側
+                mathText(ctx, o.label, 8, q.a > 0 ? H - 8 : 20, 16, 'left', blue);   // 放物線とかさならない側
             }
             ctx.restore();
         }
@@ -649,7 +680,7 @@
             let s = '';
             if (q.a < 0) s += '両辺に −1 をかけると ' + M(formatQuad(g.a, g.b, g.c) + ' ' + SIGN[g.s] + ' 0') + '（不等号の向きが逆になる）<br>';
             if (q.labels) {
-                s += '2 次方程式 ' + M(formatQuad(g.a, g.b, g.c) + ' = 0') + ' を解の公式で解くと ' + M('x = ' + q.labels[0].replace(' − ', ' ± ')) + '<br>';
+                s += '2次方程式 ' + M(formatQuad(g.a, g.b, g.c) + ' = 0') + ' を解の公式で解くと ' + M('x = ' + q.labels[0].replace(' − ', ' ± ')) + '<br>';
             } else if (q.D > 0) {
                 s += '因数分解すると ' + M(formatFactor(-q.r[0], -q.r[1]) + ' ' + SIGN[g.s] + ' 0') + '<br>';
             } else if (q.D === 0) {
@@ -728,8 +759,56 @@
             resultDiv.scrollIntoView({ block: 'center' });
         }
 
+        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・a・A・θ など）は斜体、数字・記号・sin／cos／tan は立体、書体は数式用。
+        //   画面の文字（textContent）は変えずに、英数字のまとまりを <span class="m"> で包み、文字だけを <i> にする（日本語はふつうの書体のまま）。
+        //   画面が書きかわるたびに、指定した場所の式を整え直す
+        const MATH_RUN = /[A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*[A-Za-z0-9θ][A-Za-z0-9θ()=+\-−·×÷\/.,<>≦≧≠°√²³ ]*/g;
+        function mathify(root) {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode, p = n.parentElement;
+                if (!p || p.closest('.m, .no-math, svg, canvas, script, style, textarea, input')) continue;
+                if (/[A-Za-z0-9θ]/.test(n.nodeValue)) nodes.push(n);
+            }
+            nodes.forEach(n => {
+                const s = n.nodeValue, frag = document.createDocumentFragment();
+                let last = 0;
+                s.replace(MATH_RUN, (run, at) => {
+                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
+                    if (!text) return run;
+                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+                    const span = document.createElement('span');
+                    span.className = 'm';
+                    const parts = text.split(/(sin|cos|tan|[A-Za-zθ])/);
+                    parts.forEach((part, k) => {
+                        if (!part) return;
+                        const upright = k % 2 === 0 || /^(sin|cos|tan)$/.test(part) ||
+                            (part === 'm' && /\d\s*$/.test(parts[k - 1] || '') && !/^[A-Za-z]/.test(parts[k + 1] || ''));   // 36.4 m の単位
+                        if (upright) span.appendChild(document.createTextNode(part));
+                        else { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+                    });
+                    frag.appendChild(span);
+                    last = at + lead + text.length;
+                    return run;
+                });
+                frag.appendChild(document.createTextNode(s.slice(last)));
+                n.parentNode.replaceChild(frag, n);
+            });
+        }
+        function watchMath(selectors) {
+            let queued = false;
+            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
+            run();
+            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
+                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+
         // 初期化（【ブラッシュアップ】元はレベル1から始まっていた。レベル0から順に）
         setLevel(0);
+        document.getElementById('explanationSection').open = window.innerWidth > 700;   // スマホでは「解き方のポイント」を閉じておく
+        watchMath(['body > .container > .text-center p', '#questionText', '#inequality', '#intersectionInfo', '#optionsGrid', '#result', '#explanationContent', '#hintContent', '#explanationSection']);
 
     </script>
 <script>
