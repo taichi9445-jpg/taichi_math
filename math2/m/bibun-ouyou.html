@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+  <!--
+    数学Ⅱ 05. 微分の練習 応用（微分クイズチャレンジ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../../assets/port.css">
+  <script src="../../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微分クイズチャレンジ</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            color: #333;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .mode-selection {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .mode-btn {
+            display: inline-block;
+            margin: 15px;
+            padding: 20px 40px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .quiz-container {
+            padding: 40px;
+            display: none;
+        }
+
+        .timer-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #ffecd2, #fcb69f);
+            border-radius: 15px;
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #e74c3c;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress {
+            font-size: 1.2em;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .fraction {
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            margin: 0 3px;
+        }
+
+        .fraction .numerator {
+            display: block;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+
+        .fraction .denominator {
+            display: block;
+            padding-top: 2px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 20px;
+            background: white;
+            border: 3px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            border-color: #4ecdc4;
+            background: #f0fdfc;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            border-color: #2ecc71;
+            background: #d5f4e6;
+        }
+
+        .option.correct {
+            border-color: #27ae60;
+            background: #d5f4e6;
+            animation: correctPulse 0.6s ease;
+        }
+
+        .option.incorrect {
+            border-color: #e74c3c;
+            background: #fadbd8;
+            animation: incorrectShake 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .next-btn {
+            display: none;
+            margin: 30px auto 0;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .score {
+            font-size: 3em;
+            color: #27ae60;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .time-display {
+            font-size: 1.5em;
+            color: #e74c3c;
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .hell-mode {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
+            animation: hellPulse 2s infinite;
+        }
+
+        @keyframes hellPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 65, 108, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 65, 108, 0.8); }
+        }
+
+        .back-to-menu-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-to-menu-btn:hover {
+            background: rgba(0,0,0,0.9);
+            transform: translateY(-2px);
+        }
+
+        .input-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #answerInput {
+            width: 80%;
+            max-width: 400px;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            ime-mode: disabled;
+        }
+
+        #answerInput:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .submit-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .input-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        .input-feedback.correct {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
+        .input-feedback.incorrect {
+            background: #fadbd8;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    html, body { height: auto; }
+    body { padding: 12px; }
+    .container { overflow: visible; padding: 20px 16px; }
+    .header { background: none; color: var(--u-ink); padding: 4px 4px 0; }
+    .header h1 { font-size: min(2.2rem, 6vw); white-space: nowrap; text-shadow: none; margin: 0 0 6px; }
+    .header p { color: var(--u-sub); font-weight: 700; }
+    .mode-selection { padding: 12px 4px; }
+    .mode-selection h2 { color: var(--u-title-dark); font-size: 1.2rem; }
+    .mode-btn { display: block; width: 100%; max-width: 440px; margin: 12px auto; padding: 16px 20px; font-size: 1.15em; box-sizing: border-box; }
+    .mode-btn small { color: var(--u-sub); font-weight: 700; }
+    .mode-btn.hell-mode { background: var(--u-ng-soft) !important; border-color: var(--u-ng-line) !important; color: var(--u-ng) !important; animation: none; }
+    .quiz-container { padding: 12px 4px; }
+    .mode-indicator, .back-to-menu-btn { position: static; display: inline-block; margin: 0 6px 10px 0; }
+    .mode-indicator { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); }
+    .mode-indicator.hell-mode { background: var(--u-ng-soft) !important; color: var(--u-ng); animation: none; }
+    .timer-section { background: var(--u-soft-yellow); border: 3px dashed #fde68a; }
+    .timer { color: var(--u-accent-text); text-shadow: none; }
+    .progress { color: var(--u-ink); }
+    .question-card { background: #f8fafc; border: 3px solid var(--u-line); box-shadow: none; border-radius: 24px; }
+    .question { color: var(--u-ink); font-weight: 800; }
+    .option { font-size: 1.25em; font-weight: 700; }
+    .fraction .numerator { border-bottom-color: currentColor; }
+    .input-section div[style] { color: var(--u-sub) !important; }
+    .input-feedback { border-radius: 14px; }
+    .input-feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .input-feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .rule-hint { margin-top: 8px; color: var(--u-title); font-size: 0.95rem; font-weight: 700; }
+    .results h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
+    .score { color: var(--u-title); text-shadow: none; font-size: 2.2em; font-weight: 800; }
+    .time-display { color: var(--u-sub); font-weight: 700; }
+    #encouragementText { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 18px auto 0; }
+    .result-nav button { margin: 0; padding: 12px; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 14px 10px; }
+      .question-card { padding: 16px 10px; }
+      .question { font-size: 1.25em; }
+      .options { gap: 8px; }
+      .option { padding: 14px 6px; font-size: 1.1em; }
+      .timer { font-size: 1.5em; }
+      .timer-section { padding: 10px 14px; margin-bottom: 14px; }
+      #answerInput { width: 100%; box-sizing: border-box; }
+      .submit-btn { margin: 6px 4px !important; }
+    }
+  
+  </style>
+</head>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <div class="header">
+            <h1>🧮 微分クイズチャレンジ 🚀</h1>
+            <p>単項式・多項式の微分をマスターしよう！</p>
+        </div>
+
+        <div class="mode-selection" id="modeSelection">
+            <h2>チャレンジモードを選択してください</h2>
+            <button class="mode-btn" onclick="startQuiz('normal')">
+                📚 通常モード<br>
+                <small>10問ランダム出題</small>
+            </button>
+            <button class="mode-btn" onclick="startQuiz('hundred')">
+                💯 全問連続モード<br>
+                <small>全<span class="pool-count">80</span>問に連続チャレンジ</small>
+            </button>
+            <button class="mode-btn hell-mode" onclick="startQuiz('hell')">
+                👹 超鬼連チャンモード<br>
+                <small>全<span class="pool-count">80</span>問・1問でも間違えたら終了</small>
+            </button>
+            <button class="mode-btn" onclick="startQuiz('input')" style="background: linear-gradient(45deg, #a8e6cf, #88d8a3);">
+                ✏️ 入力モード<br>
+                <small>10問・答えを直接入力<br>※整数係数の問題のみ</small>
+            </button>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="mode-indicator" id="modeIndicator"></div>
+            <button class="back-to-menu-btn" onclick="showModeSelection()">← メニューに戻る</button>
+            <div class="timer-section">
+                <div class="timer" id="timer">00:00</div>
+                <div class="progress" id="progress">問題 1/10</div>
+            </div>
+
+            <div class="question-card">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div class="input-section" id="inputSection" style="display: none;">
+                    <input type="text" id="answerInput" placeholder="答えを入力してください（例：-x^2 + 2x）" />
+                    <div style="margin: 10px 0; font-size: 0.9em; color: #666; line-height: 1.4;">
+                        <strong>📱 入力方法：</strong><br>
+                        • 指数：x^2 または x**2（ハット記号は英数字キーボードの6の上）<br>
+                        • マイナス：- （ひらがなキーボードの「ー」でもOK）<br>
+                        • 例：2x + 1, -3x^2 + 5x, 0<br>
+                    </div>
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">回答する</button>
+                    <button class="submit-btn" id="showAnswerBtn" onclick="showAnswer()" style="background: linear-gradient(45deg, #f39c12, #e67e22); margin-left: 10px;">答えを見る</button>
+                    <div class="input-feedback" id="inputFeedback"></div>
+                </div>
+                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">次の問題へ →</button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <h2>🎉 お疲れさまでした！</h2>
+            <div class="score" id="finalScore"></div>
+            <div class="time-display" id="finalTime"></div>
+            <div id="encouragementText"></div>
+            <!-- 【ブラッシュアップ】ほかの教材も選べるようにした -->
+            <div class="result-nav">
+                <button class="restart-btn again" onclick="restartSameMode()">同じモードで再挑戦</button>
+                <button class="restart-btn plain" onclick="showModeSelection()">モードをえらび直す</button>
+                <a href="../remake.html">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 問題プール（100問）
+        const problemPool = [
+            // 単項式（基本）
+            {q: "f(x) = x", options: ["1", "x", "0", "2x"], correct: 0},
+            {q: "f(x) = 2x", options: ["2", "x", "2x", "0"], correct: 0},
+            {q: "f(x) = 3x", options: ["3", "3x", "1", "0"], correct: 0},
+            {q: "f(x) = 5x", options: ["5", "x", "5x", "1"], correct: 0},
+            {q: "f(x) = x²", options: ["2x", "x", "x²", "2"], correct: 0},
+            {q: "f(x) = x³", options: ["3x²", "x²", "3x", "x³"], correct: 0},
+            {q: "f(x) = x⁴", options: ["4x³", "x³", "4x", "x⁴"], correct: 0},
+            {q: "f(x) = x⁵", options: ["5x⁴", "x⁴", "5x", "x⁵"], correct: 0},
+            {q: "f(x) = 2x²", options: ["4x", "2x", "x²", "2"], correct: 0},
+            {q: "f(x) = 3x²", options: ["6x", "3x", "x²", "3"], correct: 0},
+
+            // 単項式（係数あり）
+            {q: "f(x) = 4x³", options: ["12x²", "4x²", "3x²", "12x"], correct: 0},
+            {q: "f(x) = 6x²", options: ["12x", "6x", "2x", "12"], correct: 0},
+            {q: "f(x) = -x", options: ["-1", "1", "-x", "x"], correct: 0},
+            {q: "f(x) = -2x", options: ["-2", "2", "-2x", "2x"], correct: 0},
+            {q: "f(x) = -x²", options: ["-2x", "2x", "-x", "x"], correct: 0},
+            {q: "f(x) = -3x²", options: ["-6x", "6x", "-3x", "3x"], correct: 0},
+            {q: "f(x) = 7x", options: ["7", "1", "7x", "x"], correct: 0},
+            {q: "f(x) = 8x³", options: ["24x²", "8x²", "3x²", "24x"], correct: 0},
+            {q: "f(x) = 9x⁴", options: ["36x³", "9x³", "4x³", "36x"], correct: 0},
+            {q: "f(x) = 10x", options: ["10", "1", "10x", "x"], correct: 0},
+
+            // 分数係数
+            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "x", "2"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²", options: ["<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", "2x", "x"], correct: 0},
+
+            {q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²", options: ["<span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x", "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x", "2x", "<span class='fraction'><span class='numerator'>6</span><span class='denominator'>4</span></span>x"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x³", options: ["<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x²", "3x²", "x²"], correct: 0},
+
+            // 多項式（2項）
+            {q: "f(x) = x² + x", options: ["2x + 1", "x + 1", "2x", "x²"], correct: 0},
+            {q: "f(x) = x² - x", options: ["2x - 1", "x - 1", "2x", "x²"], correct: 0},
+            {q: "f(x) = 2x² + 3x", options: ["4x + 3", "2x + 3", "4x", "2x"], correct: 0},
+            {q: "f(x) = 3x² - 2x", options: ["6x - 2", "3x - 2", "6x", "3x"], correct: 0},
+            {q: "f(x) = x³ + x²", options: ["3x² + 2x", "x² + x", "3x²", "x²"], correct: 0},
+            {q: "f(x) = x³ - x²", options: ["3x² - 2x", "x² - x", "3x²", "x²"], correct: 0},
+
+            // 多項式（3項）
+            {q: "f(x) = x² + 2x + 1", options: ["2x + 2", "x + 2", "2x + 1", "x + 1"], correct: 0},
+            {q: "f(x) = x² - 3x + 2", options: ["2x - 3", "x - 3", "2x + 2", "x - 1"], correct: 0},
+            {q: "f(x) = 2x² + x - 1", options: ["4x + 1", "2x + 1", "4x - 1", "2x - 1"], correct: 0},
+            {q: "f(x) = x³ + x² + x", options: ["3x² + 2x + 1", "x² + x + 1", "3x² + x", "x² + 2x"], correct: 0},
+            {q: "f(x) = x³ - 2x² + 3x", options: ["3x² - 4x + 3", "x² - 2x + 3", "3x² + 3", "x² - 4x"], correct: 0},
+
+            // 定数項あり
+            {q: "f(x) = x + 5", options: ["1", "5", "x", "0"], correct: 0},
+            {q: "f(x) = x² + 7", options: ["2x", "7", "x", "2x + 7"], correct: 0},
+            {q: "f(x) = 3x - 4", options: ["3", "-4", "3x", "3 - 4"], correct: 0},
+            {q: "f(x) = 2x² + 5x - 3", options: ["4x + 5", "2x + 5", "4x - 3", "2x - 3"], correct: 0},
+
+            // 高次項
+            {q: "f(x) = x⁶", options: ["6x⁵", "x⁵", "6x", "x⁶"], correct: 0},
+            {q: "f(x) = 2x⁵", options: ["10x⁴", "2x⁴", "5x⁴", "10x"], correct: 0},
+            {q: "f(x) = x⁷", options: ["7x⁶", "x⁶", "7x", "x⁷"], correct: 0},
+            {q: "f(x) = 3x⁴", options: ["12x³", "3x³", "4x³", "12x"], correct: 0},
+
+            // 負の係数
+            {q: "f(x) = -x² + 2x", options: ["-2x + 2", "x + 2", "-2x", "2x"], correct: 0},
+            {q: "f(x) = -2x³ + x", options: ["-6x² + 1", "-2x² + 1", "-6x²", "2x² + 1"], correct: 0},
+            {q: "f(x) = -x + 3", options: ["-1", "3", "-x", "1"], correct: 0},
+            {q: "f(x) = -3x² - 2x", options: ["-6x - 2", "3x - 2", "-6x", "-3x"], correct: 0},
+
+            // 分数係数の多項式
+            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x² + x", options: ["x + 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x + 1", "x", "2x + 1"], correct: 0},
+            {q: "f(x) = x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", options: ["2x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>", "x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>", "2x", "x"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x³ - x", options: ["2x² - 1", "<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x² - 1", "2x²", "x² - 1"], correct: 0},
+
+            // 複雑な多項式
+            {q: "f(x) = x⁴ + 2x³ - x²", options: ["4x³ + 6x² - 2x", "x³ + 2x² - x", "4x³ - 2x", "x³ + 6x²"], correct: 0},
+            {q: "f(x) = 2x⁴ - 3x² + 1", options: ["8x³ - 6x", "2x³ - 3x", "8x³", "2x³ - 6x"], correct: 0},
+            {q: "f(x) = x⁵ - x³ + x", options: ["5x⁴ - 3x² + 1", "x⁴ - x² + 1", "5x⁴ + 1", "x⁴ - 3x²"], correct: 0},
+
+            // 特殊なケース
+            {q: "f(x) = 0", options: ["0", "1", "x", "定義されない"], correct: 0},
+            {q: "f(x) = 10", options: ["0", "10", "1", "x"], correct: 0},
+            {q: "f(x) = -5", options: ["0", "-5", "5", "-1"], correct: 0},
+
+            // より複雑な問題
+            {q: "f(x) = 3x⁵ + 2x⁴ - x³ + 4x", options: ["15x⁴ + 8x³ - 3x² + 4", "3x⁴ + 2x³ - x² + 4", "15x⁴ - 3x² + 4", "3x⁴ + 8x³ - x²"], correct: 0},
+            {q: "f(x) = x⁶ - 2x⁴ + 3x² - 1", options: ["6x⁵ - 8x³ + 6x", "x⁵ - 2x³ + 3x", "6x⁵ + 6x", "x⁵ - 8x³ + 3x"], correct: 0},
+            {q: "f(x) = 4x³ + 5x² - 6x + 2", options: ["12x² + 10x - 6", "4x² + 5x - 6", "12x² - 6", "4x² + 10x - 6"], correct: 0},
+
+            // 分数係数の複雑な問題
+            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x⁴ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²", options: ["2x³ + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x³ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", "2x³", "x³ + x"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x³ - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x²", "3x² - 1"], correct: 0},
+
+            // 追加の基本問題
+            {q: "f(x) = 12x", options: ["12", "1", "12x", "0"], correct: 0},
+            {q: "f(x) = x⁸", options: ["8x⁷", "x⁷", "8x", "x⁸"], correct: 0},
+            {q: "f(x) = 5x⁴", options: ["20x³", "5x³", "4x³", "20x"], correct: 0},
+            {q: "f(x) = -4x²", options: ["-8x", "4x", "-4x", "8x"], correct: 0},
+            {q: "f(x) = 6x² + 4x", options: ["12x + 4", "6x + 4", "12x", "6x"], correct: 0},
+            {q: "f(x) = x³ + 3x² + 3x + 1", options: ["3x² + 6x + 3", "x² + 3x + 3", "3x² + 3", "x² + 6x + 1"], correct: 0},
+            {q: "f(x) = 2x⁵ - 4x³ + x", options: ["10x⁴ - 12x² + 1", "2x⁴ - 4x² + 1", "10x⁴ + 1", "2x⁴ - 12x²"], correct: 0},
+            {q: "f(x) = -x³ + 2x² - 3x + 4", options: ["-3x² + 4x - 3", "x² + 2x - 3", "-3x² - 3", "x² + 4x - 3"], correct: 0},
+
+            // 最後の問題群
+            {q: "f(x) = 7x³ + x² - 5x + 10", options: ["21x² + 2x - 5", "7x² + x - 5", "21x² - 5", "7x² + 2x - 5"], correct: 0},
+            {q: "f(x) = x⁴ - 4x³ + 6x² - 4x + 1", options: ["4x³ - 12x² + 12x - 4", "x³ - 4x² + 6x - 4", "4x³ + 12x - 4", "x³ - 12x² + 6x"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x² + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", options: ["<span class='fraction'><span class='numerator'>5</span><span class='denominator'>3</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>", "<span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>", "<span class='fraction'><span class='numerator'>10</span><span class='denominator'>6</span></span>x", "5x + 2"], correct: 0},
+            {q: "f(x) = 8x⁶ - 3x⁴ + 2x² - 7", options: ["48x⁵ - 12x³ + 4x", "8x⁵ - 3x³ + 2x", "48x⁵ + 4x", "8x⁵ - 12x³ + 2x"], correct: 0},
+            {q: "f(x) = x⁹", options: ["9x⁸", "x⁸", "9x", "x⁹"], correct: 0},
+            {q: "f(x) = 15x² - 10x + 25", options: ["30x - 10", "15x - 10", "30x + 25", "15x - 10 + 25"], correct: 0},
+            {q: "f(x) = -6x⁴ + 8x² - 2", options: ["-24x³ + 16x", "6x³ + 8x", "-24x³ - 2", "-6x³ + 16x"], correct: 0},
+            {q: "f(x) = x¹⁰", options: ["10x⁹", "x⁹", "10x", "x¹⁰"], correct: 0},
+            {q: "f(x) = <span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x³ - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "7x² - 3x + 1"], correct: 0},
+            {q: "f(x) = 100x - 50", options: ["100", "50", "100x", "100 - 50"], correct: 0},
+            {q: "f(x) = x⁷ + x⁵ + x³ + x", options: ["7x⁶ + 5x⁴ + 3x² + 1", "x⁶ + x⁴ + x² + 1", "7x⁶ + 3x² + 1", "x⁶ + 5x⁴ + x²"], correct: 0}
+        ];
+
+        let currentMode = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let startTime = 0;
+        let timerInterval = null;
+        let selectedAnswer = null;
+        let totalQuestions = 0;
+        // 【ブラッシュアップ】この問題でまちがえたか・超鬼モードで終わったか・遊びの回（古いタイマーの取り消し用）
+        let missedThis = false;
+        let hellFailed = false;
+        let runId = 0;
+
+        function showModeSelection() {
+            runId++;   // 【ブラッシュアップ】
+            document.getElementById('modeSelection').style.display = 'block';
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            clearInterval(timerInterval);
+        }
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            currentQuestionIndex = 0;
+            score = 0;
+            hellFailed = false;   // 【ブラッシュアップ】
+            runId++;
+            window.scrollTo(0, 0);
+            selectedAnswer = null;
+
+            // モードに応じて問題を設定
+            if (mode === 'normal') {
+                currentQuestions = getRandomQuestions(10);
+                totalQuestions = 10;
+                document.getElementById('modeIndicator').textContent = '📚 通常モード';
+                document.getElementById('modeIndicator').className = 'mode-indicator';
+            } else if (mode === 'input') {
+                currentQuestions = getRandomQuestions(10);
+                totalQuestions = 10;
+                document.getElementById('modeIndicator').textContent = '✏️ 入力モード';
+                document.getElementById('modeIndicator').className = 'mode-indicator';
+            } else if (mode === 'hundred') {
+                currentQuestions = [...problemPool];
+                shuffleArray(currentQuestions);
+                totalQuestions = currentQuestions.length;   // 【ブラッシュアップ】
+                document.getElementById('modeIndicator').textContent = '💯 全問連続モード';
+                document.getElementById('modeIndicator').className = 'mode-indicator';
+            } else if (mode === 'hell') {
+                currentQuestions = [...problemPool];
+                shuffleArray(currentQuestions);
+                totalQuestions = currentQuestions.length;   // 【ブラッシュアップ】
+                document.getElementById('modeIndicator').textContent = '👹 超鬼連チャンモード';
+                document.getElementById('modeIndicator').className = 'mode-indicator hell-mode';
+            }
+
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            clearInterval(timerInterval);   // 【ブラッシュアップ】
+            startTime = Date.now();
+            startTimer();
+            showQuestion();
+        }
+
+        function getRandomQuestions(count) {
+            // 入力モードの場合は分数係数の問題を除外
+            let availableProblems = problemPool;
+            if (currentMode === 'input') {
+                availableProblems = problemPool.filter(problem => {
+                    // 問題文に分数係数が含まれている場合は除外
+                    if (problem.q.includes('fraction') || problem.q.includes('/')) {
+                        return false;
+                    }
+
+                    // 答えに分数が含まれている場合も除外
+                    const correctAnswer = problem.options[problem.correct];
+                    const cleanAnswer = correctAnswer.replace(/<[^>]*>/g, '');
+                    if (cleanAnswer.includes('/') || cleanAnswer.includes('fraction')) {
+                        return false;
+                    }
+
+                    return true;
+                });
+            }
+
+            // 定数の微分問題を抽出
+            const constantProblems = availableProblems.filter(problem =>
+                problem.q.includes('f(x) = 0') ||
+                problem.q.includes('f(x) = 10') ||
+                problem.q.includes('f(x) = -5')
+            );
+
+            // 定数以外の問題を抽出
+            const otherProblems = availableProblems.filter(problem =>
+                !problem.q.includes('f(x) = 0') &&
+                !problem.q.includes('f(x) = 10') &&
+                !problem.q.includes('f(x) = -5')
+            );
+
+            // 入力モードの場合は必ず定数問題を1問含める
+            if (currentMode === 'input') {
+                // 定数問題から1問選択
+                const selectedConstant = constantProblems[Math.floor(Math.random() * constantProblems.length)];
+
+                // 残りの問題からランダムに選択
+                shuffleArray(otherProblems);
+                const selectedOthers = otherProblems.slice(0, count - 1);
+
+                // 結合してシャッフル
+                const result = [selectedConstant, ...selectedOthers];
+                shuffleArray(result);
+                return result;
+            } else {
+                // 他のモードでは通常通りランダム選択
+                shuffleArray(availableProblems);
+                return availableProblems.slice(0, count);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('timer').textContent =
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            document.getElementById('question').innerHTML = `次の関数を微分してください：<br><br>${question.q}`;
+            document.getElementById('progress').textContent =
+                `問題 ${currentQuestionIndex + 1}/${totalQuestions}`;
+
+            const optionsContainer = document.getElementById('options');
+            const inputSection = document.getElementById('inputSection');
+            const inputFeedback = document.getElementById('inputFeedback');
+            const answerInput = document.getElementById('answerInput');
+            const submitBtn = document.getElementById('submitBtn');
+
+            selectedAnswer = null;
+            missedThis = false;   // 【ブラッシュアップ】
+
+            if (currentMode === 'input') {
+                // 入力モードの場合
+                optionsContainer.style.display = 'none';
+                inputSection.style.display = 'block';
+                answerInput.value = '';
+                answerInput.disabled = false;
+                submitBtn.disabled = false;
+                document.getElementById('showAnswerBtn').disabled = false;
+                inputFeedback.textContent = '';
+                inputFeedback.className = 'input-feedback';
+                inputFeedback.style.background = '';
+                inputFeedback.style.color = '';
+                inputFeedback.style.border = '';
+                answerInput.focus();
+            } else {
+                // 選択モードの場合
+                optionsContainer.style.display = 'grid';
+                inputSection.style.display = 'none';
+                optionsContainer.innerHTML = '';
+
+                // 選択肢をランダムに並び替え
+                const shuffledOptions = [...question.options];
+                const correctAnswer = question.options[question.correct];
+                shuffleArray(shuffledOptions);
+                const newCorrectIndex = shuffledOptions.indexOf(correctAnswer);
+
+                shuffledOptions.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.innerHTML = option;
+                    optionDiv.onclick = () => selectAnswer(index, optionDiv, newCorrectIndex);
+                    optionsContainer.appendChild(optionDiv);
+                });
+            }
+
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectAnswer(answerIndex, optionElement, correctIndex) {
+            if (selectedAnswer !== null) return;
+
+            selectedAnswer = answerIndex;
+            const isCorrect = answerIndex === correctIndex;
+
+            if (isCorrect) {
+                // 全ての選択肢を無効化
+                document.querySelectorAll('.option').forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+
+                optionElement.classList.add('correct');
+                if (!missedThis) score++;   // 【ブラッシュアップ】
+                document.getElementById('nextBtn').style.display = 'block';
+            } else {
+                // 間違いの場合は一時的に無効化
+                document.querySelectorAll('.option').forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+
+                optionElement.classList.add('incorrect');
+                missedThis = true;   // 【ブラッシュアップ】
+
+                // 超鬼連チャンモードでは即終了
+                if (currentMode === 'hell') {
+                    hellFailed = true;   // 【ブラッシュアップ】
+                    if (typeof correctIndex === 'number') {
+                        const right = document.querySelectorAll('#options .option')[correctIndex];
+                        if (right) right.classList.add('correct');
+                    }
+                    const myRun = runId;
+                    setTimeout(() => {
+                        if (myRun === runId) endQuiz();
+                    }, 2000);
+                    return;
+                }
+
+                // 0.5秒後に再選択可能にする
+                setTimeout(() => {
+                    optionElement.classList.remove('incorrect');
+                    selectedAnswer = null;
+                    document.querySelectorAll('.option').forEach(opt => {
+                        opt.style.pointerEvents = 'auto';
+                    });
+                }, 500);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex >= currentQuestions.length) {
+                endQuiz();
+            } else {
+                // 選択肢をリセット
+                document.querySelectorAll('.option').forEach(opt => {
+                    opt.className = 'option';
+                    opt.style.pointerEvents = 'auto';
+                });
+                showQuestion();
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            const totalTime = Date.now() - startTime;
+            const minutes = Math.floor(totalTime / 60000);
+            const seconds = Math.floor((totalTime % 60000) / 1000);
+
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            const answered = hellFailed ? currentQuestionIndex + 1 : currentQuestionIndex;   // 【ブラッシュアップ】
+            document.getElementById('finalScore').textContent = `${score}/${answered}問 一発正解`;
+            document.getElementById('finalTime').textContent =
+                `所要時間: ${minutes}分${seconds}秒`;
+
+            // 結果に応じたメッセージ
+            let message = '';
+            const percentage = answered ? (score / answered) * 100 : 0;
+
+            if (hellFailed) {
+                message = `😈 超鬼連チャンモード終了！<br>${answered}問目で力尽きました...<br>再挑戦して完全制覇を目指そう！`;
+            } else if (percentage === 100) {
+                message = '🏆 完璧です！微分マスターですね！';
+            } else if (percentage >= 80) {
+                message = '🌟 素晴らしい成績です！';
+            } else if (percentage >= 60) {
+                message = '👍 良い調子です！もう少し練習すれば完璧！';
+            } else {
+                message = '📚 基礎をもう一度復習してみましょう！';
+            }
+
+            document.getElementById('encouragementText').innerHTML = message;
+        }
+
+        function submitAnswer() {
+            const answerInput = document.getElementById('answerInput');
+            const inputFeedback = document.getElementById('inputFeedback');
+            const submitBtn = document.getElementById('submitBtn');
+            const userAnswer = answerInput.value.trim();
+
+            if (!userAnswer) {
+                inputFeedback.textContent = '答えを入力してください';
+                inputFeedback.className = 'input-feedback incorrect';
+                return;
+            }
+
+            const question = currentQuestions[currentQuestionIndex];
+            const correctAnswer = question.options[question.correct];
+
+            // 答えを正規化して比較
+            const userPoly = parsePoly(userAnswer);   // 【ブラッシュアップ】
+            if (samePoly(userAnswer, correctAnswer)) {
+                answerInput.disabled = true;
+                submitBtn.disabled = true;
+                document.getElementById('showAnswerBtn').disabled = true;
+                if (!missedThis) score++;   // 【ブラッシュアップ】
+                inputFeedback.textContent = '正解です！';
+                inputFeedback.className = 'input-feedback correct';
+                document.getElementById('nextBtn').style.display = 'block';
+            } else {
+                // 【ブラッシュアップ】式として読めないときは書き方を、読めたときは考え方のヒントを出す
+                if (userPoly) missedThis = true;   // 書き方のまちがいは数えない
+                inputFeedback.innerHTML = userPoly
+                    ? '不正解です。もう一度考えてみましょう。<div class="rule-hint">💡 1 つの項ずつ、xⁿ → n xⁿ⁻¹。定数（数だけの項）は微分すると 0 になるよ。</div>'
+                    : '式として読み取れませんでした。<div class="rule-hint">例：3x^2 - 4x + 1　（x² は x^2 と入力）</div>';
+                inputFeedback.className = 'input-feedback incorrect';
+
+                // 超鬼連チャンモードでは即終了
+                if (currentMode === 'hell') {
+                    hellFailed = true;   // 【ブラッシュアップ】
+                    if (typeof correctIndex === 'number') {
+                        const right = document.querySelectorAll('#options .option')[correctIndex];
+                        if (right) right.classList.add('correct');
+                    }
+                    const myRun = runId;
+                    setTimeout(() => {
+                        if (myRun === runId) endQuiz();
+                    }, 2000);
+                    return;
+                }
+
+                // 0.5秒後に再入力可能にする
+                setTimeout(() => {
+                    inputFeedback.textContent = '';
+                    inputFeedback.className = 'input-feedback';
+                    answerInput.focus();
+                }, 1500);
+            }
+        }
+
+        function showAnswer() {
+            const answerInput = document.getElementById('answerInput');
+            const inputFeedback = document.getElementById('inputFeedback');
+            const submitBtn = document.getElementById('submitBtn');
+            const showAnswerBtn = document.getElementById('showAnswerBtn');
+            const question = currentQuestions[currentQuestionIndex];
+            const correctAnswer = question.options[question.correct];
+
+            // 入力フィールドに正解を表示
+            answerInput.value = correctAnswer.replace(/<[^>]*>/g, '');
+            answerInput.disabled = true;
+            submitBtn.disabled = true;
+            showAnswerBtn.disabled = true;
+
+            // フィードバックメッセージを表示
+            inputFeedback.innerHTML = `正解は「${correctAnswer}」でした。<br>次の問題で頑張りましょう！`;
+            inputFeedback.className = 'input-feedback';
+            inputFeedback.style.background = '#fff3cd';
+            inputFeedback.style.color = '#856404';
+            inputFeedback.style.border = '2px solid #ffeaa7';
+
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        // 【ブラッシュアップ】式を { 次数: 係数 } に分ける（整数の係数だけ）。読めないときは null
+        function parsePoly(s) {
+            const sup = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
+            let t = String(s).replace(/<[^>]*>/g, '').replace(/\s+/g, '').toLowerCase()
+                .replace(/\*\*/g, '^').replace(/[ー－−―]/g, '-').replace(/＋/g, '+').replace(/＾/g, '^').replace(/ｘ/g, 'x')
+                .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, m => '^' + [...m].map(c => sup[c]).join(''))
+                .replace(/\*/g, '');
+            if (!t || /[^0-9x^+\-]/.test(t)) return null;
+            const re = /([+-]?)(\d*)(x(?:\^(\d+))?)?/y;
+            const poly = {};
+            let pos = 0;
+            while (pos < t.length) {
+                re.lastIndex = pos;
+                const m = re.exec(t);
+                if (!m || (!m[2] && !m[3]) || (pos > 0 && !m[1])) return null;
+                const deg = m[3] ? (m[4] ? parseInt(m[4], 10) : 1) : 0;
+                poly[deg] = (poly[deg] || 0) + (m[1] === '-' ? -1 : 1) * (m[2] ? parseInt(m[2], 10) : 1);
+                pos += m[0].length;
+            }
+            return poly;
+        }
+
+        function samePoly(a, b) {
+            const p = parsePoly(a), q = parsePoly(b);
+            if (!p || !q) return false;
+            const keys = new Set([...Object.keys(p), ...Object.keys(q)]);
+            for (const k of keys) if ((p[k] || 0) !== (q[k] || 0)) return false;
+            return true;
+        }
+
+        function normalizeAnswer(answer) {
+            // HTMLタグを除去し、空白を削除、小文字に変換
+            let normalized = answer.replace(/<[^>]*>/g, '').replace(/\s+/g, '').toLowerCase();
+
+            // **を^に変換
+            normalized = normalized.replace(/\*\*/g, '^');
+
+            // 日本語のマイナス記号を英語のマイナスに変換（スマホ対応）
+            normalized = normalized.replace(/ー/g, '-');
+            normalized = normalized.replace(/－/g, '-');
+
+            // 全角数字を半角に変換（スマホ対応）
+            normalized = normalized.replace(/０/g, '0').replace(/１/g, '1').replace(/２/g, '2')
+                                   .replace(/３/g, '3').replace(/４/g, '4').replace(/５/g, '5')
+                                   .replace(/６/g, '6').replace(/７/g, '7').replace(/８/g, '8')
+                                   .replace(/９/g, '9');
+
+            // 全角のxを半角に変換
+            normalized = normalized.replace(/ｘ/g, 'x');
+
+            // 指数記号の統一（²→^2, ³→^3など）
+            normalized = normalized.replace(/²/g, '^2');
+            normalized = normalized.replace(/³/g, '^3');
+            normalized = normalized.replace(/⁴/g, '^4');
+            normalized = normalized.replace(/⁵/g, '^5');
+            normalized = normalized.replace(/⁶/g, '^6');
+            normalized = normalized.replace(/⁷/g, '^7');
+            normalized = normalized.replace(/⁸/g, '^8');
+            normalized = normalized.replace(/⁹/g, '^9');
+            normalized = normalized.replace(/¹⁰/g, '^10');
+
+            // 分数の正規化
+            normalized = normalized.replace(/\//g, '/');
+
+            // 分数係数の*記号を除去（1/2*x → 1/2x）
+            normalized = normalized.replace(/(\d+\/\d+)\*x/g, '$1x');
+
+            // 分数のみの場合（例：2/3）と分数係数（例：2/3x）を統一
+            // 分数のみの場合は、xが付いていない分数係数として扱う
+            normalized = normalized.replace(/^(\d+\/\d+)$/, '$1');
+            normalized = normalized.replace(/\+(\d+\/\d+)$/, '+$1');
+            normalized = normalized.replace(/-(\d+\/\d+)$/, '-$1');
+
+            // 係数1の省略を統一（1x → x）
+            normalized = normalized.replace(/1x/g, 'x');
+            normalized = normalized.replace(/\+1x/g, '+x');
+            normalized = normalized.replace(/-1x/g, '-x');
+
+            // 項の順序を統一するため、項を分離して並び替え
+            const terms = [];
+            let currentTerm = '';
+            let inTerm = false;
+
+            for (let i = 0; i < normalized.length; i++) {
+                const char = normalized[i];
+                if ((char === '+' || char === '-') && inTerm) {
+                    if (currentTerm) terms.push(currentTerm);
+                    currentTerm = char;
+                } else {
+                    currentTerm += char;
+                    inTerm = true;
+                }
+            }
+            if (currentTerm) terms.push(currentTerm);
+
+            // 項を次数順に並び替え
+            terms.sort((a, b) => {
+                const getDegree = (term) => {
+                    const match = term.match(/x\^?(\d+)?/);
+                    if (!match) return term.includes('x') ? 1 : 0;
+                    return match[1] ? parseInt(match[1]) : 1;
+                };
+                return getDegree(b) - getDegree(a);
+            });
+
+            return terms.join('').replace(/^\+/, '');
+        }
+
+        // Enterキーで回答送信・次の問題へ
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && currentMode === 'input') {
+                    const answerInput = document.getElementById('answerInput');
+                    const submitBtn = document.getElementById('submitBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+
+                    if (document.activeElement === answerInput && !submitBtn.disabled) {
+                        // 回答入力中の場合
+                        submitAnswer();
+                    } else if (nextBtn.style.display === 'block') {
+                        // 次の問題ボタンが表示されている場合
+                        nextQuestion();
+                    }
+                }
+            });
+
+            // 入力フィールドのリアルタイム全角→半角変換
+            document.addEventListener('input', function(e) {
+                if (e.target.id === 'answerInput') {
+                    const input = e.target;
+                    const cursorPosition = input.selectionStart;
+                    const originalValue = input.value;
+
+                    // 全角文字を半角に変換
+                    let convertedValue = originalValue
+                        // 全角数字を半角に変換
+                        .replace(/０/g, '0').replace(/１/g, '1').replace(/２/g, '2')
+                        .replace(/３/g, '3').replace(/４/g, '4').replace(/５/g, '5')
+                        .replace(/６/g, '6').replace(/７/g, '7').replace(/８/g, '8')
+                        .replace(/９/g, '9')
+                        // 全角英字を半角に変換
+                        .replace(/ａ/g, 'a').replace(/ｂ/g, 'b').replace(/ｃ/g, 'c')
+                        .replace(/ｄ/g, 'd').replace(/ｅ/g, 'e').replace(/ｆ/g, 'f')
+                        .replace(/ｇ/g, 'g').replace(/ｈ/g, 'h').replace(/ｉ/g, 'i')
+                        .replace(/ｊ/g, 'j').replace(/ｋ/g, 'k').replace(/ｌ/g, 'l')
+                        .replace(/ｍ/g, 'm').replace(/ｎ/g, 'n').replace(/ｏ/g, 'o')
+                        .replace(/ｐ/g, 'p').replace(/ｑ/g, 'q').replace(/ｒ/g, 'r')
+                        .replace(/ｓ/g, 's').replace(/ｔ/g, 't').replace(/ｕ/g, 'u')
+                        .replace(/ｖ/g, 'v').replace(/ｗ/g, 'w').replace(/ｘ/g, 'x')
+                        .replace(/ｙ/g, 'y').replace(/ｚ/g, 'z')
+                        // 全角記号を半角に変換
+                        .replace(/＋/g, '+').replace(/－/g, '-').replace(/ー/g, '-')
+                        .replace(/＊/g, '*').replace(/／/g, '/').replace(/＾/g, '^')
+                        .replace(/（/g, '(').replace(/）/g, ')').replace(/　/g, ' ');
+
+                    if (convertedValue !== originalValue) {
+                        input.value = convertedValue;
+                        // カーソル位置を維持
+                        input.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                }
+            });
+        });
+
+        function restartSameMode() {
+            startQuiz(currentMode);
+        }
+
+        // 初期表示
+        document.querySelectorAll('.pool-count').forEach(e => e.textContent = problemPool.length);   // 【ブラッシュアップ】
+        showModeSelection();
+    </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".header h1": "u-title",
+    ".mode-btn": "u-choice",
+    ".back-to-menu-btn": "u-btn u-btn-plain",
+    ".option": "u-choice",
+    ".option.correct": "u-ok",
+    ".option.incorrect": "u-ng",
+    ".next-btn": "u-btn u-btn-blue",
+    "#answerInput": "u-input",
+    "#submitBtn": "u-btn",
+    "#showAnswerBtn": "u-btn u-btn-plain",
+    ".result-nav .again": "u-btn",
+    ".result-nav .plain": "u-btn u-btn-plain"
+  });
+</script>
+</body>
+</html>
