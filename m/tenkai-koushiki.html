@@ -23,121 +23,191 @@ function doGet() {
 }
 
 function generateQuizSet(level, subMode) {
-  const rNum = () => {
-    let n = 0;
-    while(n === 0) n = Math.floor(Math.random() * 19) - 9;
-    return n;
-  };
   const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  
-  function clean(s) {
-    return s.toString()
-      .replace(/\+\-/g, "-")
-      .replace(/\-\+/g, "-")
-      .replace(/\b1x/g, "x")
-      .replace(/\+1x/g, "+x")
-      .replace(/-1x/g, "-x")
-      .replace(/\^2/g, "²");
+  const rNum = max => { let n = 0; while (n === 0) n = r(-max, max); return n; };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
+  const SUP = { 2: '²', 3: '³', 4: '⁴' };
+
+  // ---- 多項式 { "i,j": 係数 }（x^i y^j）----
+  function P(terms) { const p = {}; terms.forEach(([c, i, j]) => { const k = i + ',' + j; p[k] = (p[k] || 0) + c; if (!p[k]) delete p[k]; }); return p; }
+  function add(...ps) { return P([].concat(...ps.map(p => Object.keys(p).map(k => [p[k], ...k.split(',').map(Number)])))); }
+  function scale(p, s) { return P(Object.keys(p).map(k => [p[k] * s, ...k.split(',').map(Number)])); }
+  function mul(p, q) {
+    const t = [];
+    for (const a in p) for (const b in q) { const [i1, j1] = a.split(',').map(Number), [i2, j2] = b.split(',').map(Number); t.push([p[a] * q[b], i1 + i2, j1 + j2]); }
+    return P(t);
   }
+  const lin = (cx, cy, c0) => P([[cx, 1, 0], [cy, 0, 1], [c0, 0, 0]]);
+  // 並びは次数の高い順、同じ次数なら x の次数の高い順（x² + 2xy + y² + 6x + 6y + 9）
+  function fmtPoly(p) {
+    const ks = Object.keys(p).map(k => k.split(',').map(Number)).sort((u, v) => (v[0] + v[1]) - (u[0] + u[1]) || v[0] - u[0]);
+    return ks.map(([i, j], n) => {
+      const c = p[i + ',' + j], abs = Math.abs(c);
+      const vars = (i ? 'x' + (SUP[i] || '') : '') + (j ? 'y' + (SUP[j] || '') : '');
+      return (c < 0 ? '-' : (n ? '+' : '')) + (abs === 1 && vars ? '' : abs) + vars;
+    }).join('') || '0';
+  }
+  // 途中式用：負の数はかっこをつける
+  const n = v => v < 0 ? '(' + v + ')' : String(v);
+  const term = (c, v) => (c === 1 ? '' : c === -1 ? '-' : c) + v;          // 3x、x、-y
+  const sq = (c, v) => v ? (c === 1 ? v + '²' : '(' + c + v + ')²') : c + '²';   // (3x)²、x²、4²
 
-  function makeQ(type, coeff = 1) {
-    let a = rNum(), b = rNum(), c = coeff;
-    if (type === 1) { while (a === b) { b = rNum(); } }
-    if (type === 4) { a = Math.abs(a); } 
-    else if (type === 2 || type === 3) { a = Math.abs(a); }
-
-    let formula = "";
-    let rawParts = [];
-
-    if (type === 1) { 
-      const signA = a > 0 ? "+" : "";
-      const signB = b > 0 ? "+" : "";
-      formula = `(${c==1?'':c}x${signA}${a})(${c==1?'':c}x${signB}${b})`; 
-      let mid = c * (a + b);
-      let last = a * b;
-      rawParts = [`${c*c}`, "x²", mid >= 0 ? "+" : "-", mid === 0 ? "" : `${Math.abs(mid)}`, mid === 0 ? "" : "x", last >= 0 ? "+" : "-", `${Math.abs(last)}`]; 
-    }
-    else if (type === 2) { 
-      formula = `(${c==1?'':c}x+${a})²`; 
-      rawParts = [`${c*c}`, "x²", "+", `${2*c*a}`, "x", "+", `${a*a}`]; 
-    }
-    else if (type === 3) { 
-      formula = `(${c==1?'':c}x-${a})²`; 
-      rawParts = [`${c*c}`, "x²", "-", `${2*c*a}`, "x", "+", `${a*a}`]; 
-    }
-    else { 
-      formula = `(${c==1?'':c}x+${a})(${c==1?'':c}x-${a})`; 
-      rawParts = [`${c*c}`, "x²", "-", `${a*a}`]; 
-    }
-
-    const correct = clean(rawParts.join(""));
-    
-    // --- 【修正】ダミー選択肢をより紛らわしく ---
-    let choiceSet = new Set();
-    choiceSet.add(correct);
-    
-    if (type === 4) { // (x+a)(x-a) の場合のひっかけ
-      choiceSet.add(clean(`${c*c}x²+${a*a}`)); // 符号違い
-      choiceSet.add(clean(`${c*c}x²-${2*c*a}x+${a*a}`)); // 2乗の公式と混同
-      choiceSet.add(clean(`${c*c}x²-${a}`)); // 2乗し忘れ
-    } else {
-      choiceSet.add(clean(correct.replace('+', '-')));
-      choiceSet.add(clean(correct.replace('x²', 'x')));
-    }
-
-    while(choiceSet.size < 4) {
-      let dummy = clean(`${c*c}x²` + (r(0,1)?'+':'-') + r(1,20) + "x" + (r(0,1)?'+':'-') + r(1,50));
-      choiceSet.add(dummy);
-    }
-    const choices = Array.from(choiceSet).sort(() => Math.random() - 0.5);
-    
-    // 🧩パズル用のパーツ生成
-    let tempPool = [];
-    let finalParts = rawParts.filter(p => p !== "" && p !== "0");
-    finalParts.forEach(part => {
-      let s = part.toString().replace(/\^2/g, "²");
-      if (s.startsWith('-')) { tempPool.push('-'); s = s.substring(1); }
-      if (s === "x²" || s === "x" || s === "+" || s === "-") {
-        tempPool.push(s);
-      } else {
-        let digits = s.split(/(\d)/).filter(v => v !== "");
-        digits.forEach(d => tempPool.push(d));
-      }
-    });
-    for(let i=0; i<3; i++) { tempPool.push(Math.floor(Math.random() * 10).toString()); }
-    tempPool.push("+", "-", "x", "x²");
-    let pool = [...new Set(tempPool)].filter(v => v !== "").sort();
-
-    return { 
-      formula: clean(formula), 
-      correct, 
-      allChoices: pool, 
-      choices,
-      coeff: c
+  // ---- 公式ごとの問題（formula 問題、poly 答え、traps よくあるまちがい、expl 途中式、hint 公式）----
+  // (x + a·u)(x + b·u)　u は 1 か y
+  function T1(a, b, u) {
+    const f1 = u ? lin(1, a, 0) : lin(1, 0, a), f2 = u ? lin(1, b, 0) : lin(1, 0, b);
+    const XU = u ? 'x' + u : 'x', U2 = u ? u + '²' : '';
+    const mk = (m, c) => u ? P([[1, 2, 0], [m, 1, 1], [c, 0, 2]]) : P([[1, 2, 0], [m, 1, 0], [c, 0, 0]]);
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')', poly: mul(f1, f2),
+      traps: [mk(a * b, a + b), mk(-(a + b), a * b), mk(a + b, -a * b)],     // 和と積の取りちがえ、真ん中の符号、定数の符号
+      expl: ['x² + (' + n(a) + ' + ' + n(b) + ')' + XU + ' + ' + n(a) + ' × ' + n(b) + U2],
+      hint: '(x + a)(x + b) = x² + (a + b)x + ab'
+    };
+  }
+  // (p·x + q·u)²　q > 0 は和の平方、q < 0 は差の平方
+  function T2(p, q, u) {
+    const f = u ? lin(p, q, 0) : lin(p, 0, q), Q = Math.abs(q), s = q > 0 ? '+' : '-';
+    const mk = (a, m, c) => u ? P([[a, 2, 0], [m, 1, 1], [c, 0, 2]]) : P([[a, 2, 0], [m, 1, 0], [c, 0, 0]]);
+    const traps = [mk(p * p, p * q, q * q), mk(p * p, 0, q * q), mk(p * p, -2 * p * q, q * q), mk(p * p, 2 * p * q, -q * q)];
+    if (p > 1) traps.unshift(mk(p, 2 * p * q, q * q));                                   // x² の係数を 2 乗し忘れた
+    return {
+      formula: '(' + fmtPoly(f) + ')²', poly: mul(f, f), traps,                          // 2 倍忘れ、真ん中の項忘れ、符号
+      expl: [sq(p, 'x') + ' ' + s + ' 2 × ' + term(p, 'x') + ' × ' + (u ? term(Q, u) : Q) + ' + ' + sq(Q, u || '')],
+      hint: q > 0 ? '(a + b)² = a² + 2ab + b²' : '(a - b)² = a² - 2ab + b²'
+    };
+  }
+  // (p·x + q·u)(p·x − q·u)
+  function T4(p, q, u) {
+    const f1 = u ? lin(p, q, 0) : lin(p, 0, q), f2 = u ? lin(p, -q, 0) : lin(p, 0, -q);
+    const mk = (a, m, c) => u ? P([[a, 2, 0], [m, 1, 1], [c, 0, 2]]) : P([[a, 2, 0], [m, 1, 0], [c, 0, 0]]);
+    const traps = [mk(p * p, 0, q * q), mk(p * p, -2 * p * q, q * q), mk(p * p, 0, -2 * q), mk(p * p, 2 * p * q, -q * q)];
+    if (p > 1) traps.unshift(mk(p, 0, -q * q));
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')', poly: mul(f1, f2), traps,
+      expl: [sq(p, 'x') + ' - ' + sq(q, u || '')],
+      hint: '(a + b)(a - b) = a² - b²'
+    };
+  }
+  // (a·x + b·u)(c·x + d·u)
+  function T5(a, b, c, d, u) {
+    const f1 = u ? lin(a, b, 0) : lin(a, 0, b), f2 = u ? lin(c, d, 0) : lin(c, 0, d);
+    const XU = u ? 'x' + u : 'x', U2 = u ? u + '²' : '';
+    const mk = (A, m, C) => u ? P([[A, 2, 0], [m, 1, 1], [C, 0, 2]]) : P([[A, 2, 0], [m, 1, 0], [C, 0, 0]]);
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')', poly: mul(f1, f2),
+      traps: [mk(a * c, b + d, b * d), mk(a * c, a * d, b * d), mk(a * c, -(a * d + b * c), b * d), mk(a * c, a * d + b * c, -b * d), mk(a + c, a * d + b * c, b * d)],
+      expl: ['(' + a + ' × ' + c + ')x² + (' + a + ' × ' + n(d) + ' + ' + n(b) + ' × ' + c + ')' + XU + ' + ' + n(b) + ' × ' + n(d) + U2],
+      hint: '(ax + b)(cx + d) = acx² + (ad + bc)x + bd'
+    };
+  }
+  // ---- Lv.4：3項・おきかえ ----
+  function S1(s, k) {            // (x + s·y + k)²　（x + s·y を A とおく）
+    const A = lin(1, s, 0), f = lin(1, s, k), K = Math.abs(k), sg = k > 0 ? '+' : '-';
+    const A2 = mul(A, A);
+    return {
+      formula: '(' + fmtPoly(f) + ')²', poly: mul(f, f),
+      traps: [add(A2, P([[k * k, 0, 0]])), add(A2, scale(A, k), P([[k * k, 0, 0]])), add(mul(f, f), P([[-2 * s, 1, 1]])), add(A2, scale(A, -2 * k), P([[k * k, 0, 0]]))],
+      expl: ['(' + fmtPoly(A) + ')² ' + sg + ' 2 × ' + K + ' × (' + fmtPoly(A) + ') + ' + K + '²'],
+      hint: fmtPoly(A) + ' をひとまとめ（A）にして、(A ' + sg + ' ' + K + ')² = A² ' + sg + ' ' + 2 * K + 'A + ' + K * K
+    };
+  }
+  function S2(s, k) {            // (x + s·y + k)(x + s·y − k)
+    const A = lin(1, s, 0), f1 = lin(1, s, k), f2 = lin(1, s, -k), A2 = mul(A, A);
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')', poly: mul(f1, f2),
+      traps: [add(A2, P([[k * k, 0, 0]])), add(mul(f1, f2), P([[-2 * s, 1, 1]])), add(A2, scale(A, -2 * k), P([[k * k, 0, 0]])), add(A2, P([[-2 * k, 0, 0]]))],
+      expl: ['(' + fmtPoly(A) + ')² - ' + k + '²'],
+      hint: fmtPoly(A) + ' をひとまとめ（A）にして、(A + ' + k + ')(A - ' + k + ') = A² - ' + k * k
+    };
+  }
+  function S3(k) {               // (x + k)(x − k)(x² + k²)
+    const f1 = lin(1, 0, k), f2 = lin(1, 0, -k), f3 = P([[1, 2, 0], [k * k, 0, 0]]);
+    const k4 = k ** 4;
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')(' + fmtPoly(f3) + ')', poly: mul(mul(f1, f2), f3),
+      traps: [P([[1, 4, 0], [k4, 0, 0]]), P([[1, 4, 0], [-2 * k * k, 2, 0], [k4, 0, 0]]), P([[1, 4, 0], [-k * k, 0, 0]]), P([[1, 4, 0], [2 * k * k, 2, 0], [-k4, 0, 0]])],
+      expl: ['(x² - ' + k + '²)(x² + ' + k * k + ')', '(x²)² - ' + k * k + '²'],
+      hint: '前の 2 つを先に：(x + ' + k + ')(x - ' + k + ') = x² - ' + k * k + '。そのあと (a - b)(a + b) = a² - b² をもう一度'
+    };
+  }
+  function S4(k) {               // (x + y − k)(x − y − k)　（x − k を A とおく）
+    const f1 = lin(1, 1, -k), f2 = lin(1, -1, -k), A = lin(1, 0, -k);
+    return {
+      formula: '(' + fmtPoly(f1) + ')(' + fmtPoly(f2) + ')', poly: mul(f1, f2),
+      traps: [add(mul(A, A), P([[1, 0, 2]])), add(mul(f1, f2), P([[-2 * k * k, 0, 0]])), add(mul(f1, f2), P([[4 * k, 1, 0]])), P([[1, 2, 0], [-1, 0, 2], [-k * k, 0, 0]])],
+      expl: ['(x - ' + k + ')² - y²'],
+      hint: '並べかえると {(x - ' + k + ') + y}{(x - ' + k + ') - y}。x - ' + k + ' をひとまとめ（A）にして (A + y)(A - y) = A² - y²'
     };
   }
 
-  let questions = [];
-  let count = (level === 1) ? 5 : 10;
-
-  for (let i = 0; i < count; i++) {
-    let t = (level === 1) ? subMode : r(1, 4);
-    let cf = (level === 3) ? (r(0, 1) === 0 ? 1 : r(2, 5)) : 1; 
-    questions.push(makeQ(t, cf));
+  // ---- 種類ごとに数を決める ----
+  function make(t, easy) {
+    let a, b, c, d, p, q;
+    switch (t) {
+      case 1: do { a = easy ? r(1, 5) : rNum(9); b = easy ? r(1, 5) : rNum(9); } while (a === b || a + b === 0); return T1(a, b, '');
+      case 2: return T2(1, r(1, 9), '');
+      case 3: return T2(1, -r(1, 9), '');
+      case 4: return T4(1, r(1, 9), '');
+      case 'c2': do { p = r(2, 5); q = r(1, 5); } while (gcd(p, q) > 1); return T2(p, q, '');
+      case 'c3': do { p = r(2, 5); q = r(1, 5); } while (gcd(p, q) > 1); return T2(p, -q, '');
+      case 'c4': do { p = r(2, 5); q = r(1, 6); } while (gcd(p, q) > 1); return T4(p, q, '');
+      case 5: do { a = r(1, 4); c = r(1, 4); b = rNum(5); d = rNum(5); } while (a === c || gcd(a, b) > 1 || gcd(c, d) > 1 || a * d + b * c === 0); return T5(a, b, c, d, '');
+      case 'y1': do { a = rNum(6); b = rNum(6); } while (a === b || a + b === 0); return T1(a, b, 'y');
+      case 'y2': do { p = r(1, 3); q = rNum(4); } while (gcd(p, q) > 1); return T2(p, q, 'y');
+      case 'y4': do { p = r(1, 4); q = r(1, 4); } while (gcd(p, q) > 1 || p === q); return T4(p, q, 'y');
+      case 'y5': do { a = r(1, 3); c = r(1, 3); b = rNum(4); d = rNum(4); } while (a === c || gcd(a, b) > 1 || gcd(c, d) > 1 || a * d + b * c === 0); return T5(a, b, c, d, 'y');
+      case 's1': return S1(pick([1, -1]), rNum(5));
+      case 's2': return S2(pick([1, -1]), r(1, 6));
+      case 's3': return S3(r(1, 3));
+      default: return S4(r(1, 5));
+    }
   }
 
-  // --- 【修正】レベル3のソート: 係数1を前半に、それ以外を後半に ---
-  if (level === 3) {
-    questions.sort((a, b) => {
-      if (a.coeff === 1 && b.coeff !== 1) return -1;
-      if (a.coeff !== 1 && b.coeff === 1) return 1;
-      return 0;
-    });
+  // ---- 選択肢と、組み立て（🧩）用のパーツ ----
+  function finish(o) {
+    const correct = fmtPoly(o.poly);
+    const set = [correct];
+    shuffle(o.traps.map(fmtPoly)).forEach(s => { if (set.length < 4 && !set.includes(s)) set.push(s); });
+    const ks = Object.keys(o.poly);
+    let guard = 0;
+    while (set.length < 4 && guard++ < 100) {        // 足りないときは、1 つの項の係数を少しずらす
+      const k = pick(ks), w = Object.assign({}, o.poly);
+      w[k] += pick([-2, -1, 1, 2]);
+      if (!w[k]) continue;
+      const s = fmtPoly(w);
+      if (!set.includes(s)) set.push(s);
+    }
+    const toks = correct.match(/[+-]|\d|[a-z][²³⁴]?/g);
+    const pool = new Set(toks);
+    for (let i = 0; i < 3; i++) pool.add(String(r(0, 9)));
+    ['+', '-', 'x', 'x²'].forEach(v => pool.add(v));
+    if (/y/.test(correct)) ['y', 'y²'].forEach(v => pool.add(v));
+    return {
+      formula: o.formula, correct, choices: shuffle(set), allChoices: [...pool].sort(),
+      expl: o.expl.concat(o.expl[o.expl.length - 1] === correct ? [] : [correct]), hint: o.hint
+    };
+  }
+
+  let plan;
+  if (level === 1) {
+    if (subMode === 2) plan = shuffle([2, 3, 2, 3, pick([2, 3])]);           // (x+a)² と (x−a)² をどちらも
+    else plan = [subMode, subMode, subMode, subMode, subMode];
   } else if (level === 2) {
-    // レベル2は完全ランダム
-    questions.sort(() => Math.random() - 0.5);
+    plan = shuffle([1, 1, 2, 2, 3, 3, 4, 4, pick([1, 2, 3, 4]), pick([1, 2, 3, 4])]);
+  } else if (level === 3) {
+    plan = shuffle(['c2', 'c3', 'c4', 5, 5]).concat(shuffle(['y1', 'y2', 'y4', 'y5', pick(['y1', 'y2', 'y5'])]));   // 係数 → 2文字 の順
+  } else {
+    plan = shuffle(['s1', 's2', 's3', 's4', pick(['s1', 's2'])]);
   }
-
+  const questions = [];
+  plan.forEach((t, i) => {
+    let q, g = 0;
+    do { q = finish(make(t, level === 1 && subMode === 1 && i < 2)); } while (questions.some(x => x.formula === q.formula) && g++ < 50);
+    questions.push(q);
+  });
   return questions;
 }
     return { generateQuizSet: generateQuizSet };
@@ -162,6 +232,9 @@ function generateQuizSet(level, subMode) {
     .card-title { font-size: 16px; font-weight: bold; color: #546e7a; text-align: left; border-left: 6px solid #3498db; padding-left: 12px; margin-bottom: 5px; }
     .formula-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 10px 15px; background: white; border-radius: 12px; border: 1px solid #eee; }
     .formula-text { font-family: 'Times New Roman', serif; font-size: 22px; font-weight: bold; flex-grow: 1; text-align: left; }
+    /* 【ブラッシュアップ】Lv.2〜4 の名前とひとこと説明 */
+    .formula-label { font-size: 17px; font-weight: bold; flex-grow: 1; text-align: left; }
+    .formula-label small { display: block; font-size: 14px; font-weight: normal; color: #64748b; font-family: 'Times New Roman', serif; }
     .btn-group { display: flex; gap: 10px; }
     .btn-mini { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; background: #e67e22; color: white; font-size: 14px; transition: 0.1s; box-shadow: 0 4px 0 #d35400; position: relative; top: 0; white-space: nowrap; }
     .btn-mini:hover { background: #f39c12; top: -2px; box-shadow: 0 6px 0 #d35400; }
@@ -192,12 +265,20 @@ function generateQuizSet(level, subMode) {
     .port-back { max-width: 900px; }
     #container { box-sizing: border-box; }   /* 余白の分だけ画面からはみ出していたのを直す */
     #feedback { white-space: nowrap; }
-    #answer-note { font-size: 22px; color: #e74c3c; font-weight: bold; min-height: 1.2em; margin-bottom: 8px; font-family: 'Times New Roman', serif; }
+    #answer-note { font-size: 22px; color: #e74c3c; font-weight: bold; min-height: 1.2em; margin-bottom: 8px; }
     .btn-4:disabled { opacity: .35; }
     .locked .btn-4, .locked .choice, .locked #submit-btn { pointer-events: none; }
     #done .nav { display: flex; flex-direction: column; gap: 14px; width: min(24rem, 100%); margin: 0 auto; }
     #done .nav a { color: #7f8c8d; font-weight: bold; }
     #done .big { font-size: 64px; margin-top: auto; }
+    #done-msg { font-size: 20px; font-weight: bold; margin: 0 0 16px; }
+    /* 【ブラッシュアップ】長い式は小さめに・選択肢は 1 列に。カーソル（差しこむ位置）は、見た目は細いまま押せる幅を広く */
+    #problem.long { font-size: 46px; }
+    .grid-4.one-col { grid-template-columns: 1fr; }
+    .grid-4.one-col .btn-4 { padding: 18px; font-size: 28px; }
+    .cursor { box-sizing: content-box; padding: 0 9px; background-clip: content-box; cursor: pointer; }
+    .solved .cursor { padding: 0; }
+    #next-q { padding: 14px 40px; font-size: 22px; margin: 6px auto 10px; }
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
     @media (max-width: 640px) {
@@ -207,17 +288,26 @@ function generateQuizSet(level, subMode) {
       .menu-section { grid-template-columns: 1fr; gap: 14px; }
       .menu-card { padding: 14px; }
       .formula-text { font-size: 22px; }
-      .btn-mini { font-size: 16px; padding: 12px 16px; }
-      #problem { font-size: min(46px, 11.5vw); margin: 14px 0; }
+      .btn-mini { font-size: 16px; padding: 12px 14px; }
+      /* 【ブラッシュアップ】メニューは、式の下にボタンを並べる（式が 2 行に折れていた） */
+      .formula-row { flex-wrap: wrap; gap: 8px; }
+      .formula-text, .formula-label { flex-basis: 100%; }
+      .formula-row .btn-group { width: 100%; }
+      .formula-row .btn-mini { flex: 1; }
+      #problem { font-size: min(46px, 11.5vw); margin: 10px 0; }
+      #problem.long { font-size: min(34px, 7.6vw); }
       .grid-4 { gap: 10px; }
       .btn-4 { font-size: min(26px, 6.6vw); padding: 20px 4px; }
+      .grid-4.one-col .btn-4 { font-size: min(24px, 6.2vw); padding: 14px 4px; }
       #drop-zone { min-height: 80px; padding: 14px 8px; gap: 6px; }
       .part { font-size: 26px; padding: 8px 12px; }
-      .solved .part { font-size: 38px; }
-      .cursor { height: 40px; }
+      .solved .part { font-size: 34px; }
+      .cursor { height: 40px; padding: 0 7px; }
       .bin { padding: 14px 8px; gap: 8px; }
       .choice { font-size: 26px; padding: 12px 18px; }
       #feedback { font-size: 30px; height: 40px; margin: 10px 0; }
+      .xp { font-size: 16px; }
+      body.u-theme .xp-steps { font-size: 20px; }
     }
   </style>
     <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
@@ -238,6 +328,18 @@ function generateQuizSet(level, subMode) {
     #progress-bar { background: linear-gradient(90deg, #facc15, #f97316); }
     #answer-note { color: var(--u-ng); }
     #done h2 { color: var(--u-accent-text) !important; }
+    /* 【ブラッシュアップ】数式は教科書と同じ書体：文字は斜体、数字は立体（選択肢・パーツも同じ書体に） */
+    body.u-theme #problem, body.u-theme .btn-4, body.u-theme .choice, body.u-theme .part, body.u-theme .xp-steps, body.u-theme .formula-text {
+      font-family: var(--u-math-font) !important; font-style: normal; font-weight: 400 !important; }
+    body.u-theme #problem i, body.u-theme .btn-4 i, body.u-theme .choice i, body.u-theme .part i, .xp i, .formula-text i { font-style: italic; }
+    .xp { border-radius: 18px; padding: 10px 16px; margin: 8px 0; font-size: 18px; line-height: 1.7; text-align: left; }
+    .xp:empty { display: none; }
+    .xp-hint { background: var(--u-soft-blue); color: var(--u-title-dark); border: 2px solid var(--u-soft-blue-line); }
+    .xp-full { background: #f8fafc; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    body.u-theme .xp-steps { font-size: 24px; color: var(--u-math); font-weight: 700 !important; margin-top: 4px; }
+    #q-count { align-self: center; padding: 4px 16px; margin-top: 6px; font-size: 16px; }
+    .q-lead { color: var(--u-title); font-weight: 700; margin-top: 6px; }
+    #answer-note { font-family: var(--u-font); font-size: 18px; }
   
     </style>
 </head>
@@ -251,14 +353,16 @@ function generateQuizSet(level, subMode) {
       <div class="menu-section">
         <div class="menu-card">
           <div class="card-title">Lv.1 公式別</div>
-          <div class="formula-row"><div class="formula-text">(x+a)(x+b)</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,1,1)">4択</button><button class="btn-mini" onclick="preStart(1,1,2)">🧩</button></div></div>
-          <div class="formula-row"><div class="formula-text">(x±a)²</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,2,1)">4択</button><button class="btn-mini" onclick="preStart(1,2,2)">🧩</button></div></div>
-          <div class="formula-row"><div class="formula-text">(x+a)(x-a)</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,4,1)">4択</button><button class="btn-mini" onclick="preStart(1,4,2)">🧩</button></div></div>
+          <div class="formula-row"><div class="formula-text">(<i>x</i> + <i>a</i>)(<i>x</i> + <i>b</i>)</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,1,1)">4択</button><button class="btn-mini" onclick="preStart(1,1,2)">🧩 組み立て</button></div></div>
+          <div class="formula-row"><div class="formula-text">(<i>x</i> ± <i>a</i>)²</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,2,1)">4択</button><button class="btn-mini" onclick="preStart(1,2,2)">🧩 組み立て</button></div></div>
+          <div class="formula-row"><div class="formula-text">(<i>x</i> + <i>a</i>)(<i>x</i> − <i>a</i>)</div><div class="btn-group"><button class="btn-mini" onclick="preStart(1,4,1)">4択</button><button class="btn-mini" onclick="preStart(1,4,2)">🧩 組み立て</button></div></div>
         </div>
         <div class="menu-card">
-          <div class="card-title" style="border-color: #9b59b6;">Lv.2 & 3 ミックス</div>
-          <div class="formula-row"><div class="formula-text" style="font-size:18px">Lv.2 完全ランダム</div><div class="btn-group"><button class="btn-mini blue" onclick="preStart(2,0,1)">4択</button><button class="btn-mini blue" onclick="preStart(2,0,2)">🧩</button></div></div>
-          <div class="formula-row"><div class="formula-text" style="font-size:18px">Lv.3 係数あり発展</div><div class="btn-group"><button class="btn-mini blue" onclick="preStart(3,0,1)">4択</button><button class="btn-mini blue" onclick="preStart(3,0,2)">🧩</button></div></div>
+          <div class="card-title" style="border-color: #9b59b6;">Lv.2〜4 ミックス</div>
+          <div class="formula-row"><div class="formula-label">Lv.2 公式ミックス<small>どの公式を使うか見ぬこう</small></div><div class="btn-group"><button class="btn-mini blue" onclick="preStart(2,0,1)">4択</button><button class="btn-mini blue" onclick="preStart(2,0,2)">🧩 組み立て</button></div></div>
+          <div class="formula-row"><div class="formula-label">Lv.3 係数・2文字<small>(3<i>x</i> − 2)²、(<i>x</i> + 2<i>y</i>)(<i>x</i> − 3<i>y</i>)</small></div><div class="btn-group"><button class="btn-mini blue" onclick="preStart(3,0,1)">4択</button><button class="btn-mini blue" onclick="preStart(3,0,2)">🧩 組み立て</button></div></div>
+          <!-- 【ブラッシュアップ】Lv.4 を追加 -->
+          <div class="formula-row"><div class="formula-label">Lv.4 3項・おきかえ<small>(<i>x</i> + <i>y</i> + 3)²、(<i>x</i> + 2)(<i>x</i> − 2)(<i>x</i>² + 4)</small></div><div class="btn-group"><button class="btn-mini blue" onclick="preStart(4,0,1)">4択</button><button class="btn-mini blue" onclick="preStart(4,0,2)">🧩 組み立て</button></div></div>
         </div>
       </div>
     </div>
@@ -267,7 +371,9 @@ function generateQuizSet(level, subMode) {
   <div id="done" class="screen">
     <div class="big">🎉</div>
     <h2 style="font-size:34px;">クリア！</h2>
+    <p id="done-msg"></p>
     <div class="nav" style="margin-bottom:auto;">
+      <button id="next-lv" class="btn-mini" style="font-size:20px; padding:16px;" onclick="preStart(lastStart[0] + 1, 0, lastStart[2])">次のレベルへ ▶</button>
       <button class="btn-mini" style="font-size:20px; padding:16px;" onclick="preStart(...lastStart)">同じ問題の種類でもう一度</button>
       <button class="btn-mini blue" style="font-size:18px; padding:14px;" onclick="goHome()">メニューにもどる</button>
       <a href="../remake.html">ほかの教材をえらぶ</a>
@@ -275,43 +381,56 @@ function generateQuizSet(level, subMode) {
   </div>
 
   <div id="quiz" class="screen">
+    <!-- 【ブラッシュアップ】問題番号と、何をするかのひとこと -->
+    <div id="q-count"></div>
+    <div class="q-lead">次の式を展開しなさい</div>
     <div id="problem"></div>
     <div id="stage"></div>
     <div id="feedback"></div>
     <div id="answer-note"></div>
+    <div id="xp" class="xp"></div>
+    <button id="next-q" style="display:none;" onclick="advance()">次の問題へ ▶</button>
     <div class="footer-btns">
-      <button class="ans-btn" id="show-ans" onclick="showAnswer()">👁️ 答えを見る</button>
+      <!-- 【ブラッシュアップ】元は🧩だけの「答えを見る」（答えを写すだけ）。4択でも使える「ヒント」に -->
+      <button class="ans-btn" id="show-ans" onclick="showAnswer()">💡 ヒント</button>
       <button class="nav-btn" onclick="goHome()">🏠 ホームへ</button>
     </div>
   </div>
 </div>
 <script>
   let questions = [], current = 0, gMode = 1, userAns = [], cursorIdx = -1;
+  let lastStart = [1, 1, 1];   // 「同じ種類でもう一度」のために、最後に始めた設定を覚えておく
+  let solved = false, miss = 0, missTotal = 0, hintStep = 0;
 
-  let lastStart = [1, 1, 1];   // 【ブラッシュアップ】「同じ種類でもう一度」のために、最後に始めた設定を覚えておく
-  let solved = false;          // 【ブラッシュアップ】正解したあとの連打よけ
+  // 数式の表示：文字は斜体、数字は立体、マイナスは「−」。＋・− の前後は少しあける（x² + 8x + 15）
+  function fmt(s) { return String(s).replace(/([^(\s])([+-])/g, '$1 $2 ').replace(/-/g, '−').replace(/[a-z]/g, '<i>$&</i>'); }
+
   function goHome() { document.getElementById('done').classList.remove('active'); document.getElementById('quiz').classList.remove('active'); document.getElementById('home').classList.add('active'); document.getElementById('progress-bar').style.width = "0%"; }
-  function preStart(lv, sub, m) { lastStart = [lv, sub, m]; gMode = m; document.getElementById('done').classList.remove('active'); document.getElementById('home').classList.remove('active'); document.getElementById('quiz').classList.add('active'); google.script.run.withSuccessHandler(data => { questions = data; current = 0; render(); }).generateQuizSet(lv, sub); }
-  
+  function preStart(lv, sub, m) { lastStart = [lv, sub, m]; gMode = m; missTotal = 0; document.getElementById('done').classList.remove('active'); document.getElementById('home').classList.remove('active'); document.getElementById('quiz').classList.add('active'); google.script.run.withSuccessHandler(data => { questions = data; current = 0; render(); }).generateQuizSet(lv, sub); }
+
   function render() {
     const q = questions[current];
     document.getElementById('progress-bar').style.width = (current / questions.length) * 100 + "%";
-    document.getElementById('problem').innerText = q.formula;
+    document.getElementById('q-count').innerText = `第 ${current + 1} 問 / ${questions.length} 問`;
+    const pr = document.getElementById('problem');
+    pr.innerHTML = fmt(q.formula);
+    pr.classList.toggle('long', q.formula.length > 12);
     document.getElementById('feedback').innerText = "";
-    document.getElementById('answer-note').innerText = "";
-    solved = false;
+    showXp('');
+    solved = false; miss = 0; hintStep = 0;
     document.getElementById('stage').classList.remove('locked');
-    document.getElementById('show-ans').style.display = (gMode === 2) ? "block" : "none";
+    document.getElementById('next-q').style.display = 'none';
     const stage = document.getElementById('stage');
     stage.innerHTML = ""; userAns = []; cursorIdx = -1;
 
     if (gMode === 1) {
       const g = document.createElement('div'); g.className = "grid-4";
-      q.choices.forEach(c => { const b = document.createElement('button'); b.className = "btn-4"; b.innerText = c; b.onclick = () => check(c, b); g.appendChild(b); });
+      if (q.choices.some(c => c.length > 11)) g.classList.add('one-col');   // 長い式は 1 列に
+      q.choices.forEach(c => { const b = document.createElement('button'); b.className = "btn-4"; b.innerHTML = fmt(c); b.onclick = () => check(c, b); g.appendChild(b); });
       stage.appendChild(g);
     } else {
       stage.innerHTML = `<div id="drop-zone"></div><div class="bin" id="bin"></div><button id="submit-btn" onclick="check()" style="width:100%; margin-top:20px; padding:20px; background:#43a047; color:white; border:none; border-radius:12px; font-weight:bold; font-size:24px;">回答する</button>`;
-      q.allChoices.forEach(val => { const d = document.createElement('div'); d.className = "choice"; d.innerText = val; d.onclick = () => { if (cursorIdx === -1) userAns.push(val); else { userAns.splice(cursorIdx, 0, val); cursorIdx++; } updateDrop(); }; document.getElementById('bin').appendChild(d); });
+      q.allChoices.forEach(val => { const d = document.createElement('div'); d.className = "choice"; d.innerHTML = fmt(val); d.onclick = () => { if (solved) return; if (cursorIdx === -1) userAns.push(val); else { userAns.splice(cursorIdx, 0, val); cursorIdx++; } updateDrop(); }; document.getElementById('bin').appendChild(d); });
       updateDrop();
     }
   }
@@ -321,60 +440,86 @@ function generateQuizSet(level, subMode) {
     const isSolved = dz.classList.contains('solved');
     dz.innerHTML = "";
     let effectiveIdx = (cursorIdx === -1) ? userAns.length : cursorIdx;
-    for(let i = 0; i <= userAns.length; i++) {
+    for (let i = 0; i <= userAns.length; i++) {
       const c = document.createElement('div'); c.className = "cursor" + (effectiveIdx === i ? " active" : "");
-      c.onclick = () => { if(!isSolved) { cursorIdx = i; updateDrop(); } };
+      c.onclick = () => { if (!isSolved) { cursorIdx = i; updateDrop(); } };
       dz.appendChild(c);
-      if(i < userAns.length) {
-        const p = document.createElement('div'); p.className = "part"; p.innerText = userAns[i];
+      if (i < userAns.length) {
+        const p = document.createElement('div'); p.className = "part"; p.innerHTML = fmt(userAns[i]);
         if (!isSolved) p.onclick = () => { userAns.splice(i, 1); cursorIdx = i; updateDrop(); };
         dz.appendChild(p);
       }
     }
   }
 
-  // 【ブラッシュアップ】🧩で組み立てた式が「式として正しい並び」になっているか。
-  //   元は「x² ＋ − 12x」のように符号を 2 つ続けても、項だけ合っていれば正解になっていた。
-  function wellFormed(s) {
-    if (!s) return false;
-    if (/[+\-]{2}/.test(s)) return false;        // 符号が 2 つ続く
-    if (/^\+/.test(s) || /[+\-]$/.test(s)) return false;   // 先頭が＋、最後が符号
-    return true;
+  // 🧩で組み立てた式を「符号つきの項」に分ける。式の形になっていなければ理由を返す
+  function terms(s) {
+    if (/[+\-]{2}/.test(s)) return { err: '符号が 2 つ続いているよ' };
+    if (/^\+/.test(s)) return { err: '先頭の ＋ は書かないよ' };
+    if (/[+\-]$/.test(s)) return { err: '最後が符号で終わっているよ' };
+    const out = [];
+    for (const t of s.replace(/-/g, '+-').split('+').filter(v => v)) {
+      const m = t.match(/^(-?)(\d*)((?:[a-z][²³⁴]?)*)$/);
+      if (!m || (!m[2] && !m[3])) return { err: '数字 → 文字 の順に並べよう' };
+      if (m[2] === '1' && m[3]) return { err: '係数の 1 は書かないよ' };
+      if (/^0/.test(m[2])) return { err: '0 から始まる数はないよ' };
+      out.push(m[1] + m[2] + (m[3].match(/[a-z][²³⁴]?/g) || []).sort().join(''));   // 項の中の文字の順番は問わない
+    }
+    return { list: out };
   }
 
   function check(val, btn) {
-    if (solved) return;               // 【ブラッシュアップ】正解のあとは受け付けない（元は 2 回押すと 1 問とばした）
+    if (solved) return;               // 正解のあとは受け付けない（元は 2 回押すと 1 問とばした）
     const q = questions[current];
-    let isCorrect = false;
+    let isCorrect = false, note = '';
     if (gMode === 2 && userAns.length === 0) { document.getElementById('feedback').innerText = "パーツを選んでね"; return; }
     if (gMode === 1) {
       isCorrect = (val === q.correct);
-      if (!isCorrect && btn) btn.disabled = true;
+      if (btn) { if (isCorrect) btn.classList.add('is-correct'); else btn.disabled = true; }
     } else {
-      if (!wellFormed(userAns.join(""))) { document.getElementById('feedback').innerText = "❌ 不正解"; return; }
-      const normalize = (str) => str.replace(/²/g, "^2").replace(/-/g, "+-").split('+').filter(s => s).map(s => s.trim()).sort().join('|');
-      isCorrect = (normalize(userAns.join("")) === normalize(q.correct));
+      const mine = terms(userAns.join("")), want = terms(q.correct).list;
+      if (mine.err) { wrong(mine.err); return; }
+      isCorrect = [...mine.list].sort().join('|') === [...want].sort().join('|');
+      if (isCorrect && mine.list.join('|') !== want.join('|')) note = 'ふつうは ' + fmt(q.correct) + ' の順（次数の高い順）に書くよ';
     }
 
     if (isCorrect) {
       solved = true;
       document.getElementById('stage').classList.add('locked');
       document.getElementById('feedback').innerText = "✨ 正解！";
-      if(gMode === 2) document.getElementById('drop-zone').classList.add('solved');
-      setTimeout(() => {
-        current++;
-        if (current < questions.length) render();
-        else {
-          document.getElementById('progress-bar').style.width = "100%";
-          document.getElementById('quiz').classList.remove('active');
-          document.getElementById('done').classList.add('active');
-        }
-      }, 2000);
-    } else { document.getElementById('feedback').innerText = "❌ 不正解"; }
+      if (note) document.getElementById('answer-note').innerHTML = note;
+      if (gMode === 2) document.getElementById('drop-zone').classList.add('solved');
+      if (miss === 0) setTimeout(advance, note ? 2000 : 1000);   // 1 回で正解：自動で次へ
+      else { showXp(explHtml(), 'full'); document.getElementById('next-q').style.display = ''; }
+    } else { wrong(); }
+  }
+  function advance() {
+    current++;
+    if (current < questions.length) render();
+    else {
+      document.getElementById('progress-bar').style.width = "100%";
+      document.getElementById('quiz').classList.remove('active');
+      document.getElementById('done').classList.add('active');
+      document.getElementById('done-msg').innerText = missTotal === 0 ? 'ノーミス！すばらしい！' : `まちがい ${missTotal} 回。解説を見直してもう一度やってみよう！`;
+      document.getElementById('next-lv').style.display = lastStart[0] < 4 ? '' : 'none';
+    }
+  }
+  function wrong(msg) {
+    miss++; missTotal++;
+    document.getElementById('feedback').innerText = "❌ 不正解";
+    document.getElementById('answer-note').innerText = msg || '';
+    if (miss >= 2) showXp(explHtml(), 'full'); else showXp(hintHtml(), 'hint');
   }
 
-  // 【ブラッシュアップ】alert をやめて、画面の中に答えを出す
-  function showAnswer() { document.getElementById('answer-note').innerText = "正解の例： " + questions[current].correct; }
+  // ヒント（使う公式）と解説（公式に数を入れた途中式）
+  function showXp(html, kind) { const x = document.getElementById('xp'); x.className = 'xp' + (kind ? ' xp-' + kind : ''); x.innerHTML = html; if (html) requestAnimationFrame(() => x.scrollIntoView({ block: 'nearest', behavior: 'smooth' })); if (!html) document.getElementById('answer-note').innerText = ''; }
+  function hintHtml() { return '<b>💡 ヒント</b><div class="xp-rule">' + fmt(questions[current].hint) + '</div>'; }
+  function explHtml() {
+    const q = questions[current];
+    return '<b>解説</b><div class="xp-rule">' + fmt(q.hint) + '</div><div class="xp-steps">' + fmt(q.formula) + q.expl.map(s => '<br>= ' + fmt(s)).join('') + '</div>';
+  }
+  // 「💡 ヒント」ボタン：1 回目は公式、2 回目は途中式
+  function showAnswer() { hintStep++; if (hintStep >= 2) showXp(explHtml(), 'full'); else showXp(hintHtml(), 'hint'); }
 </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
@@ -384,8 +529,11 @@ function generateQuizSet(level, subMode) {
     ".btn-mini:not(.blue)": "u-btn",
     ".btn-mini.blue": "u-btn u-btn-blue",
     ".btn-4": "u-choice",
+    ".btn-4.is-correct": "u-ok",
     ".btn-4:disabled": "u-ng",
     "#submit-btn": "u-btn",
+    "#next-q": "u-btn u-btn-blue",
+    "#q-count": "u-pill",
     ".nav-btn": "u-btn u-btn-plain",
     ".ans-btn": "u-btn u-btn-plain"
   });

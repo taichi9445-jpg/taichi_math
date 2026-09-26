@@ -428,9 +428,27 @@
     .victory-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 380px; }
     .victory-nav .continue-btn { width: 100%; padding: 1rem 1.5rem; font-size: 1.25rem; }
     .victory-nav .continue-btn.sub { background: rgba(255,255,255,0.15); }
-    .victory-nav a { }
-    .answer-hint { font-size: 1.3rem; text-align: center; }
-    .answer-hint .math-expression { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 1.8rem; }
+    .question-type-selection { flex-wrap: wrap; justify-content: center; max-width: 600px; }
+    /* 【ブラッシュアップ】戦っている間は、タイトルを隠して問題を上に（Chromebook で問題が画面の外に出ていた） */
+    .in-battle .title, .in-battle .subtitle { display: none; }
+    @media (max-height: 820px) {
+      .battle-screen { gap: 1rem; }
+      .battle-info { padding: 0.5rem 1rem; }
+      .battle-area { min-height: 130px; padding: 0.5rem 2rem; }
+      .character-sprite { font-size: 4.5rem; }
+      .question-area { padding: 1rem 1.2rem; }
+      .question-text { margin-bottom: 0.8rem; }
+      .game-container { padding-top: 1rem; }
+      .choices { gap: 0.7rem; }
+      .choice-btn { padding: 0.8rem; }
+    }
+    /* 【ブラッシュアップ】正解したら、入力欄を「ふつうの式」に整える：消す項は幅ごと縮めて詰める（元はピクセル固定の移動で、スマホでは項が重なった） */
+    .input-row > * { max-width: 12rem; transition: max-width .5s, opacity .4s, margin .5s, padding .5s; }
+    .input-row .fold { max-width: 0 !important; opacity: 0 !important; padding: 0 !important; margin: 0 !important; border-width: 0 !important; overflow: hidden; }
+    .input-row.is-settled { gap: 0; }
+    .input-row.is-settled .sign-before-x, .input-row.is-settled .sign-before-c { margin: 0 .3em; }
+    .input-row span.settled { font-family: 'Times New Roman', Times, serif; animation: settleIn .4s ease-out; }
+    @keyframes settleIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
     @media (max-width: 640px) {
@@ -442,16 +460,17 @@
       .mode-btn .mode-title { font-size: 1.2rem; }
       .battle-screen { gap: 1rem; }
       .battle-info { padding: 0.6rem 0.8rem; }
-      .battle-area { min-height: 140px; padding: 0.8rem 1.5rem; }
-      .character-sprite { font-size: 4.5rem; }
+      .battle-area { min-height: 120px; padding: 0.6rem 1.5rem; }
+      .character-sprite { font-size: 4rem; }
       .question-area { padding: 1rem 0.8rem; }
       .question-text { font-size: 1.2rem; margin-bottom: 1rem; }
-      .question-text .math-expression { font-size: min(2.2rem, 9vw); display: block; white-space: nowrap; }
+      .question-text .math-expression { font-size: min(2.2rem, 8.4vw); display: block; white-space: nowrap; }
       .choices { grid-template-columns: 1fr; gap: 0.7rem; }
       .choice-btn { padding: 0.8rem; }
-      .choice-btn .math-expression { font-size: min(1.9rem, 8vw); }
-      .input-row { font-size: 1.6rem; gap: 0.35rem; flex-wrap: nowrap; }
-      .input-field, #inputX2 { width: 64px !important; font-size: 1.4rem; padding: 0.4rem 0.2rem; margin-top: 0; }
+      .choice-btn .math-expression { font-size: min(1.9rem, 7.6vw); }
+      .input-row { font-size: 1.45rem; gap: 0.2rem; flex-wrap: nowrap; }
+      .input-field, #inputX2 { width: 50px !important; font-size: 1.3rem; padding: 0.4rem 0.1rem; margin-top: 0; }
+      .xp-steps { font-size: 1.25rem; }
       .victory-screen { padding: 1.5rem 1rem; gap: 1.2rem; }
       .victory-title { font-size: min(3rem, 9vw); white-space: nowrap; }
     }
@@ -487,12 +506,24 @@
     .question-text { color: var(--u-title-dark); }
     .input-row { color: var(--u-ink); }
     .input-row .input-field { color: var(--u-ink) !important; }
-    .sign-before-x, .sign-before-c, .x-span, .x2-span { color: var(--u-ink) !important; }
+    .sign-before-x, .sign-before-c, .x-span, .x2-span, .y2-span { color: var(--u-ink) !important; }
     .victory-screen { padding: 2rem 1.5rem; }
     .victory-title { color: var(--u-accent-text) !important; text-shadow: none !important; }
     .victory-screen > div { color: var(--u-ink); }
     .victory-nav a { color: var(--u-sub); }
     .answer-hint { color: var(--u-title); }
+    /* 【ブラッシュアップ】数式は教科書と同じ書き方：文字は斜体、数字は立体 */
+    .math-expression, .input-row .input-field, .input-row span.settled { font-style: normal !important; }
+    .math-expression i, .input-row i, .xp i { font-style: italic; }
+    .choice-btn .math-expression { font-weight: 400; }
+    /* 【ブラッシュアップ】ヒント・解説 */
+    .xp { margin-top: 1rem; border-radius: 18px; padding: 10px 16px; font-size: 1.05rem; line-height: 1.7; text-align: left; font-weight: 700; }
+    .xp:empty { display: none; }
+    .xp-hint { background: var(--u-soft-blue); color: var(--u-title-dark); border: 2px solid var(--u-soft-blue-line); }
+    .xp-full { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    .xp-steps { font-family: var(--u-math-font); font-size: 1.5rem; color: var(--u-math); margin-top: 4px; }
+    .type-note { width: 100%; text-align: center; color: var(--u-sub); font-weight: 700; }
+    .victory-miss { font-size: 1.2rem; font-weight: 700; color: var(--u-sub); }
   
   </style>
 </head>
@@ -531,9 +562,15 @@
      </div>
      <div class="mode-desc">
       係数付き展開！覚悟せよ...
+     </div></button> <button class="mode-btn" onclick="selectMode(6)">
+     <div class="mode-title">
+      🌀 モード⑥ 2文字の展開
+     </div>
+     <div class="mode-desc">
+      (x+2y)(x-3y)、(2x-y)² の形を展開しよう！
      </div></button>
    </div>
-   <div class="question-type-selection" id="typeSelection" style="display: none;"><button class="type-btn" onclick="selectType('choice')">📝 4択問題</button> <button class="type-btn" onclick="selectType('input')">✏️ 穴埋め入力</button>
+   <div class="question-type-selection" id="typeSelection" style="display: none;"><div class="type-note" id="typeNote"></div><button class="type-btn" onclick="selectType('choice')">📝 4択問題</button> <button class="type-btn" onclick="selectType('input')">✏️ 穴埋め入力</button> <button class="type-btn back" onclick="backToMenu()">← モードをえらび直す</button>
    </div>
    <div class="battle-screen" id="battleScreen">
     <div class="battle-info">
@@ -570,6 +607,7 @@
      <div class="question-text" id="questionText"></div>
      <div class="choices" id="choicesArea"></div>
      <div class="input-mode" id="inputArea" style="display: none;"></div>
+     <div class="xp" id="xpArea"></div>
     </div><button class="back-btn" onclick="backToMenu()">メニューに戻る</button>
    </div>
    <div class="victory-screen" id="victoryScreen">
@@ -580,6 +618,7 @@
      全ての敵を倒しました！<br>
       あなたは展開のマスターです！
     </div>
+    <div class="victory-miss" id="victoryMiss"></div>
     <!-- 【ブラッシュアップ】元は「メニューに戻る」だけだった。同じモード・次のモードも選べるようにした -->
     <div class="victory-nav">
      <button class="continue-btn" onclick="replayMode(lastMode)">同じモードでもう一度</button>
@@ -615,11 +654,65 @@
     // 【ブラッシュアップ】
     let session = 0;        // メニューに戻ったら、前の「あとで動く処理」を止めるための番号
     let lastMode = 1, lastType = 'choice';
-    let missCount = 0;      // 穴埋めでまちがえた回数（2 回まちがえたら答えを見せる）
+    let missCount = 0;      // この問題でまちがえた回数（1 回目はヒント、2 回目は解説）
+    let missTotal = 0;      // このモードでまちがえた回数（クリア画面に出す）
     let inputLocked = false; // 穴埋めで正解したあと、「答える！」の 2 度押しを受け付けない
+    const MODE_NAMES = { 1: 'モード① 基本の展開', 2: 'モード② 2乗の展開', 3: 'モード③ 和と差の展開', 4: 'モード④ ランダムチャレンジ', 5: 'モード⑤ 最凶展開モード', 6: 'モード⑥ 2文字の展開' };
+
+    // 【ブラッシュアップ】数式の表示：文字は斜体、数字は立体、マイナスは「−」。＋・− の前後は少しあける
+    function fmtMath(s) {
+      return String(s).replace(/([^(\s])([+-])/g, '$1 $2 ').replace(/-/g, '−').replace(/[a-z]/g, '<i>$&</i>');
+    }
+    // 【ブラッシュアップ】教科書では出さない形の問題をよける：同じ式どうしのかけ算（(2x+1)(2x+1) は (2x+1)² と書く）、
+    //   (2x+4) のように、かっこの中に共通な因数がある式
+    function isAwkward(q) {
+      const m = q.match(/^\((\d*)x([+-]\d+)\)\((\d*)x([+-]\d+)\)$/);
+      if (!m) return false;
+      const g = (a, b) => b ? g(b, a % b) : a;
+      if (m[1] + m[2] === m[3] + m[4]) return true;
+      return (m[1] && g(+m[1], Math.abs(+m[2])) > 1) || (m[3] && g(+m[3], Math.abs(+m[4])) > 1);
+    }
+    // 【ブラッシュアップ】ヒント（使う公式）と解説（公式に数を入れた途中式）
+    function explainHtml(full) {
+      const q = currentQuestion.question;
+      const m = q.match(/^\((\d*)x([+-]\d*)(y?)\)(?:\((\d*)x([+-]\d*)(y?)\))?(²?)$/);
+      if (!m) return '';
+      const num = s => s === '+' ? 1 : s === '-' ? -1 : Number(s);
+      const a = m[1] ? +m[1] : 1, b = num(m[2]), u = m[3];
+      const isSq = m[7] === '²', c = isSq ? a : (m[4] ? +m[4] : 1), d = isSq ? b : num(m[5]);
+      const n = v => v < 0 ? '(' + v + ')' : String(v);
+      const term = (k, v) => (k === 1 ? '' : k) + v;
+      const sq = (k, v) => v ? (k === 1 ? v + '²' : '(' + k + v + ')²') : k + '²';
+      const B = Math.abs(b), U2 = u ? u + '²' : '';
+      let rule, step;
+      if (isSq) {
+        rule = b > 0 ? '(a + b)² = a² + 2ab + b²' : '(a - b)² = a² - 2ab + b²';
+        step = sq(a, 'x') + (b > 0 ? ' + ' : ' - ') + '2 × ' + term(a, 'x') + ' × ' + (u ? term(B, u) : B) + ' + ' + sq(B, u);
+      } else if (a === c && b === -d) {
+        rule = '(a + b)(a - b) = a² - b²';
+        step = sq(a, 'x') + ' - ' + sq(B, u);
+      } else if (a === 1 && c === 1) {
+        rule = '(x + a)(x + b) = x² + (a + b)x + ab';
+        step = 'x² + (' + n(b) + ' + ' + n(d) + ')x' + u + ' + ' + n(b) + ' × ' + n(d) + U2;
+      } else {
+        rule = '(ax + b)(cx + d) = acx² + (ad + bc)x + bd';
+        step = '(' + a + ' × ' + c + ')x² + (' + a + ' × ' + n(d) + ' + ' + n(b) + ' × ' + c + ')x' + u + ' + ' + n(b) + ' × ' + n(d) + U2;
+      }
+      if (!full) return '<b>💡 ヒント</b>　公式 ' + fmtMath(rule);
+      const fin = formatAnswer(currentQuestion.answer);
+      return '<b>解説</b>　公式 ' + fmtMath(rule) + '<div class="xp-steps">' + fmtMath(q) + '<br>= ' + fmtMath(step) +
+        (step.replace(/ /g, '') === fin ? '' : '<br>= ' + fmtMath(fin)) + '</div>';
+    }
+    function showXp(html, kind) {
+      const x = document.getElementById('xpArea');
+      x.className = 'xp' + (kind ? ' xp-' + kind : '');
+      x.innerHTML = html || '';
+      if (html) requestAnimationFrame(() => x.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));   // 画面の外に出ないように
+    }
 
     function selectMode(mode) {
       currentMode = mode;
+      document.getElementById('typeNote').textContent = (MODE_NAMES[mode] || '') + '：答え方をえらぼう';   // 【ブラッシュアップ】
       document.getElementById('modeSelection').style.display = 'none';
       document.getElementById('typeSelection').style.display = 'flex';
 
@@ -640,6 +733,8 @@
     function selectType(type) {
       session++;
       lastMode = currentMode; lastType = type;
+      missTotal = 0;
+      document.body.classList.add('in-battle');   // 【ブラッシュアップ】戦っている間はタイトルを隠す
       currentType = type;
       currentStage = 0;
       isProcessingAnswer = false;
@@ -669,6 +764,7 @@
     function generateQuestion() {
       missCount = 0;
       inputLocked = false;
+      showXp('');
       const stage = currentStage;
       let question, answer, effectiveMode;
       let attempts = 0;
@@ -731,6 +827,36 @@
 
           question = '(x' + firstSign + a + ')(x' + secondSign + a + ')';
           answer = { x2: 1, x: 0, c: -(a * a) };
+        } else if (effectiveMode === 6) {
+          // 【ブラッシュアップ】2文字の展開：(x+2y)(x-3y)、(x-3y)²、(2x+y)(2x-y)、(2x+y)(x-3y)
+          const kinds = stage <= 1 ? [1, 2] : stage <= 3 ? [1, 2, 3] : [1, 2, 3, 4];
+          const kind = kinds[Math.floor(Math.random() * kinds.length)];
+          const mv = Math.min(maxVal, 6);
+          const rn = () => { const v = Math.floor(Math.random() * mv) + 1; return (stage === 0 || Math.random() > 0.5) ? v : -v; };
+          const yt = v => (v > 0 ? '+' : '-') + (Math.abs(v) === 1 ? '' : Math.abs(v)) + 'y';
+          const g = (p, q) => q ? g(q, p % q) : p;
+          if (kind === 1) {
+            let a, b;
+            do { a = rn(); b = rn(); } while (a === b || a + b === 0);
+            question = '(x' + yt(a) + ')(x' + yt(b) + ')';
+            answer = { x2: 1, x: a + b, c: a * b };
+          } else if (kind === 2) {
+            const a = rn();
+            question = '(x' + yt(a) + ')²';
+            answer = { x2: 1, x: 2 * a, c: a * a };
+          } else if (kind === 3) {
+            let p, a;
+            do { p = Math.floor(Math.random() * 3) + 1; a = Math.floor(Math.random() * 4) + 1; } while (g(p, a) > 1 || (p === 1 && a === 1 && Math.random() < 0.5));
+            const ps = p === 1 ? '' : p;
+            question = '(' + ps + 'x' + yt(a) + ')(' + ps + 'x' + yt(-a) + ')';
+            answer = { x2: p * p, x: 0, c: -a * a };
+          } else {
+            let p, q, a, b;
+            do { p = Math.floor(Math.random() * 3) + 1; q = Math.floor(Math.random() * 3) + 1; a = rn(); b = rn(); }
+            while (p === q || g(p, Math.abs(a)) > 1 || g(q, Math.abs(b)) > 1 || p * b + q * a === 0);
+            question = '(' + (p === 1 ? '' : p) + 'x' + yt(a) + ')(' + (q === 1 ? '' : q) + 'x' + yt(b) + ')';
+            answer = { x2: p * q, x: p * b + q * a, c: a * b };
+          }
         } else if (effectiveMode === 5) {
           let coefA, coefB, a, b;
 
@@ -784,17 +910,17 @@
             c: valA * valB
           };
         }
-      } while (usedQuestions.includes(question) && attempts < maxAttempts);
+      } while ((usedQuestions.includes(question) || isAwkward(question)) && attempts < maxAttempts);   // 【ブラッシュアップ】教科書で出さない形もよける
 
       usedQuestions.push(question);
 
-      currentQuestion = { question: question, answer: answer, effectiveMode: effectiveMode };
+      currentQuestion = { question: question, answer: answer, effectiveMode: effectiveMode, twoVar: /y/.test(question) };
 
       let displayHTML;
       if (currentMode === 5) {
-        displayHTML = '💀 <span class="math-expression">' + question + '</span> を展開せよ！ 💀';
+        displayHTML = '💀 <span class="math-expression">' + fmtMath(question) + '</span> を展開せよ！ 💀';
       } else {
-        displayHTML = '<span class="math-expression">' + question + '</span> を展開せよ！';
+        displayHTML = '<span class="math-expression">' + fmtMath(question) + '</span> を展開せよ！';
       }
 
       document.getElementById('questionText').innerHTML = displayHTML;
@@ -817,7 +943,7 @@
       choices.forEach((choice) => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
-        btn.innerHTML = '<span class="math-expression">' + choice.text + '</span>';
+        btn.innerHTML = '<span class="math-expression">' + fmtMath(choice.text) + '</span>';
         btn.onclick = () => {
           if (!isProcessingAnswer) {
             checkAnswer(choice.isCorrect, btn);
@@ -834,22 +960,24 @@
       // 【ブラッシュアップ】元はまちがいの選択肢を、x の係数と定数を「でたらめにずらす」だけで作っていた。
       //   よくあるまちがい（定数や真ん中の符号・2 倍の忘れ・係数と定数の取りちがえ など）を先に入れる。
       const A = answer, traps = [];
-      const m = (currentQuestion && currentQuestion.question || '').match(/\((\d*)x([+-]\d+)\)\((\d*)x([+-]\d+)\)/);
+      const q = (currentQuestion && currentQuestion.question) || '';
+      const m = q.match(/\((\d*)x([+-]\d*)y?\)\((\d*)x([+-]\d*)y?\)/);
       traps.push({ x2: A.x2, x: A.x, c: -A.c });
       if (A.x !== 0) traps.push({ x2: A.x2, x: -A.x, c: A.c });
       if (A.x !== 0 && A.x !== A.c) traps.push({ x2: A.x2, x: A.c, c: A.x });
-      if (currentQuestion && currentQuestion.effectiveMode === 2) {
+      if (/²$/.test(q)) {
         traps.push({ x2: A.x2, x: A.x / 2, c: A.c });   // 真ん中の 2 倍を忘れた
         traps.push({ x2: A.x2, x: 0, c: A.c });         // 真ん中の項を忘れた
       }
-      if (currentQuestion && currentQuestion.effectiveMode === 3) {
+      if (A.x === 0 && A.c < 0) {                       // 和と差
         const a = Math.round(Math.sqrt(-A.c));
         traps.push({ x2: A.x2, x: 0, c: -A.c });        // x² + a² としてしまう
         traps.push({ x2: A.x2, x: 2 * a, c: A.c });
         traps.push({ x2: A.x2, x: -2 * a, c: A.c });
       }
       if (m) {
-        const cA = m[1] === '' ? 1 : +m[1], vA = +m[2], cB = m[3] === '' ? 1 : +m[3], vB = +m[4];
+        const num = s => s === '+' ? 1 : s === '-' ? -1 : +s;
+        const cA = m[1] === '' ? 1 : +m[1], vA = num(m[2]), cB = m[3] === '' ? 1 : +m[3], vB = num(m[4]);
         if (cA !== 1 || cB !== 1) {
           traps.push({ x2: A.x2, x: vA + vB, c: A.c });          // 係数をかけ忘れた
           traps.push({ x2: cA + cB, x: A.x, c: A.c });
@@ -881,6 +1009,9 @@
     }
 
     function formatAnswer(answer) {
+      // 【ブラッシュアップ】2 文字（モード⑥）のときは、x の項を xy、定数の項を y² にする
+      const two = currentQuestion && currentQuestion.twoVar;
+      const X = two ? 'xy' : 'x';
       let result = '';
 
       if (answer.x2 !== 0) {
@@ -889,12 +1020,12 @@
 
       if (answer.x !== 0) {
         if (result && answer.x > 0) result += '+';
-        result += answer.x === 1 ? 'x' : answer.x === -1 ? '-x' : answer.x + 'x';
+        result += answer.x === 1 ? X : answer.x === -1 ? '-' + X : answer.x + X;
       }
 
       if (answer.c !== 0) {
         if (result && answer.c > 0) result += '+';
-        result += answer.c;
+        result += two ? (answer.c === 1 ? 'y²' : answer.c === -1 ? '-y²' : answer.c + 'y²') : answer.c;
       }
 
       return result || '0';
@@ -905,25 +1036,38 @@
       document.getElementById('inputArea').style.display = 'flex';
 
       const inputArea = document.getElementById('inputArea');
+      const two = currentQuestion && currentQuestion.twoVar;
 
       let inputHTML = '<div class="input-row">';
 
       if (answer.x2 !== 1) {
         inputHTML += '<input type="number" class="input-field" id="inputX2" placeholder="?" style="width: 110px;">';
-        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;">x²</span>';
+        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;"><i>x</i>²</span>';
       } else {
-        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;">x²</span>';
+        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;"><i>x</i>²</span>';
       }
 
       inputHTML += '<span class="sign-before-x">+</span>';
       inputHTML += '<input type="number" class="input-field input-x-coef" id="inputXCoef" placeholder="?">';
-      inputHTML += '<span class="x-span">x</span>';
+      inputHTML += '<span class="x-span">' + (two ? '<i>xy</i>' : '<i>x</i>') + '</span>';
       inputHTML += '<span class="sign-before-c">+</span>';
       inputHTML += '<input type="number" class="input-field" id="inputC" placeholder="?">';
+      if (two) inputHTML += '<span class="y2-span"><i>y</i>²</span>';
       inputHTML += '</div>';
       inputHTML += '<button class="submit-btn" onclick="checkInputAnswer()">答える！</button>';
 
       inputArea.innerHTML = inputHTML;
+
+      const fields = [...inputArea.querySelectorAll('.input-field')];
+      fields.forEach((f, i) => {
+        f.setAttribute('enterkeyhint', i === fields.length - 1 ? 'done' : 'next');
+        f.addEventListener('keydown', e => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          if (i < fields.length - 1) fields[i + 1].focus(); else checkInputAnswer();
+        });
+      });
+      if (window.matchMedia && matchMedia('(pointer: fine)').matches && fields[0]) fields[0].focus({ preventScroll: true });
     }
 
     function checkInputAnswer() {
@@ -933,423 +1077,58 @@
       const inputXCoefElement = document.getElementById('inputXCoef');
       const inputCElement = document.getElementById('inputC');
       const answer = currentQuestion.answer;
+      const read = el => el.value.trim() === '' ? NaN : Number(el.value);
 
-      const inputXCoefValue = inputXCoefElement.value.trim();
-      const inputCValue = inputCElement.value.trim();
+      const inputX2 = inputX2Element ? read(inputX2Element) : 1;
+      const inputXCoef = inputXCoefElement.value.trim() === '' ? 0 : Number(inputXCoefElement.value);   // x の係数の空らんは 0（和と差の公式）
+      const inputC = read(inputCElement);
 
-      let inputXCoef;
-      if (inputXCoefValue === '') {
-        inputXCoef = 0;
-      } else {
-        inputXCoef = parseInt(inputXCoefValue);
-      }
-
-      const inputC = parseInt(inputCValue);
-
-      if (isNaN(inputC)) {
+      if (isNaN(inputX2) || isNaN(inputC) || isNaN(inputXCoef)) {
+        showXp('空らんに数を入れてから「答える！」を押そう', 'hint');
+        const empty = [inputX2Element, inputCElement].find(el => el && el.value.trim() === '');
+        if (empty) empty.focus();
         return;
       }
 
-      if (inputX2Element) {
-        const inputX2 = parseInt(inputX2Element.value);
-        if (isNaN(inputX2)) {
-          return;
-        }
-      }
-
-      let isCorrect;
-
-      if (inputX2Element) {
-        const inputX2 = parseInt(inputX2Element.value);
-        isCorrect = inputX2 === answer.x2 && inputXCoef === answer.x && inputC === answer.c;
-      } else {
-        isCorrect = inputXCoef === answer.x && inputC === answer.c;
-      }
+      const isCorrect = inputX2 === answer.x2 && inputXCoef === answer.x && inputC === answer.c;
+      const submitBtn = document.querySelector('.submit-btn');
 
       if (isCorrect) {
         inputLocked = true;
-        const effectiveMode = currentQuestion.effectiveMode;
-
-        if (currentMode === 5) {
-          cleanupMode5Animation(inputXCoef, inputC);
-          setTimeout(() => {
-            const submitBtn = document.querySelector('.submit-btn');
-            checkAnswer(isCorrect, submitBtn);
-          }, 800);
-        } else if (effectiveMode === 3) {
-          showMode3CenterAnimation();
-          setTimeout(() => {
-            const submitBtn = document.querySelector('.submit-btn');
-            checkAnswer(isCorrect, submitBtn);
-          }, 800);
-        } else {
-          if (inputXCoef === 0) {
-            showZeroXAnimation();
-            setTimeout(() => {
-              const submitBtn = document.querySelector('.submit-btn');
-              checkAnswer(isCorrect, submitBtn);
-            }, 800);
-          }
-          else if (inputXCoef === 1 || inputXCoef === -1) {
-            showCoefficientOneAnimation(inputXCoef, inputC);
-            setTimeout(() => {
-              const submitBtn = document.querySelector('.submit-btn');
-              checkAnswer(isCorrect, submitBtn);
-            }, 800);
-          }
-          else {
-            showSignCleanupAnimation(inputXCoef, inputC);
-            setTimeout(() => {
-              const submitBtn = document.querySelector('.submit-btn');
-              checkAnswer(isCorrect, submitBtn);
-            }, 800);
-          }
-        }
+        settleAnimation(inputX2, inputXCoef, inputC);
+        setTimeout(() => checkAnswer(true, submitBtn), 800);
       } else {
-        const submitBtn = document.querySelector('.submit-btn');
-        checkAnswer(isCorrect, submitBtn);
-        // 【ブラッシュアップ】元は何度まちがえても答えが分からず、先に進めなかった
-        missCount++;
-        if (missCount >= 2 && !document.getElementById('answerHint')) {
-          const hint = document.createElement('div');
-          hint.id = 'answerHint';
-          hint.className = 'answer-hint';
-          hint.innerHTML = 'こたえ： <span class="math-expression">' + formatAnswer(answer) + '</span>（入れて「答える！」を押そう）';
-          document.getElementById('inputArea').appendChild(hint);
-        }
+        checkAnswer(false, submitBtn);
       }
     }
 
-    function showMode3CenterAnimation() {
-      const signBeforeX = document.querySelector('.sign-before-x');
-      const inputXCoef = document.getElementById('inputXCoef');
-      const inputC = document.getElementById('inputC');
-      const signBeforeC = document.querySelector('.sign-before-c');
-      const xSpan = document.querySelector('.x-span');
-      const inputX2Element = document.getElementById('inputX2');
-      const x2Span = document.querySelector('.x2-span');
-      const inputCValue = parseInt(inputC.value);
-
-      if (inputXCoef) {
-        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s';
-        inputXCoef.style.opacity = '0';
-        inputXCoef.style.transform = 'scale(0)';
+    // 【ブラッシュアップ】正解したら、入力欄を「ふつうの式」に整える（先生の「+ (−6)x を −6x に整える」しかけ）。
+    //   元は 5 つの関数でピクセル固定の移動をしていたため、スマホでは項が重なり、
+    //   共通デザインの入力欄（!important の白い背景と枠）も消えなかった。
+    //   入力欄は数の文字に置きかえ、消す項（0x・係数の 1・＋のあとの −）は幅ごと縮めて詰める。
+    function settleAnimation(x2, xc, c) {
+      const row = document.querySelector('.input-row');
+      if (!row) return;
+      const two = currentQuestion.twoVar;
+      const fold = el => { if (el) el.classList.add('fold'); };
+      const toText = (el, v) => {
+        if (!el) return;
+        const s = document.createElement('span');
+        s.className = 'settled';
+        s.textContent = String(v);
+        el.replaceWith(s);
+      };
+      toText(document.getElementById('inputX2'), x2);
+      const signX = row.querySelector('.sign-before-x'), inX = document.getElementById('inputXCoef'), spanX = row.querySelector('.x-span');
+      if (xc === 0) { fold(signX); fold(inX); fold(spanX); }
+      else {
+        signX.textContent = xc < 0 ? '−' : '+';
+        if (Math.abs(xc) === 1) fold(inX); else toText(inX, Math.abs(xc));
       }
-
-      if (xSpan) {
-        xSpan.style.transition = 'opacity 0.8s, transform 0.8s';
-        xSpan.style.opacity = '0';
-        xSpan.style.transform = 'scale(0)';
-      }
-
-      if (signBeforeX) {
-        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeX.style.opacity = '0';
-        signBeforeX.style.transform = 'scale(0)';
-      }
-
-      if (inputC) {
-        inputC.style.transition = 'transform 0.8s ease-in-out, background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out';
-        inputC.style.transform = 'translateX(-120px)';
-        inputC.style.background = 'transparent';
-        inputC.style.border = 'none';
-        inputC.style.color = '#eee';
-      }
-
-      if (signBeforeC) {
-        signBeforeC.style.transition = 'transform 0.8s ease-in-out, opacity 0.8s ease-in-out';
-
-        if (inputCValue < 0) {
-          signBeforeC.style.opacity = '0';
-          signBeforeC.style.transform = 'scale(0)';
-        } else {
-          signBeforeC.style.transform = 'translateX(-120px)';
-        }
-      }
-
-      if (inputX2Element) {
-        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
-        inputX2Element.style.background = 'transparent';
-        inputX2Element.style.border = 'none';
-        inputX2Element.style.color = '#eee';
-        inputX2Element.style.transform = 'translateX(95px)';
-      }
-
-      if (x2Span) {
-        x2Span.style.transition = 'transform 0.8s ease-in-out';
-        x2Span.style.transform = 'translateX(95px)';
-      }
-    }
-
-    function cleanupMode5Animation(inputXCoef, inputC) {
-      const signBeforeX = document.querySelector('.sign-before-x');
-      const signBeforeC = document.querySelector('.sign-before-c');
-      const inputXCoefElement = document.getElementById('inputXCoef');
-      const inputCElement = document.getElementById('inputC');
-      const inputX2Element = document.getElementById('inputX2');
-      const x2Span = document.querySelector('.x2-span');
-      const xSpan = document.querySelector('.x-span');
-
-      const xCoefIsNegative = inputXCoef < 0;
-      const cIsNegative = inputC < 0;
-
-      if (inputX2Element) {
-        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
-        inputX2Element.style.background = 'transparent';
-        inputX2Element.style.border = 'none';
-        inputX2Element.style.color = '#eee';
-        inputX2Element.style.transform = 'translateX(60px)';
-      }
-
-      if (x2Span) {
-        x2Span.style.transition = 'transform 0.8s ease-in-out';
-        x2Span.style.transform = 'translateX(40px)';
-      }
-
-      if (inputXCoefElement) {
-        inputXCoefElement.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
-        inputXCoefElement.style.background = 'transparent';
-        inputXCoefElement.style.border = 'none';
-        inputXCoefElement.style.color = '#eee';
-        inputXCoefElement.style.transform = 'translateX(10px)';
-      }
-
-      if (xCoefIsNegative && signBeforeX) {
-        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeX.style.opacity = '0';
-        signBeforeX.style.transform = 'scale(0)';
-      } else if (signBeforeX) {
-        signBeforeX.style.transition = 'transform 0.8s ease-in-out';
-        signBeforeX.style.transform = 'translateX(40px)';
-      }
-
-      if (xSpan) {
-        xSpan.style.transition = 'transform 0.8s ease-in-out';
-        xSpan.style.transform = 'translateX(-20px)';
-      }
-
-      if (inputCElement) {
-        inputCElement.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
-        inputCElement.style.background = 'transparent';
-        inputCElement.style.border = 'none';
-        inputCElement.style.color = '#eee';
-        inputCElement.style.transform = 'translateX(-40px)';
-      }
-
-      if (cIsNegative && signBeforeC) {
-        signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeC.style.opacity = '0';
-        signBeforeC.style.transform = 'scale(0)';
-      } else if (signBeforeC) {
-        signBeforeC.style.transition = 'transform 0.8s ease-in-out';
-        signBeforeC.style.transform = 'translateX(-20px)';
-      }
-    }
-
-    function showZeroXAnimation() {
-      const signBeforeX = document.querySelector('.sign-before-x');
-      const inputXCoef = document.getElementById('inputXCoef');
-      const inputC = document.getElementById('inputC');
-      const signBeforeC = document.querySelector('.sign-before-c');
-      const xSpan = document.querySelector('.x-span');
-      const inputX2Element = document.getElementById('inputX2');
-      const inputCValue = parseInt(inputC.value);
-
-      if (inputXCoef) {
-        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s';
-        inputXCoef.style.opacity = '0';
-        inputXCoef.style.transform = 'scale(0)';
-      }
-
-      if (xSpan) {
-        xSpan.style.transition = 'opacity 0.8s, transform 0.8s';
-        xSpan.style.opacity = '0';
-        xSpan.style.transform = 'scale(0)';
-      }
-
-      if (signBeforeX) {
-        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeX.style.opacity = '0';
-        signBeforeX.style.transform = 'scale(0)';
-      }
-
-      if (inputC) {
-        inputC.style.transition = 'transform 0.8s ease-in-out, background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out';
-        inputC.style.transform = 'translateX(-10px)';
-        inputC.style.background = 'transparent';
-        inputC.style.border = 'none';
-        inputC.style.color = '#eee';
-      }
-
-      if (signBeforeC) {
-        signBeforeC.style.transition = 'transform 0.8s ease-in-out, opacity 0.8s ease-in-out';
-
-        if (inputCValue < 0) {
-          signBeforeC.style.opacity = '0';
-          signBeforeC.style.transform = 'scale(0)';
-        } else {
-          signBeforeC.style.transform = 'translateX(-10px)';
-        }
-      }
-
-      if (inputX2Element) {
-        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
-        inputX2Element.style.background = 'transparent';
-        inputX2Element.style.border = 'none';
-        inputX2Element.style.color = '#eee';
-        inputX2Element.style.transform = 'translateX(5px)';
-      }
-    }
-
-    function showCoefficientOneAnimation(inputXCoefValue, inputCValue) {
-      const signBeforeX = document.querySelector('.sign-before-x');
-      const signBeforeC = document.querySelector('.sign-before-c');
-      const inputXCoef = document.getElementById('inputXCoef');
-      const inputC = document.getElementById('inputC');
-      const xSpan = document.querySelector('.x-span');
-      const inputX2Element = document.getElementById('inputX2');
-
-      if (inputXCoef) {
-        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s, width 0.8s';
-        inputXCoef.style.opacity = '0';
-        inputXCoef.style.transform = 'scale(0)';
-        inputXCoef.style.width = '0';
-      }
-
-      if (inputXCoefValue === 1) {
-        if (signBeforeX) {
-          signBeforeX.style.transition = 'transform 0.8s ease-in-out';
-          signBeforeX.style.transform = 'translateX(-8px)';
-        }
-
-        if (xSpan) {
-          xSpan.style.transition = 'transform 0.8s ease-in-out';
-          xSpan.style.transform = 'translateX(-10px)';
-        }
-
-        if (inputC) {
-          inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-          inputC.style.background = 'transparent';
-          inputC.style.border = 'none';
-          inputC.style.color = '#eee';
-          inputC.style.transform = 'translateX(-10px)';
-        }
-
-        if (signBeforeC) {
-          if (inputCValue < 0) {
-            signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
-            signBeforeC.style.opacity = '0';
-            signBeforeC.style.transform = 'scale(0)';
-          } else {
-            signBeforeC.style.transition = 'transform 0.8s ease-in-out';
-            signBeforeC.style.transform = 'translateX(-10px)';
-          }
-        }
-      } else {
-        if (signBeforeX) {
-          signBeforeX.style.transition = 'transform 0.8s ease-in-out';
-          signBeforeX.textContent = '-';
-          signBeforeX.style.color = '#eee';
-          signBeforeX.style.transform = 'translateX(-8px)';
-        }
-
-        if (xSpan) {
-          xSpan.style.transition = 'transform 0.8s ease-in-out';
-          xSpan.style.transform = 'translateX(-10px)';
-        }
-
-        if (inputC) {
-          inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-          inputC.style.background = 'transparent';
-          inputC.style.border = 'none';
-          inputC.style.color = '#eee';
-          inputC.style.transform = 'translateX(-10px)';
-        }
-
-        if (signBeforeC) {
-          if (inputCValue < 0) {
-            signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
-            signBeforeC.style.opacity = '0';
-            signBeforeC.style.transform = 'scale(0)';
-          } else {
-            signBeforeC.style.transition = 'transform 0.8s ease-in-out';
-            signBeforeC.style.transform = 'translateX(-10px)';
-          }
-        }
-      }
-
-      if (inputX2Element) {
-        inputX2Element.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-        inputX2Element.style.background = 'transparent';
-        inputX2Element.style.border = 'none';
-        inputX2Element.style.color = '#eee';
-        inputX2Element.style.transform = 'translateX(5px)';
-      }
-    }
-
-    function showSignCleanupAnimation(inputXCoefValue, inputCValue) {
-      const signBeforeX = document.querySelector('.sign-before-x');
-      const signBeforeC = document.querySelector('.sign-before-c');
-      const inputXCoef = document.getElementById('inputXCoef');
-      const inputC = document.getElementById('inputC');
-      const xSpan = document.querySelector('.x-span');
-      const inputX2Element = document.getElementById('inputX2');
-      const x2Span = document.querySelector('.x2-span');
-
-      const xCoefIsNegative = inputXCoefValue < 0;
-      const cIsNegative = inputCValue < 0;
-
-      if (inputX2Element) {
-        inputX2Element.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-        inputX2Element.style.background = 'transparent';
-        inputX2Element.style.border = 'none';
-        inputX2Element.style.color = '#eee';
-        inputX2Element.style.transform = 'translateX(40px)';
-      }
-
-      if (x2Span) {
-        x2Span.style.transition = 'transform 0.8s ease-in-out';
-        x2Span.style.transform = 'translateX(40px)';
-      }
-
-      if (inputXCoef) {
-        inputXCoef.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-        inputXCoef.style.background = 'transparent';
-        inputXCoef.style.border = 'none';
-        inputXCoef.style.color = '#eee';
-        inputXCoef.style.transform = 'translateX(20px)';
-      }
-
-      if (xCoefIsNegative && signBeforeX) {
-        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeX.style.opacity = '0';
-        signBeforeX.style.transform = 'scale(0)';
-      } else if (signBeforeX) {
-        signBeforeX.style.transition = 'transform 0.8s ease-in-out';
-        signBeforeX.style.transform = 'translateX(40px)';
-      }
-
-      if (xSpan) {
-        xSpan.style.transition = 'transform 0.8s ease-in-out';
-        xSpan.style.transform = 'translateX(-20px)';
-      }
-
-      if (inputC) {
-        inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
-        inputC.style.background = 'transparent';
-        inputC.style.border = 'none';
-        inputC.style.color = '#eee';
-        inputC.style.transform = 'translateX(-40px)';
-      }
-
-      if (cIsNegative && signBeforeC) {
-        signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
-        signBeforeC.style.opacity = '0';
-        signBeforeC.style.transform = 'scale(0)';
-      } else if (signBeforeC) {
-        signBeforeC.style.transition = 'transform 0.8s ease-in-out';
-        signBeforeC.style.transform = 'translateX(-30px)';
-      }
+      const signC = row.querySelector('.sign-before-c'), inC = document.getElementById('inputC');
+      signC.textContent = c < 0 ? '−' : '+';
+      if (two && Math.abs(c) === 1) fold(inC); else toText(inC, Math.abs(c));
+      row.classList.add('is-settled');
     }
 
     function checkAnswer(isCorrect, btn) {
@@ -1358,7 +1137,8 @@
       const sid = session;
       isProcessingAnswer = true;
 
-      const buttons = document.querySelectorAll('.choice-btn, .submit-btn, .input-field');
+      // 【ブラッシュアップ】まちがえたときは入力欄を止めない（スマホのキーボードが閉じないように）
+      const buttons = document.querySelectorAll(isCorrect ? '.choice-btn, .submit-btn, .input-field' : '.choice-btn, .submit-btn');
       buttons.forEach(b => b.disabled = true);
 
       const hero = document.querySelector('.hero');
@@ -1366,6 +1146,7 @@
       const battleArea = document.getElementById('battleArea');
 
       if (isCorrect) {
+        if (btn && btn.classList.contains('choice-btn')) btn.classList.add('is-correct');   // 【ブラッシュアップ】正解の選択肢に色
         hero.classList.add('attack');
 
         setTimeout(() => {
@@ -1390,6 +1171,11 @@
           }, 1000);
         }, 500);
       } else {
+        // 【ブラッシュアップ】まちがえたら、1 回目はヒント（公式）、2 回目は解説（途中式）。まちがえた選択肢は押せないまま
+        missCount++; missTotal++;
+        if (btn && btn.classList.contains('choice-btn')) btn.classList.add('is-wrong');
+        showXp(explainHtml(missCount >= 2), missCount >= 2 ? 'full' : 'hint');
+
         enemyChar.classList.add('damaged');
 
         const bubble = document.createElement('div');
@@ -1401,10 +1187,10 @@
           enemyChar.classList.remove('damaged');
           bubble.remove();
           buttons.forEach(b => {
-            b.disabled = false;
+            if (!b.classList.contains('is-wrong')) b.disabled = false;
           });
           isProcessingAnswer = false;
-        }, 1500);
+        }, 900);   // 【ブラッシュアップ】元は 1.5 秒待たされた
       }
     }
 
@@ -1412,7 +1198,9 @@
       document.getElementById('battleScreen').classList.remove('active');
       document.getElementById('victoryScreen').classList.add('active');
       document.getElementById('victoryMessage').textContent = config.victory_message || defaultConfig.victory_message;
-      document.getElementById('nextModeBtn').style.display = lastMode < 5 ? '' : 'none';
+      document.getElementById('nextModeBtn').style.display = lastMode < 6 ? '' : 'none';
+      document.body.classList.remove('in-battle');
+      document.getElementById('victoryMiss').textContent = missTotal === 0 ? 'ノーミス！すばらしい！' : 'まちがい ' + missTotal + ' 回';
     }
 
     // 【ブラッシュアップ】同じ答え方（4択・穴埋め）のまま、モードを選んで始める
@@ -1426,6 +1214,7 @@
 
     function backToMenu() {
       session++;
+      document.body.classList.remove('in-battle');
       document.getElementById('battleScreen').classList.remove('active');
       document.getElementById('victoryScreen').classList.remove('active');
       document.getElementById('modeSelection').style.display = 'flex';
@@ -1466,9 +1255,12 @@
   PortTheme.map({
     ".title": "u-title",
     ".mode-btn": "u-choice",
-    ".type-btn": "u-btn u-btn-blue",
+    ".type-btn:not(.back)": "u-btn u-btn-blue",
+    ".type-btn.back": "u-btn u-btn-plain",
     ".battle-screen": "u-card",
     ".choice-btn": "u-choice",
+    ".choice-btn.is-correct": "u-ok",
+    ".choice-btn.is-wrong": "u-ng",
     ".input-field": "u-input",
     ".submit-btn": "u-btn",
     ".back-btn": "u-btn u-btn-plain",

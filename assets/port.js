@@ -146,8 +146,10 @@
       Object.keys(rules).forEach(function (sel) {
         var v = rules[sel];
         var cls = String(v).split(/\s+/).filter(Boolean);
-        // 「.a.b」のように状態を表すクラスが 2 つ以上重なった指定は、状態として扱う
-        var state = /\.[\w-]+\.[\w-]+|:/.test(sel);
+        // どの指定も「状態」として扱う：元の部品がその指定に当てはまらなくなったら、付けたクラスを外す
+        // （以前は「.a.b」や「:」をふくむ指定だけだったため、[id^="option"].bg-green-100 のような指定では
+        //   色が次の問題まで残っていた。ほかの指定でも必要なクラスは残すので、外しすぎることはない）
+        var state = true;
         themeRules.push({ sel: sel, cls: cls, state: state, els: new Set() });
       });
       var start = function () {

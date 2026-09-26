@@ -59,6 +59,7 @@
     #done-screen .nav { display: flex; flex-direction: column; gap: 14px; width: min(26rem, 90%); }
     #done-screen .nav a { color: #888; font-weight: bold; text-align: center; }
     .order-note { font-size: 18px; color: #F57C00; min-height: 1.2em; margin-bottom: 6px; }
+    #next-btn { margin-top: 14px; padding: 14px 48px; font-size: 24px; }
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
     @media (max-width: 640px) {
@@ -71,13 +72,15 @@
       #progress-container { width: 100%; }
       #feedback { font-size: min(34px, 9vw); height: 44px; }
       #q-area { padding: 18px 8px; width: 100%; box-sizing: border-box; margin-bottom: 14px; }
-      #q-text { font-size: min(40px, 10.5vw); }
+      #q-text { font-size: min(40px, 9.5vw); }
       #choice-ui { width: 100%; gap: 10px; }
-      .choice-btn { font-size: min(26px, 7vw); padding: 18px 6px; }
+      .choice-btn { font-size: min(26px, 6.2vw); padding: 18px 6px; }
       #connect-ui { width: 100% !important; }
       .ans-chip { font-size: 24px; padding: 6px 12px; }
       .tile { font-size: 24px; padding: 8px 14px; }
       .judge-btn { font-size: 24px; padding: 14px 40px; }
+      .xp { width: 100%; font-size: 16px; }
+      body.u-theme .xp-steps { font-size: 20px; }
     }
   </style>
     <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
@@ -97,6 +100,15 @@
     .order-note { color: var(--u-accent-text); font-weight: 700; }
     #done-screen h2 { color: var(--u-accent-text) !important; white-space: nowrap; }
     #done-screen .done-msg { color: var(--u-ink); font-weight: 700; }
+    /* 【ブラッシュアップ】数式は教科書と同じ書体：文字は斜体、数字は立体（選択肢・タイルも同じ書体に） */
+    body.u-theme .math-font, body.u-theme .xp-steps { font-family: var(--u-math-font) !important; font-style: normal; font-weight: 400 !important; }
+    body.u-theme .math-font i, .xp i { font-style: italic; }
+    .xp { width: 90%; box-sizing: border-box; border-radius: 18px; padding: 10px 16px; margin-top: 14px; font-size: 18px; line-height: 1.7; text-align: left; }
+    .xp:empty { display: none; }
+    .xp-hint { background: var(--u-soft-blue); color: var(--u-title-dark); border: 2px solid var(--u-soft-blue-line); }
+    .xp-full { background: #f8fafc; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    body.u-theme .xp-steps { font-size: 24px; color: var(--u-math); font-weight: 700 !important; margin-top: 4px; }
+    .btn-group .mode-btn small { display: block; font-size: 14px; font-weight: 700; opacity: .85; margin-top: 2px; }
   
     </style>
 </head>
@@ -106,8 +118,9 @@
     <div id="menu-screen" class="screen active">
       <h1 style="font-size:50px; color:var(--pop-orange);">展開マスター</h1>
       <div class="btn-group">
-        <button class="mode-btn selected" onclick="sel('level', 1, this)">レベル1 (10問)</button>
-        <button class="mode-btn" onclick="sel('level', 2, this)">レベル2 (5問)</button>
+        <button class="mode-btn selected" onclick="sel('level', 1, this)">レベル1 (10問)<small>数×多項式</small></button>
+        <button class="mode-btn" onclick="sel('level', 2, this)">レベル2 (8問)<small>かっこ×かっこ</small></button>
+        <button class="mode-btn" onclick="sel('level', 3, this)">レベル3 (8問)<small>係数・3項・2文字</small></button>
       </div>
       <div class="btn-group">
         <button class="mode-btn selected" onclick="sel('mode', 'choice', this)">選択式</button>
@@ -122,7 +135,8 @@
       <h2 style="font-size:40px; color:var(--pop-orange); margin:10px 0;">全問クリア！</h2>
       <p class="done-msg">お疲れ様でした。</p>
       <div class="nav">
-        <button class="mode-btn selected" style="font-size:24px; padding:16px;" onclick="startGame()">同じ設定でもう一度</button>
+        <button id="next-level-btn" class="mode-btn selected" style="font-size:24px; padding:16px;" onclick="cfg.level++; syncLevelBtn(); startGame()">次のレベルへ ▶</button>
+        <button class="mode-btn selected" style="font-size:22px; padding:14px;" onclick="startGame()">同じ設定でもう一度</button>
         <button class="mode-btn" style="font-size:20px; padding:14px;" onclick="goHome()">レベル・形式をえらび直す</button>
         <a href="../remake.html">ほかの教材をえらぶ</a>
       </div>
@@ -143,32 +157,89 @@
         <div id="tile-tray" class="tile-tray math-font"></div>
         <button class="judge-btn" onclick="judgeConnect()">できた！</button>
       </div>
+      <div id="xp" class="xp"></div>
+      <button id="next-btn" style="display:none;" onclick="next()">次の問題へ ▶</button>
     </div>
   </div>
 <script>
+// 問題データ： q 問題、a 答え、o まちがいの選択肢、c つなげるの正解の並び、p つなげるのタイル、
+//             e 途中式（q = e[0] = e[1] = … の右辺）
 const level1Data = [
-  { q: "4(x + 3)", a: "4x + 12", o: ["4x + 3", "4x + 7", "x + 12"], c: ["4x", "+", "12"], p: ["4x", "12", "x", "3", "+", "-"] },
-  { q: "x(x - 7)", a: "x² - 7x", o: ["x² - 7", "2x - 7", "x² + 7x"], c: ["x²", "-", "7x"], p: ["x²", "7x", "x", "7", "+", "-"] },
-  { q: "-2(3x - 5)", a: "-6x + 10", o: ["-6x - 10", "6x + 10", "-6x - 5"], c: ["-6x", "+", "10"], p: ["-6x", "10", "6x", "5", "+", "-"] },
-  { q: "5x(2x + 1)", a: "10x² + 5x", o: ["10x² + 1", "7x² + 5x", "10x + 5x"], c: ["10x²", "+", "5x"], p: ["10x²", "5x", "x²", "1", "+", "-"] },
-  { q: "(x - 4) × (-3x)", a: "-3x² + 12x", o: ["-3x² - 12x", "3x² + 12x", "-3x - 12"], c: ["-3x²", "+", "12x"], p: ["-3x²", "12x", "3x²", "4x", "+", "-"] },
-  { q: "x(2x² - x)", a: "2x³ - x²", o: ["2x³ - x", "2x² - x²", "x³ - x²"], c: ["2x³", "-", "x²"], p: ["2x³", "x²", "x³", "x", "+", "-"] },
-  { q: "3(2x - 4)", a: "6x - 12", o: ["6x - 4", "6x + 12", "5x - 12"], c: ["6x", "-", "12"], p: ["6x", "12", "x", "4", "+", "-"] },
-  { q: "-x(3x + 2)", a: "-3x² - 2x", o: ["-3x² + 2x", "3x² - 2x", "-3x - 2"], c: ["-3x²", "-", "2x"], p: ["-3x²", "2x", "3x²", "x", "+", "-"] },
-  { q: "(x + 6)(x - 6)", a: "x² - 36", o: ["x² + 36", "x² - 12x - 36", "x² - 12"], c: ["x²", "-", "36"], p: ["x²", "36", "12x", "6", "+", "-"] },
-  { q: "2x(x² + 4)", a: "2x³ + 8x", o: ["2x³ + 4", "2x² + 8x", "x³ + 8x"], c: ["2x³", "+", "8x"], p: ["2x³", "8x", "x³", "4x", "+", "-"] }
+  { q: "4(x + 3)", a: "4x + 12", o: ["4x + 3", "4x + 7", "x + 12"], c: ["4x", "+", "12"], p: ["4x", "12", "x", "3", "7", "+", "-"],
+    e: ["4 × x + 4 × 3", "4x + 12"] },
+  { q: "x(x - 7)", a: "x² - 7x", o: ["x² - 7", "2x - 7", "x² + 7x"], c: ["x²", "-", "7x"], p: ["x²", "7x", "x", "7", "2x", "+", "-"],
+    e: ["x × x - x × 7", "x² - 7x"] },
+  { q: "-2(3x - 5)", a: "-6x + 10", o: ["-6x - 10", "6x + 10", "-6x - 5"], c: ["-6x", "+", "10"], p: ["-6x", "10", "6x", "5", "-10", "+", "-"],
+    e: ["(-2) × 3x + (-2) × (-5)", "-6x + 10"] },
+  { q: "5x(2x + 1)", a: "10x² + 5x", o: ["10x² + 1", "7x² + 5x", "10x² + 5"], c: ["10x²", "+", "5x"], p: ["10x²", "5x", "7x²", "10x", "5", "+", "-"],
+    e: ["5x × 2x + 5x × 1", "10x² + 5x"] },
+  { q: "(x - 4) × (-3x)", a: "-3x² + 12x", o: ["-3x² - 12x", "3x² + 12x", "-3x - 12"], c: ["-3x²", "+", "12x"], p: ["-3x²", "12x", "3x²", "4x", "12", "+", "-"],
+    e: ["x × (-3x) - 4 × (-3x)", "-3x² + 12x"] },
+  { q: "x(2x² - x)", a: "2x³ - x²", o: ["2x³ - x", "2x³ - 2x", "x³ - x²"], c: ["2x³", "-", "x²"], p: ["2x³", "x²", "x³", "2x", "x", "+", "-"],
+    e: ["x × 2x² - x × x", "2x³ - x²"] },
+  { q: "3(2x - 4)", a: "6x - 12", o: ["6x - 4", "6x + 12", "5x - 12"], c: ["6x", "-", "12"], p: ["6x", "12", "5x", "4", "x", "+", "-"],
+    e: ["3 × 2x - 3 × 4", "6x - 12"] },
+  { q: "-x(3x + 2)", a: "-3x² - 2x", o: ["-3x² + 2x", "3x² - 2x", "-3x - 2"], c: ["-3x²", "-", "2x"], p: ["-3x²", "2x", "3x²", "-3x", "2", "+", "-"],
+    e: ["(-x) × 3x + (-x) × 2", "-3x² - 2x"] },
+  { q: "-2x(x² - 3x + 1)", a: "-2x³ + 6x² - 2x", o: ["-2x³ - 6x² - 2x", "-2x³ + 6x² + 1", "2x³ - 6x² + 2x"], c: ["-2x³", "+", "6x²", "-", "2x"], p: ["-2x³", "6x²", "2x", "2x³", "5x²", "1", "+", "-"],
+    e: ["(-2x) × x² + (-2x) × (-3x) + (-2x) × 1", "-2x³ + 6x² - 2x"] },
+  { q: "2x(x² + 4)", a: "2x³ + 8x", o: ["2x³ + 4", "2x² + 8x", "x³ + 8x"], c: ["2x³", "+", "8x"], p: ["2x³", "8x", "2x²", "4", "x³", "+", "-"],
+    e: ["2x × x² + 2x × 4", "2x³ + 8x"] }
 ];
 
+// 【ブラッシュアップ】新しいレベル2：かっこ×かっこの基本
 const level2Data = [
-  { q: "(2x + 3)(3x + 1)", a: "6x² + 11x + 3", o: ["6x² + 9x + 3", "5x² + 11x + 3", "6x² + 11x + 4"], c: ["6x²", "+", "11x", "+", "3"], p: ["6x²", "11x", "3", "5x²", "9x", "+", "-"] },
-  { q: "(3x - 2)(2x + 4)", a: "6x² + 8x - 8", o: ["6x² - 8x - 8", "6x² + 16x - 8", "5x² + 8x - 8"], c: ["6x²", "+", "8x", "-", "8"], p: ["6x²", "8x", "8", "16x", "x²", "+", "-"] },
-  { q: "(4x - 1)(2x - 3)", a: "8x² - 14x + 3", o: ["8x² + 14x + 3", "8x² - 14x - 3", "6x² - 14x + 3"], c: ["8x²", "-", "14x", "+", "3"], p: ["8x²", "14x", "3", "6x²", "12x", "+", "-"] },
-  { q: "(2x + 5)(5x - 2)", a: "10x² + 21x - 10", o: ["10x² - 21x - 10", "10x² + 29x - 10", "7x² + 21x - 10"], c: ["10x²", "+", "21x", "-", "10"], p: ["10x²", "21x", "10", "29x", "x²", "+", "-"] },
-  { q: "(3x + 2)(3x - 2)", a: "9x² - 4", o: ["9x² + 4", "9x² - 12x - 4", "6x² - 4"], c: ["9x²", "-", "4"], p: ["9x²", "4", "12x", "x²", "+", "-"] }
+  { q: "(x + 3)(x + 5)", a: "x² + 8x + 15", o: ["x² + 15x + 8", "x² + 8x + 8", "x² + 2x + 15"], c: ["x²", "+", "8x", "+", "15"], p: ["x²", "8x", "15", "15x", "8", "2x", "+", "-"],
+    e: ["x × x + x × 5 + 3 × x + 3 × 5", "x² + 5x + 3x + 15", "x² + 8x + 15"] },
+  { q: "(x - 4)(x + 2)", a: "x² - 2x - 8", o: ["x² + 2x - 8", "x² - 2x + 8", "x² - 6x - 8"], c: ["x²", "-", "2x", "-", "8"], p: ["x²", "2x", "8", "6x", "2", "+", "-"],
+    e: ["x × x + x × 2 - 4 × x - 4 × 2", "x² + 2x - 4x - 8", "x² - 2x - 8"] },
+  { q: "(x - 5)(x - 3)", a: "x² - 8x + 15", o: ["x² - 8x - 15", "x² + 8x + 15", "x² - 2x + 15"], c: ["x²", "-", "8x", "+", "15"], p: ["x²", "8x", "15", "2x", "8", "+", "-"],
+    e: ["x × x - x × 3 - 5 × x + 5 × 3", "x² - 3x - 5x + 15", "x² - 8x + 15"] },
+  { q: "(x + 6)(x - 6)", a: "x² - 36", o: ["x² + 36", "x² - 12x - 36", "x² - 12"], c: ["x²", "-", "36"], p: ["x²", "36", "12x", "12", "6x", "+", "-"],
+    e: ["x × x - x × 6 + 6 × x - 6 × 6", "x² - 6x + 6x - 36", "x² - 36"] },
+  { q: "(a + 2)(b - 3)", a: "ab - 3a + 2b - 6", o: ["ab - 3a - 2b - 6", "ab + 3a + 2b - 6", "ab - a - 6"], c: ["ab", "-", "3a", "+", "2b", "-", "6"], p: ["ab", "3a", "2b", "6", "a", "5", "+", "-"],
+    e: ["a × b - a × 3 + 2 × b - 2 × 3", "ab - 3a + 2b - 6"] },
+  { q: "(x + 4)(y - 1)", a: "xy - x + 4y - 4", o: ["xy + x + 4y - 4", "xy - x + 4y + 4", "xy + 3y - 4"], c: ["xy", "-", "x", "+", "4y", "-", "4"], p: ["xy", "x", "4y", "4", "3y", "y", "+", "-"],
+    e: ["x × y - x × 1 + 4 × y - 4 × 1", "xy - x + 4y - 4"] },
+  { q: "(2x + 1)(x + 3)", a: "2x² + 7x + 3", o: ["2x² + 4x + 3", "2x² + 6x + 3", "3x² + 7x + 3"], c: ["2x²", "+", "7x", "+", "3"], p: ["2x²", "7x", "3", "3x²", "6x", "4x", "+", "-"],
+    e: ["2x × x + 2x × 3 + 1 × x + 1 × 3", "2x² + 6x + x + 3", "2x² + 7x + 3"] },
+  { q: "(3x - 1)(x - 2)", a: "3x² - 7x + 2", o: ["3x² - 5x + 2", "3x² - 7x - 2", "3x² - 3x + 2"], c: ["3x²", "-", "7x", "+", "2"], p: ["3x²", "7x", "2", "5x", "6x", "3x", "+", "-"],
+    e: ["3x × x - 3x × 2 - 1 × x + 1 × 2", "3x² - 6x - x + 2", "3x² - 7x + 2"] }
 ];
+
+// 元のレベル2（→ レベル3）に 3 問足した
+const level3Data = [
+  { q: "(2x + 3)(3x + 1)", a: "6x² + 11x + 3", o: ["6x² + 9x + 3", "5x² + 11x + 3", "6x² + 11x + 4"], c: ["6x²", "+", "11x", "+", "3"], p: ["6x²", "11x", "3", "5x²", "9x", "2x", "+", "-"],
+    e: ["2x × 3x + 2x × 1 + 3 × 3x + 3 × 1", "6x² + 2x + 9x + 3", "6x² + 11x + 3"] },
+  { q: "(3x - 2)(2x + 4)", a: "6x² + 8x - 8", o: ["6x² - 8x - 8", "6x² + 16x - 8", "5x² + 8x - 8"], c: ["6x²", "+", "8x", "-", "8"], p: ["6x²", "8x", "8", "16x", "5x²", "12x", "+", "-"],
+    e: ["3x × 2x + 3x × 4 - 2 × 2x - 2 × 4", "6x² + 12x - 4x - 8", "6x² + 8x - 8"] },
+  { q: "(4x - 1)(2x - 3)", a: "8x² - 14x + 3", o: ["8x² + 14x + 3", "8x² - 14x - 3", "6x² - 14x + 3"], c: ["8x²", "-", "14x", "+", "3"], p: ["8x²", "14x", "3", "6x²", "12x", "10x", "+", "-"],
+    e: ["4x × 2x - 4x × 3 - 1 × 2x + 1 × 3", "8x² - 12x - 2x + 3", "8x² - 14x + 3"] },
+  { q: "(2x + 5)(5x - 2)", a: "10x² + 21x - 10", o: ["10x² - 21x - 10", "10x² + 29x - 10", "7x² + 21x - 10"], c: ["10x²", "+", "21x", "-", "10"], p: ["10x²", "21x", "10", "29x", "7x²", "4x", "+", "-"],
+    e: ["2x × 5x - 2x × 2 + 5 × 5x - 5 × 2", "10x² - 4x + 25x - 10", "10x² + 21x - 10"] },
+  { q: "(3x + 2)(3x - 2)", a: "9x² - 4", o: ["9x² + 4", "9x² - 12x - 4", "6x² - 4"], c: ["9x²", "-", "4"], p: ["9x²", "4", "12x", "6x²", "2", "+", "-"],
+    e: ["3x × 3x - 3x × 2 + 2 × 3x - 2 × 2", "9x² - 6x + 6x - 4", "9x² - 4"] },
+  { q: "(x + 2)(x² - x + 3)", a: "x³ + x² + x + 6", o: ["x³ - x² + x + 6", "x³ + x² + 5x + 6", "x³ + x² + x + 5"], c: ["x³", "+", "x²", "+", "x", "+", "6"], p: ["x³", "x²", "x", "6", "3x", "5x", "+", "-"],
+    e: ["x × x² - x × x + x × 3 + 2 × x² - 2 × x + 2 × 3", "x³ - x² + 3x + 2x² - 2x + 6", "x³ + x² + x + 6"] },
+  { q: "(2x - y)(x + 3y)", a: "2x² + 5xy - 3y²", o: ["2x² + 7xy - 3y²", "2x² + 5xy + 3y²", "2x² - 5xy - 3y²"], c: ["2x²", "+", "5xy", "-", "3y²"], p: ["2x²", "5xy", "3y²", "7xy", "xy", "y²", "+", "-"],
+    e: ["2x × x + 2x × 3y - y × x - y × 3y", "2x² + 6xy - xy - 3y²", "2x² + 5xy - 3y²"] },
+  { q: "(4x - 3)(2x + 5)", a: "8x² + 14x - 15", o: ["8x² + 26x - 15", "8x² + 14x + 15", "8x² - 14x - 15"], c: ["8x²", "+", "14x", "-", "15"], p: ["8x²", "14x", "15", "26x", "6x", "20x", "+", "-"],
+    e: ["4x × 2x + 4x × 5 - 3 × 2x - 3 × 5", "8x² + 20x - 6x - 15", "8x² + 14x - 15"] }
+];
+const LEVELS = { 1: level1Data, 2: level2Data, 3: level3Data };
+const HINTS = {
+  1: 'かっこの外の項を、かっこの中の<b>それぞれの項</b>にかける（分配法則）。符号もいっしょにかけよう。',
+  2: '前のかっこの<b>それぞれの項</b>を、後ろのかっこの<b>それぞれの項</b>に 1 つずつかけて、同類項をまとめる。',
+  3: '前のかっこの<b>それぞれの項</b>を、後ろのかっこの<b>それぞれの項</b>に 1 つずつかけて、同類項をまとめる。'
+};
 
 let cfg = { level: 1, mode: 'choice' };
-let state = { index: 0, questions: [], current: null, user: [] };
+let state = { index: 0, questions: [], current: null, user: [], solved: false, miss: 0, missTotal: 0 };
+
+// 数式の表示：文字は斜体、数字は立体、マイナスは「−」
+function fmt(s) {
+  return String(s).replace(/-/g, '−').replace(/[a-z]/g, '<i>$&</i>');
+}
 
 function sel(type, val, btn) {
   cfg[type] = val;
@@ -183,11 +254,13 @@ function goHome() {
 }
 
 function startGame() {
-  const data = cfg.level === 1 ? [...level1Data] : [...level2Data];
+  const data = [...LEVELS[cfg.level]];
   // 問題をシャッフル
-  state.questions = data.sort(() => Math.random() - 0.5);
+  for (let i = data.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [data[i], data[j]] = [data[j], data[i]]; }
+  state.questions = data;
   state.index = 0;
-  
+  state.missTotal = 0;
+
   document.getElementById('done-screen').classList.remove('active');
   document.getElementById('menu-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
@@ -195,13 +268,15 @@ function startGame() {
 }
 
 function next() {
-  const max = cfg.level === 1 ? 10 : 5;
+  const max = state.questions.length;
 
-  if(state.index >= max) {
+  if (state.index >= max) {
     document.getElementById('game-screen').classList.remove('active');
     document.getElementById('done-screen').classList.add('active');
     document.querySelector('#done-screen .done-msg').textContent =
-      `レベル${cfg.level}（${cfg.mode === 'choice' ? '選択式' : 'つなげる'}）をクリア！お疲れ様でした。`;
+      `レベル${cfg.level}（${cfg.mode === 'choice' ? '選択式' : 'つなげる'}）をクリア！` +
+      (state.missTotal === 0 ? 'ノーミス！すばらしい！' : `（まちがい ${state.missTotal} 回）`);
+    document.getElementById('next-level-btn').style.display = cfg.level < 3 ? '' : 'none';
     return;
   }
 
@@ -211,15 +286,18 @@ function next() {
 
   state.current = state.questions[state.index];
   state.index++;
-  
-  document.getElementById('q-text').innerText = state.current.q;
+
+  document.getElementById('q-text').innerHTML = fmt(state.current.q);
   document.getElementById('feedback').innerText = "";
   document.getElementById('order-note').textContent = "";
   document.getElementById('game-screen').classList.remove('locked');
+  showXp('');
+  document.getElementById('next-btn').style.display = 'none';
   state.solved = false;
+  state.miss = 0;
   state.user = [];
 
-  if(cfg.mode === 'choice') {
+  if (cfg.mode === 'choice') {
     renderChoice();
   } else {
     renderConnect();
@@ -235,8 +313,9 @@ function renderChoice() {
   choices.forEach(txt => {
     const b = document.createElement('button');
     b.className = "choice-btn math-font";
-    b.innerText = txt;
-    b.onclick = () => { if(txt === state.current.a) ok(); else { b.disabled = true; fail(); } };
+    b.innerHTML = fmt(txt);
+    // まちがえたボタンは押せないまま。正解のボタンには色をつける
+    b.onclick = () => { if (txt === state.current.a) { b.classList.add('is-correct'); ok(); } else { b.disabled = true; fail(); } };
     ui.appendChild(b);
   });
 }
@@ -247,16 +326,16 @@ function renderConnect() {
   updateAns();
   const tray = document.getElementById('tile-tray');
   tray.innerHTML = "";
-  const sorted = [...new Set(state.current.p)].sort((a,b) => {
-     const score = (s) => s.includes('³') ? 40 : s.includes('²') ? 30 : s.includes('x') ? 20 : (s==='+'||s==='-') ? 0 : 10;
+  const sorted = [...new Set(state.current.p)].sort((a, b) => {
+     const score = (s) => s.includes('³') ? 40 : s.includes('²') ? 30 : /[a-z]/.test(s) ? 20 : (s === '+' || s === '-') ? 0 : 10;
      const diff = score(b) - score(a);
      return diff !== 0 ? diff : a.localeCompare(b);
   });
   sorted.forEach(v => {
     const t = document.createElement('div');
     t.className = "tile";
-    t.innerText = v;
-    t.onclick = () => { state.user.push(v); updateAns(); };
+    t.innerHTML = fmt(v);
+    t.onclick = () => { if (!state.solved) { state.user.push(v); updateAns(); } };
     tray.appendChild(t);
   });
 }
@@ -267,20 +346,19 @@ function updateAns() {
   state.user.forEach((v, i) => {
     const c = document.createElement('div');
     c.className = "ans-chip";
-    c.innerText = v;
-    c.onclick = () => { state.user.splice(i, 1); updateAns(); };
+    c.innerHTML = fmt(v);
+    c.onclick = () => { if (!state.solved) { state.user.splice(i, 1); updateAns(); } };
     zone.appendChild(c);
   });
 }
 
-// 【ブラッシュアップ】項の順番がちがっても正解にする。
-//   元はパーツの並びまで同じでないと不正解で、「12 + 4x」のように入れかえると正しいのに不正解だった。
-//   符号つきの項に分けて比べる。並びが教科書どおりでないときは、正解にしたうえでひとこと出す。
+// 項の順番がちがっても正解にする（符号つきの項に分けて比べる）。先頭の「+」は式の書き方としてまちがい
 function signedTerms(chips) {
   const terms = [];
   let sign = '+', expectTerm = true;
   for (const c of chips) {
     if (c === '+' || c === '-') {
+      if (terms.length === 0 && c === '+') return null;   // 先頭に「+」は書かない
       if (!expectTerm || terms.length === 0) { sign = c; expectTerm = true; continue; }
       return null;                     // 符号が続いた
     }
@@ -296,36 +374,68 @@ function signedTerms(chips) {
 
 function judgeConnect() {
   if (state.solved) return;
+  if (!state.user.length) { const f = document.getElementById('feedback'); f.innerText = 'タイルをえらんで式を作ろう'; f.style.color = '#999'; return; }
   if (state.user.join("") === state.current.c.join("")) { ok(); return; }
   const mine = signedTerms(state.user), want = signedTerms(state.current.c);
   if (mine && want && mine.length === want.length &&
       [...mine].sort().join('|') === [...want].sort().join('|')) {
-    document.getElementById('order-note').textContent = '正解！ ふつうは次数の高い順（' + state.current.a + '）に書くよ';
+    document.getElementById('order-note').innerHTML = '正解！ ふつうは ' + fmt(state.current.a) + ' の順に書くよ（次数の高い順）';
     ok();
     return;
   }
   fail();
 }
 
+// ヒント・解説
+function showXp(html, kind) {
+  const x = document.getElementById('xp');
+  x.className = 'xp' + (kind ? ' xp-' + kind : '');
+  x.innerHTML = html;
+  if (html) requestAnimationFrame(() => x.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));   // 画面の外に出ないように
+}
+function explHtml() {
+  const q = state.current;
+  return '<b>解説</b><div class="xp-steps">' + fmt(q.q) + q.e.map(s => '<br>= ' + fmt(s)).join('') + '</div>';
+}
+function hintHtml() {
+  const q = state.current;
+  return '<b>💡 ヒント</b><div>' + HINTS[cfg.level] + '</div><div class="xp-steps">' + fmt(q.q) + '<br>= ' + fmt(q.e[0]) + '</div>';
+}
+
 function ok() {
-  // 【ブラッシュアップ】元は正解のボタンを続けて押すと next() が 2 回呼ばれ、1 問とばしていた
+  // 正解のボタンを続けて押しても 1 問とばさない
   if (state.solved) return;
   state.solved = true;
   document.getElementById('game-screen').classList.add('locked');
   const f = document.getElementById('feedback');
   f.innerText = "🌸 正解！！ 🌸";
   f.style.color = "#4CAF50";
-  const max = cfg.level === 1 ? 10 : 5;
+  const max = state.questions.length;
   document.getElementById('progress-bar-fill').style.width = (state.index / max) * 100 + "%";
-  setTimeout(next, 1200);
+  if (state.miss === 0) {
+    setTimeout(next, 1200);          // 1 回で正解：元どおり自動で次へ
+  } else {
+    showXp(explHtml(), 'full');      // まちがえたあと：解説を見てから自分で次へ
+    document.getElementById('next-btn').style.display = '';
+  }
 }
 
 function fail() {
+  state.miss++; state.missTotal++;
   const f = document.getElementById('feedback');
   f.innerText = "❌ ちがうよ！";
   f.style.color = "#F44336";
-  setTimeout(() => f.innerText = "", 1000);
+  setTimeout(() => { if (!state.solved) f.innerText = ""; }, 1000);
+  if (state.miss >= 2) showXp(explHtml(), 'full');
+  else showXp(hintHtml(), 'hint');
 }
+</script>
+<script>
+  // 【ブラッシュアップ】メニューのレベルのボタンの選択を cfg.level にそろえる
+  function syncLevelBtn() {
+    const bs = document.querySelectorAll('#menu-screen .btn-group:first-of-type .mode-btn');
+    bs.forEach((b, i) => b.classList.toggle('selected', i + 1 === cfg.level));
+  }
 </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
@@ -340,8 +450,10 @@ function fail() {
     "#home-btn": "u-btn u-btn-plain",
     "#progress-bar-bg": "u-progress",
     ".choice-btn": "u-choice",
+    ".choice-btn.is-correct": "u-ok",
     ".choice-btn:disabled": "u-ng",
-    ".judge-btn": "u-btn"
+    ".judge-btn": "u-btn",
+    "#next-btn": "u-btn u-btn-blue"
   });
 </script>
 </body>

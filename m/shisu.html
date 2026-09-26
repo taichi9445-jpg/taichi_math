@@ -58,6 +58,12 @@
         .done-box p { font-size: 1.3rem; margin: 0 0 10px; }
         .done-box a { color: #666; font-weight: bold; }
         .port-back { max-width: 1050px; width: 95vw; }
+        /* 【ブラッシュアップ】長い式は小さめに。フィードバックは 1 行に収まらないとき折り返す */
+        .txt-q.long { font-size: 2.8rem; }
+        .feedback { height: auto; min-height: 3rem; font-size: 1.8rem; }
+        .lv-menu { grid-template-columns: 1fr 1fr; }
+        .btn-p.sup sup { top: -0.3em; font-size: .8em; }
+        .p-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; width: 100%; }
 
         /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
         @media (max-width: 640px) {
@@ -65,17 +71,19 @@
             .container { min-height: 0; padding: 14px; border-width: 4px; border-radius: 22px; box-shadow: 6px 6px 0 var(--text); }
             #scrHome h1 { font-size: min(2.2rem, 9vw) !important; white-space: nowrap; margin: 6px 0 0; }
             .lv-menu { gap: 12px; margin-top: 18px; }
-            .btn-main { font-size: 1.3rem; padding: 22px 8px; }
+            .btn-main { font-size: 1.3rem; padding: 18px 8px; }
             #qInfo { font-size: 1.3rem !important; }
             .main-content { grid-template-columns: 1fr; gap: 12px; }
             .box-q { min-height: 150px; padding: 10px 6px; }
             .txt-q { font-size: 3.1rem; }
-            .feedback { font-size: 1.6rem; height: 2.4rem; margin: 6px 0 0; }
+            .txt-q.long { font-size: min(2.2rem, 8.4vw); }
+            .feedback { font-size: 1.4rem; min-height: 2.2rem; margin: 6px 0 0; }
             .choice-list { gap: 10px; }
             .btn-choice { font-size: 2.3rem; padding: 18px 6px; }
             .ans-display { min-height: 88px; font-size: 3rem; }
             .palette { gap: 6px; padding: 10px; }
-            .btn-p { font-size: 1.6rem; padding: 10px 12px; min-width: 56px; }
+            .p-row { gap: 6px; }
+            .btn-p { font-size: 1.6rem; padding: 8px 10px; min-width: 52px; }
             .btn-action { font-size: 1.4rem; padding: 14px; }
             .done-box h2 { font-size: 2rem; }
         }
@@ -95,6 +103,20 @@
     .btn-p.sup { background: #ffe4e6; }
     #qInfo { padding: 4px 16px; font-size: 1.2rem !important; }
     .done-box h2 { color: var(--u-accent-text); }
+    /* 【ブラッシュアップ】数式は教科書と同じ書体：文字は斜体、数字は立体（選択肢・パレットも同じ書体に） */
+    body.u-theme .math { font-family: var(--u-math-font) !important; font-style: normal; font-weight: 400 !important; }
+    body.u-theme .math i, .xp i { font-style: italic; }
+    .xp { border-radius: 18px; padding: 10px 14px; font-size: 1.15rem; line-height: 1.7; text-align: left; margin-top: 10px; }
+    .xp:empty { display: none; }
+    .xp-hint { background: var(--u-soft-blue); color: var(--u-title-dark); border: 2px solid var(--u-soft-blue-line); }
+    .xp-full { background: #f8fafc; color: var(--u-ink); border: 3px dashed var(--u-line); }
+    .xp-steps { font-family: var(--u-math-font); font-size: 1.5rem; color: var(--u-math); font-weight: bold; margin-top: 6px; }
+    .xp-rule { font-size: 1.05rem; }
+    .xp-note { color: var(--u-accent-text); font-weight: 700; }
+    .xp sup { position: static; vertical-align: super; font-size: .65em; top: auto; left: auto; }
+    .q-lead { color: var(--u-title); font-weight: 700; font-size: 1.1rem; margin-bottom: 6px; }
+    .lv-menu .btn-main small { display: block; font-size: .95rem; font-weight: 700; color: var(--u-sub); margin-top: 4px; }
+    .p-lab { font-size: .85rem; font-weight: 700; color: var(--u-sub); width: 2.6em; text-align: left; }
   
     </style>
 </head>
@@ -105,10 +127,13 @@
     <div id="scrHome" class="screen active">
         <h1 style="text-align: center; font-size: 3rem;">指数法則★MASTER</h1>
         <div class="lv-menu">
-            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'choice')">Lv.1 4択</button>
-            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'build')">Lv.1 つなげる</button>
-            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'choice')">Lv.2 4択</button>
-            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'build')">Lv.2 つなげる</button>
+            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'choice')">Lv.1 4択<small>指数法則の基本</small></button>
+            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'build')">Lv.1 組み立てる<small>指数法則の基本</small></button>
+            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'choice')">Lv.2 4択<small>係数つき</small></button>
+            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'build')">Lv.2 組み立てる<small>係数つき</small></button>
+            <!-- 【ブラッシュアップ】Lv.3 を追加 -->
+            <button class="btn-main" onclick="start(3, 'choice')">Lv.3 4択<small>マイナスをふくむ</small></button>
+            <button class="btn-main" onclick="start(3, 'build')">Lv.3 組み立てる<small>マイナスをふくむ</small></button>
         </div>
     </div>
 
@@ -118,6 +143,7 @@
             <div style="font-size:4rem;">🎉</div>
             <h2>全問クリア！</h2>
             <p id="doneMsg"></p>
+            <button id="btnNextLv" class="btn-action" onclick="start(st.lv + 1, st.mode)">次のレベルへ ▶</button>
             <button class="btn-action" onclick="start(st.lv, st.mode)">同じレベルでもう一度</button>
             <button class="btn-main" style="font-size:1.3rem; padding:16px;" onclick="goHome()">レベルをえらび直す</button>
             <a href="../remake.html">ほかの教材をえらぶ</a>
@@ -131,6 +157,7 @@
         </div>
         <div class="main-content">
             <div class="box-q">
+                <div class="q-lead">次の計算をしなさい</div>
                 <div id="qTxt" class="math txt-q"></div>
                 <div id="fb" class="feedback"></div>
             </div>
@@ -139,12 +166,14 @@
                 <div id="modeBuild" style="display:none;">
                     <div id="uAns" class="ans-display math"></div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <button class="btn-hint" onclick="showHint()">💡 答えを見る (3秒)</button>
+                        <!-- 【ブラッシュアップ】元は答えを 3 秒見せるだけだった。使う法則を見せる -->
+                        <button class="btn-hint" onclick="showHint()">💡 ヒント</button>
                         <button onclick="pop()" style="color:red; font-weight:bold; border:none; background:none; cursor:pointer; font-size:1.2rem;">⌫ 1つ消す</button>
                     </div>
                     <div id="palette" class="palette"></div>
                     <button id="btnJudge" class="btn-action" style="margin-top:15px; width:100%;" onclick="judgeBuild()">判定する！</button>
                 </div>
+                <div id="expl" class="xp"></div>
                 <button id="btnNext" class="btn-action btn-next" style="width:100%;" onclick="nextQ()">正解！次へ 🚀</button>
             </div>
         </div>
@@ -152,169 +181,363 @@
 </div>
 
 <script>
-let st = { lv:1, mode:'', cur:0, prob:{}, solved:false };
+// ======================================================================
+// 【ブラッシュアップ】問題の作り方・誤答・判定・解説を作り直した（画面の流れは元のまま）
+//   ・Lv.2 の後半は指数が「2・3・2 乗」で固定だった（12 通りしかなく、(x²)² は「指数をたす」
+//     まちがいでも正解になった）。指数・何乗かを乱数にし、m＝n＝2 のような見分けられない組は出さない。
+//   ・Lv.3（マイナスをふくむ）を追加：(−3a²b)³、3a²b×(−2ab³)、2x×(−3x²)² など。
+//   ・誤答は「指数をたす／かけるの取りちがえ」「係数の累乗忘れ」「符号」などのよくあるまちがいから作る。
+//   ・まちがえたら 1 回目はヒント（使う法則）、2 回目と正解のあとは途中式つきの解説を出す。
+//   ・文字は斜体・数字は立体、マイナスは「−」。文字はアルファベット順（a と b、x と y の組）。
+//   ・同じ回の中で同じ問題を出さない。
+// ======================================================================
+let st = { lv:1, mode:'', cur:0, prob:{}, solved:false, miss:0, missTotal:0, seen:[], choices:[] };
 let uIn = [];
+const $ = id => document.getElementById(id);
+const MODE_NAME = { choice: '4択', build: '組み立てる' };
 
 function goHome() {
-    document.getElementById('scrDone').classList.remove('active');
-    document.getElementById('scrQuiz').classList.remove('active');
-    document.getElementById('scrHome').classList.add('active');
+    $('scrDone').classList.remove('active');
+    $('scrQuiz').classList.remove('active');
+    $('scrHome').classList.add('active');
 }
 
 function start(l, m) {
-    st.lv = l; st.mode = m; st.cur = 0;
-    document.getElementById('scrDone').classList.remove('active');
-    document.getElementById('scrHome').classList.remove('active');
-    document.getElementById('scrQuiz').classList.add('active');
+    st.lv = l; st.mode = m; st.cur = 0; st.missTotal = 0; st.seen = [];
+    $('scrDone').classList.remove('active');
+    $('scrHome').classList.remove('active');
+    $('scrQuiz').classList.add('active');
     nextQ();
 }
 
 function nextQ() {
     if (st.cur >= 5) {
-        document.getElementById('scrQuiz').classList.remove('active');
-        document.getElementById('scrDone').classList.add('active');
-        document.getElementById('doneMsg').textContent = `Lv.${st.lv}（${st.mode === 'choice' ? '4択' : 'つなげる'}）をクリアしたよ！`;
+        $('scrQuiz').classList.remove('active');
+        $('scrDone').classList.add('active');
+        $('doneMsg').textContent = `Lv.${st.lv}（${MODE_NAME[st.mode]}）をクリアしたよ！` +
+            (st.missTotal === 0 ? ' ノーミス！すばらしい！' : `（まちがい ${st.missTotal} 回）`);
+        $('btnNextLv').style.display = st.lv < 3 ? '' : 'none';
         return;
     }
-    st.cur++; st.solved = false; uIn = [];
-    st.prob = getProb(st.lv, st.cur);
-    
-    document.getElementById('qInfo').innerText = `第 ${st.cur} / 5 問`;
-    document.getElementById('qTxt').innerHTML = st.prob.q;
-    document.getElementById('fb').innerText = '';
-    document.getElementById('btnNext').style.display = 'none';
+    st.cur++; st.solved = false; st.miss = 0; uIn = [];
+    let p, guard = 0;
+    do { p = getProb(st.lv, st.cur); } while (st.seen.includes(p.q) && guard++ < 50);
+    st.seen.push(p.q);
+    st.prob = p;
+
+    $('qInfo').innerText = `第 ${st.cur} / 5 問`;
+    $('qTxt').innerHTML = p.q;
+    $('qTxt').classList.toggle('long', $('qTxt').textContent.length > 11);
+    $('fb').innerText = '';
+    showExpl('');
+    $('btnNext').style.display = 'none';
 
     if (st.mode === 'choice') {
-        document.getElementById('modeChoice').style.display = 'grid';
-        document.getElementById('modeBuild').style.display = 'none';
+        $('modeChoice').style.display = 'grid';
+        $('modeBuild').style.display = 'none';
         renderChoices();
     } else {
-        document.getElementById('modeChoice').style.display = 'none';
-        document.getElementById('modeBuild').style.display = 'block';
-        document.getElementById('uAns').innerHTML = '';
-        document.getElementById('btnJudge').style.display = 'block';
+        $('modeChoice').style.display = 'none';
+        $('modeBuild').style.display = 'block';
+        $('uAns').innerHTML = '';
+        $('btnJudge').style.display = 'block';
         renderPalette();
     }
 }
 
-function getProb(lv, step) {
-    const vars = ['x', 'y', 'a', 'b'];
-    const v = vars[Math.floor(Math.random() * 2)];
-    const v2 = vars[Math.floor(Math.random() * 2) + 2];
-    const m = Math.floor(Math.random() * 3) + 2; 
-    const n = Math.floor(Math.random() * 3) + 2;
+// ---------- 単項式のあつかい ----------
+//   単項式 m = { c: 係数, p: { 文字: 指数 } }、問題の因数 f = { c, p, k }（(c・文字^指数)^k。k＝1 はかっこなし）
+const PAIRS = [['a', 'b'], ['x', 'y']];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const F = (c, p, k) => ({ c, p, k: k || 1 });
+const lettersOf = p => Object.keys(p).sort();
+const neg = n => '−' + n;   // マイナスは「−」（U+2212）
 
-    if (lv === 1) {
-        if (step <= 2) return { q:`${v}<sup>${m}</sup>×${v}<sup>${n}</sup>`, a:`${v}^${m+n}`, h:`${v}<sup>${m+n}</sup>`, p:[v, String(m+n)], d:[String(m*n)] };
-        if (step <= 4) return { q:`(${v}<sup>${m}</sup>)<sup>${n}</sup>`, a:`${v}^${m*n}`, h:`${v}<sup>${m*n}</sup>`, p:[v, String(m*n)], d:[String(m+n)] };
-        return { q:`(${v}<sup>${m}</sup>${v2})<sup>${n}</sup>`, a:`${v}^${m*n}${v2}^${n}`, h:`${v}<sup>${m*n}</sup>${v2}<sup>${n}</sup>`, p:[v, String(m*n), v2, String(n)], d:[String(m+n)] };
-    } else {
-        const c1 = Math.floor(Math.random() * 3) + 2;
-        const c2 = Math.floor(Math.random() * 3) + 2;
-        if (step <= 2) return { q:`${c1}${v}<sup>${m}</sup>×${c2}${v}<sup>${n}</sup>`, a:`${c1*c2}${v}^${m+n}`, h:`${c1*c2}${v}<sup>${m+n}</sup>`, p:[String(c1*c2), v, String(m+n)], d:[String(c1+c2)] };
-        return { q:`(${c1}${v}<sup>2</sup>${v2}<sup>3</sup>)<sup>2</sup>`, a:`${c1*c1}${v}^4${v2}^6`, h:`${c1*c1}${v}<sup>4</sup>${v2}<sup>6</sup>`, p:[String(c1*c1), v, '4', v2, '6'], d:[String(c1*2), '5'] };
-    }
+function coefHtml(c) { return c === 1 ? '' : c === -1 ? '−' : c < 0 ? neg(-c) : String(c); }
+function lettersHtml(p) { return lettersOf(p).map(v => `<i>${v}</i>` + (p[v] > 1 ? `<sup>${p[v]}</sup>` : '')).join(''); }
+function monoHtml(m) { return coefHtml(m.c) + lettersHtml(m.p); }
+function monoKey(m) { return m.c + '|' + lettersOf(m.p).map(v => v + m.p[v]).join(','); }
+function factorHtml(f, i) {
+    const core = coefHtml(f.c) + lettersHtml(f.p);
+    if (f.k > 1) return `(${core})<sup>${f.k}</sup>`;
+    return (f.c < 0 && i > 0) ? `(${core})` : core;
 }
+const TIMES = '&nbsp;×&nbsp;';
+function probHtml(fs) { return fs.map(factorHtml).join(TIMES); }
 
-// 【ブラッシュアップ】誤答の作り方
-//   元は「ほかの問題の答え」を誤答にしていたため、文字まで違う選択肢が混ざり、ひと目で正解が分かった。
-//   正解の式の数字を、ひっかけの数（st.prob.d：足すべきところを掛けた数など）や ±1 に入れかえて作る。
-function toHtml(a) { return a.replace(/\^(\d+)/g, '<sup>$1</sup>'); }
-function makeDummies(prob) {
-    const tokens = [...prob.a.matchAll(/\d+/g)];
-    const traps = (prob.d || []).map(Number);
-    const out = [];
-    tokens.forEach(t => {
-        const val = Number(t[0]);
-        [...traps, val + 1, val - 1, val + 2].forEach(nv => {
-            if (nv < 1 || nv === val) return;
-            const cand = prob.a.slice(0, t.index) + nv + prob.a.slice(t.index + t[0].length);
-            if (cand !== prob.a && !out.includes(cand)) out.push(cand);
-        });
+// 計算のきまり。誤答は、このうち 1 つを「よくあるまちがい」に入れかえて作る
+const RULE = {
+    powExp: (e, k) => e * k,                          // (a^m)^n = a^(mn)
+    powCoef: (c, k) => c ** k,                        // 係数も累乗する
+    mulExp: es => es.reduce((s, e) => s + e, 0),      // a^m × a^n = a^(m+n)
+    mulCoef: cs => cs.reduce((s, c) => s * c, 1),
+    flip: false
+};
+function calc(fs, over) {
+    const R = Object.assign({}, RULE, over || {});
+    const coefs = [], exps = {};
+    fs.forEach(f => {
+        coefs.push(f.k > 1 ? R.powCoef(f.c, f.k) : f.c);
+        lettersOf(f.p).forEach(v => (exps[v] = exps[v] || []).push(f.k > 1 ? R.powExp(f.p[v], f.k) : f.p[v]));
     });
-    return out.sort(() => Math.random() - 0.5);
+    const p = {};
+    Object.keys(exps).forEach(v => { p[v] = exps[v].length > 1 ? R.mulExp(exps[v]) : exps[v][0]; });
+    let c = coefs.length > 1 ? R.mulCoef(coefs) : coefs[0];
+    if (R.flip) c = -c;
+    return { c, p };
+}
+function sharedLetter(fs) {
+    const cnt = {};
+    fs.forEach(f => lettersOf(f.p).forEach(v => { cnt[v] = (cnt[v] || 0) + 1; }));
+    return Object.values(cnt).some(n => n > 1);
+}
+function makeTraps(fs) {
+    const out = [];
+    if (fs.some(f => f.k > 1)) out.push({ powExp: (e, k) => e + k });                        // 累乗なのに指数をたした
+    if (sharedLetter(fs)) out.push({ mulExp: es => es.reduce((s, e) => s * e, 1) });         // かけ算なのに指数をかけた
+    if (fs.some(f => f.k > 1 && Math.abs(f.c) > 1)) {
+        out.push({ powCoef: c => c });                                                      // 係数を累乗し忘れた
+        out.push({ powCoef: (c, k) => c * k });                                             // 係数に指数をかけた
+    }
+    if (fs.filter(f => Math.abs(f.c) > 1).length >= 2) out.push({ mulCoef: cs => cs.reduce((s, c) => s + c, 0) }); // 係数をたした
+    if (fs.some(f => f.c < 0)) out.push({ flip: true });                                     // 符号のまちがい
+    if (fs.some(f => f.c < 0 && f.k > 1 && f.k % 2 === 0)) {                                 // 偶数乗：符号は合っていて係数がちがう
+        out.push({ powCoef: (c, k) => Math.abs(c) * k });
+        if (fs.some(f => f.c < -1)) out.push({ powCoef: c => Math.abs(c) });
+    }
+    return out.map(o => calc(fs, o)).filter(m => m.c !== 0);
+}
+// となりの数（指数±1・係数±1）。指数 1 や係数 1 は作らない
+function neighbors(m) {
+    const out = [];
+    lettersOf(m.p).forEach(v => [1, -1, 2].forEach(d => {
+        const e = m.p[v] + d;
+        if (e >= 2) { const p = Object.assign({}, m.p); p[v] = e; out.push({ c: m.c, p }); }
+    }));
+    if (Math.abs(m.c) > 1) [1, -1].forEach(d => { const c = m.c + Math.sign(m.c) * d; if (Math.abs(c) >= 2) out.push({ c, p: m.p }); });
+    return out;
 }
 
+// ---------- 問題 ----------
+function getProb(lv, step) {
+    const [v, w] = pick(PAIRS);
+    const ok22 = (a, b) => !(a === 2 && b === 2);   // 2 と 2 は「たす」でも「かける」でも 4 になり、見分けられない
+    let fs, m, n, k, p, q;
+    if (lv === 1) {
+        if (step === 1) {                                   // a^m × a^n
+            do { m = ri(2, 5); n = ri(2, 5); } while (!ok22(m, n));
+            fs = [F(1, { [v]: m }), F(1, { [v]: n })];
+        } else if (step === 2) {                            // a × a^n、a^m × a^n × a（指数 1 が見えない形）
+            if (Math.random() < 0.5) { fs = shuffle([F(1, { [v]: 1 }), F(1, { [v]: ri(2, 6) })]); }
+            else {
+                do { m = ri(2, 4); n = ri(2, 4); } while (m * n === m + n + 1);   // a²×a³×a は「かける」でも 6 になるので出さない
+                fs = [F(1, { [v]: m }), F(1, { [v]: n }), F(1, { [v]: 1 })];
+            }
+        } else if (step === 3) {                            // (a^m)^n
+            do { m = ri(2, 5); n = ri(2, 4); } while (!ok22(m, n));
+            fs = [F(1, { [v]: m }, n)];
+        } else if (step === 4) {                            // (a^m b)^n
+            do { m = ri(2, 4); n = ri(2, 4); } while (!ok22(m, n));
+            fs = [F(1, Math.random() < 0.5 ? { [v]: m, [w]: 1 } : { [v]: 1, [w]: m }, n)];
+        } else {                                            // a^m × (a^n)^k
+            do { m = ri(2, 4); n = ri(2, 4); k = ri(2, 3); } while (!ok22(n, k));
+            fs = [F(1, { [v]: m }), F(1, { [v]: n }, k)];
+        }
+    } else if (lv === 2) {
+        if (step === 1) {                                   // 3x² × 4x³
+            let c1, c2;
+            do { m = ri(1, 5); n = ri(2, 5); c1 = ri(2, 5); c2 = ri(2, 5); } while (!ok22(m, n) || !ok22(c1, c2));
+            fs = [F(c1, { [v]: m }), F(c2, { [v]: n })];
+        } else if (step === 2) {                            // 2a²b × 3ab³
+            fs = [F(ri(2, 5), { [v]: ri(2, 4), [w]: 1 }), F(ri(2, 5), { [v]: 1, [w]: ri(2, 4) })];
+        } else if (step === 3) {                            // (3x²)³
+            k = ri(2, 3);
+            do { p = ri(1, 4); } while (!ok22(p, k));
+            fs = [F(k === 2 ? ri(2, 5) : ri(2, 3), { [v]: p }, k)];
+        } else if (step === 4) {                            // (2a³b²)³
+            k = ri(2, 3);
+            do { p = ri(1, 4); q = ri(1, 4); } while (p === q || !ok22(p, k) || !ok22(q, k));
+            fs = [F(k === 2 ? ri(2, 5) : ri(2, 3), { [v]: p, [w]: q }, k)];
+        } else {                                            // 2x × (3x³)²
+            fs = [F(ri(2, 4), { [v]: ri(1, 3) }), F(ri(2, 3), { [v]: pick([1, 3, 4]) }, 2)];
+        }
+    } else {
+        if (step === 1) {                                   // (−a)²、(−2x³)³ など
+            k = ri(2, 3);
+            do { p = ri(1, 3); } while (!ok22(p, k));
+            fs = [F(-ri(1, 3), { [v]: p }, k)];
+        } else if (step === 2) {                            // 3a²b × (−2ab³)
+            fs = [F(ri(2, 4), { [v]: ri(2, 3), [w]: 1 }), F(-ri(2, 4), { [v]: 1, [w]: ri(2, 3) })];
+        } else if (step === 3) {                            // (−3a²b)³
+            do { p = ri(1, 3); q = ri(1, 3); } while (p === q);
+            fs = [F(-ri(2, 3), { [v]: p, [w]: q }, 3)];
+        } else if (step === 4) {                            // 2x × (−3x²)²、(−2x)³ × 3x²
+            fs = Math.random() < 0.5
+                ? [F(ri(2, 4), { [v]: 1 }), F(-ri(2, 3), { [v]: pick([1, 3]) }, 2)]
+                : [F(-2, { [v]: 1 }, 3), F(ri(2, 4), { [v]: ri(2, 3) })];
+        } else {                                            // (−xy²)³ × (2x²y)²
+            fs = [F(-1, { [v]: 1, [w]: ri(2, 3) }, 3), F(ri(2, 3), { [v]: ri(2, 3), [w]: 1 }, 2)];
+        }
+    }
+    const ans = calc(fs);
+    const traps = makeTraps(fs).filter(t => monoKey(t) !== monoKey(ans));
+    return { fs, q: probHtml(fs), ans, traps, letters: [v, w] };
+}
+
+// ---------- ヒントと解説 ----------
+function rulesHtml(fs) {
+    const rs = [];
+    if (fs.some(f => f.k > 1 && (lettersOf(f.p).length > 1 || f.c !== 1)))
+        rs.push('積の累乗は、<b>係数も文字も全部</b>累乗する　(<i>ab</i>)<sup><i>n</i></sup> = <i>a</i><sup><i>n</i></sup><i>b</i><sup><i>n</i></sup>');
+    if (fs.some(f => f.k > 1 && lettersOf(f.p).some(v => f.p[v] > 1)))
+        rs.push('累乗の累乗は、指数を<b>かける</b>　(<i>a</i><sup><i>m</i></sup>)<sup><i>n</i></sup> = <i>a</i><sup><i>mn</i></sup>');
+    if (sharedLetter(fs))
+        rs.push('同じ文字のかけ算は、指数を<b>たす</b>　<i>a</i><sup><i>m</i></sup> × <i>a</i><sup><i>n</i></sup> = <i>a</i><sup><i>m</i>+<i>n</i></sup>');
+    if (fs.some(f => f.c < 0 && f.k > 1)) rs.push('マイナスの累乗は、<b>偶数乗なら＋、奇数乗なら−</b>');
+    if (fs.some(f => f.c < 0 && f.k === 1)) rs.push('符号は、マイナスが<b>奇数個なら−、偶数個なら＋</b>');
+    if (sharedLetter(fs) && fs.some(f => lettersOf(f.p).some(v => f.p[v] === 1))) rs.push('<i>a</i> は <i>a</i><sup>1</sup>（指数の 1 は書かない）');
+    return rs.map(r => `<div>・${r}</div>`).join('');
+}
+function coefPow(c, k) { return c === 1 ? '' : c < 0 ? `(${neg(-c)})<sup>${k}</sup>` : `${c}<sup>${k}</sup>`; }
+function explHtml(fs) {
+    const ans = calc(fs);
+    const steps = [probHtml(fs)];
+    const powered = fs.map(f => (f.k > 1 ? calc([f]) : { c: f.c, p: f.p }));
+    if (fs.some(f => f.k > 1)) {
+        // ① かっこの累乗をはずす（係数も文字も累乗）
+        steps.push(fs.map((f, i) => f.k === 1 ? factorHtml(f, i)
+            : coefPow(f.c, f.k) + lettersOf(f.p).map(v => `<i>${v}</i><sup>${f.p[v]}×${f.k}</sup>`).join('')).join(TIMES));
+        if (fs.length > 1) steps.push(powered.map((m, i) => (m.c < 0 && i > 0) ? `(${monoHtml(m)})` : monoHtml(m)).join(TIMES));
+    }
+    if (fs.length > 1) {
+        // ② 係数どうし・同じ文字どうしをまとめる（指数はたす）
+        //   係数の −1 は「−」として前に出す（(−1)×4 ではなく −4 と書く）
+        const all = powered.map(m => m.c);
+        const cs = all.filter(c => Math.abs(c) !== 1);
+        const sign = all.filter(c => c === -1).length % 2 ? '−' : '';
+        const cStr = cs.length >= 2 ? sign + '(' + cs.map(c => c < 0 ? `(${neg(-c)})` : c).join(' × ') + ')'
+            : cs.length === 1 ? sign + coefHtml(cs[0]) : sign;
+        steps.push(cStr + lettersOf(ans.p).map(v => {
+            const es = powered.filter(m => m.p[v]).map(m => m.p[v]);
+            return `<i>${v}</i>` + (es.length > 1 ? `<sup>${es.join('+')}</sup>` : es[0] > 1 ? `<sup>${es[0]}</sup>` : '');
+        }).join(''));
+    }
+    steps.push(monoHtml(ans));
+    const uniq = steps.filter((s, i) => i === 0 || s !== steps[i - 1]);
+    return `<div class="xp-rule">${rulesHtml(fs)}</div><div class="xp-steps">${uniq.map((s, i) => (i ? '= ' : '') + s).join('<br>')}</div>`;
+}
+function showExpl(html, kind) {
+    const e = $('expl');
+    e.className = 'xp' + (kind ? ' xp-' + kind : '');
+    e.innerHTML = html;
+    if (html) requestAnimationFrame(() => e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));   // 画面の外に出ないように
+}
+function showHint() { showExpl('<b>💡 ヒント</b>' + rulesHtml(st.prob.fs), 'hint'); }
+
+function onCorrect(note) {
+    st.solved = true;
+    $('fb').innerHTML = '<span style="color:var(--u-ok);">⭕ 正解！</span>';
+    showExpl((note ? `<div class="xp-note">${note}</div>` : '') + '<b>解説</b>' + explHtml(st.prob.fs), 'full');
+    $('btnJudge').style.display = 'none';
+    $('btnNext').style.display = 'block';
+}
+function onWrong(msg) {
+    st.miss++; st.missTotal++;
+    $('fb').innerHTML = `<span style="color:var(--u-ng);">❌ ${msg || 'おしい！'}</span>`;
+    if (st.miss >= 2) showExpl('<b>解説</b>' + explHtml(st.prob.fs), 'full');
+    else showHint();
+}
+
+// ---------- 4択 ----------
 function renderChoices() {
-    let cs = [{ k: st.prob.a, h: st.prob.h }];
-    makeDummies(st.prob).forEach(k => { if (cs.length < 4) cs.push({ k, h: toHtml(k) }); });
-    let guard = 0;
-    while (cs.length < 4 && guard++ < 200) {
-        let p = getProb(st.lv, Math.floor(Math.random()*5)+1);
-        if (!cs.find(i => i.k === p.a)) cs.push({ k: p.a, h: p.h });
-    }
-    cs.sort(() => Math.random() - 0.5);
-    let html = '';
-    cs.forEach(c => html += `<button class="btn-choice math" onclick="judgeChoice('${c.k}', this)">${c.h}</button>`);
-    document.getElementById('modeChoice').innerHTML = html;
+    const p = st.prob;
+    const cs = [p.ans], keys = new Set([monoKey(p.ans)]);
+    const addC = m => { const k = monoKey(m); if (cs.length < 4 && !keys.has(k)) { keys.add(k); cs.push(m); } };
+    // よくあるまちがいを先に。符号だけで答えが分からないよう、答えと同じ符号の誤答を 1 つ入れる
+    const tr = shuffle([...p.traps]);
+    const same = tr.findIndex(t => Math.sign(t.c) === Math.sign(p.ans.c));
+    if (same > 0) tr.unshift(tr.splice(same, 1)[0]);
+    tr.forEach(addC);
+    shuffle(neighbors(p.ans)).forEach(addC);      // 足りないときは、となりの数
+    st.choices = shuffle(cs);
+    $('modeChoice').innerHTML = st.choices.map((m, i) =>
+        `<button class="btn-choice math" onclick="judgeChoice(${i}, this)">${monoHtml(m)}</button>`).join('');
 }
-
-function renderPalette() {
-    let core = st.prob.p;
-    let dums = st.prob.d || []; // 問題に応じたひっかけ数字
-    let all = [...new Set([...core, ...dums, '2', 'a', 'x'])];
-    
-    let bases = all.filter(x => isNaN(x)).sort();
-    let nums = all.filter(x => !isNaN(x)).sort((a,b) => a-b);
-    
-    let html = '';
-    nums.forEach(n => html += `<button class="btn-p math" onclick="add('${n}','b')">${n}</button>`);
-    bases.forEach(b => html += `<button class="btn-p math" onclick="add('${b}','b')">${b}</button>`);
-    nums.forEach(n => html += `<button class="btn-p sup math" onclick="add('${n}','s')"><sup>${n}</sup></button>`);
-    document.getElementById('palette').innerHTML = html;
-}
-
-function add(v, t) { if (!st.solved) { uIn.push({ v, t }); update(); } }
-function pop() { if (!st.solved) { uIn.pop(); update(); } }
-function update() {
-    let h = ''; uIn.forEach(i => h += (i.t === 's' ? `<sup>${i.v}</sup>` : i.v));
-    document.getElementById('uAns').innerHTML = h;
-    document.getElementById('fb').innerText = '';
-}
-
-function showHint() {
-    const original = document.getElementById('uAns').innerHTML;
-    document.getElementById('uAns').innerHTML = `<span style="color:#aaa">${st.prob.h}</span>`;
-    setTimeout(() => { if(!st.solved) update(); }, 3000);
-}
-
-function judgeChoice(k, btn) {
+function judgeChoice(i, btn) {
     if (st.solved) return;
-    if (k === st.prob.a) {
-        document.getElementById('fb').innerHTML = '<span style="color:var(--secondary);">⭕ 正解！</span>';
-        st.solved = true; document.getElementById('btnNext').style.display = 'block';
-        btn.classList.add('is-correct');   // 【ブラッシュアップ】正解の選択肢に色をつける
+    if (monoKey(st.choices[i]) === monoKey(st.prob.ans)) {
+        btn.classList.add('is-correct');
+        onCorrect();
     } else {
-        document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！</span>';
-        btn.disabled = true;   // 【ブラッシュアップ】薄くするだけでなく、押せなくする
+        btn.disabled = true;   // まちがえたボタンは押せないまま
+        onWrong();
     }
 }
 
-// 【ブラッシュアップ】かける順番を問わずに比べる。
-//   元は文字の並びまで同じでないと不正解で、(x³a)² を a²x⁶ と組み立てると正しいのに不正解だった。
-//   「係数」と「文字ごとの指数」に分けて比べる。組み立て方がおかしいときは null を返して不正解にする。
-function canonical(s) {
-    const m = s.match(/^(\d*)((?:[a-z](?:\^\d+)?)+)$/);
-    if (!m) return null;
-    const coef = m[1] || '1';
-    const pow = {};
-    for (const t of m[2].matchAll(/([a-z])(?:\^(\d+))?/g)) {
-        if (pow[t[1]] !== undefined) return null;   // 同じ文字が2回（x³x³ など）は、まだまとめ切れていないので不正解
-        pow[t[1]] = Number(t[2] || 1);
+// ---------- 組み立てる（元の「つなげる」） ----------
+function renderPalette() {
+    const p = st.prob;
+    const monos = [p.ans, ...p.traps];
+    const coefs = new Set(), exps = new Set();
+    monos.forEach(m => {
+        if (Math.abs(m.c) > 1) coefs.add(Math.abs(m.c));
+        lettersOf(m.p).forEach(v => { if (m.p[v] > 1) exps.add(m.p[v]); });
+    });
+    // 指数の候補は 5 つ以上に（少ないと当てずっぽうで作れてしまう）
+    const base = [...exps];
+    for (let d = 1; exps.size < 5 && d < 6; d++) base.forEach(e => {
+        if (exps.size < 5 && e + d >= 2) exps.add(e + d);
+        if (exps.size < 5 && e - d >= 2) exps.add(e - d);
+    });
+    if (st.lv >= 2) {
+        const a = Math.abs(p.ans.c);
+        for (let d = 1; coefs.size < 4 && d < 6; d++) { coefs.add(a + d); if (a - d >= 2) coefs.add(a - d); }
     }
-    return coef + '|' + Object.keys(pow).sort().map(k => k + pow[k]).join(',');
+    const btn = (v, t, label, cls) => `<button class="btn-p math${cls || ''}" onclick="add('${v}','${t}')">${label}</button>`;
+    const nums = [...coefs].sort((a, b) => a - b), sups = [...exps].sort((a, b) => a - b);
+    let html = '';
+    if (st.lv >= 2) html += '<div class="p-row"><span class="p-lab">係数</span>' + (st.lv === 3 ? btn('-', 'b', '−') : '') + nums.map(n => btn(n, 'b', n)).join('') + '</div>';
+    html += '<div class="p-row"><span class="p-lab">文字</span>' + p.letters.map(v => btn(v, 'b', `<i>${v}</i>`)).join('') + '</div>';
+    html += '<div class="p-row"><span class="p-lab">指数</span>' + sups.map(n => btn(n, 's', `<sup>${n}</sup>`, ' sup')).join('') + '</div>';
+    $('palette').innerHTML = html;
 }
 
+function add(v, t) { if (!st.solved) { uIn.push({ v: String(v), t }); update(); } }
+function pop() { if (!st.solved) { uIn.pop(); update(); } }
+function tokenHtml(i) {
+    if (i.t === 's') return `<sup>${i.v}</sup>`;
+    if (/[a-z]/.test(i.v)) return `<i>${i.v}</i>`;
+    return i.v === '-' ? '−' : i.v;
+}
+function update() {
+    $('uAns').innerHTML = uIn.map(tokenHtml).join('');
+    $('fb').innerText = '';
+}
+
+// 組み立てた式を読む。かける順番は問わない（係数と、文字ごとの指数で比べる）
+function parseBuilt(s) {
+    const m = s.match(/^(-?)(\d*)((?:[a-z](?:\^\d+)?)+)$/);
+    if (!m) return { err: '係数 → 文字 → 指数の順に組み立てよう' };
+    if (m[2] === '1') return { err: '係数の 1 は書かないよ' };
+    const p = {}, order = [];
+    for (const t of m[3].matchAll(/([a-z])(?:\^(\d+))?/g)) {
+        if (p[t[1]] !== undefined) return { err: `同じ文字（${t[1]}）は 1 つにまとめよう` };
+        p[t[1]] = Number(t[2] || 1);
+        order.push(t[1]);
+    }
+    return { m: { c: (m[1] ? -1 : 1) * Number(m[2] || 1), p }, order };
+}
 function judgeBuild() {
-    let res = ""; uIn.forEach(i => res += (i.t === 's' ? '^' + i.v : i.v));
-    const same = res === st.prob.a || (canonical(res) !== null && canonical(res) === canonical(st.prob.a));
-    if (!res) { document.getElementById('fb').innerHTML = '<span style="color:#999;">パーツを選んで式を作ろう</span>'; return; }
-    if (same) {
-        document.getElementById('fb').innerHTML = '<span style="color:var(--secondary);">⭕ 正解！</span>';
-        st.solved = true; document.getElementById('btnJudge').style.display = 'none';
-        document.getElementById('btnNext').style.display = 'block';
+    if (st.solved) return;
+    if (!uIn.length) { $('fb').innerHTML = '<span style="color:#999;">パーツを選んで式を作ろう</span>'; return; }
+    const r = parseBuilt(uIn.map(i => (i.t === 's' ? '^' + i.v : i.v)).join(''));
+    if (r.m && monoKey(r.m) === monoKey(st.prob.ans)) {
+        const sorted = r.order.join('') === [...r.order].sort().join('');
+        onCorrect(sorted ? '' : 'ふつうは文字をアルファベット順に書くよ（' + monoHtml(st.prob.ans) + '）');
     } else {
-        document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！パーツを確認してね</span>';
+        onWrong(r.err || 'おしい！パーツを確認してね');
     }
 }
 </script>
