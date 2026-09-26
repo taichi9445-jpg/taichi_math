@@ -6,7 +6,7 @@
     <!--
       17. 1次方程式・不等式（数式ステップクイズ）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -356,8 +356,29 @@ function getQuizData(type, level) {
       .feedback { font-size: 18px; margin-bottom: 12px; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .menu-group { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 20px; }
+    .menu-group label { color: var(--u-title-dark); }
+    .progress-bar { display: inline-block; padding: 4px 16px; }
+    .problem-box { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-ink); }
+    .options-title { color: var(--u-sub); }
+    .answer-area { border-color: var(--u-line); }
+    .answer-line { color: var(--u-ink); }
+    .feedback { border-radius: 14px; }
+    .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .feedback.wrong { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .result-box h2 { white-space: nowrap; font-size: min(2rem, 7.5vw); }
+    .result-box p { color: var(--u-ink); font-weight: 700; }
+    .score { color: var(--u-accent-text); }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div class="container">
@@ -653,5 +674,21 @@ function getQuizData(type, level) {
   }
 </script>
 
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".header-area h1": "u-title",
+    ".btn-back": "u-btn u-btn-plain",
+    ".btn-grid .btn-toggle:not(.active)": "u-btn u-btn-plain",
+    ".btn-grid .btn-toggle.active": "u-btn u-btn-blue",
+    ".btn-start": "u-btn",
+    ".progress-bar": "u-pill",
+    ".option-btn": "u-choice",
+    ".option-btn:disabled": "u-ng",
+    ".result-box h2": "u-title",
+    ".result-nav .btn-toggle": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>

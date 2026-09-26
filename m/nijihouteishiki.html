@@ -7,7 +7,7 @@
     <!--
       18. 2次方程式（2次方程式 マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -349,8 +349,34 @@ function getRandomQuestions(mode, subMode) {
       .modal-body { font-size: 20px; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    :root { --primary: var(--u-title); --secondary: var(--u-soft-blue-line); --accent: var(--u-accent); --bg: var(--u-bg); }
+    header { background: #fff; color: var(--u-ink); border-bottom: 6px solid var(--u-frame); box-shadow: none; }
+    header h1 { color: var(--u-title); font-family: var(--u-font); font-weight: 800; }
+    #mode-badge { background: var(--u-soft-yellow) !important; color: var(--u-soft-yellow-text); }
+    #progress { color: var(--u-sub); }
+    #menu-screen > div:first-child { color: var(--u-title) !important; font-size: min(32px, 7vw) !important; }
+    .menu-card h3 { color: var(--u-title); }
+    .menu-card p { color: var(--u-sub); font-weight: 700; }
+    .board, .card { box-shadow: none; border: 3px solid var(--u-line); }
+    .step-title { color: var(--u-title-dark); border-left-color: var(--u-accent); }
+    .explanation-area { background: var(--u-soft-yellow); border-color: #fde68a; color: var(--u-ink); }
+    .key { background: var(--u-soft-blue); color: var(--u-ink); border-bottom: 3px solid var(--u-soft-blue-line); }
+    .key.op { background: var(--u-soft-yellow); color: var(--u-accent-text); border-bottom-color: #fde68a; }
+    .footer { border-top: 6px solid var(--u-frame); }
+    #footer-tip { color: var(--u-sub) !important; }
+    #clear-screen > div { border: 8px solid var(--u-frame); border-radius: 40px !important; box-shadow: none !important; }
+    #clear-screen h2 { color: var(--u-accent-text); }
+    .modal-overlay { background: rgba(75, 44, 32, 0.55); }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <header>
@@ -794,6 +820,24 @@ function getRandomQuestions(mode, subMode) {
 
   // 【ブラッシュアップ】MathJax が 6 秒たっても読み込めなければ、数式を読める文字に直して表示する
   PortMath.fallbackAfter(6000);
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".btn-home": "u-btn u-btn-plain",
+    ".menu-card": "u-choice",
+    "#submenu-screen > .btn": "u-btn u-btn-plain",
+    ".hint-btn": "u-btn",
+    ".choice-btn": "u-choice",
+    ".choice-btn.correct": "u-ok",
+    ".choice-btn.wrong": "u-ng",
+    ".btn-view-ans": "u-btn u-btn-plain",
+    ".modal-content": "u-card",
+    ".btn-modal-close": "u-btn u-btn-blue",
+    ".btn.btn-main": "u-btn",
+    ".btn.btn-next": "u-btn u-btn-blue",
+    ".clear-nav .btn:not(.btn-main)": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>
