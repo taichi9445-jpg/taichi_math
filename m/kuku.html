@@ -1,117 +1,791 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>九九の練習</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    04. 九九の練習（九九フラッシュカード）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九九フラッシュカード</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;   /* 【ブラッシュアップ】上が切れないように、上から並べる */
+            align-items: center;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: auto 0;   /* 【ブラッシュアップ】画面に収まるときだけ縦まん中に */
+        }
+
+        .title {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        .question {
+            font-size: 3rem;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .answer-input {
+            font-size: 2rem;
+            padding: 15px 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            width: 120px;
+            margin: 0 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: transform 0.2s ease;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: transform 0.2s ease;
+            font-weight: bold;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+        }
+
+        .feedback {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .correct {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            animation: bounce 0.6s ease;
+        }
+
+        .incorrect {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #742a2a;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .celebration {
+            font-size: 3rem;
+            margin: 10px 0;
+            animation: spin 1s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .level-select {
+            text-align: center;
+        }
+
+        .character {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        .level-select h2 {
+            color: #4a5568;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .level-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .level-btn.special {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+        }
+
+        .level-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .level-btn.special .level-number {
+            color: white;
+        }
+
+        .level-name {
+            font-size: 1rem;
+            color: #4a5568;
+            margin: 5px 0;
+        }
+
+        .level-btn.special .level-name {
+            color: white;
+        }
+
+        .level-character {
+            font-size: 2rem;
+            margin-top: 5px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .back-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #cbd5e0;
+        }
+
+        .current-level {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        #current-level-character {
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .question {
+                font-size: 2.5rem;
+            }
+
+            .answer-input {
+                font-size: 1.5rem;
+                width: 100px;
+            }
+        }
+
+        /* 【ブラッシュアップ】 */
+        .port-back { color: #fff; max-width: 500px; width: 100%; }
+        .completion-nav { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .completion-nav a { color: #718096; margin-top: 8px; }
+
+        /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 600px 以下のときだけ切り替わる） */
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .container { padding: 16px 12px; margin: 0; }
+            .title { font-size: min(2rem, 6.6vw); white-space: nowrap; margin: 4px 0 16px; }
+            .level-select h2 { font-size: min(1.5rem, 6vw); margin-bottom: 16px; white-space: nowrap; }
+            .character { font-size: 3rem; margin-bottom: 8px; }
+            .level-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .level-btn { padding: 12px 8px; }
+            .card { padding: 24px 12px; margin: 16px 0; }
+            .question { font-size: min(2.8rem, 12vw); margin-bottom: 20px; }
+            .answer-input { font-size: 2rem; width: 130px; }
+            .submit-btn, .next-btn { font-size: 1.25rem; padding: 14px 26px; margin: 16px 6px 4px; }
+            .feedback { font-size: 1.3rem; padding: 14px; }
+            .game-header { padding: 10px; }
+            .score { font-size: 1.05rem; padding: 10px; }
+        }
+    </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <h1 class="title">🌟 九九フラッシュカード 🌟</h1>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   04. 九九の練習（九九フラッシュカード）
-   「だん」ごとの練習と、全部まぜたチャンピオンモード。
+        <!-- レベル選択画面 -->
+        <div id="level-select" class="level-select">
+            <div class="character">🦸‍♂️</div>
+            <h2>きみのレベルをえらぼう！</h2>
+            <div class="level-grid">
+                <button class="level-btn" onclick="showModeSelect(1)">
+                    <div class="level-number">1</div>
+                    <div class="level-name">1のだん</div>
+                    <div class="level-character">🚀</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(2)">
+                    <div class="level-number">2</div>
+                    <div class="level-name">2のだん</div>
+                    <div class="level-character">🦁</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(3)">
+                    <div class="level-number">3</div>
+                    <div class="level-name">3のだん</div>
+                    <div class="level-character">🐉</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(4)">
+                    <div class="level-number">4</div>
+                    <div class="level-name">4のだん</div>
+                    <div class="level-character">🦅</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(5)">
+                    <div class="level-number">5</div>
+                    <div class="level-name">5のだん</div>
+                    <div class="level-character">🐺</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(6)">
+                    <div class="level-number">6</div>
+                    <div class="level-name">6のだん</div>
+                    <div class="level-character">🦈</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(7)">
+                    <div class="level-number">7</div>
+                    <div class="level-name">7のだん</div>
+                    <div class="level-character">🐅</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(8)">
+                    <div class="level-number">8</div>
+                    <div class="level-name">8のだん</div>
+                    <div class="level-character">🦖</div>
+                </button>
+                <button class="level-btn" onclick="showModeSelect(9)">
+                    <div class="level-number">9</div>
+                    <div class="level-name">9のだん</div>
+                    <div class="level-character">🤖</div>
+                </button>
+                <button class="level-btn special" onclick="startLevel(0, 'random')">
+                    <div class="level-number">🌟</div>
+                    <div class="level-name">チャンピオン</div>
+                    <div class="level-character">👑</div>
+                </button>
+            </div>
+        </div>
 
-   元教材から直した点：
-     ・入力欄に全角数字を入れると、正しい答えでも不正解になっていた。
-       → 全角・空白は自動でそろえてから判定する。
-     ・空欄のまま「こたえあわせ」を押すと正解あつかいになることがあった。
-       → 空欄のうちは採点しない。
-     ・同じ問題が続けて出ることがあった。 → 出題順をシャッフルして重複を避ける。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+        <!-- モード選択画面 -->
+        <div id="mode-select" class="level-select hidden">
+            <div class="character" id="mode-character">🚀</div>
+            <h2 id="mode-title">1のだん - モードをえらぼう！</h2>
+            <div class="level-grid">
+                <button class="level-btn" onclick="startLevel(selectedLevel, 'sequential')">
+                    <div class="level-number">📚</div>
+                    <div class="level-name">じゅんばん</div>
+                    <div class="level-character">×1, ×2, ×3...</div>
+                </button>
+                <button class="level-btn" onclick="startLevel(selectedLevel, 'random')">
+                    <div class="level-number">🎲</div>
+                    <div class="level-name">ランダム</div>
+                    <div class="level-character">×3, ×1, ×7...</div>
+                </button>
+            </div>
+            <button class="back-btn" onclick="backToLevelSelect()" style="margin-top: 20px;">← もどる</button>
+        </div>
 
-  // 元教材のキャラクター設定をそのまま引き継ぐ
-  var LEVELS = [
-    { dan: 1, name: '1のだん', ch: '🚀' },
-    { dan: 2, name: '2のだん', ch: '🦁' },
-    { dan: 3, name: '3のだん', ch: '🐉' },
-    { dan: 4, name: '4のだん', ch: '🦅' },
-    { dan: 5, name: '5のだん', ch: '🐺' },
-    { dan: 6, name: '6のだん', ch: '🦈' },
-    { dan: 7, name: '7のだん', ch: '🐅' },
-    { dan: 8, name: '8のだん', ch: '🦖' },
-    { dan: 9, name: '9のだん', ch: '🤖' }
-  ];
+        <!-- ゲーム画面 -->
+        <div id="game-screen" class="hidden">
+            <div class="game-header">
+                <button class="back-btn" onclick="backToLevelSelect()">← もどる</button>
+                <div class="current-level">
+                    <span id="current-level-character">🚀</span>
+                    <span id="current-level-name">1のだん</span>
+                </div>
+            </div>
 
-  function makeQuestion(a, b, useChoices) {
-    var ans = a * b;
-    var q = {
-      text: 'こたえは？',
-      math: a + ' × ' + b,
-      explain: a + ' × ' + b + ' = ' + ans
-    };
-    if (useChoices) {
-      // まちがえやすい数（ひとつ隣のだん・ひとつ隣の数）を誤答にする
-      var candidates = [
-        a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b,
-        ans + 1, ans - 1, ans + 10
-      ].filter(function (v) { return v > 0 && v !== ans; });
-      var wrongs = [];
-      Quiz.shuffle(candidates).forEach(function (v) {
-        if (wrongs.length < 3 && wrongs.indexOf(v) < 0) wrongs.push(v);
-      });
-      q.type = 'choice';
-      q.choices = [String(ans)].concat(wrongs.map(String));
-      q.correct = 0;
-    } else {
-      q.type = 'input';
-      q.inputmode = 'numeric';
-      q.answer = String(ans);
-      q.placeholder = 'すうじ';
-    }
-    return q;
-  }
+            <div class="score">
+                <div>問題: <span id="question-progress">1</span> / <span id="total-questions">9</span></div>
+                <div>正解数: <span id="correct-count">0</span> / 挑戦数: <span id="total-count">0</span></div>
+                <div>正解率: <span id="accuracy">0</span>%</div>
+                <div>⏱️ 時間: <span id="timer">00:00</span></div>
+            </div>
 
-  function buildDan(dan, useChoices) {
-    var pairs = [];
-    for (var b = 1; b <= 9; b++) pairs.push([dan, b]);
-    return Quiz.shuffle(pairs).map(function (p) {
-      return makeQuestion(p[0], p[1], useChoices);
-    });
-  }
+            <div class="card">
+                <div id="chant" class="hidden" style="font-size: 1.5rem; color: #666; margin-bottom: 15px; font-style: italic;"></div>
+                <div class="question" id="question">1 × 1 = ?</div>
+                <div>
+                    <input type="number" id="answer-input" class="answer-input" placeholder="?" min="0" max="81">
+                </div>
+                <div>
+                    <button class="submit-btn" id="submit-btn" onclick="checkAnswer()">こたえる！</button>
+                    <button class="next-btn hidden" id="next-btn" onclick="nextQuestion()">つぎの問題</button>
+                </div>
+            </div>
 
-  function buildAll(useChoices, n) {
-    var pairs = [];
-    for (var a = 1; a <= 9; a++) for (var b = 1; b <= 9; b++) pairs.push([a, b]);
-    return Quiz.shuffle(pairs).slice(0, n).map(function (p) {
-      return makeQuestion(p[0], p[1], useChoices);
-    });
-  }
+            <div id="feedback" class="feedback hidden"></div>
+        </div>
 
-  var modes = [];
-  LEVELS.forEach(function (lv) {
-    modes.push({ id: 'c' + lv.dan, group: '4たくモード', name: lv.ch + ' ' + lv.name, desc: '9問' });
-  });
-  modes.push({ id: 'call', group: '4たくモード', name: '👑 チャンピオン', desc: '全部まぜて20問' });
+        <!-- 完了画面 -->
+        <div id="completion-screen" class="level-select hidden">
+            <div class="character" id="completion-character">🎉</div>
+            <h2 id="completion-title">おめでとう！</h2>
+            <div id="completion-message" class="card">
+                <div style="font-size: 2rem; margin-bottom: 20px;">🏆 すごい！すごい！ 🏆</div>
+                <div style="font-size: 1.5rem; margin-bottom: 15px;">きみは本当にすばらしい！</div>
+                <div id="completion-stats" style="font-size: 1.2rem; color: #4a5568;"></div>
+            </div>
+            <!-- 【ブラッシュアップ】「つぎのだん」と「ほかの教材」を選べるようにした -->
+            <div class="completion-nav" style="margin-top: 30px;">
+                <button class="submit-btn" id="next-level-btn" onclick="goNextLevel()">つぎのだんへ ▶</button>
+                <button class="submit-btn" onclick="restartLevel()">もういちどちょうせん</button>
+                <button class="next-btn" onclick="backToLevelSelect()">べつのレベルにちょうせん</button>
+                <a href="../remake.html">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+    </div>
 
-  LEVELS.forEach(function (lv) {
-    modes.push({ id: 'i' + lv.dan, group: '入力モード', name: lv.ch + ' ' + lv.name, desc: '9問' });
-  });
-  modes.push({ id: 'iall', group: '入力モード', name: '👑 チャンピオン', desc: '全部まぜて20問' });
-  // timed / survival は出題エンジンが見て動きを変える印
-  modes.push({ id: 'time', group: 'ちょうせん', name: '⏱ タイムアタック', desc: '20問を最速で', timed: true });
-  modes.push({ id: 'survival', group: 'ちょうせん', name: '💥 サバイバル', desc: 'まちがえるまで、ずっと', survival: true });
+    <script>
+        let currentQuestion = {};
+        let correctCount = 0;
+        let totalCount = 0;
+        let currentLevel = 1;
+        let currentMode = 'random';
+        let selectedLevel = 1;
+        let questionQueue = [];
+        let currentQuestionIndex = 0;
+        let startTime = 0;
+        let timerInterval = null;
 
-  Quiz.start({
-    title: '九九の練習',
-    subtitle: 'だんごとに練習して、さいごは全部まぜたチャンピオンにちょうせん。',
-    modes: modes,
-    build: function (id) {
-      if (id === 'call') return buildAll(true, 20);
-      if (id === 'iall') return buildAll(false, 20);
-      if (id === 'time') return buildAll(false, 20);
-      if (id === 'survival') return buildAll(false, 81);
-      var useChoices = id[0] === 'c';
-      return buildDan(parseInt(id.slice(1), 10), useChoices);
-    }
-  });
-})();
-</script>
+        const levelData = {
+            1: { name: '1のだん', character: '🚀' },
+            2: { name: '2のだん', character: '🦁' },
+            3: { name: '3のだん', character: '🐉' },
+            4: { name: '4のだん', character: '🦅' },
+            5: { name: '5のだん', character: '🐺' },
+            6: { name: '6のだん', character: '🦈' },
+            7: { name: '7のだん', character: '🐅' },
+            8: { name: '8のだん', character: '🦖' },
+            9: { name: '9のだん', character: '🤖' },
+            0: { name: 'チャンピオン', character: '👑' }
+        };
+
+        const celebrations = ['🎉', '⭐', '🌟', '✨', '🎊', '🏆', '👏', '🎈'];
+        const encouragements = [
+            'すごい！せいかい！',
+            'やったね！かんぺき！',
+            'さすが！てんさい！',
+            'すばらしい！',
+            'かっこいい！',
+            'すてき！よくできました！',
+            'ばんざい！せいかい！',
+            'きみはすごいね！'
+        ];
+
+        const tryAgainMessages = [
+            'だいじょうぶ！もういちどやってみよう！',
+            'おしい！つぎはできるよ！',
+            'がんばって！もういちど！',
+            'あきらめないで！やってみよう！',
+            'つぎはぜったいできる！'
+        ];
+
+        function getMultiplicationChant(num1, num2) {
+            const chants = {
+                '1': ['いんいちが', 'いんにが', 'いんさんが', 'いんしが', 'いんごが', 'いんろくが', 'いんしちが', 'いんはちが', 'いんくが'],
+                '2': ['にいちが', 'ににんが', 'にさんが', 'にしが', 'にご', 'にろく', 'にしち', 'にはち', 'にく'],
+                '3': ['さんいちが', 'さんにが', 'さざんが', 'さんし', 'さんご', 'さぶろく', 'さんしち', 'さんぱ', 'さんく'],
+                '4': ['しいちが', 'しにが', 'しさん', 'しし', 'しご', 'しろく', 'ししち', 'しは', 'しく'],
+                '5': ['ごいちが', 'ごに', 'ごさん', 'ごし', 'ごご', 'ごろく', 'ごしち', 'ごは', 'ごっく'],
+                '6': ['ろくいちが', 'ろくに', 'ろくさん', 'ろくし', 'ろくご', 'ろくろく', 'ろくしち', 'ろくは', 'ろっく'],
+                '7': ['しちいちが', 'しちに', 'しちさん', 'しちし', 'しちご', 'しちろく', 'しちしち', 'しちは', 'しちく'],
+                '8': ['はちいちが', 'はちに', 'はちさん', 'はちし', 'はちご', 'はちろく', 'はちしち', 'はっぱ', 'はっく'],
+                '9': ['くいちが', 'くに', 'くさん', 'くし', 'くご', 'くろく', 'くしち', 'くは', 'くく']
+            };
+
+            return chants[num1.toString()][num2 - 1];
+        }
+
+        function showModeSelect(level) {
+            selectedLevel = level;
+            document.getElementById('level-select').classList.add('hidden');
+            document.getElementById('mode-select').classList.remove('hidden');
+
+            // モード選択画面の情報を更新
+            document.getElementById('mode-character').textContent = levelData[level].character;
+            document.getElementById('mode-title').textContent = `${levelData[level].name} - モードをえらぼう！`;
+        }
+
+        function startLevel(level, mode) {
+            currentLevel = level;
+            currentMode = mode;
+            correctCount = 0;
+            totalCount = 0;
+            currentQuestionIndex = 0;
+
+            // 問題キューを生成
+            generateQuestionQueue();
+
+            // 画面を切り替え
+            document.getElementById('level-select').classList.add('hidden');
+            document.getElementById('mode-select').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('completion-screen').classList.add('hidden');
+
+            // 現在のレベル情報を更新
+            document.getElementById('current-level-character').textContent = levelData[level].character;
+            document.getElementById('current-level-name').textContent = levelData[level].name;
+
+            // 問題数を更新
+            const totalQuestions = currentLevel === 0 ? 81 : 9;
+            document.getElementById('total-questions').textContent = totalQuestions;
+
+            // タイマー開始
+            startTimer();
+
+            updateScore();
+            generateQuestion();
+        }
+
+        function generateQuestionQueue() {
+            questionQueue = [];
+
+            if (currentLevel === 0) {
+                // チャンピオンレベル：81問すべて
+                for (let i = 1; i <= 9; i++) {
+                    for (let j = 1; j <= 9; j++) {
+                        questionQueue.push({ num1: i, num2: j, answer: i * j });
+                    }
+                }
+                // ランダムにシャッフル
+                for (let i = questionQueue.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [questionQueue[i], questionQueue[j]] = [questionQueue[j], questionQueue[i]];
+                }
+            } else {
+                // 各段：9問
+                for (let i = 1; i <= 9; i++) {
+                    questionQueue.push({
+                        num1: currentLevel,
+                        num2: i,
+                        answer: currentLevel * i
+                    });
+                }
+
+                if (currentMode === 'random') {
+                    // ランダムにシャッフル
+                    for (let i = questionQueue.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [questionQueue[i], questionQueue[j]] = [questionQueue[j], questionQueue[i]];
+                    }
+                }
+                // sequentialの場合はそのまま（×1, ×2, ×3...の順番）
+            }
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function backToLevelSelect() {
+            stopTimer();
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('mode-select').classList.add('hidden');
+            document.getElementById('completion-screen').classList.add('hidden');
+            document.getElementById('level-select').classList.remove('hidden');
+        }
+
+        function restartLevel() {
+            startLevel(currentLevel, currentMode);
+        }
+
+        // 【ブラッシュアップ】つぎのだんへ（9のだんのつぎはチャンピオン）
+        function goNextLevel() {
+            if (currentLevel === 0) { backToLevelSelect(); return; }
+            if (currentLevel === 9) startLevel(0, 'random');
+            else startLevel(currentLevel + 1, currentMode);
+        }
+
+        function generateQuestion() {
+            if (currentQuestionIndex >= questionQueue.length) {
+                // 全問題完了
+                showCompletionScreen();
+                return;
+            }
+
+            currentQuestion = questionQueue[currentQuestionIndex];
+
+            document.getElementById('question').textContent = `${currentQuestion.num1} × ${currentQuestion.num2} = ?`;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+
+            // 九九の読み方を表示（順番モードのみ）
+            const chantDiv = document.getElementById('chant');
+            if (currentMode === 'sequential' && currentLevel !== 0) {
+                const chant = getMultiplicationChant(currentQuestion.num1, currentQuestion.num2);
+                chantDiv.textContent = chant;
+                chantDiv.classList.remove('hidden');
+            } else {
+                chantDiv.classList.add('hidden');
+            }
+
+            // 進捗を更新
+            document.getElementById('question-progress').textContent = currentQuestionIndex + 1;
+
+            // ボタンとフィードバックをリセット
+            document.getElementById('submit-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+        }
+
+        function showCompletionScreen() {
+            stopTimer();
+
+            // 画面を切り替え
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('completion-screen').classList.remove('hidden');
+
+            // 完了メッセージを設定
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            const accuracy = Math.round((correctCount / totalCount) * 100);
+
+            let completionMessage = '';
+            let character = '';
+
+            if (currentLevel === 0) {
+                // チャンピオンレベル完了
+                character = '👑🎉🏆';
+                completionMessage = `
+                    <div style="font-size: 2.5rem; margin-bottom: 20px;">🏆 チャンピオン！ 🏆</div>
+                    <div style="font-size: 2rem; margin-bottom: 15px;">きみは九九マスター！</div>
+                    <div style="font-size: 1.8rem; margin-bottom: 15px;">すごい！すごい！すごい！</div>
+                    <div style="font-size: 1.5rem; margin-bottom: 15px;">81問ぜんぶせいかい！</div>
+                    <div style="font-size: 1.3rem; color: #4a5568;">
+                        かかった時間: ${timeStr}<br>
+                        正解率: ${accuracy}%<br>
+                        きみは本当にすばらしい！
+                    </div>
+                `;
+            } else {
+                // 各段完了
+                character = levelData[currentLevel].character + '🎉';
+                completionMessage = `
+                    <div style="font-size: 2rem; margin-bottom: 20px;">🎉 ${levelData[currentLevel].name} かんりょう！ 🎉</div>
+                    <div style="font-size: 1.5rem; margin-bottom: 15px;">すごい！すごい！</div>
+                    <div style="font-size: 1.3rem; margin-bottom: 15px;">きみは本当にがんばった！</div>
+                    <div style="font-size: 1.2rem; color: #4a5568;">
+                        かかった時間: ${timeStr}<br>
+                        正解率: ${accuracy}%<br>
+                        つぎのレベルもがんばろう！
+                    </div>
+                `;
+            }
+
+            document.getElementById('completion-character').textContent = character;
+            // 【ブラッシュアップ】つぎのだんのボタンの文字
+            const nb = document.getElementById('next-level-btn');
+            nb.textContent = currentLevel === 9 ? 'チャンピオンにちょうせん ▶' : 'つぎのだんへ ▶';
+            nb.style.display = currentLevel === 0 ? 'none' : '';
+            document.getElementById('completion-message').innerHTML = completionMessage;
+        }
+
+        function checkAnswer() {
+            // 【ブラッシュアップ】元は何も入れずに押すと「まちがい」に数えられ、答えまで出てしまった。
+            //   全角の数字（「１２」）も受け付ける。
+            const raw = document.getElementById('answer-input').value.replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)).trim();
+            if (raw === '' || isNaN(parseInt(raw))) { document.getElementById('answer-input').focus(); return; }
+            if (document.getElementById('submit-btn').classList.contains('hidden')) return;
+            const userAnswer = parseInt(raw);
+            const feedbackDiv = document.getElementById('feedback');
+            
+            totalCount++;
+
+            if (userAnswer === currentQuestion.answer) {
+                correctCount++;
+                const celebration = celebrations[Math.floor(Math.random() * celebrations.length)];
+                const encouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+
+                feedbackDiv.innerHTML = `
+                    <div class="celebration">${celebration}</div>
+                    <div>${encouragement}</div>
+                `;
+                feedbackDiv.className = 'feedback correct';
+
+                document.getElementById('submit-btn').classList.add('hidden');
+                document.getElementById('next-btn').classList.remove('hidden');
+                lastCorrectAt = Date.now();
+            } else {
+                const tryAgain = tryAgainMessages[Math.floor(Math.random() * tryAgainMessages.length)];
+                feedbackDiv.innerHTML = `
+                    <div>😊 ${tryAgain}</div>
+                    <div>せいかいは ${currentQuestion.answer} だよ！</div>
+                `;
+                feedbackDiv.className = 'feedback incorrect';
+
+                // 間違えた場合は再挑戦できるようにボタンを残す
+                document.getElementById('answer-input').value = '';
+                document.getElementById('answer-input').focus();
+            }
+
+            feedbackDiv.classList.remove('hidden');
+            updateScore();
+        }
+
+        let lastCorrectAt = 0;
+        function nextQuestion() {
+            if (Date.now() - lastCorrectAt < 400) return;   // 【ブラッシュアップ】2 度押しよけ
+            currentQuestionIndex++;
+            generateQuestion();
+        }
+
+        function updateScore() {
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('total-count').textContent = totalCount;
+
+            const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy;
+        }
+
+        // エンターキーで回答
+        document.getElementById('answer-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('submit-btn').classList.contains('hidden')) {
+                    checkAnswer();
+                } else {
+                    nextQuestion();
+                }
+            }
+        });
+
+        // 初期化：レベル選択画面を表示
+    </script>
 </body>
 </html>

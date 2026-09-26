@@ -40,6 +40,67 @@
     });
   }
 
+  /* ------------------------------------------------------------------
+     キャンバ版から移した教材用：elementSdk / dataSdk の代わり
+     ------------------------------------------------------------------
+     キャンバでは、タイトルなどの文字をキャンバの編集画面から変えられるように
+     window.elementSdk が用意されていた。ここでは「最初の設定（defaultConfig）」で
+     1 回だけ画面を整える。
+     window.dataSdk は、ゲームの進み具合などをキャンバ側に保存する仕組みだった。
+     ここでは同じ使い方のまま、その端末（ブラウザ）の中に保存する。                 */
+  if (!global.elementSdk) {
+    var esdk = {
+      config: {},
+      init: function (o) {
+        o = o || {};
+        esdk._o = o;
+        esdk.config = Object.assign({}, o.defaultConfig || {});
+        if (typeof o.onConfigChange === 'function') {
+          setTimeout(function () {
+            try {
+              var r = o.onConfigChange(esdk.config);
+              if (r && r.catch) r.catch(function (e) { if (global.console) console.error(e); });
+            } catch (e) { if (global.console) console.error(e); }
+          }, 0);
+        }
+      },
+      setConfig: function (c) {
+        esdk.config = Object.assign({}, esdk.config, c || {});
+        if (esdk._o && typeof esdk._o.onConfigChange === 'function') {
+          try { esdk._o.onConfigChange(esdk.config); } catch (e) { if (global.console) console.error(e); }
+        }
+      }
+    };
+    global.elementSdk = esdk;
+  }
+  if (!global.dataSdk) {
+    var KEY = 'port-data:' + (global.location ? global.location.pathname : '');
+    var load = function () { try { return JSON.parse(global.localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
+    var save = function (a) { try { global.localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) { } };
+    var rows = load(), handler = null;
+    var notify = function () { if (handler) { try { handler(rows.map(function (r) { return Object.assign({}, r); })); } catch (e) { if (global.console) console.error(e); } } };
+    global.dataSdk = {
+      init: function (o) { handler = o && o.onDataChanged; notify(); return Promise.resolve({ isOk: true }); },
+      create: function (r) {
+        var row = Object.assign({ __backendId: 'r' + Date.now() + Math.random().toString(36).slice(2, 6) }, r);
+        rows.push(row); save(rows); notify();
+        return Promise.resolve({ isOk: true, data: row });
+      },
+      update: function (r) {
+        var i = rows.findIndex(function (x) { return r && x.__backendId === r.__backendId; });
+        if (i < 0 && rows.length && r && !r.__backendId) i = 0;
+        if (i < 0) return Promise.resolve({ isOk: false });
+        rows[i] = Object.assign({}, rows[i], r); save(rows); notify();
+        return Promise.resolve({ isOk: true });
+      },
+      delete: function (r) {
+        rows = rows.filter(function (x) { return !(r && x.__backendId === r.__backendId); });
+        save(rows); notify();
+        return Promise.resolve({ isOk: true });
+      }
+    };
+  }
+
   global.google = global.google || {};
   global.google.script = global.google.script || {};
   global.google.script.run = runner(null, null);

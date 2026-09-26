@@ -1,158 +1,1432 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>数学バトルクエスト</title>
-<link rel="stylesheet" href="../assets/base.css">
-</head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+ <head>
+  <meta charset="UTF-8">
+  <!--
+    07. 展開の練習（数学バトルクエスト - 展開の冒険）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   07. 展開の練習（数学バトルクエスト）
-   スライム → ゴブリン → オーク → ドラゴン → 魔王 の順に、
-   展開の問題を解いて進んでいく。敵の設定は元教材のまま。
-
-   元教材から直した点：
-     ・敵を倒したあとの演出中に次の問題が始まり、答えが表示されないまま
-       先に進んでしまうことがあった。
-       → 演出をやめ、答え合わせ → 次へ、の順番を必ず守るようにした。
-     ・入力欄が2つに分かれていて（x²の係数と定数）、片方だけ埋めても
-       正解になることがあった。
-       → 空欄が残っているうちは採点しない。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt, M = MathCore;
-
-  // 元教材の敵データをそのまま引き継ぐ
-  var ENEMIES = [
-    { name: 'スライム', sprite: '👾', speech: 'プルプル...!', kind: 'mono' },
-    { name: 'ゴブリン', sprite: '👹', speech: 'グルルル...!', kind: 'ab' },
-    { name: 'オーク', sprite: '👺', speech: 'ブオォ...!', kind: 'sq' },
-    { name: 'ドラゴン', sprite: '🐉', speech: 'ガオオォ...!', kind: 'df' },
-    { name: '魔王', sprite: '😈', speech: 'フハハハ...!', kind: 'cross' }
-  ];
-
-  function makeItem(kind) {
-    if (kind === 'mono') {
-      var k = A.nz(-6, 6), p = A.nz(1, 6), q = A.nz(-9, 9);
-      var head = k === 1 ? '' : k === -1 ? '-' : String(k);
-      return {
-        question: head + '(' + A.linear(p, q) + ')',
-        answer: F.poly([[k * p, 'x'], [k * q, '']]),
-        hint: 'かっこの外の数を、中のどの項にもかけます。'
-      };
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学バトルクエスト</title>
+  
+  <style>
+    body {
+      box-sizing: border-box;
     }
-    var it = kind === 'ab' ? A.quadraticFromRoots({ lo: -7, hi: 7 })
-      : kind === 'sq' ? A.squareForm({ lo: -7, hi: 7 })
-      : kind === 'df' ? A.diffOfSquares({ hi: 8 })
-      : A.crossForm();
-    return {
-      question: it.factored,
-      answer: it.expanded,
-      coefs: it.coefs,
-      hint: kind === 'sq' ? '(x + a)² = x² + 2ax + a²'
-        : kind === 'df' ? '(x + a)(x − a) = x² − a²'
-        : kind === 'ab' ? '(x + a)(x + b) = x² + (a + b)x + ab'
-        : '前どうし・外どうし・内どうし・後ろどうしを、すべてかけて足します。'
-    };
-  }
 
-  function wrongsFor(item) {
-    var correctPlain = F.plain(item.answer);
-    var out = [];
-    var guard = 0;
-    while (out.length < 3 && guard++ < 80) {
-      var cand;
-      if (item.coefs) {
-        var c = item.coefs;
-        cand = F.poly([
-          [c.x2, F.pow('x', 2)],
-          [c.x1 + Quiz.pick([-2, -1, 1, 2, 0]), 'x'],
-          [c.x0 + Quiz.pick([-3, -1, 1, 3, 0]), '']
-        ]);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #eee;
+      overflow: auto;
+    }
+
+    .game-container {
+      width: 100%;
+      min-height: 100%;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+      letter-spacing: 0.1em;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #ffeb3b;
+    }
+
+    .mode-selection {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    .mode-btn {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: 3px solid #ffd700;
+      padding: 1.5rem;
+      border-radius: 15px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    .mode-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(255,215,0,0.5);
+    }
+
+    .mode-btn .mode-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mode-btn .mode-desc {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .question-type-selection {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .type-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      border: 2px solid #74b9ff;
+      padding: 1rem;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .type-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(116,185,255,0.5);
+    }
+
+    .battle-screen {
+      width: 100%;
+      max-width: 900px;
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .battle-screen.active {
+      display: flex;
+    }
+
+    .battle-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      border: 2px solid #ffd700;
+    }
+
+    .hero-status, .enemy-status {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .status-label {
+      font-size: 1rem;
+      color: #ffeb3b;
+    }
+
+    .status-value {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .battle-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      position: relative;
+      min-height: 300px;
+    }
+
+    .character {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .character-sprite {
+      font-size: 8rem;
+      filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+      transition: all 0.3s;
+    }
+
+    .character.attack .character-sprite {
+      animation: slash 0.5s ease-out;
+    }
+
+    .character.damaged .character-sprite {
+      animation: shake 0.5s ease-out;
+    }
+
+    .character.defeated .character-sprite {
+      animation: defeat 1s ease-out forwards;
+    }
+
+    @keyframes slash {
+      0% { transform: translateX(0) rotate(0deg); }
+      50% { transform: translateX(30px) rotate(-15deg); }
+      100% { transform: translateX(0) rotate(0deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px) rotate(-5deg); }
+      75% { transform: translateX(10px) rotate(5deg); }
+    }
+
+    @keyframes defeat {
+      0% { transform: scale(1) rotate(0deg); opacity: 1; }
+      50% { transform: scale(1.2) rotate(-10deg); opacity: 0.7; }
+      100% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    }
+
+    .slash-effect {
+      position: absolute;
+      font-size: 4rem;
+      animation: slashMove 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes slashMove {
+      0% { transform: translateX(-50px) scale(0) rotate(-45deg); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateX(50px) scale(1.5) rotate(-45deg); opacity: 0; }
+    }
+
+    .speech-bubble {
+      position: absolute;
+      top: -60px;
+      background: white;
+      color: #333;
+      padding: 0.8rem 1.2rem;
+      border-radius: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      animation: bubble 0.3s ease-out;
+      white-space: nowrap;
+    }
+
+    @keyframes bubble {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .question-area {
+      background: rgba(255,255,255,0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      border: 2px solid #74b9ff;
+    }
+
+    .question-text {
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #ffeb3b;
+    }
+
+    .question-text .math-expression {
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+      font-size: 2.8rem;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      border: 3px solid #2ecc71;
+      padding: 1.5rem;
+      border-radius: 10px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .choice-btn .math-expression {
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+      font-size: 2.2rem;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(46,204,113,0.5);
+    }
+
+    .choice-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .input-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .input-row span {
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+    }
+
+    .input-field {
+      width: 120px;
+      padding: 0.7rem;
+      font-size: 2.3rem;
+      text-align: center;
+      border: 3px solid #74b9ff;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.9);
+      font-weight: bold;
+      color: #333;
+      font-family: 'Times New Roman', Times, serif;
+      font-style: italic;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      border: 3px solid #ffd700;
+      padding: 1rem 3rem;
+      border-radius: 10px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(255,215,0,0.5);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      border: 2px solid #bdc3c7;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1rem;
+    }
+
+    .back-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .victory-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      padding: 3rem;
+      background: rgba(0,0,0,0.5);
+      border-radius: 20px;
+      border: 3px solid #ffd700;
+    }
+
+    .victory-screen.active {
+      display: flex;
+    }
+
+    .victory-title {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+      animation: victory 1s ease-out;
+    }
+
+    @keyframes victory {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .continue-btn {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: 3px solid #ffd700;
+      padding: 1.5rem 3rem;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .continue-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(255,215,0,0.5);
+    }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { color: #ffd700; max-width: 900px; width: 100%; padding-left: 0; padding-right: 0; }
+    .victory-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 380px; }
+    .victory-nav .continue-btn { width: 100%; padding: 1rem 1.5rem; font-size: 1.25rem; }
+    .victory-nav .continue-btn.sub { background: rgba(255,255,255,0.15); }
+    .victory-nav a { color: #ffeb3b; }
+    .answer-hint { font-size: 1.3rem; color: #ffeb3b; text-align: center; }
+    .answer-hint .math-expression { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 1.8rem; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      .game-container { padding: 12px; }
+      .title { font-size: min(2.5rem, 6.4vw); white-space: nowrap; letter-spacing: 0.02em; }
+      .subtitle { font-size: 1rem; margin-bottom: 1.2rem; }
+      .mode-selection { gap: 0.9rem; }
+      .mode-btn { padding: 1rem; }
+      .mode-btn .mode-title { font-size: 1.2rem; }
+      .battle-screen { gap: 1rem; }
+      .battle-info { padding: 0.6rem 0.8rem; }
+      .battle-area { min-height: 140px; padding: 0.8rem 1.5rem; }
+      .character-sprite { font-size: 4.5rem; }
+      .question-area { padding: 1rem 0.8rem; }
+      .question-text { font-size: 1.2rem; margin-bottom: 1rem; }
+      .question-text .math-expression { font-size: min(2.2rem, 9vw); display: block; white-space: nowrap; }
+      .choices { grid-template-columns: 1fr; gap: 0.7rem; }
+      .choice-btn { padding: 0.8rem; }
+      .choice-btn .math-expression { font-size: min(1.9rem, 8vw); }
+      .input-row { font-size: 1.6rem; gap: 0.35rem; flex-wrap: nowrap; }
+      .input-field, #inputX2 { width: 64px !important; font-size: 1.4rem; padding: 0.4rem 0.2rem; margin-top: 0; }
+      .victory-screen { padding: 1.5rem 1rem; gap: 1.2rem; }
+      .victory-title { font-size: min(3rem, 9vw); white-space: nowrap; }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+ </head>
+ <body>
+  <div class="game-container">
+   <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+   <h1 class="title" id="gameTitle">数学バトルクエスト - 展開の冒険</h1>
+   <p class="subtitle">敵を倒して、展開の力をマスターせよ！</p>
+   <div class="mode-selection" id="modeSelection"><button class="mode-btn" onclick="selectMode(1)">
+     <div class="mode-title">
+      🗡️ モード① 基本の展開
+     </div>
+     <div class="mode-desc">
+      (x+a)(x+b) の形を展開しよう！
+     </div></button> <button class="mode-btn" onclick="selectMode(2)">
+     <div class="mode-title">
+      🛡️ モード② 2乗の展開
+     </div>
+     <div class="mode-desc">
+      (x+a)² の形を展開しよう！
+     </div></button> <button class="mode-btn" onclick="selectMode(3)">
+     <div class="mode-title">
+      ⚔️ モード③ 和と差の展開
+     </div>
+     <div class="mode-desc">
+      (x+a)(x-a) の形を展開しよう！
+     </div></button> <button class="mode-btn" onclick="selectMode(4)">
+     <div class="mode-title">
+      ⚡ モード④ ランダムチャレンジ
+     </div>
+     <div class="mode-desc">
+      ①～③がランダムで出題！
+     </div></button> <button class="mode-btn" onclick="selectMode(5)" style="background: linear-gradient(135deg, #8b0000 0%, #4a0000 100%); border-color: #ff4444;">
+     <div class="mode-title">
+      🔥 モード⑤ 最凶展開モード 💀
+     </div>
+     <div class="mode-desc">
+      係数付き展開！覚悟せよ...
+     </div></button>
+   </div>
+   <div class="question-type-selection" id="typeSelection" style="display: none;"><button class="type-btn" onclick="selectType('choice')">📝 4択問題</button> <button class="type-btn" onclick="selectType('input')">✏️ 穴埋め入力</button>
+   </div>
+   <div class="battle-screen" id="battleScreen">
+    <div class="battle-info">
+     <div class="hero-status">
+      <div class="status-label" id="heroLabel">
+       勇者
+      </div>
+      <div class="status-value">
+       ステージ: <span id="stage">1</span>/5
+      </div>
+     </div>
+     <div class="enemy-status">
+      <div class="status-label">
+       敵
+      </div>
+      <div class="status-value" id="enemyName">
+       スライム
+      </div>
+     </div>
+    </div>
+    <div class="battle-area" id="battleArea">
+     <div class="character hero">
+      <div class="character-sprite">
+       🧙‍♂️
+      </div>
+     </div>
+     <div class="character enemy" id="enemyChar">
+      <div class="character-sprite" id="enemySprite">
+       👾
+      </div>
+     </div>
+    </div>
+    <div class="question-area">
+     <div class="question-text" id="questionText"></div>
+     <div class="choices" id="choicesArea"></div>
+     <div class="input-mode" id="inputArea" style="display: none;"></div>
+    </div><button class="back-btn" onclick="backToMenu()">メニューに戻る</button>
+   </div>
+   <div class="victory-screen" id="victoryScreen">
+    <div class="victory-title" id="victoryMessage">
+     🎉 見事討伐！ 🎉
+    </div>
+    <div style="font-size: 1.5rem; text-align: center;">
+     全ての敵を倒しました！<br>
+      あなたは展開のマスターです！
+    </div>
+    <!-- 【ブラッシュアップ】元は「メニューに戻る」だけだった。同じモード・次のモードも選べるようにした -->
+    <div class="victory-nav">
+     <button class="continue-btn" onclick="replayMode(lastMode)">同じモードでもう一度</button>
+     <button class="continue-btn" id="nextModeBtn" onclick="replayMode(lastMode + 1)">次のモードへ ▶</button>
+     <button class="continue-btn sub" onclick="backToMenu()">モードをえらび直す</button>
+     <a href="../remake.html">ほかの教材をえらぶ</a>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: '数学バトルクエスト - 展開の冒険',
+      hero_name: '勇者',
+      victory_message: '🎉 見事討伐！ 🎉'
+    };
+
+    let config = { ...defaultConfig };
+
+    const enemies = [
+      { name: 'スライム', sprite: '👾', speech: 'プルプル...!' },
+      { name: 'ゴブリン', sprite: '👹', speech: 'グルルル...!' },
+      { name: 'オーク', sprite: '👺', speech: 'ブオォ...!' },
+      { name: 'ドラゴン', sprite: '🐉', speech: 'ガオオォ...!' },
+      { name: '魔王', sprite: '😈', speech: 'フハハハ...!' }
+    ];
+
+    let currentMode = 0;
+    let currentType = '';
+    let currentStage = 0;
+    let currentQuestion = null;
+    let isProcessingAnswer = false;
+    let usedQuestions = [];
+    // 【ブラッシュアップ】
+    let session = 0;        // メニューに戻ったら、前の「あとで動く処理」を止めるための番号
+    let lastMode = 1, lastType = 'choice';
+    let missCount = 0;      // 穴埋めでまちがえた回数（2 回まちがえたら答えを見せる）
+    let inputLocked = false; // 穴埋めで正解したあと、「答える！」の 2 度押しを受け付けない
+
+    function selectMode(mode) {
+      currentMode = mode;
+      document.getElementById('modeSelection').style.display = 'none';
+      document.getElementById('typeSelection').style.display = 'flex';
+
+      const battleArea = document.getElementById('battleArea');
+      const questionArea = document.querySelector('.question-area');
+
+      if (mode === 5) {
+        battleArea.style.background = 'linear-gradient(135deg, rgba(139,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%)';
+        questionArea.style.borderColor = '#ff4444';
+        questionArea.style.boxShadow = '0 0 30px rgba(255,68,68,0.5)';
       } else {
-        cand = item.answer.replace(/(-?\d+)/, function (m) {
-          return String(Number(m) + Quiz.pick([-2, -1, 1, 2]));
-        });
+        battleArea.style.background = 'rgba(0,0,0,0.3)';
+        questionArea.style.borderColor = '#74b9ff';
+        questionArea.style.boxShadow = 'none';
       }
-      if (cand === item.answer) continue;
-      if (M.isEqual(F.plain(cand), correctPlain)) continue;
-      if (out.indexOf(cand) >= 0) continue;
-      out.push(cand);
     }
-    return out;
-  }
 
-  function battleQuestion(enemy, style) {
-    var item = makeItem(enemy.kind);
-    var head = '<span style="font-size:1.6em">' + enemy.sprite + '</span>　<b>' + enemy.name +
-      '</b> 「' + enemy.speech + '」<br>次の式を展開して こうげき！';
-
-    if (style === 'input') {
-      return {
-        tag: enemy.name,
-        text: head,
-        math: item.question,
-        type: 'input',
-        answer: F.plain(item.answer),
-        answerLabel: item.answer,
-        placeholder: '例： x^2 + 5x + 6',
-        hint: item.hint,
-        explain: '答え： ' + item.answer
-      };
+    function selectType(type) {
+      session++;
+      lastMode = currentMode; lastType = type;
+      currentType = type;
+      currentStage = 0;
+      isProcessingAnswer = false;
+      document.getElementById('typeSelection').style.display = 'none';
+      document.getElementById('battleScreen').classList.add('active');
+      nextStage();
     }
-    return {
-      tag: enemy.name,
-      text: head,
-      math: item.question,
-      type: 'choice',
-      choices: [item.answer].concat(wrongsFor(item)),
-      correct: 0,
-      hint: item.hint,
-      explain: '答え： ' + item.answer
-    };
-  }
 
-  var modes = [];
-  ENEMIES.forEach(function (e, i) {
-    modes.push({
-      id: 'e' + i + ':choice',
-      group: 'ステージ別',
-      name: e.sprite + ' ' + e.name,
-      desc: '4択で3問'
-    });
-  });
-  modes.push({ id: 'quest:choice', group: '冒険モード', name: '⚔ クエスト（4択）', desc: '5体を順に、全10問' });
-  modes.push({ id: 'quest:input', group: '冒険モード', name: '🔥 クエスト（記述）', desc: '5体を順に、全10問' });
-
-  Quiz.start({
-    title: '数学バトルクエスト',
-    subtitle: '展開の力で、5体の敵を倒していこう。',
-    modes: modes,
-    build: function (id) {
-      var p = id.split(':');
-      var out = [];
-      if (p[0] === 'quest') {
-        ENEMIES.forEach(function (e, i) {
-          var n = i === ENEMIES.length - 1 ? 2 : 2;
-          for (var k = 0; k < n; k++) out.push(battleQuestion(e, p[1]));
-        });
-        return out;
+    function nextStage() {
+      if (currentStage >= 5) {
+        showVictory();
+        return;
       }
-      var enemy = ENEMIES[Number(p[0].slice(1))];
-      for (var i = 0; i < 3; i++) out.push(battleQuestion(enemy, p[1]));
-      return out;
+
+      isProcessingAnswer = false;
+      const enemy = enemies[currentStage];
+      document.getElementById('stage').textContent = currentStage + 1;
+      document.getElementById('enemyName').textContent = enemy.name;
+      document.getElementById('enemySprite').textContent = enemy.sprite;
+
+      const enemyChar = document.getElementById('enemyChar');
+      enemyChar.className = 'character enemy';
+
+      generateQuestion();
     }
-  });
-})();
-</script>
-</body>
+
+    function generateQuestion() {
+      missCount = 0;
+      inputLocked = false;
+      const stage = currentStage;
+      let question, answer, effectiveMode;
+      let attempts = 0;
+      const maxAttempts = 100;
+
+      do {
+        attempts++;
+
+        if (currentMode === 4) {
+          const rand = Math.random();
+          if (rand < 0.33) {
+            effectiveMode = 1;
+          } else if (rand < 0.66) {
+            effectiveMode = 2;
+          } else {
+            effectiveMode = 3;
+          }
+        } else {
+          effectiveMode = currentMode;
+        }
+
+        let maxVal;
+        if (stage === 0) {
+          maxVal = 3;
+        } else if (stage === 1) {
+          maxVal = 5;
+        } else if (stage === 2) {
+          maxVal = 6;
+        } else if (stage === 3) {
+          maxVal = 7;
+        } else {
+          maxVal = 9;
+        }
+
+        if (effectiveMode === 1) {
+          let a, b;
+          do {
+            a = Math.floor(Math.random() * maxVal) + 1;
+            b = Math.floor(Math.random() * maxVal) + 1;
+          } while (a === b);
+
+          const signA = stage === 0 ? '+' : (Math.random() > 0.5 ? '+' : '-');
+          const signB = stage === 0 ? '+' : (Math.random() > 0.5 ? '+' : '-');
+          const valA = signA === '+' ? a : -a;
+          const valB = signB === '+' ? b : -b;
+
+          question = '(x' + signA + a + ')(x' + signB + b + ')';
+          answer = { x2: 1, x: valA + valB, c: valA * valB };
+        } else if (effectiveMode === 2) {
+          const a = Math.floor(Math.random() * maxVal) + 1;
+          const sign = stage === 0 ? '+' : (Math.random() > 0.5 ? '+' : '-');
+          const val = sign === '+' ? a : -a;
+
+          question = '(x' + sign + a + ')²';
+          answer = { x2: 1, x: 2 * val, c: val * val };
+        } else if (effectiveMode === 3) {
+          const a = Math.floor(Math.random() * maxVal) + 1;
+          const firstSign = Math.random() > 0.5 ? '+' : '-';
+          const secondSign = firstSign === '+' ? '-' : '+';
+
+          question = '(x' + firstSign + a + ')(x' + secondSign + a + ')';
+          answer = { x2: 1, x: 0, c: -(a * a) };
+        } else if (effectiveMode === 5) {
+          let coefA, coefB, a, b;
+
+          if (stage === 0) {
+            coefA = Math.random() > 0.5 ? 2 : 1;
+            coefB = coefA === 1 ? 2 : (Math.random() > 0.5 ? 2 : 1);
+            a = Math.floor(Math.random() * 3) + 1;
+            b = Math.floor(Math.random() * 3) + 1;
+          } else if (stage === 1) {
+            const pool = [1, 2, 2, 3];
+            coefA = pool[Math.floor(Math.random() * pool.length)];
+            coefB = pool[Math.floor(Math.random() * pool.length)];
+            if (coefA === 1 && coefB === 1) coefB = 2;
+            a = Math.floor(Math.random() * 4) + 1;
+            b = Math.floor(Math.random() * 4) + 1;
+          } else if (stage === 2) {
+            const pool = [1, 2, 2, 3, 3];
+            coefA = pool[Math.floor(Math.random() * pool.length)];
+            coefB = pool[Math.floor(Math.random() * pool.length)];
+            if (coefA === 1 && coefB === 1) coefB = 2;
+            a = Math.floor(Math.random() * 5) + 1;
+            b = Math.floor(Math.random() * 5) + 1;
+          } else if (stage === 3) {
+            const pool = [1, 2, 2, 3, 3, 4];
+            coefA = pool[Math.floor(Math.random() * pool.length)];
+            coefB = pool[Math.floor(Math.random() * pool.length)];
+            if (coefA === 1 && coefB === 1) coefB = 2;
+            a = Math.floor(Math.random() * 6) + 1;
+            b = Math.floor(Math.random() * 6) + 1;
+          } else {
+            const pool = [1, 2, 2, 3, 3, 4, 4, 5];
+            coefA = pool[Math.floor(Math.random() * pool.length)];
+            coefB = pool[Math.floor(Math.random() * pool.length)];
+            if (coefA === 1 && coefB === 1) coefB = 2;
+            a = Math.floor(Math.random() * 7) + 1;
+            b = Math.floor(Math.random() * 7) + 1;
+          }
+
+          const signA = stage === 0 ? '+' : (Math.random() > 0.5 ? '+' : '-');
+          const signB = stage === 0 ? '+' : (Math.random() > 0.5 ? '+' : '-');
+          const valA = signA === '+' ? a : -a;
+          const valB = signB === '+' ? b : -b;
+
+          const coefAStr = coefA === 1 ? '' : coefA;
+          const coefBStr = coefB === 1 ? '' : coefB;
+
+          question = '(' + coefAStr + 'x' + signA + a + ')(' + coefBStr + 'x' + signB + b + ')';
+          answer = {
+            x2: coefA * coefB,
+            x: coefA * valB + coefB * valA,
+            c: valA * valB
+          };
+        }
+      } while (usedQuestions.includes(question) && attempts < maxAttempts);
+
+      usedQuestions.push(question);
+
+      currentQuestion = { question: question, answer: answer, effectiveMode: effectiveMode };
+
+      let displayHTML;
+      if (currentMode === 5) {
+        displayHTML = '💀 <span class="math-expression">' + question + '</span> を展開せよ！ 💀';
+      } else {
+        displayHTML = '<span class="math-expression">' + question + '</span> を展開せよ！';
+      }
+
+      document.getElementById('questionText').innerHTML = displayHTML;
+
+      if (currentType === 'choice') {
+        showChoices(answer);
+      } else {
+        showInput(answer);
+      }
+    }
+
+    function showChoices(answer) {
+      document.getElementById('choicesArea').style.display = 'grid';
+      document.getElementById('inputArea').style.display = 'none';
+
+      const choices = generateChoices(answer);
+      const choicesArea = document.getElementById('choicesArea');
+      choicesArea.innerHTML = '';
+
+      choices.forEach((choice) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = '<span class="math-expression">' + choice.text + '</span>';
+        btn.onclick = () => {
+          if (!isProcessingAnswer) {
+            checkAnswer(choice.isCorrect, btn);
+          }
+        };
+        choicesArea.appendChild(btn);
+      });
+    }
+
+    function generateChoices(answer) {
+      const correct = formatAnswer(answer);
+      const choices = [{ text: correct, isCorrect: true }];
+
+      // 【ブラッシュアップ】元はまちがいの選択肢を、x の係数と定数を「でたらめにずらす」だけで作っていた。
+      //   よくあるまちがい（定数や真ん中の符号・2 倍の忘れ・係数と定数の取りちがえ など）を先に入れる。
+      const A = answer, traps = [];
+      const m = (currentQuestion && currentQuestion.question || '').match(/\((\d*)x([+-]\d+)\)\((\d*)x([+-]\d+)\)/);
+      traps.push({ x2: A.x2, x: A.x, c: -A.c });
+      if (A.x !== 0) traps.push({ x2: A.x2, x: -A.x, c: A.c });
+      if (A.x !== 0 && A.x !== A.c) traps.push({ x2: A.x2, x: A.c, c: A.x });
+      if (currentQuestion && currentQuestion.effectiveMode === 2) {
+        traps.push({ x2: A.x2, x: A.x / 2, c: A.c });   // 真ん中の 2 倍を忘れた
+        traps.push({ x2: A.x2, x: 0, c: A.c });         // 真ん中の項を忘れた
+      }
+      if (currentQuestion && currentQuestion.effectiveMode === 3) {
+        const a = Math.round(Math.sqrt(-A.c));
+        traps.push({ x2: A.x2, x: 0, c: -A.c });        // x² + a² としてしまう
+        traps.push({ x2: A.x2, x: 2 * a, c: A.c });
+        traps.push({ x2: A.x2, x: -2 * a, c: A.c });
+      }
+      if (m) {
+        const cA = m[1] === '' ? 1 : +m[1], vA = +m[2], cB = m[3] === '' ? 1 : +m[3], vB = +m[4];
+        if (cA !== 1 || cB !== 1) {
+          traps.push({ x2: A.x2, x: vA + vB, c: A.c });          // 係数をかけ忘れた
+          traps.push({ x2: cA + cB, x: A.x, c: A.c });
+        }
+      }
+      shuffleList(traps).forEach(t => {
+        const text = formatAnswer(t);
+        if (choices.length < 4 && !choices.find(c => c.text === text)) choices.push({ text: text, isCorrect: false });
+      });
+
+      while (choices.length < 4) {
+        const wrongAnswer = {
+          x2: answer.x2,
+          x: answer.x + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1),
+          c: answer.c + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 5) + 1)
+        };
+        const wrongText = formatAnswer(wrongAnswer);
+        if (!choices.find(c => c.text === wrongText)) {
+          choices.push({ text: wrongText, isCorrect: false });
+        }
+      }
+
+      return shuffleList(choices);
+    }
+
+    function shuffleList(a) {
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    function formatAnswer(answer) {
+      let result = '';
+
+      if (answer.x2 !== 0) {
+        result += answer.x2 === 1 ? 'x²' : answer.x2 + 'x²';
+      }
+
+      if (answer.x !== 0) {
+        if (result && answer.x > 0) result += '+';
+        result += answer.x === 1 ? 'x' : answer.x === -1 ? '-x' : answer.x + 'x';
+      }
+
+      if (answer.c !== 0) {
+        if (result && answer.c > 0) result += '+';
+        result += answer.c;
+      }
+
+      return result || '0';
+    }
+
+    function showInput(answer) {
+      document.getElementById('choicesArea').style.display = 'none';
+      document.getElementById('inputArea').style.display = 'flex';
+
+      const inputArea = document.getElementById('inputArea');
+
+      let inputHTML = '<div class="input-row">';
+
+      if (answer.x2 !== 1) {
+        inputHTML += '<input type="number" class="input-field" id="inputX2" placeholder="?" style="width: 110px;">';
+        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;">x²</span>';
+      } else {
+        inputHTML += '<span class="x2-span" style="margin-right: 0.3rem;">x²</span>';
+      }
+
+      inputHTML += '<span class="sign-before-x">+</span>';
+      inputHTML += '<input type="number" class="input-field input-x-coef" id="inputXCoef" placeholder="?">';
+      inputHTML += '<span class="x-span">x</span>';
+      inputHTML += '<span class="sign-before-c">+</span>';
+      inputHTML += '<input type="number" class="input-field" id="inputC" placeholder="?">';
+      inputHTML += '</div>';
+      inputHTML += '<button class="submit-btn" onclick="checkInputAnswer()">答える！</button>';
+
+      inputArea.innerHTML = inputHTML;
+    }
+
+    function checkInputAnswer() {
+      if (isProcessingAnswer || inputLocked) return;
+
+      const inputX2Element = document.getElementById('inputX2');
+      const inputXCoefElement = document.getElementById('inputXCoef');
+      const inputCElement = document.getElementById('inputC');
+      const answer = currentQuestion.answer;
+
+      const inputXCoefValue = inputXCoefElement.value.trim();
+      const inputCValue = inputCElement.value.trim();
+
+      let inputXCoef;
+      if (inputXCoefValue === '') {
+        inputXCoef = 0;
+      } else {
+        inputXCoef = parseInt(inputXCoefValue);
+      }
+
+      const inputC = parseInt(inputCValue);
+
+      if (isNaN(inputC)) {
+        return;
+      }
+
+      if (inputX2Element) {
+        const inputX2 = parseInt(inputX2Element.value);
+        if (isNaN(inputX2)) {
+          return;
+        }
+      }
+
+      let isCorrect;
+
+      if (inputX2Element) {
+        const inputX2 = parseInt(inputX2Element.value);
+        isCorrect = inputX2 === answer.x2 && inputXCoef === answer.x && inputC === answer.c;
+      } else {
+        isCorrect = inputXCoef === answer.x && inputC === answer.c;
+      }
+
+      if (isCorrect) {
+        inputLocked = true;
+        const effectiveMode = currentQuestion.effectiveMode;
+
+        if (currentMode === 5) {
+          cleanupMode5Animation(inputXCoef, inputC);
+          setTimeout(() => {
+            const submitBtn = document.querySelector('.submit-btn');
+            checkAnswer(isCorrect, submitBtn);
+          }, 800);
+        } else if (effectiveMode === 3) {
+          showMode3CenterAnimation();
+          setTimeout(() => {
+            const submitBtn = document.querySelector('.submit-btn');
+            checkAnswer(isCorrect, submitBtn);
+          }, 800);
+        } else {
+          if (inputXCoef === 0) {
+            showZeroXAnimation();
+            setTimeout(() => {
+              const submitBtn = document.querySelector('.submit-btn');
+              checkAnswer(isCorrect, submitBtn);
+            }, 800);
+          }
+          else if (inputXCoef === 1 || inputXCoef === -1) {
+            showCoefficientOneAnimation(inputXCoef, inputC);
+            setTimeout(() => {
+              const submitBtn = document.querySelector('.submit-btn');
+              checkAnswer(isCorrect, submitBtn);
+            }, 800);
+          }
+          else {
+            showSignCleanupAnimation(inputXCoef, inputC);
+            setTimeout(() => {
+              const submitBtn = document.querySelector('.submit-btn');
+              checkAnswer(isCorrect, submitBtn);
+            }, 800);
+          }
+        }
+      } else {
+        const submitBtn = document.querySelector('.submit-btn');
+        checkAnswer(isCorrect, submitBtn);
+        // 【ブラッシュアップ】元は何度まちがえても答えが分からず、先に進めなかった
+        missCount++;
+        if (missCount >= 2 && !document.getElementById('answerHint')) {
+          const hint = document.createElement('div');
+          hint.id = 'answerHint';
+          hint.className = 'answer-hint';
+          hint.innerHTML = 'こたえ： <span class="math-expression">' + formatAnswer(answer) + '</span>（入れて「答える！」を押そう）';
+          document.getElementById('inputArea').appendChild(hint);
+        }
+      }
+    }
+
+    function showMode3CenterAnimation() {
+      const signBeforeX = document.querySelector('.sign-before-x');
+      const inputXCoef = document.getElementById('inputXCoef');
+      const inputC = document.getElementById('inputC');
+      const signBeforeC = document.querySelector('.sign-before-c');
+      const xSpan = document.querySelector('.x-span');
+      const inputX2Element = document.getElementById('inputX2');
+      const x2Span = document.querySelector('.x2-span');
+      const inputCValue = parseInt(inputC.value);
+
+      if (inputXCoef) {
+        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s';
+        inputXCoef.style.opacity = '0';
+        inputXCoef.style.transform = 'scale(0)';
+      }
+
+      if (xSpan) {
+        xSpan.style.transition = 'opacity 0.8s, transform 0.8s';
+        xSpan.style.opacity = '0';
+        xSpan.style.transform = 'scale(0)';
+      }
+
+      if (signBeforeX) {
+        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeX.style.opacity = '0';
+        signBeforeX.style.transform = 'scale(0)';
+      }
+
+      if (inputC) {
+        inputC.style.transition = 'transform 0.8s ease-in-out, background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out';
+        inputC.style.transform = 'translateX(-120px)';
+        inputC.style.background = 'transparent';
+        inputC.style.border = 'none';
+        inputC.style.color = '#eee';
+      }
+
+      if (signBeforeC) {
+        signBeforeC.style.transition = 'transform 0.8s ease-in-out, opacity 0.8s ease-in-out';
+
+        if (inputCValue < 0) {
+          signBeforeC.style.opacity = '0';
+          signBeforeC.style.transform = 'scale(0)';
+        } else {
+          signBeforeC.style.transform = 'translateX(-120px)';
+        }
+      }
+
+      if (inputX2Element) {
+        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
+        inputX2Element.style.background = 'transparent';
+        inputX2Element.style.border = 'none';
+        inputX2Element.style.color = '#eee';
+        inputX2Element.style.transform = 'translateX(95px)';
+      }
+
+      if (x2Span) {
+        x2Span.style.transition = 'transform 0.8s ease-in-out';
+        x2Span.style.transform = 'translateX(95px)';
+      }
+    }
+
+    function cleanupMode5Animation(inputXCoef, inputC) {
+      const signBeforeX = document.querySelector('.sign-before-x');
+      const signBeforeC = document.querySelector('.sign-before-c');
+      const inputXCoefElement = document.getElementById('inputXCoef');
+      const inputCElement = document.getElementById('inputC');
+      const inputX2Element = document.getElementById('inputX2');
+      const x2Span = document.querySelector('.x2-span');
+      const xSpan = document.querySelector('.x-span');
+
+      const xCoefIsNegative = inputXCoef < 0;
+      const cIsNegative = inputC < 0;
+
+      if (inputX2Element) {
+        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
+        inputX2Element.style.background = 'transparent';
+        inputX2Element.style.border = 'none';
+        inputX2Element.style.color = '#eee';
+        inputX2Element.style.transform = 'translateX(60px)';
+      }
+
+      if (x2Span) {
+        x2Span.style.transition = 'transform 0.8s ease-in-out';
+        x2Span.style.transform = 'translateX(40px)';
+      }
+
+      if (inputXCoefElement) {
+        inputXCoefElement.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
+        inputXCoefElement.style.background = 'transparent';
+        inputXCoefElement.style.border = 'none';
+        inputXCoefElement.style.color = '#eee';
+        inputXCoefElement.style.transform = 'translateX(10px)';
+      }
+
+      if (xCoefIsNegative && signBeforeX) {
+        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeX.style.opacity = '0';
+        signBeforeX.style.transform = 'scale(0)';
+      } else if (signBeforeX) {
+        signBeforeX.style.transition = 'transform 0.8s ease-in-out';
+        signBeforeX.style.transform = 'translateX(40px)';
+      }
+
+      if (xSpan) {
+        xSpan.style.transition = 'transform 0.8s ease-in-out';
+        xSpan.style.transform = 'translateX(-20px)';
+      }
+
+      if (inputCElement) {
+        inputCElement.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
+        inputCElement.style.background = 'transparent';
+        inputCElement.style.border = 'none';
+        inputCElement.style.color = '#eee';
+        inputCElement.style.transform = 'translateX(-40px)';
+      }
+
+      if (cIsNegative && signBeforeC) {
+        signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeC.style.opacity = '0';
+        signBeforeC.style.transform = 'scale(0)';
+      } else if (signBeforeC) {
+        signBeforeC.style.transition = 'transform 0.8s ease-in-out';
+        signBeforeC.style.transform = 'translateX(-20px)';
+      }
+    }
+
+    function showZeroXAnimation() {
+      const signBeforeX = document.querySelector('.sign-before-x');
+      const inputXCoef = document.getElementById('inputXCoef');
+      const inputC = document.getElementById('inputC');
+      const signBeforeC = document.querySelector('.sign-before-c');
+      const xSpan = document.querySelector('.x-span');
+      const inputX2Element = document.getElementById('inputX2');
+      const inputCValue = parseInt(inputC.value);
+
+      if (inputXCoef) {
+        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s';
+        inputXCoef.style.opacity = '0';
+        inputXCoef.style.transform = 'scale(0)';
+      }
+
+      if (xSpan) {
+        xSpan.style.transition = 'opacity 0.8s, transform 0.8s';
+        xSpan.style.opacity = '0';
+        xSpan.style.transform = 'scale(0)';
+      }
+
+      if (signBeforeX) {
+        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeX.style.opacity = '0';
+        signBeforeX.style.transform = 'scale(0)';
+      }
+
+      if (inputC) {
+        inputC.style.transition = 'transform 0.8s ease-in-out, background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out';
+        inputC.style.transform = 'translateX(-10px)';
+        inputC.style.background = 'transparent';
+        inputC.style.border = 'none';
+        inputC.style.color = '#eee';
+      }
+
+      if (signBeforeC) {
+        signBeforeC.style.transition = 'transform 0.8s ease-in-out, opacity 0.8s ease-in-out';
+
+        if (inputCValue < 0) {
+          signBeforeC.style.opacity = '0';
+          signBeforeC.style.transform = 'scale(0)';
+        } else {
+          signBeforeC.style.transform = 'translateX(-10px)';
+        }
+      }
+
+      if (inputX2Element) {
+        inputX2Element.style.transition = 'background 0.8s ease-in-out, border 0.8s ease-in-out, color 0.8s ease-in-out, transform 0.8s ease-in-out';
+        inputX2Element.style.background = 'transparent';
+        inputX2Element.style.border = 'none';
+        inputX2Element.style.color = '#eee';
+        inputX2Element.style.transform = 'translateX(5px)';
+      }
+    }
+
+    function showCoefficientOneAnimation(inputXCoefValue, inputCValue) {
+      const signBeforeX = document.querySelector('.sign-before-x');
+      const signBeforeC = document.querySelector('.sign-before-c');
+      const inputXCoef = document.getElementById('inputXCoef');
+      const inputC = document.getElementById('inputC');
+      const xSpan = document.querySelector('.x-span');
+      const inputX2Element = document.getElementById('inputX2');
+
+      if (inputXCoef) {
+        inputXCoef.style.transition = 'opacity 0.8s, transform 0.8s, width 0.8s';
+        inputXCoef.style.opacity = '0';
+        inputXCoef.style.transform = 'scale(0)';
+        inputXCoef.style.width = '0';
+      }
+
+      if (inputXCoefValue === 1) {
+        if (signBeforeX) {
+          signBeforeX.style.transition = 'transform 0.8s ease-in-out';
+          signBeforeX.style.transform = 'translateX(-8px)';
+        }
+
+        if (xSpan) {
+          xSpan.style.transition = 'transform 0.8s ease-in-out';
+          xSpan.style.transform = 'translateX(-10px)';
+        }
+
+        if (inputC) {
+          inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+          inputC.style.background = 'transparent';
+          inputC.style.border = 'none';
+          inputC.style.color = '#eee';
+          inputC.style.transform = 'translateX(-10px)';
+        }
+
+        if (signBeforeC) {
+          if (inputCValue < 0) {
+            signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
+            signBeforeC.style.opacity = '0';
+            signBeforeC.style.transform = 'scale(0)';
+          } else {
+            signBeforeC.style.transition = 'transform 0.8s ease-in-out';
+            signBeforeC.style.transform = 'translateX(-10px)';
+          }
+        }
+      } else {
+        if (signBeforeX) {
+          signBeforeX.style.transition = 'transform 0.8s ease-in-out';
+          signBeforeX.textContent = '-';
+          signBeforeX.style.color = '#eee';
+          signBeforeX.style.transform = 'translateX(-8px)';
+        }
+
+        if (xSpan) {
+          xSpan.style.transition = 'transform 0.8s ease-in-out';
+          xSpan.style.transform = 'translateX(-10px)';
+        }
+
+        if (inputC) {
+          inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+          inputC.style.background = 'transparent';
+          inputC.style.border = 'none';
+          inputC.style.color = '#eee';
+          inputC.style.transform = 'translateX(-10px)';
+        }
+
+        if (signBeforeC) {
+          if (inputCValue < 0) {
+            signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
+            signBeforeC.style.opacity = '0';
+            signBeforeC.style.transform = 'scale(0)';
+          } else {
+            signBeforeC.style.transition = 'transform 0.8s ease-in-out';
+            signBeforeC.style.transform = 'translateX(-10px)';
+          }
+        }
+      }
+
+      if (inputX2Element) {
+        inputX2Element.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+        inputX2Element.style.background = 'transparent';
+        inputX2Element.style.border = 'none';
+        inputX2Element.style.color = '#eee';
+        inputX2Element.style.transform = 'translateX(5px)';
+      }
+    }
+
+    function showSignCleanupAnimation(inputXCoefValue, inputCValue) {
+      const signBeforeX = document.querySelector('.sign-before-x');
+      const signBeforeC = document.querySelector('.sign-before-c');
+      const inputXCoef = document.getElementById('inputXCoef');
+      const inputC = document.getElementById('inputC');
+      const xSpan = document.querySelector('.x-span');
+      const inputX2Element = document.getElementById('inputX2');
+      const x2Span = document.querySelector('.x2-span');
+
+      const xCoefIsNegative = inputXCoefValue < 0;
+      const cIsNegative = inputCValue < 0;
+
+      if (inputX2Element) {
+        inputX2Element.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+        inputX2Element.style.background = 'transparent';
+        inputX2Element.style.border = 'none';
+        inputX2Element.style.color = '#eee';
+        inputX2Element.style.transform = 'translateX(40px)';
+      }
+
+      if (x2Span) {
+        x2Span.style.transition = 'transform 0.8s ease-in-out';
+        x2Span.style.transform = 'translateX(40px)';
+      }
+
+      if (inputXCoef) {
+        inputXCoef.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+        inputXCoef.style.background = 'transparent';
+        inputXCoef.style.border = 'none';
+        inputXCoef.style.color = '#eee';
+        inputXCoef.style.transform = 'translateX(20px)';
+      }
+
+      if (xCoefIsNegative && signBeforeX) {
+        signBeforeX.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeX.style.opacity = '0';
+        signBeforeX.style.transform = 'scale(0)';
+      } else if (signBeforeX) {
+        signBeforeX.style.transition = 'transform 0.8s ease-in-out';
+        signBeforeX.style.transform = 'translateX(40px)';
+      }
+
+      if (xSpan) {
+        xSpan.style.transition = 'transform 0.8s ease-in-out';
+        xSpan.style.transform = 'translateX(-20px)';
+      }
+
+      if (inputC) {
+        inputC.style.transition = 'background 0.8s, border 0.8s, color 0.8s, transform 0.8s ease-in-out';
+        inputC.style.background = 'transparent';
+        inputC.style.border = 'none';
+        inputC.style.color = '#eee';
+        inputC.style.transform = 'translateX(-40px)';
+      }
+
+      if (cIsNegative && signBeforeC) {
+        signBeforeC.style.transition = 'opacity 0.8s, transform 0.8s';
+        signBeforeC.style.opacity = '0';
+        signBeforeC.style.transform = 'scale(0)';
+      } else if (signBeforeC) {
+        signBeforeC.style.transition = 'transform 0.8s ease-in-out';
+        signBeforeC.style.transform = 'translateX(-30px)';
+      }
+    }
+
+    function checkAnswer(isCorrect, btn) {
+      if (isProcessingAnswer) return;
+      if (!document.getElementById('battleScreen').classList.contains('active')) return;   // 【ブラッシュアップ】
+      const sid = session;
+      isProcessingAnswer = true;
+
+      const buttons = document.querySelectorAll('.choice-btn, .submit-btn, .input-field');
+      buttons.forEach(b => b.disabled = true);
+
+      const hero = document.querySelector('.hero');
+      const enemyChar = document.getElementById('enemyChar');
+      const battleArea = document.getElementById('battleArea');
+
+      if (isCorrect) {
+        hero.classList.add('attack');
+
+        setTimeout(() => {
+          const slash = document.createElement('div');
+          slash.className = 'slash-effect';
+          slash.textContent = '⚔️';
+          slash.style.left = '50%';
+          slash.style.top = '50%';
+          battleArea.appendChild(slash);
+
+          setTimeout(() => slash.remove(), 500);
+        }, 250);
+
+        setTimeout(() => {
+          hero.classList.remove('attack');
+          enemyChar.classList.add('defeated');
+
+          setTimeout(() => {
+            if (sid !== session) return;   // 【ブラッシュアップ】途中でメニューに戻っていたら何もしない
+            currentStage++;
+            nextStage();
+          }, 1000);
+        }, 500);
+      } else {
+        enemyChar.classList.add('damaged');
+
+        const bubble = document.createElement('div');
+        bubble.className = 'speech-bubble';
+        bubble.textContent = enemies[currentStage].speech;
+        enemyChar.appendChild(bubble);
+
+        setTimeout(() => {
+          enemyChar.classList.remove('damaged');
+          bubble.remove();
+          buttons.forEach(b => {
+            b.disabled = false;
+          });
+          isProcessingAnswer = false;
+        }, 1500);
+      }
+    }
+
+    function showVictory() {
+      document.getElementById('battleScreen').classList.remove('active');
+      document.getElementById('victoryScreen').classList.add('active');
+      document.getElementById('victoryMessage').textContent = config.victory_message || defaultConfig.victory_message;
+      document.getElementById('nextModeBtn').style.display = lastMode < 5 ? '' : 'none';
+    }
+
+    // 【ブラッシュアップ】同じ答え方（4択・穴埋め）のまま、モードを選んで始める
+    function replayMode(mode) {
+      const type = lastType;
+      backToMenu();
+      selectMode(mode);
+      selectType(type);
+      window.scrollTo(0, 0);
+    }
+
+    function backToMenu() {
+      session++;
+      document.getElementById('battleScreen').classList.remove('active');
+      document.getElementById('victoryScreen').classList.remove('active');
+      document.getElementById('modeSelection').style.display = 'flex';
+      document.getElementById('typeSelection').style.display = 'none';
+      currentMode = 0;
+      currentType = '';
+      currentStage = 0;
+      isProcessingAnswer = false;
+      usedQuestions = [];
+    }
+
+    async function onConfigChange(newConfig) {
+      config = { ...newConfig };
+      document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+      document.getElementById('heroLabel').textContent = config.hero_name || defaultConfig.hero_name;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig: defaultConfig,
+        onConfigChange: onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['game_title', config.game_title || defaultConfig.game_title],
+          ['hero_name', config.hero_name || defaultConfig.hero_name],
+          ['victory_message', config.victory_message || defaultConfig.victory_message]
+        ])
+      });
+    }
+  </script>
+ </body>
 </html>

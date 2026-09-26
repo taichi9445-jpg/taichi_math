@@ -1,217 +1,2351 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>文字式の計算</title>
-<link rel="stylesheet" href="../assets/base.css">
-</head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+ <head>
+  <meta charset="UTF-8">
+  <!--
+    06. 文字式の計算（数式バトル：6つのダンジョン）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   06. 文字式の計算（四則計算・分配法則）
-     たし算ひき算（同類項）／かけ算わり算（単項式）／分配法則／総合
-
-   元教材から直した点：
-     ・分配法則で、かっこの前がマイナスのときの符号処理がまちがった
-       選択肢が正解になっていることがあった。
-       → 式は係数の計算から機械的に作り、選択肢は数式として突き合わせる。
-     ・わり算の答えを分数で書くと不正解になっていた。
-       → 「x/2」「0.5x」どちらでも正解になる（数式として同値なら正解）。
-     ・難易度を上げると問題が作れず、画面が真っ白になることがあった。
-       → 作れなかったときは作り直すので、真っ白にならない。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra, F = Quiz.fmt, M = MathCore;
-
-  /* ---------- 同類項のたし算・ひき算 ---------- */
-  function addSub(level) {
-    var v = Quiz.pick(['x', 'a', 'y']);
-    var n = level >= 2 ? 4 : 3;             // 項の数
-    var terms = [];
-    for (var i = 0; i < n; i++) {
-      var isVar = Math.random() < 0.6;
-      terms.push({ c: A.nz(-9, 9), v: isVar ? v : '' });
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数式バトル</title>
+  
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      overflow: hidden;
     }
-    var sumV = 0, sumC = 0;
-    terms.forEach(function (t) { if (t.v) sumV += t.c; else sumC += t.c; });
 
-    var shown = terms.map(function (t, i) {
-      var body = F.term(Math.abs(t.c), t.v);
-      if (i === 0) return (t.c < 0 ? '-' : '') + body;
-      return (t.c < 0 ? ' - ' : ' + ') + body;
-    }).join('');
+    html, body, #game-container {
+      height: 100%;
+      width: 100%;
+    }
 
-    var answer = F.poly([[sumV, v], [sumC, '']]);
-    return {
-      question: shown,
-      answer: answer,
-      hint: v + ' がついた項どうし、数だけの項どうしをまとめます。',
-      explain: v + ' の項の合計は ' + sumV + '、数の項の合計は ' + sumC + '。答えは ' + answer + ' です。'
+    #game-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .game-header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .game-title {
+      font-size: 32px;
+      font-weight: bold;
+      margin: 0 0 10px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .mode-selection-text {
+      font-size: 18px;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .mode-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 3px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .mode-card:nth-child(1)::before {
+      background: linear-gradient(90deg, #f093fb, #f5576c);
+    }
+
+    .mode-card:nth-child(2)::before {
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+    }
+
+    .mode-card:nth-child(3)::before {
+      background: linear-gradient(90deg, #43e97b, #38f9d7);
+    }
+
+    .mode-card:nth-child(4)::before {
+      background: linear-gradient(90deg, #fa709a, #fee140);
+    }
+
+    .mode-card:nth-child(5)::before {
+      background: linear-gradient(90deg, #30cfd0, #330867);
+    }
+
+    .mode-card:nth-child(6)::before {
+      background: linear-gradient(90deg, #a8edea, #fed6e3);
+    }
+
+    .mode-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+      border-color: #667eea;
+    }
+
+    .mode-number {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 36px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .mode-card:nth-child(1) .mode-number {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+    }
+
+    .mode-card:nth-child(2) .mode-number {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+    }
+
+    .mode-card:nth-child(3) .mode-number {
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+    }
+
+    .mode-card:nth-child(4) .mode-number {
+      background: linear-gradient(135deg, #fa709a, #fee140);
+    }
+
+    .mode-card:nth-child(5) .mode-number {
+      background: linear-gradient(135deg, #30cfd0, #330867);
+    }
+
+    .mode-card:nth-child(6) .mode-number {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      color: #333;
+    }
+
+    .mode-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin: 0 0 10px 0;
+    }
+
+    .mode-description {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .difficulty-select {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .difficulty-select.active {
+      display: flex;
+    }
+
+    .difficulty-panel {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .difficulty-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      margin: 0 0 30px 0;
+      text-align: center;
+    }
+
+    .difficulty-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .difficulty-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .difficulty-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+
+    .difficulty-button.hell {
+      background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+    }
+
+    .difficulty-button.pressure {
+      background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+    }
+
+    .close-difficulty {
+      background: #ccc;
+      color: #333;
+      margin-top: 10px;
+    }
+
+    .game-screen {
+      display: none;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .game-screen.active {
+      display: block;
+    }
+
+    .game-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .back-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .back-button:hover {
+      background: #5568d3;
+    }
+
+    .stage-info {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .hell-mode-badge {
+      background: linear-gradient(135deg, #ff0000 0%, #8b0000 100%);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 10px;
+      box-shadow: 0 2px 8px rgba(255,0,0,0.4);
+    }
+
+    .pressure-mode-badge {
+      background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: 10px;
+      box-shadow: 0 2px 8px rgba(255,165,0,0.4);
+    }
+
+    .game-area {
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+    }
+
+    .puzzle-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 90px);
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .term-block {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 15px 5px;
+      border-radius: 12px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      user-select: none;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Latin Modern Math', 'Times New Roman', serif;
+      font-style: italic;
+    }
+
+    .term-block:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+
+    .term-block.selected {
+      border: 4px solid #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    .term-block.dragging {
+      opacity: 0.5;
+    }
+
+    .term-block.merged {
+      animation: merge 0.5s ease-out;
+    }
+
+    .term-block.empty {
+      background: rgba(200,200,200,0.3);
+      cursor: default;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    @keyframes merge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3) rotate(10deg); }
+      100% { transform: scale(1); }
+    }
+
+    .congratulation-overlay {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+      border: 4px solid #ff6b6b;
+      border-radius: 20px;
+      padding: 30px 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      z-index: 100;
+      animation: celebrationBounce 0.6s ease-out;
+      max-width: 80%;
+      text-align: center;
+    }
+
+    @keyframes celebrationBounce {
+      0% {
+        transform: translateX(-50%) translateY(-100px) scale(0.5);
+        opacity: 0;
+      }
+      60% {
+        transform: translateX(-50%) translateY(10px) scale(1.1);
+      }
+      100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .congratulation-text {
+      font-size: 26px;
+      font-weight: bold;
+      color: #d32f2f;
+      margin: 0 0 10px 0;
+      text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+    }
+
+    .congratulation-subtext {
+      font-size: 18px;
+      color: #ff6b6b;
+      margin: 0;
+      font-weight: bold;
+    }
+
+    .final-congratulation {
+      background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+      border: 5px solid #ee5a6f;
+      padding: 40px 50px;
+    }
+
+    .final-congratulation .congratulation-text {
+      font-size: 32px;
+      color: #ffffff;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    }
+
+    .final-congratulation .congratulation-subtext {
+      font-size: 20px;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .dungeon-scene {
+      position: relative;
+      width: 100%;
+      max-width: 650px;
+      height: 450px;
+      margin: 20px 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .demon-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      animation: demonFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes demonFloat {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-15px); }
+    }
+
+    .demon-body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+    }
+
+    .demon-head {
+      font-size: 80px;
+      line-height: 1;
+      margin-bottom: -15px;
+      position: relative;
+    }
+
+    .demon-horns {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+      opacity: 0;
+    }
+
+    .demon-horn {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 30px solid #8b0000;
+    }
+
+    .demon-torso {
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      width: 120px;
+      height: 140px;
+      border-radius: 60px 60px 20px 20px;
+      position: relative;
+      border: 4px solid #4a0000;
+      transition: all 0.3s ease;
+    }
+
+    .demon-weak .demon-head {
+      font-size: 70px;
+    }
+
+    .demon-weak .demon-torso {
+      width: 100px;
+      height: 120px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+      border-color: #ff4444;
+    }
+
+    .demon-weak .demon-horns {
+      opacity: 0;
+    }
+
+    .demon-medium .demon-head {
+      font-size: 85px;
+    }
+
+    .demon-medium .demon-torso {
+      width: 120px;
+      height: 140px;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      border-color: #4a0000;
+    }
+
+    .demon-medium .demon-horns {
+      opacity: 1;
+    }
+
+    .demon-medium .demon-horn {
+      border-bottom: 25px solid #8b0000;
+    }
+
+    .demon-strong .demon-head {
+      font-size: 100px;
+    }
+
+    .demon-strong .demon-torso {
+      width: 140px;
+      height: 160px;
+      background: linear-gradient(135deg, #4a0080 0%, #7b1fa2 100%);
+      border-color: #2a0050;
+    }
+
+    .demon-strong .demon-horns {
+      opacity: 1;
+      gap: 40px;
+    }
+
+    .demon-strong .demon-horn {
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 40px solid #4a0080;
+    }
+
+    .demon-boss .demon-head {
+      font-size: 120px;
+    }
+
+    .demon-boss .demon-torso {
+      width: 160px;
+      height: 180px;
+      background: linear-gradient(135deg, #000000 0%, #2c003e 100%);
+      border-color: #1a0028;
+      box-shadow: 0 0 30px rgba(138, 43, 226, 0.9);
+    }
+
+    .demon-boss .demon-horns {
+      opacity: 1;
+      gap: 50px;
+    }
+
+    .demon-boss .demon-horn {
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 50px solid #1a0028;
+      filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.8));
+    }
+
+    .problem-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 4px solid #ffd700;
+      border-radius: 12px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      min-width: 150px;
+      max-width: 400px;
+      white-space: nowrap;
+      z-index: 5;
+    }
+
+    .demon-problem {
+      color: #333;
+      font-size: 32px;
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      font-family: 'Latin Modern Math', 'Times New Roman', serif;
+      font-style: italic;
+    }
+
+    .demon-arms {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .demon-arm {
+      width: 50px;
+      height: 80px;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      border-radius: 25px;
+      border: 3px solid #4a0000;
+      transition: all 0.3s ease;
+    }
+
+    .demon-arm.left {
+      transform: rotate(-30deg);
+      margin-left: -35px;
+    }
+
+    .demon-arm.right {
+      transform: rotate(30deg);
+      margin-right: -35px;
+    }
+
+    .demon-legs {
+      display: flex;
+      gap: 20px;
+      margin-top: -10px;
+    }
+
+    .demon-leg {
+      width: 40px;
+      height: 90px;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      border-radius: 20px 20px 10px 10px;
+      border: 3px solid #4a0000;
+      transition: all 0.3s ease;
+    }
+
+    .demon-weak .demon-arm,
+    .demon-weak .demon-leg {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+      border-color: #ff4444;
+    }
+
+    .demon-weak .demon-arm {
+      width: 40px;
+      height: 70px;
+    }
+
+    .demon-weak .demon-leg {
+      width: 35px;
+      height: 80px;
+    }
+
+    .demon-medium .demon-arm,
+    .demon-medium .demon-leg {
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      border-color: #4a0000;
+    }
+
+    .demon-strong .demon-arm,
+    .demon-strong .demon-leg {
+      background: linear-gradient(135deg, #4a0080 0%, #7b1fa2 100%);
+      border-color: #2a0050;
+    }
+
+    .demon-strong .demon-arm {
+      width: 60px;
+      height: 95px;
+    }
+
+    .demon-strong .demon-leg {
+      width: 50px;
+      height: 105px;
+    }
+
+    .demon-boss .demon-arm,
+    .demon-boss .demon-leg {
+      background: linear-gradient(135deg, #000000 0%, #2c003e 100%);
+      border-color: #1a0028;
+      box-shadow: 0 0 20px rgba(138, 43, 226, 0.8);
+    }
+
+    .demon-boss .demon-arm {
+      width: 70px;
+      height: 110px;
+    }
+
+    .demon-boss .demon-leg {
+      width: 55px;
+      height: 120px;
+    }
+
+    .slash {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      width: 400px;
+      height: 6px;
+      background: linear-gradient(90deg, transparent, #ff0000, #ffff00, transparent);
+      z-index: 4;
+      opacity: 0;
+      box-shadow: 0 0 20px #ff0000;
+    }
+
+    .slash.active {
+      animation: slashAttack 0.6s ease-out;
+    }
+
+    .slash.failed {
+      animation: slashFailed 0.6s ease-out;
+    }
+
+    @keyframes slashAttack {
+      0% {
+        opacity: 0;
+        transform: translate(-200%, -50%) rotate(-45deg) scaleX(0);
+      }
+      30% {
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(-45deg) scaleX(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(100%, -50%) rotate(-45deg) scaleX(1);
+      }
+    }
+
+    @keyframes slashFailed {
+      0% {
+        opacity: 0;
+        transform: translate(-200%, -50%) rotate(-45deg) scaleX(0);
+      }
+      30% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(-45deg) scaleX(0.5);
+      }
+      50% {
+        opacity: 0.5;
+        transform: translate(-30%, -50%) rotate(-45deg) scaleX(0.3);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-30%, -50%) rotate(-45deg) scaleX(0);
+      }
+    }
+
+    .demon-container.shake {
+      animation: demonShake 0.5s ease-out;
+    }
+
+    @keyframes demonShake {
+      0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+      25% { transform: translate(-50%, -50%) rotate(-5deg); }
+      75% { transform: translate(-50%, -50%) rotate(5deg); }
+    }
+
+    .demon-container.defeated {
+      animation: demonDefeat 1s ease-out forwards;
+    }
+
+    @keyframes demonDefeat {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+        opacity: 1;
+      }
+      30% {
+        transform: translate(-50%, -50%) rotate(20deg) scale(1.1);
+        opacity: 0.8;
+      }
+      60% {
+        transform: translate(-50%, -50%) rotate(-30deg) scale(0.9);
+        opacity: 0.5;
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(180deg) scale(0) translateY(200%);
+        opacity: 0;
+      }
+    }
+
+    .demon-container.approaching {
+      animation: none !important;
+    }
+
+    .demon-container.victory {
+      animation: demonVictory 1.5s ease-out forwards;
+    }
+
+    @keyframes demonVictory {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.5);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(2);
+      }
+    }
+
+    .demon-speech-bubble {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 3px solid #333;
+      border-radius: 20px;
+      padding: 12px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ff0000;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      z-index: 10;
+      opacity: 0;
+    }
+
+    .demon-speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 15px solid white;
+    }
+
+    .demon-speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 18px solid #333;
+      z-index: -1;
+    }
+
+    .demon-speech-bubble.active {
+      animation: speechAppear 0.3s ease-out forwards;
+    }
+
+    @keyframes speechAppear {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+    }
+
+    .explosion {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff0000, #ffa500, transparent);
+      opacity: 0;
+      z-index: 10;
+    }
+
+    .explosion.active {
+      animation: explode 1s ease-out forwards;
+    }
+
+    @keyframes explode {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+      }
+    }
+
+    .timer-display {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 3px solid #ffa500;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      z-index: 6;
+    }
+
+    .timer-display.warning {
+      border-color: #ff0000;
+      color: #ff0000;
+      animation: timerPulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes timerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .choice-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border: 3px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'Latin Modern Math', 'Times New Roman', serif;
+      font-style: italic;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .choice-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      border-color: #ffd700;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      font-style: italic;
+    }
+
+    .fraction-numerator {
+      padding-bottom: 2px;
+    }
+
+    .fraction-line {
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      margin: 2px 0;
+    }
+
+    .fraction-denominator {
+      padding-top: 2px;
+    }
+
+    .message {
+      font-size: 20px;
+      color: #333;
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    .instruction {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .puzzle-grid {
+        grid-template-columns: repeat(4, 70px);
+        gap: 8px;
+      }
+
+      .term-block {
+        font-size: 16px;
+        padding: 10px 3px;
+        min-height: 50px;
+      }
+
+      .congratulation-text {
+        font-size: 20px;
+      }
+
+      .congratulation-subtext {
+        font-size: 14px;
+      }
+    }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { color: #fff; padding-left: 0; padding-right: 0; flex-shrink: 0; }
+    .result-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #fff; border-radius: 16px; padding: 20px 16px; margin: 16px auto 8px; max-width: 460px; width: 100%; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+    .result-nav-title { font-size: 22px; font-weight: bold; text-align: center; }
+    .result-nav-title.ok { color: #2e7d32; }
+    .result-nav-title.ng { color: #d32f2f; }
+    .result-btn { width: 100%; max-width: 340px; padding: 14px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; background: #e2e8f0; color: #333; }
+    .result-btn.main { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+    .result-btn.next { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #064e3b; }
+    .result-nav a { color: #666; font-size: 15px; }
+    /* 【ブラッシュアップ】長い答え（例：-30x³y - 10x²y² + 20xy³）が選択肢の枠からはみ出していたので、項の区切りで折り返す */
+    .choice-card { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 600px 以下のときだけ切り替わる） */
+    @media (max-width: 600px) {
+      #game-container { padding: 10px; }
+      .game-header { margin-bottom: 16px; }
+      .game-title { font-size: min(28px, 6.2vw) !important; white-space: nowrap; }
+      .mode-selection-text { font-size: 15px !important; }
+      .mode-grid { grid-template-columns: 1fr; gap: 12px; }
+      .mode-card { padding: 16px; }
+      .mode-title { font-size: 18px !important; }
+      .game-screen { padding: 12px; }
+      .game-nav { margin-bottom: 10px; padding-bottom: 10px; }
+      .instruction { padding: 8px 10px; font-size: 14px; margin-bottom: 10px; }
+      /* 悪魔の場面を低くして、選択肢まで画面に収める */
+      .dungeon-scene { height: 270px; margin: 8px 0 12px; }
+      .dungeon-scene .demon-container { zoom: 0.62; }
+      .problem-frame { padding: 8px 12px; max-width: 94%; }
+      .demon-problem { font-size: min(26px, 5.8vw); }
+      .choice-grid { grid-template-columns: 1fr; gap: 10px; }
+      .choice-card { font-size: min(22px, 5.8vw); padding: 12px 10px; }
+      .result-nav-title { font-size: 20px; }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+ </head>
+ <body>
+  <div id="game-container">
+   <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+   <div id="menu-screen">
+    <div class="game-header">
+     <h1 class="game-title" id="gameTitle">数式バトル：6つのダンジョン</h1>
+     <p class="mode-selection-text" id="modeSelectionText">挑戦するモードを選んでください</p>
+    </div>
+    <div class="mode-grid">
+     <div class="mode-card" onclick="startMode(1)">
+      <div class="mode-number">
+       1
+      </div>
+      <h2 class="mode-title">同類項のパズル整理</h2>
+      <p class="mode-description">4×4グリッドで同じ文字を持つブロックをタップまたはドラッグして合体させよう！全3問</p>
+     </div>
+     <div class="mode-card" onclick="showDifficultySelect(2)">
+      <div class="mode-number">
+       2
+      </div>
+      <h2 class="mode-title">バリアを破れ！加法・減法のダンジョン</h2>
+      <p class="mode-description">文字式の計算をして、悪魔を倒せ！通常モードか鬼連チャンモード、プレッシャーモードを選択</p>
+     </div>
+     <div class="mode-card" onclick="showDifficultySelect(3)">
+      <div class="mode-number">
+       3
+      </div>
+      <h2 class="mode-title">バリアを破れ！乗法のダンジョン</h2>
+      <p class="mode-description">文字式の掛け算をマスターしよう！通常モードか鬼連チャンモード、プレッシャーモードを選択</p>
+     </div>
+     <div class="mode-card" onclick="showDifficultySelect(4)">
+      <div class="mode-number">
+       4
+      </div>
+      <h2 class="mode-title">バリアを破れ！除法のダンジョン</h2>
+      <p class="mode-description">文字式の割り算をマスターしよう！通常モードか鬼連チャンモード、プレッシャーモードを選択</p>
+     </div>
+     <div class="mode-card" onclick="showDifficultySelect(5)">
+      <div class="mode-number">
+       5
+      </div>
+      <h2 class="mode-title">バリアを破れ！分配法則Ver.1</h2>
+      <p class="mode-description">分配法則を使って展開！カッコの前後に数字がある問題</p>
+     </div>
+     <div class="mode-card" onclick="showDifficultySelect(6)">
+      <div class="mode-number">
+       6
+      </div>
+      <h2 class="mode-title">バリアを破れ！分配法則Ver.2</h2>
+      <p class="mode-description">分配法則を使って展開！カッコの前に文字式がある問題</p>
+     </div>
+    </div>
+   </div>
+   <div id="difficulty-select" class="difficulty-select">
+    <div class="difficulty-panel">
+     <h2 class="difficulty-title" id="difficultyTitle">モードを選択してください</h2>
+     <div class="difficulty-buttons"><button class="difficulty-button" onclick="startGameMode('normal')">通常モード（10問）</button> <button class="difficulty-button hell" onclick="startGameMode('hell')">🔥 鬼連チャンモード 🔥<br>
+       1問でも間違えたら即終了！</button> <button class="difficulty-button pressure" onclick="startGameMode('pressure')">⚡ プレッシャーモード ⚡<br>
+       各問10秒の時間制限！</button> <button class="difficulty-button close-difficulty" onclick="closeDifficultySelect()">戻る</button>
+     </div>
+    </div>
+   </div>
+   <div id="game-screen" class="game-screen">
+    <div class="game-nav"><button class="back-button" onclick="backToMenu()">← メニューに戻る</button>
+     <div class="stage-info" id="stageInfo">
+      ステージ 1/10
+     </div>
+    </div>
+    <div class="game-area" id="gameArea"></div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "数式バトル：6つのダンジョン",
+      mode_selection_text: "挑戦するモードを選んでください",
+      background_color: "#667eea",
+      card_color: "#ffffff",
+      text_color: "#333333",
+      button_color: "#667eea",
+      accent_color: "#f5576c",
+      font_family: "Hiragino Sans",
+      font_size: 16
     };
-  }
 
-  /* ---------- 単項式のかけ算・わり算 ---------- */
-  function mulDiv(level) {
-    var isMul = Math.random() < 0.6;
-    var c1 = A.nz(-6, 6), c2 = A.nz(-6, 6);
-    var e1 = Quiz.randInt(1, level >= 2 ? 3 : 2);
-    var e2 = Quiz.randInt(1, level >= 2 ? 2 : 1);
+    let currentMode = 0;
+    let currentStage = 0;
+    let puzzleBlocks = [];
+    let selectedBlock = null;
+    let draggedElement = null;
+    let draggedIndex = -1;
+    let isHellMode = false;
+    let isPressureMode = false;
+    let pendingMode = 0;
+    let currentQuestions = [];
+    let timerInterval = null;
+    let timeRemaining = 10;
+    // 【ブラッシュアップ】元は「メニューに戻る」ですぐ別のモードを始めると、前のモードで予約されていた処理
+    //   （次の問題へ・メニューに戻る など）が後から動き、勝手にメニューに戻されたり問題が切りかわったりした。
+    //   モードを始める・メニューに戻るたびに番号を変え、古い処理は何もしないようにする。
+    let session = 0;
+    let merging = false;   // 【ブラッシュアップ】同類項パズルで合体の途中に別のブロックを押しても重ならないように
 
-    var left = F.term(c1, F.pow('x', e1));
-    var right = F.term(c2, F.pow('x', e2));
+    function createFraction(numerator, denominator) {
+      return `<span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-line"></span><span class="fraction-denominator">${denominator}</span></span>`;
+    }
 
-    if (isMul) {
-      var c = c1 * c2, e = e1 + e2;
-      var answer = F.term(c, F.pow('x', e));
-      return {
-        question: left + ' × ' + right,
-        answer: answer,
-        hint: '数どうしをかけ、文字は指数をたします。',
-        explain: '数： ' + c1 + ' × ' + c2 + ' = ' + c + '　　文字： x' +
-          (e1 > 1 ? '<sup>' + e1 + '</sup>' : '') + ' × x' + (e2 > 1 ? '<sup>' + e2 + '</sup>' : '') +
-          ' = ' + F.pow('x', e) + '　　答え： ' + answer
+    const puzzleTemplates = [
+      [
+        { term: "2x", coef: 2, var: "x" }, { term: "3x", coef: 3, var: "x" },
+        { term: "-x", coef: -1, var: "x" }, { term: "5y", coef: 5, var: "y" },
+        { term: "2y", coef: 2, var: "y" }, { term: "-3y", coef: -3, var: "y" },
+        { term: "4x", coef: 4, var: "x" }, { term: "6", coef: 6, var: "" },
+        { term: "-2", coef: -2, var: "" }, { term: "x", coef: 1, var: "x" },
+        { term: "3", coef: 3, var: "" }, { term: "-4x", coef: -4, var: "x" },
+        { term: "y", coef: 1, var: "y" }, { term: "-y", coef: -1, var: "y" },
+        { term: "2", coef: 2, var: "" }, { term: "-5", coef: -5, var: "" }
+      ],
+      [
+        { term: "3x", coef: 3, var: "x" }, { term: "-2y", coef: -2, var: "y" },
+        { term: "2xy", coef: 2, var: "xy" }, { term: "5y", coef: 5, var: "y" },
+        { term: "4x", coef: 4, var: "x" }, { term: "-3xy", coef: -3, var: "xy" },
+        { term: "7", coef: 7, var: "" }, { term: "-4", coef: -4, var: "" },
+        { term: "2x", coef: 2, var: "x" }, { term: "6xy", coef: 6, var: "xy" },
+        { term: "-x", coef: -1, var: "x" }, { term: "3", coef: 3, var: "" },
+        { term: "8", coef: 8, var: "" }, { term: "-2y", coef: -2, var: "y" },
+        { term: "xy", coef: 1, var: "xy" }, { term: "-6", coef: -6, var: "" }
+      ],
+      [
+        { term: "2x²y", coef: 2, var: "x²y" }, { term: "3xy", coef: 3, var: "xy" },
+        { term: "-x²y", coef: -1, var: "x²y" }, { term: "5xy²", coef: 5, var: "xy²" },
+        { term: "4xy", coef: 4, var: "xy" }, { term: "-2xy²", coef: -2, var: "xy²" },
+        { term: "9", coef: 9, var: "" }, { term: "3x²y", coef: 3, var: "x²y" },
+        { term: "-5", coef: -5, var: "" }, { term: "2xy²", coef: 2, var: "xy²" },
+        { term: "-3xy", coef: -3, var: "xy" }, { term: "7", coef: 7, var: "" },
+        { term: "6xy", coef: 6, var: "xy" }, { term: "-4", coef: -4, var: "" },
+        { term: "-x²y", coef: -1, var: "x²y" }, { term: "xy²", coef: 1, var: "xy²" }
+      ]
+    ];
+
+    const mode2Pool = {
+      weak: [
+        { problem: "3x - 5x", answer: "-2x", choices: ["-2x", "8x", "2x", "-8x"] },
+        { problem: "4y + 3y", answer: "7y", choices: ["7y", "y", "12y", "-y"] },
+        { problem: "6x - 2x + x", answer: "5x", choices: ["5x", "3x", "9x", "7x"] },
+        { problem: "7a - 3a", answer: "4a", choices: ["4a", "10a", "-4a", "a"] },
+        { problem: "5b + 2b", answer: "7b", choices: ["7b", "3b", "10b", "b"] },
+        { problem: "8x - 3x", answer: "5x", choices: ["5x", "11x", "-5x", "5"] }
+      ],
+      medium: [
+        { problem: "2x + 5y - 5x + 8y", answer: "-3x + 13y", choices: ["-3x + 13y", "7x + 13y", "-3x + 3y", "3x + 13y"] },
+        { problem: "3a - 2b + 4a + b", answer: "7a - b", choices: ["7a - b", "7a + b", "a - b", "7a - 3b"] },
+        { problem: "5x - 3y + 2x - y", answer: "7x - 4y", choices: ["7x - 4y", "3x - 4y", "7x - 2y", "7x + 4y"] },
+        { problem: "4p + 3q - 2p + 5q", answer: "2p + 8q", choices: ["2p + 8q", "6p + 8q", "2p + 2q", "2p - 8q"] },
+        { problem: "6a + 4b - 3a + 2b", answer: "3a + 6b", choices: ["3a + 6b", "9a + 6b", "3a + 2b", "3a - 6b"] },
+        { problem: "7x - 2y + x + 5y", answer: "8x + 3y", choices: ["8x + 3y", "6x + 3y", "8x + 7y", "8x - 3y"] }
+      ],
+      strong: [
+        { problem: "2x + 3xy - x + 5xy", answer: "x + 8xy", choices: ["x + 8xy", "3x + 8xy", "x + 2xy", "x + 8x"] },
+        { problem: "4ab - 2a + 3ab + 5a", answer: "7ab + 3a", choices: ["7ab + 3a", "7ab - 3a", "ab + 3a", "7ab + 7a"] },
+        { problem: "3x² - 5x + 2x² + 7x", answer: "5x² + 2x", choices: ["5x² + 2x", "5x² - 2x", "x² + 2x", "5x² + 12x"] },
+        { problem: "6xy - 4x + 2xy + 3x", answer: "8xy - x", choices: ["8xy - x", "8xy + x", "4xy - x", "8xy - 7x"] },
+        { problem: "5a² + 3a - 2a² + 4a", answer: "3a² + 7a", choices: ["3a² + 7a", "3a² + a", "7a² + 7a", "3a² - 7a"] },
+        { problem: "4pq - 3p + 2pq + 6p", answer: "6pq + 3p", choices: ["6pq + 3p", "6pq - 3p", "2pq + 3p", "6pq + 9p"] }
+      ],
+      boss: [
+        { problem: "2x + 5y - 5x + 8y + 6xy - 2xy", answer: "-3x + 13y + 4xy", choices: ["-3x + 13y + 4xy", "-3x + 13y + 8xy", "7x + 13y + 4xy", "-3x + 3y + 4xy"] },
+        { problem: "3a² - 4ab + 2a² + 5ab - a²", answer: "4a² + ab", choices: ["4a² + ab", "4a² - ab", "6a² + ab", "4a² + 9ab"] }
+      ]
+    };
+
+    const mode3Pool = {
+      weak: [
+        { problem: "x × x", answer: "x²", choices: ["x²", "2x", "x", "x³"] },
+        { problem: "3x × 2x", answer: "6x²", choices: ["6x²", "5x²", "6x", "5x"] },
+        { problem: "2x × 3y", answer: "6xy", choices: ["6xy", "5xy", "6x²y", "2xy"] },
+        { problem: "5a × 2a", answer: "10a²", choices: ["10a²", "7a²", "10a", "7a"] },
+        { problem: "4b × b", answer: "4b²", choices: ["4b²", "5b", "4b", "b²"] },
+        { problem: "2y × 5y", answer: "10y²", choices: ["10y²", "7y²", "10y", "7y"] },
+        { problem: "x × 3", answer: "3x", choices: ["3x", "4x", "x³", "3"] },
+        { problem: "2 × 4a", answer: "8a", choices: ["8a", "6a", "8", "2a"] },
+        { problem: "3p × 4q", answer: "12pq", choices: ["12pq", "7pq", "12p²q", "12pq²"] },
+        { problem: "4a × 2b", answer: "8ab", choices: ["8ab", "6ab", "8a²b", "8ab²"] },
+        { problem: "5 × 3x²", answer: "15x²", choices: ["15x²", "8x²", "15x", "5x²"] },
+        { problem: "2xy × 4", answer: "8xy", choices: ["8xy", "6xy", "8x²y", "2xy"] }
+      ],
+      medium: [
+        { problem: "x² × x³", answer: "x⁵", choices: ["x⁵", "x⁶", "x", "2x⁵"] },
+        { problem: "2a² × 3a", answer: "6a³", choices: ["6a³", "6a²", "5a³", "6a"] },
+        { problem: "4x × 3y²", answer: "12xy²", choices: ["12xy²", "12x²y", "7xy²", "12xy"] },
+        { problem: "5x² × y³", answer: "5x²y³", choices: ["5x²y³", "5x⁵", "5xy⁵", "5x³y²"] },
+        { problem: "(x²)³", answer: "x⁶", choices: ["x⁶", "x⁵", "x⁸", "3x²"] },
+        { problem: "(a³)²", answer: "a⁶", choices: ["a⁶", "a⁵", "a⁹", "2a³"] },
+        { problem: "(y²)⁴", answer: "y⁸", choices: ["y⁸", "y⁶", "y¹⁰", "4y²"] },
+        { problem: "(b³)³", answer: "b⁹", choices: ["b⁹", "b⁶", "b¹²", "3b³"] },
+        { problem: "(p²)⁵", answer: "p¹⁰", choices: ["p¹⁰", "p⁷", "p¹²", "5p²"] },
+        { problem: "(x⁴)²", answer: "x⁸", choices: ["x⁸", "x⁶", "x¹⁰", "2x⁴"] },
+        { problem: "(a²)⁶", answer: "a¹²", choices: ["a¹²", "a⁸", "a¹⁴", "6a²"] }
+      ],
+      strong: [
+        { problem: "3xy × 4xy", answer: "12x²y²", choices: ["12x²y²", "12xy", "7x²y²", "12xy²"] },
+        { problem: "2x² × 3x³", answer: "6x⁵", choices: ["6x⁵", "6x⁶", "5x⁵", "6x"] },
+        { problem: "5ab × 2ab", answer: "10a²b²", choices: ["10a²b²", "10ab", "7a²b²", "10ab²"] },
+        { problem: "4p²q × 3pq²", answer: "12p³q³", choices: ["12p³q³", "12p²q²", "7p³q³", "12pq"] },
+        { problem: "6xy² × 2x²y", answer: "12x³y³", choices: ["12x³y³", "12x²y²", "8x³y³", "12xy"] },
+        { problem: "3a²b × 4ab²", answer: "12a³b³", choices: ["12a³b³", "12a²b²", "7a³b³", "12ab"] },
+        { problem: "(xy)²", answer: "x²y²", choices: ["x²y²", "xy²", "x²y", "2xy"] },
+        { problem: "(2a)³", answer: "8a³", choices: ["8a³", "6a³", "2a³", "8a"] },
+        { problem: "(ab)³", answer: "a³b³", choices: ["a³b³", "ab³", "a³b", "3ab"] },
+        { problem: "(3x)²", answer: "9x²", choices: ["9x²", "6x²", "3x²", "9x"] },
+        { problem: "(pq)⁴", answer: "p⁴q⁴", choices: ["p⁴q⁴", "pq⁴", "p⁴q", "4pq"] },
+        { problem: "(2b)⁴", answer: "16b⁴", choices: ["16b⁴", "8b⁴", "2b⁴", "16b"] },
+        { problem: "(3y)³", answer: "27y³", choices: ["27y³", "9y³", "3y³", "27y"] },
+        { problem: "(4a)²", answer: "16a²", choices: ["16a²", "8a²", "4a²", "16a"] },
+        { problem: "(x²y)³", answer: "x⁶y³", choices: ["x⁶y³", "x²y³", "x⁸y³", "x⁶y"] },
+        { problem: "(2xy²)²", answer: "4x²y⁴", choices: ["4x²y⁴", "2x²y⁴", "4x²y²", "4xy⁴"] },
+        { problem: "(a²b)⁴", answer: "a⁸b⁴", choices: ["a⁸b⁴", "a²b⁴", "a⁸b", "4a²b"] },
+        { problem: "(3p²q)²", answer: "9p⁴q²", choices: ["9p⁴q²", "3p⁴q²", "9p²q²", "9p⁴q"] },
+        { problem: "(2a³b)³", answer: "8a⁹b³", choices: ["8a⁹b³", "2a⁹b³", "8a³b³", "8a⁹b"] },
+        { problem: "(xy³)⁴", answer: "x⁴y¹²", choices: ["x⁴y¹²", "xy¹²", "x⁴y³", "4xy³"] },
+        { problem: "(4ab²)²", answer: "16a²b⁴", choices: ["16a²b⁴", "4a²b⁴", "16ab⁴", "16a²b²"] },
+        { problem: "(5x²y)²", answer: "25x⁴y²", choices: ["25x⁴y²", "5x⁴y²", "25x²y²", "25x⁴y"] }
+      ],
+      boss: [
+        { problem: "5x²y³ × 3xy²", answer: "15x³y⁵", choices: ["15x³y⁵", "15x²y³", "8x³y⁵", "15xy"] },
+        { problem: "4a³b² × 2a²b³", answer: "8a⁵b⁵", choices: ["8a⁵b⁵", "8a³b²", "6a⁵b⁵", "8ab"] },
+        { problem: "(-2x²y)³", answer: "-8x⁶y³", choices: ["-8x⁶y³", "8x⁶y³", "-6x⁶y³", "-8x⁵y³"] },
+        { problem: "(-3x²y³)³", answer: "-27x⁶y⁹", choices: ["-27x⁶y⁹", "27x⁶y⁹", "-27x⁵y⁹", "-27x⁶y⁶"] },
+        { problem: "(-2ab²)⁴", answer: "16a⁴b⁸", choices: ["16a⁴b⁸", "-16a⁴b⁸", "16ab⁸", "16a⁴b²"] },
+        { problem: "(-4x³y)²", answer: "16x⁶y²", choices: ["16x⁶y²", "-16x⁶y²", "16x³y²", "16x⁶y"] },
+        { problem: "(-3a²b³)²", answer: "9a⁴b⁶", choices: ["9a⁴b⁶", "-9a⁴b⁶", "9a²b⁶", "9a⁴b³"] },
+        { problem: "(-5xy²)³", answer: "-125x³y⁶", choices: ["-125x³y⁶", "125x³y⁶", "-125xy⁶", "-125x³y²"] },
+        { problem: "(-2p³q)⁴", answer: "16p¹²q⁴", choices: ["16p¹²q⁴", "-16p¹²q⁴", "16p³q⁴", "16p¹²q"] }
+      ]
+    };
+
+    const mode4Pool = {
+      weak: [
+        { problem: "6x² ÷ 2x", answer: "3x", choices: ["3x", "3x²", "4x", "3"] },
+        { problem: "8xy ÷ 4y", answer: "2x", choices: ["2x", "2xy", "2y", "8x"] },
+        { problem: "10a² ÷ 5a", answer: "2a", choices: ["2a", "2a²", "5a", "2"] },
+        { problem: "12x ÷ 3", answer: "4x", choices: ["4x", "4", "9x", "3x"] },
+        { problem: "15y² ÷ 3y", answer: "5y", choices: ["5y", "5y²", "12y", "5"] },
+        { problem: "9ab ÷ 3b", answer: "3a", choices: ["3a", "3ab", "3b", "6a"] },
+        { problem: "20x ÷ 4", answer: "5x", choices: ["5x", "5", "16x", "4x"] },
+        { problem: "14a² ÷ 2a", answer: "7a", choices: ["7a", "7a²", "12a", "7"] },
+        { problem: "4x ÷ 3y", answer: createFraction("4x", "3y"), choices: [createFraction("4x", "3y"), createFraction("4x", "3"), createFraction("x", "3y"), createFraction("4", "3y")] },
+        { problem: "5a ÷ 2b", answer: createFraction("5a", "2b"), choices: [createFraction("5a", "2b"), createFraction("5", "2b"), createFraction("5a", "2"), createFraction("a", "2b")] },
+        { problem: "6p ÷ 5q", answer: createFraction("6p", "5q"), choices: [createFraction("6p", "5q"), createFraction("6p", "5"), createFraction("p", "5q"), createFraction("6", "5q")] },
+        { problem: "7x ÷ 4y", answer: createFraction("7x", "4y"), choices: [createFraction("7x", "4y"), createFraction("7x", "4"), createFraction("x", "4y"), createFraction("7", "4y")] },
+        { problem: "8a ÷ 3b", answer: createFraction("8a", "3b"), choices: [createFraction("8a", "3b"), createFraction("8", "3b"), createFraction("8a", "3"), createFraction("a", "3b")] }
+      ],
+      medium: [
+        { problem: "15a²b ÷ 3ab", answer: "5a", choices: ["5a", "5ab", "5b", "15a"] },
+        { problem: "10x²y ÷ 2xy", answer: "5x", choices: ["5x", "5xy", "5y", "5x²"] },
+        { problem: "18ab² ÷ 6b", answer: "3ab", choices: ["3ab", "3b", "3a", "12ab"] },
+        { problem: "24x³ ÷ 4x²", answer: "6x", choices: ["6x", "6x³", "20x", "6"] },
+        { problem: "21p²q ÷ 3pq", answer: "7p", choices: ["7p", "7pq", "7q", "18p"] },
+        { problem: "30xy² ÷ 5y", answer: "6xy", choices: ["6xy", "6y²", "6x", "25xy"] },
+        { problem: "16a²b² ÷ 4ab", answer: "4ab", choices: ["4ab", "4a", "4b", "12ab"] },
+        { problem: "28x²y ÷ 7xy", answer: "4x", choices: ["4x", "4xy", "4y", "21x"] },
+        { problem: "7a² ÷ 2b", answer: createFraction("7a²", "2b"), choices: [createFraction("7a²", "2b"), createFraction("7a²", "2"), createFraction("7", "2b"), createFraction("a²", "2b")] },
+        { problem: "5xy ÷ 3", answer: createFraction("5xy", "3"), choices: [createFraction("5xy", "3"), createFraction("5x", "3"), createFraction("5y", "3"), createFraction("xy", "3")] },
+        { problem: "9p² ÷ 4q", answer: createFraction("9p²", "4q"), choices: [createFraction("9p²", "4q"), createFraction("9p²", "4"), createFraction("9", "4q"), createFraction("p²", "4q")] },
+        { problem: "11xy ÷ 5", answer: createFraction("11xy", "5"), choices: [createFraction("11xy", "5"), createFraction("11x", "5"), createFraction("11y", "5"), createFraction("xy", "5")] },
+        { problem: "13a² ÷ 6b", answer: createFraction("13a²", "6b"), choices: [createFraction("13a²", "6b"), createFraction("13a²", "6"), createFraction("13", "6b"), createFraction("a²", "6b")] }
+      ],
+      strong: [
+        { problem: "12x²y³ ÷ 3xy", answer: "4xy²", choices: ["4xy²", "4x²y³", "9xy²", "4xy"] },
+        { problem: "20a³b² ÷ 4ab", answer: "5a²b", choices: ["5a²b", "5ab²", "16a²b", "5a³b"] },
+        { problem: "18p³q² ÷ 6pq", answer: "3p²q", choices: ["3p²q", "3pq²", "12p²q", "3p³q"] },
+        { problem: "24x⁴y² ÷ 4x²y", answer: "6x²y", choices: ["6x²y", "6xy²", "20x²y", "6x⁴y"] },
+        { problem: "30a²b³ ÷ 5ab²", answer: "6ab", choices: ["6ab", "6a²b", "25ab", "6ab³"] },
+        { problem: "36xy⁴ ÷ 6xy²", answer: "6y²", choices: ["6y²", "6xy", "30y²", "6xy²"] },
+        { problem: "8x²y ÷ 2xy²", answer: createFraction("4x", "y"), choices: [createFraction("4x", "y"), createFraction("4x²", "y"), createFraction("4x", "y²"), createFraction("4", "y")] },
+        { problem: "15a³b ÷ 3ab²", answer: createFraction("5a²", "b"), choices: [createFraction("5a²", "b"), createFraction("5a³", "b"), createFraction("5a²", "b²"), createFraction("5a", "b")] },
+        { problem: "12p²q³ ÷ 4pq⁴", answer: createFraction("3p", "q"), choices: [createFraction("3p", "q"), createFraction("3p²", "q"), createFraction("3p", "q⁴"), createFraction("3", "q")] },
+        { problem: "20x³y² ÷ 5x²y³", answer: createFraction("4x", "y"), choices: [createFraction("4x", "y"), createFraction("4x³", "y"), createFraction("4x", "y³"), createFraction("4", "y")] }
+      ],
+      boss: [
+        { problem: "45x³y⁴ ÷ 9xy²", answer: "5x²y²", choices: ["5x²y²", "5xy⁴", "36x²y²", "5x³y²"] },
+        { problem: "60a⁴b³ ÷ 12a²b", answer: "5a²b²", choices: ["5a²b²", "5ab³", "48a²b²", "5a⁴b"] },
+        { problem: "28x⁴y² ÷ 7x³y⁴", answer: createFraction("4x", "y²"), choices: [createFraction("4x", "y²"), createFraction("4x⁴", "y²"), createFraction("4x", "y⁴"), createFraction("4", "y²")] },
+        { problem: "35a⁵b² ÷ 7a²b⁴", answer: createFraction("5a³", "b²"), choices: [createFraction("5a³", "b²"), createFraction("5a⁵", "b²"), createFraction("5a³", "b⁴"), createFraction("5a", "b²")] },
+        { problem: "42p⁴q³ ÷ 6pq⁵", answer: createFraction("7p³", "q²"), choices: [createFraction("7p³", "q²"), createFraction("7p⁴", "q²"), createFraction("7p³", "q⁵"), createFraction("7p", "q²")] },
+        { problem: "54x⁶y² ÷ 9x²y⁵", answer: createFraction("6x⁴", "y³"), choices: [createFraction("6x⁴", "y³"), createFraction("6x⁶", "y³"), createFraction("6x⁴", "y⁵"), createFraction("6x", "y³")] }
+      ]
+    };
+
+    const mode5Pool = {
+      weak: [
+        { problem: "-(3x - 5)", answer: "-3x + 5", choices: ["-3x + 5", "3x - 5", "-3x - 5", "3x + 5"] },
+        { problem: "2(x + 3)", answer: "2x + 6", choices: ["2x + 6", "2x + 3", "x + 6", "2x - 6"] },
+        { problem: "-3(2x - y)", answer: "-6x + 3y", choices: ["-6x + 3y", "-6x - 3y", "6x + 3y", "-6x + y"] },
+        { problem: "(2x + 4) × 3", answer: "6x + 12", choices: ["6x + 12", "6x + 4", "2x + 12", "6x - 12"] },
+        { problem: "3(y + 2)", answer: "3y + 6", choices: ["3y + 6", "3y + 2", "y + 6", "3y - 6"] },
+        { problem: "-(4a - 3)", answer: "-4a + 3", choices: ["-4a + 3", "4a - 3", "-4a - 3", "4a + 3"] }
+      ],
+      medium: [
+        { problem: "4(a + 2b)", answer: "4a + 8b", choices: ["4a + 8b", "4a + 2b", "a + 8b", "4a - 8b"] },
+        { problem: "-(5x + 2y)", answer: "-5x - 2y", choices: ["-5x - 2y", "-5x + 2y", "5x - 2y", "5x + 2y"] },
+        { problem: "3(2x - 4)", answer: "6x - 12", choices: ["6x - 12", "6x + 12", "5x - 12", "6x - 4"] },
+        { problem: "(4x + 3) × 2", answer: "8x + 6", choices: ["8x + 6", "4x + 6", "8x + 3", "8x - 6"] },
+        { problem: "5(2a - 3b)", answer: "10a - 15b", choices: ["10a - 15b", "10a + 15b", "7a - 15b", "10a - 3b"] },
+        { problem: "(3p + 5) × 4", answer: "12p + 20", choices: ["12p + 20", "3p + 20", "12p + 5", "12p - 20"] }
+      ],
+      strong: [
+        { problem: "-2(3a - 4b)", answer: "-6a + 8b", choices: ["-6a + 8b", "-6a - 8b", "6a + 8b", "-6a + 4b"] },
+        { problem: "5(x² + 2x)", answer: "5x² + 10x", choices: ["5x² + 10x", "5x² + 2x", "x² + 10x", "5x² - 10x"] },
+        { problem: "-(2x² - 3x + 1)", answer: "-2x² + 3x - 1", choices: ["-2x² + 3x - 1", "-2x² - 3x - 1", "2x² + 3x - 1", "-2x² + 3x + 1"] },
+        { problem: "(3x - 5y) × 4", answer: "12x - 20y", choices: ["12x - 20y", "12x + 20y", "3x - 20y", "12x - 5y"] },
+        { problem: "-4(2p² + 3p)", answer: "-8p² - 12p", choices: ["-8p² - 12p", "-8p² + 12p", "8p² - 12p", "-8p² - 3p"] },
+        { problem: "(5a - 2b) × 3", answer: "15a - 6b", choices: ["15a - 6b", "15a + 6b", "5a - 6b", "8a - 6b"] }
+      ],
+      boss: [
+        { problem: "3(x² + 2xy - y²)", answer: "3x² + 6xy - 3y²", choices: ["3x² + 6xy - 3y²", "3x² + 2xy - 3y²", "3x² + 6xy + 3y²", "x² + 6xy - 3y²"] },
+        { problem: "-2(3a² - 4ab + 2b²)", answer: "-6a² + 8ab - 4b²", choices: ["-6a² + 8ab - 4b²", "-6a² - 8ab - 4b²", "6a² + 8ab - 4b²", "-6a² + 8ab + 4b²"] }
+      ]
+    };
+
+    const mode6Pool = {
+      weak: [
+        { problem: "x(x + 3)", answer: "x² + 3x", choices: ["x² + 3x", "x² + 3", "x + 3x", "2x + 3"] },
+        { problem: "2x(x + 4)", answer: "2x² + 8x", choices: ["2x² + 8x", "2x² + 4x", "2x + 8x", "x² + 8x"] },
+        { problem: "a(2a - 3)", answer: "2a² - 3a", choices: ["2a² - 3a", "2a² + 3a", "a² - 3a", "2a - 3a"] },
+        { problem: "-x(x + 5)", answer: "-x² - 5x", choices: ["-x² - 5x", "-x² + 5x", "x² - 5x", "-x - 5x"] },
+        { problem: "y(y + 4)", answer: "y² + 4y", choices: ["y² + 4y", "y² + 4", "2y + 4", "y + 4y"] },
+        { problem: "3b(b - 2)", answer: "3b² - 6b", choices: ["3b² - 6b", "3b² + 6b", "3b - 6b", "b² - 6b"] }
+      ],
+      medium: [
+        { problem: "3y(2y + 1)", answer: "6y² + 3y", choices: ["6y² + 3y", "6y² + 1", "5y² + 3y", "6y + 3y"] },
+        { problem: "-2a(3a - 4)", answer: "-6a² + 8a", choices: ["-6a² + 8a", "-6a² - 8a", "6a² + 8a", "-6a - 8a"] },
+        { problem: "4x(x - 2y)", answer: "4x² - 8xy", choices: ["4x² - 8xy", "4x² + 8xy", "4x - 8xy", "x² - 8xy"] },
+        { problem: "(x + 6) × 5x", answer: "5x² + 30x", choices: ["5x² + 30x", "5x² + 6x", "x² + 30x", "5x + 30x"] },
+        { problem: "3p(4p - 5)", answer: "12p² - 15p", choices: ["12p² - 15p", "12p² + 15p", "7p² - 15p", "12p - 15p"] },
+        { problem: "(2a - 3) × 4a", answer: "8a² - 12a", choices: ["8a² - 12a", "8a² + 12a", "2a² - 12a", "8a - 12a"] }
+      ],
+      strong: [
+        { problem: "2x²(3x + 5)", answer: "6x³ + 10x²", choices: ["6x³ + 10x²", "6x³ + 5x²", "5x³ + 10x²", "6x² + 10x²"] },
+        { problem: "-3xy(2x - y)", answer: "-6x²y + 3xy²", choices: ["-6x²y + 3xy²", "-6x²y - 3xy²", "6x²y + 3xy²", "-6xy + 3xy"] },
+        { problem: "5ab(a + 2b)", answer: "5a²b + 10ab²", choices: ["5a²b + 10ab²", "5a²b + 2ab²", "5ab + 10ab²", "a²b + 10ab²"] },
+        { problem: "(4x - 3y) × 2x", answer: "8x² - 6xy", choices: ["8x² - 6xy", "8x² + 6xy", "4x² - 6xy", "8x - 6xy"] },
+        { problem: "-4pq(3p + 2q)", answer: "-12p²q - 8pq²", choices: ["-12p²q - 8pq²", "-12p²q + 8pq²", "12p²q - 8pq²", "-12pq - 8pq"] },
+        { problem: "3a²(2a - 4b)", answer: "6a³ - 12a²b", choices: ["6a³ - 12a²b", "6a³ + 12a²b", "5a³ - 12a²b", "6a² - 12a²b"] }
+      ],
+      boss: [
+        { problem: "-3x²(2x³ + 4x² + x + 4)", answer: "-6x⁵ - 12x⁴ - 3x³ - 12x²", choices: ["-6x⁵ - 12x⁴ - 3x³ - 12x²", "-6x⁵ + 12x⁴ - 3x³ - 12x²", "-6x⁵ - 12x⁴ + 3x³ - 12x²", "-6x⁵ - 12x⁴ - 3x³ + 12x²"] },
+        { problem: "-5xy(6x² + 2xy - 4y²)", answer: "-30x³y - 10x²y² + 20xy³", choices: ["-30x³y - 10x²y² + 20xy³", "-30x³y + 10x²y² + 20xy³", "-30x³y - 10x²y² - 20xy³", "30x³y - 10x²y² + 20xy³"] }
+      ]
+    };
+
+    const demonEmojis = {
+      weak: "👹",
+      medium: "😈",
+      strong: "👿",
+      boss: "💀"
+    };
+
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function generateRandomQuestions(pool, count = 10) {
+      const difficulties = ['weak', 'weak', 'weak', 'weak', 'medium', 'medium', 'medium', 'strong', 'strong', 'boss'];
+      const questions = [];
+      const usedQuestions = new Set();
+
+      const specialQuestionPerDifficulty = {
+        weak: null,
+        medium: null,
+        strong: null,
+        boss: null
       };
-    }
 
-    // わり算は、割り切れる形に整えてから出す
-    if (e1 < e2) { var t = e1; e1 = e2; e2 = t; }
-    var num = c1 * c2;                       // 被除数の係数を c2 の倍数にしておく
-    var answer2 = F.term(c1, F.pow('x', e1 - e2));
-    return {
-      question: F.term(num, F.pow('x', e1)) + ' ÷ ' + F.term(c2, F.pow('x', e2)),
-      answer: answer2,
-      hint: '数どうしをわり、文字は指数をひきます。',
-      explain: '数： ' + num + ' ÷ ' + c2 + ' = ' + c1 + '　　文字： 指数は ' + e1 + ' − ' + e2 +
-        ' = ' + (e1 - e2) + '　　答え： ' + answer2
-    };
-  }
+      ['weak', 'medium', 'strong', 'boss'].forEach(diff => {
+        const availableQuestions = pool[diff];
+        if (availableQuestions && availableQuestions.length > 0) {
+          const specialQuestions = availableQuestions.filter(q => {
+            if (q.problem.includes('(') && q.problem.includes(')') && q.problem.match(/\)\^/)) {
+              return true;
+            }
+            if (q.problem.includes('÷') && typeof q.answer === 'object' && q.answer.props && q.answer.props.className === 'fraction') {
+              return true;
+            }
+            return false;
+          });
 
-  /* ---------- 分配法則 ---------- */
-  function distribute(level) {
-    var k = A.nz(-7, 7);
-    var p = A.nz(1, 6), q = A.nz(-9, 9);
-    var inner = A.linear(p, q);
-    var head = k === 1 ? '' : k === -1 ? '-' : String(k);
-
-    if (level >= 2) {
-      // 2つのかっこを展開して同類項までまとめる
-      var k2 = A.nz(-6, 6), p2 = A.nz(1, 6), q2 = A.nz(-9, 9);
-      var inner2 = A.linear(p2, q2);
-      var head2 = k2 === 1 ? '' : k2 === -1 ? '-' : String(k2);
-      var sign = k2 < 0 ? ' - ' : ' + ';
-      var head2abs = Math.abs(k2) === 1 ? '' : String(Math.abs(k2));
-
-      var cx = k * p + k2 * p2, cc = k * q + k2 * q2;
-      var ans = F.poly([[cx, 'x'], [cc, '']]);
-      return {
-        question: head + '(' + inner + ')' + sign + head2abs + '(' + inner2 + ')',
-        answer: ans,
-        hint: 'それぞれのかっこを外してから、同類項をまとめます。ひき算のときは符号に注意。',
-        explain: '外すと ' + F.poly([[k * p, 'x'], [k * q, '']]) + ' と ' +
-          F.poly([[k2 * p2, 'x'], [k2 * q2, '']]) + '。まとめて ' + ans + ' です。'
-      };
-    }
-
-    var ans1 = F.poly([[k * p, 'x'], [k * q, '']]);
-    return {
-      question: head + '(' + inner + ')',
-      answer: ans1,
-      hint: 'かっこの外の数を、中のどの項にもかけます。マイナスのときは符号が全部変わります。',
-      explain: k + ' × ' + p + 'x = ' + (k * p) + 'x、' + k + ' × (' + q + ') = ' + (k * q) +
-        '。答えは ' + ans1 + ' です。'
-    };
-  }
-
-  /* ---------- 出題の形にする ---------- */
-
-  function toChoice(item) {
-    var correctPlain = F.plain(item.answer);
-    var wrongs = [];
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 80) {
-      // 数字をひとつだけずらした式を誤答の候補にする
-      var cand = item.answer.replace(/(-?\d+)/, function (m) {
-        return String(Number(m) + Quiz.pick([-2, -1, 1, 2]));
+          if (specialQuestions.length > 0) {
+            const randomSpecial = specialQuestions[Math.floor(Math.random() * specialQuestions.length)];
+            specialQuestionPerDifficulty[diff] = randomSpecial;
+            const questionKey = `${randomSpecial.problem}_${JSON.stringify(randomSpecial.answer)}`;
+            usedQuestions.add(questionKey);
+          }
+        }
       });
-      if (cand === item.answer) continue;
-      if (M.isEqual(F.plain(cand), correctPlain)) continue;
-      if (wrongs.indexOf(cand) >= 0) continue;
-      wrongs.push(cand);
+
+      for (let i = 0; i < count; i++) {
+        const difficulty = difficulties[i] || 'medium';
+        const availableQuestions = pool[difficulty];
+
+        if (availableQuestions && availableQuestions.length > 0) {
+          const alreadyUsedSpecialForThisDiff = questions.some(q =>
+            q.difficulty === difficulty &&
+            specialQuestionPerDifficulty[difficulty] &&
+            q.problem === specialQuestionPerDifficulty[difficulty].problem
+          );
+
+          let randomQuestion;
+          let questionKey;
+
+          if (!alreadyUsedSpecialForThisDiff && specialQuestionPerDifficulty[difficulty]) {
+            randomQuestion = specialQuestionPerDifficulty[difficulty];
+            questionKey = `${randomQuestion.problem}_${JSON.stringify(randomQuestion.answer)}`;
+          } else {
+            let attempts = 0;
+            do {
+              randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+              questionKey = `${randomQuestion.problem}_${JSON.stringify(randomQuestion.answer)}`;
+              attempts++;
+            } while (usedQuestions.has(questionKey) && attempts < 50);
+          }
+
+          if (!usedQuestions.has(questionKey)) {
+            usedQuestions.add(questionKey);
+            questions.push({...randomQuestion, difficulty: difficulty});
+          }
+        }
+      }
+
+      return questions;
     }
-    // それでも足りなければ符号を反転したものを足す
-    guard = 0;
-    while (wrongs.length < 3 && guard++ < 20) {
-      var neg = item.answer.indexOf('-') === 0 ? item.answer.slice(1) : '-' + item.answer;
-      if (!M.isEqual(F.plain(neg), correctPlain) && wrongs.indexOf(neg) < 0) wrongs.push(neg);
-      else wrongs.push(String(Quiz.randInt(-20, 20)) + 'x');
+
+    function showDifficultySelect(mode) {
+      pendingMode = mode;
+      const difficultySelect = document.getElementById('difficulty-select');
+      const difficultyTitle = document.getElementById('difficultyTitle');
+
+      const modeNames = {
+        2: "加法・減法のダンジョン",
+        3: "乗法のダンジョン",
+        4: "除法のダンジョン",
+        5: "分配法則Ver.1",
+        6: "分配法則Ver.2"
+      };
+
+      difficultyTitle.textContent = `${modeNames[mode]} - モード選択`;
+      difficultySelect.classList.add('active');
     }
 
-    return {
-      text: '次の計算をしなさい。',
-      math: item.question,
-      type: 'choice',
-      choices: [item.answer].concat(wrongs.slice(0, 3)),
-      correct: 0,
-      hint: item.hint,
-      explain: item.explain
-    };
-  }
-
-  function toInput(item) {
-    return {
-      text: '次の計算をしなさい。',
-      math: item.question,
-      type: 'input',
-      answer: F.plain(item.answer),
-      answerLabel: item.answer,
-      placeholder: '例： 3x + 5',
-      note: '2乗は「x^2」または「x²」。分数は「x/2」のように書けます。',
-      hint: item.hint,
-      explain: item.explain
-    };
-  }
-
-  var MAKERS = { add: addSub, mul: mulDiv, dist: distribute };
-
-  function build(kind, level, style, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) {
-      var maker = kind === 'all' ? MAKERS[Quiz.pick(['add', 'mul', 'dist'])] : MAKERS[kind];
-      var item = maker(level);
-      out.push(style === 'choice' ? toChoice(item) : toInput(item));
+    function closeDifficultySelect() {
+      document.getElementById('difficulty-select').classList.remove('active');
+      pendingMode = 0;
     }
-    return out;
-  }
 
-  Quiz.start({
-    title: '文字式の計算',
-    subtitle: '四則計算と分配法則。まちがえやすい符号を、ていねいにつぶしていこう。',
-    modes: [
-      { id: 'add:1:choice', group: 'たし算・ひき算（同類項）', name: '4択', desc: '10問' },
-      { id: 'add:1:input', group: 'たし算・ひき算（同類項）', name: '記述', desc: '8問' },
-      { id: 'mul:1:choice', group: 'かけ算・わり算（単項式）', name: '4択', desc: '10問' },
-      { id: 'mul:2:input', group: 'かけ算・わり算（単項式）', name: '記述（発展）', desc: '8問' },
-      { id: 'dist:1:choice', group: '分配法則', name: '4択', desc: '10問' },
-      { id: 'dist:1:input', group: '分配法則', name: '記述', desc: '8問' },
-      { id: 'dist:2:input', group: '分配法則', name: '記述（2つのかっこ）', desc: '8問' },
-      { id: 'all:2:choice', group: '総合', name: '総合バトル　4択', desc: '全種類まぜて12問' },
-      { id: 'all:2:input', group: '総合', name: '総合バトル　記述', desc: '全種類まぜて10問' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      var n = p[2] === 'choice' ? (p[0] === 'all' ? 12 : 10) : (p[0] === 'all' ? 10 : 8);
-      return build(p[0], Number(p[1]), p[2], n);
+    function startGameMode(difficulty) {
+      isHellMode = (difficulty === 'hell');
+      isPressureMode = (difficulty === 'pressure');
+      currentMode = pendingMode;
+      closeDifficultySelect();
+      startMode(currentMode);
     }
-  });
-})();
-</script>
-</body>
+
+    function startMode(mode) {
+      session++;
+      merging = false;
+      currentMode = mode;
+      currentStage = 0;
+      selectedBlock = null;
+      clearTimer();
+
+      if (mode >= 2 && mode <= 6) {
+        const pools = {
+          2: mode2Pool,
+          3: mode3Pool,
+          4: mode4Pool,
+          5: mode5Pool,
+          6: mode6Pool
+        };
+        currentQuestions = generateRandomQuestions(pools[mode], 10);
+      }
+
+      document.getElementById('menu-screen').style.display = 'none';
+      document.getElementById('game-screen').classList.add('active');
+      loadStage();
+    }
+
+    function backToMenu() {
+      session++;
+      merging = false;
+      document.getElementById('menu-screen').style.display = 'block';
+      document.getElementById('game-screen').classList.remove('active');
+      currentMode = 0;
+      currentStage = 0;
+      isHellMode = false;
+      isPressureMode = false;
+      selectedBlock = null;
+      clearTimer();
+    }
+
+    function loadStage() {
+      const maxStages = currentMode === 1 ? 3 : 10;
+      const stageInfo = document.getElementById('stageInfo');
+      const gameArea = document.getElementById('gameArea');
+      gameArea.innerHTML = '';
+
+      let stageText = `ステージ ${currentStage + 1}/${maxStages}`;
+      if (isHellMode && currentMode !== 1) {
+        stageText += ' <span class="hell-mode-badge">🔥 鬼連チャン 🔥</span>';
+      } else if (isPressureMode && currentMode !== 1) {
+        stageText += ' <span class="pressure-mode-badge">⚡ プレッシャー ⚡</span>';
+      }
+      stageInfo.innerHTML = stageText;
+
+      if (currentMode === 1) {
+        loadMode1Stage();
+      } else {
+        loadDungeonMode();
+      }
+    }
+
+    function loadMode1Stage() {
+      const gameArea = document.getElementById('gameArea');
+      const instruction = document.createElement('div');
+      instruction.className = 'instruction';
+      instruction.textContent = '同じ文字のブロックを2回タップするか、ドラッグして重ねると合体します。全部整理しよう！';
+      gameArea.appendChild(instruction);
+
+      const grid = document.createElement('div');
+      grid.className = 'puzzle-grid';
+      grid.id = 'puzzleGrid';
+
+      const template = puzzleTemplates[currentStage % puzzleTemplates.length];
+      puzzleBlocks = JSON.parse(JSON.stringify(template));
+      puzzleBlocks = shuffleArray(puzzleBlocks);
+
+      selectedBlock = null;
+
+      gameArea.appendChild(grid);
+      renderPuzzleGrid();
+    }
+
+    function renderPuzzleGrid() {
+      const grid = document.getElementById('puzzleGrid');
+      if (!grid) return;
+
+      grid.innerHTML = '';
+
+      puzzleBlocks.forEach((block, index) => {
+        const blockEl = document.createElement('div');
+        blockEl.className = block.var === 'empty' ? 'term-block empty' : 'term-block';
+        blockEl.textContent = block.term;
+        blockEl.draggable = block.var !== 'empty';
+        blockEl.dataset.index = index;
+
+        if (block.var !== 'empty') {
+          blockEl.addEventListener('click', handleBlockClick);
+          blockEl.addEventListener('dragstart', handleDragStart);
+          blockEl.addEventListener('dragover', handleDragOver);
+          blockEl.addEventListener('drop', handleDrop);
+          blockEl.addEventListener('dragend', handleDragEnd);
+        }
+
+        grid.appendChild(blockEl);
+      });
+    }
+
+    function handleBlockClick(e) {
+      const clickedIndex = parseInt(e.currentTarget.dataset.index);
+
+      if (selectedBlock === null) {
+        selectedBlock = clickedIndex;
+        e.currentTarget.classList.add('selected');
+      } else {
+        if (selectedBlock === clickedIndex) {
+          e.currentTarget.classList.remove('selected');
+          selectedBlock = null;
+          return;
+        }
+
+        const firstBlock = puzzleBlocks[selectedBlock];
+        const secondBlock = puzzleBlocks[clickedIndex];
+
+        if (firstBlock.var === secondBlock.var && secondBlock.var !== 'empty') {
+          mergeBlocks(selectedBlock, clickedIndex);
+        } else {
+          document.querySelectorAll('.term-block').forEach(el => el.classList.remove('selected'));
+          showErrorMessage('文字が違うので合体できません！');
+          selectedBlock = clickedIndex;
+          e.currentTarget.classList.add('selected');
+        }
+      }
+    }
+
+    function mergeBlocks(fromIndex, toIndex) {
+      if (merging) return;
+      merging = true;
+      const sid = session;
+      const fromBlock = puzzleBlocks[fromIndex];
+      const toBlock = puzzleBlocks[toIndex];
+
+      const newCoef = fromBlock.coef + toBlock.coef;
+
+      let newTerm;
+      const varPart = fromBlock.var;
+
+      if (newCoef === 0) {
+        newTerm = '0';
+      }
+      else if (varPart === '') {
+        newTerm = String(newCoef);
+      }
+      else {
+        if (newCoef === 1) {
+          newTerm = varPart;
+        } else if (newCoef === -1) {
+          newTerm = `-${varPart}`;
+        } else {
+          newTerm = `${newCoef}${varPart}`;
+        }
+      }
+
+      const targetEl = document.querySelector(`[data-index="${selectedBlock}"]`);
+      if (targetEl) {
+        targetEl.classList.add('merged');
+      }
+
+      setTimeout(() => {
+        merging = false;
+        if (sid !== session) return;
+        const targetIndex = Math.min(fromIndex, toIndex);
+        const emptyIndex = Math.max(fromIndex, toIndex);
+
+        puzzleBlocks[targetIndex] = {
+          term: newTerm,
+          coef: newCoef,
+          var: varPart
+        };
+        puzzleBlocks[emptyIndex] = { term: '', coef: 0, var: 'empty' };
+
+        renderPuzzleGrid();
+
+        selectedBlock = targetIndex;
+        setTimeout(() => {
+          const newTargetEl = document.querySelector(`[data-index="${targetIndex}"]`);
+          if (newTargetEl && puzzleBlocks[targetIndex].var !== 'empty') {
+            newTargetEl.classList.add('selected');
+          } else {
+            selectedBlock = null;
+          }
+        }, 50);
+
+        const remaining = puzzleBlocks.filter(b => b.var !== 'empty');
+        const varGroups = {};
+
+        remaining.forEach(b => {
+          const varKey = b.var;
+          if (!varGroups[varKey]) {
+            varGroups[varKey] = [];
+          }
+          varGroups[varKey].push(b);
+        });
+
+        let canMergeMore = false;
+        for (let key in varGroups) {
+          if (varGroups[key].length > 1) {
+            canMergeMore = true;
+            break;
+          }
+        }
+
+        if (!canMergeMore) {
+          selectedBlock = null;
+          document.querySelectorAll('.term-block').forEach(el => el.classList.remove('selected'));
+
+          setTimeout(() => {
+            if (currentStage < 2) {
+              showStageCompleteMessage();
+              setTimeout(() => {
+                if (sid !== session) return;
+                currentStage++;
+                selectedBlock = null;
+                loadStage();
+              }, 2500);
+            } else {
+              showFinalCompleteMessage();
+            }
+          }, 500);
+        }
+      }, 500);
+    }
+
+    function showStageCompleteMessage() {
+      const gameArea = document.getElementById('gameArea');
+
+      const messages = [
+        { main: '🎊 素晴らしい！ 🎊', sub: 'パーフェクトな整理です。次の問題も頑張りましょう！' },
+        { main: '✨ 完璧です！ ✨', sub: 'あなたの理解力は抜群です！さあ、次のステージへ！' },
+        { main: '🌟 すごい！ 🌟', sub: '見事にクリアしました！この調子で最後まで！' }
+      ];
+
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+      const overlay = document.createElement('div');
+      overlay.className = 'congratulation-overlay';
+
+      const mainText = document.createElement('div');
+      mainText.className = 'congratulation-text';
+      mainText.textContent = randomMessage.main;
+
+      const subText = document.createElement('div');
+      subText.className = 'congratulation-subtext';
+      subText.textContent = randomMessage.sub;
+
+      overlay.appendChild(mainText);
+      overlay.appendChild(subText);
+      gameArea.appendChild(overlay);
+    }
+
+    function showFinalCompleteMessage() {
+      const gameArea = document.getElementById('gameArea');
+
+      const overlay = document.createElement('div');
+      overlay.className = 'congratulation-overlay final-congratulation';
+
+      const mainText = document.createElement('div');
+      mainText.className = 'congratulation-text';
+      mainText.textContent = '🏆 全問クリア！おめでとうございます！ 🏆';
+
+      const subText = document.createElement('div');
+      subText.className = 'congratulation-subtext';
+      subText.textContent = 'あなたは同類項整理のマスターです！本当に素晴らしい！';
+
+      overlay.appendChild(mainText);
+      overlay.appendChild(subText);
+      gameArea.appendChild(overlay);
+
+      // 【ブラッシュアップ】元は 4 秒後に自動でメニューに戻っていた。次を選べるボタンを出す
+      const sid = session;
+      setTimeout(() => {
+        if (sid !== session) return;
+        gameArea.querySelectorAll('.congratulation-overlay').forEach(o => o.remove());
+        showResultNav('🏆 同類項パズル 全問クリア！', true);
+      }, 2000);
+    }
+
+    function handleDragStart(e) {
+      draggedElement = e.target;
+      draggedIndex = parseInt(e.target.dataset.index);
+      e.target.classList.add('dragging');
+      selectedBlock = null;
+      document.querySelectorAll('.term-block').forEach(el => el.classList.remove('selected'));
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+
+      let dropTarget = e.target;
+      if (!dropTarget.classList.contains('term-block')) {
+        return;
+      }
+
+      const dropIndex = parseInt(dropTarget.dataset.index);
+
+      if (draggedIndex === dropIndex || puzzleBlocks[dropIndex].var === 'empty') return;
+
+      const draggedBlock = puzzleBlocks[draggedIndex];
+      const targetBlock = puzzleBlocks[dropIndex];
+
+      if (draggedBlock.var === targetBlock.var) {
+        selectedBlock = draggedIndex;
+        mergeBlocks(draggedIndex, dropIndex);
+      } else {
+        showErrorMessage('文字が違うので合体できません！');
+      }
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+    }
+
+    function showErrorMessage(text) {
+      const message = document.createElement('div');
+      message.className = 'message';
+      message.textContent = text;
+      message.style.color = '#f5576c';
+      message.style.position = 'fixed';
+      message.style.top = '50%';
+      message.style.left = '50%';
+      message.style.transform = 'translate(-50%, -50%)';
+      message.style.background = 'white';
+      message.style.padding = '20px';
+      message.style.borderRadius = '12px';
+      message.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      message.style.zIndex = '1000';
+      document.body.appendChild(message);
+      setTimeout(() => message.remove(), 2000);
+    }
+
+    function clearTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function startTimer(onTimeout) {
+      clearTimer();
+      timeRemaining = 10;
+
+      const timerDisplay = document.createElement('div');
+      timerDisplay.className = 'timer-display';
+      timerDisplay.id = 'timerDisplay';
+      timerDisplay.textContent = `⏱️ ${timeRemaining}`;
+      document.querySelector('.dungeon-scene').appendChild(timerDisplay);
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        timerDisplay.textContent = `⏱️ ${timeRemaining}`;
+
+        if (timeRemaining <= 3) {
+          timerDisplay.classList.add('warning');
+        }
+
+        const demonContainer = document.getElementById('demonContainer');
+        if (demonContainer) {
+          demonContainer.classList.add('approaching');
+          const progress = 1 - (timeRemaining / 10);
+          const scale = 1 + (progress * 0.8);
+          const translateY = progress * 50;
+          demonContainer.style.transform = `translate(-50%, -50%) translateY(${translateY}px) scale(${scale})`;
+        }
+
+        if (timeRemaining <= 0) {
+          clearTimer();
+          onTimeout();
+        }
+      }, 1000);
+    }
+
+    function loadDungeonMode() {
+      const stage = currentQuestions[currentStage];
+      const gameArea = document.getElementById('gameArea');
+
+      const instruction = document.createElement('div');
+      instruction.className = 'instruction';
+      if (isHellMode) {
+        instruction.textContent = '正しい答えを選んで悪魔を倒そう！1回でも間違えたら終了！';
+      } else if (isPressureMode) {
+        instruction.textContent = '10秒以内に正しい答えを選ぼう！時間切れになると爆発します！';
+      } else {
+        instruction.textContent = '正しい答えを選んで悪魔を倒そう！';
+      }
+      gameArea.appendChild(instruction);
+
+      const dungeonScene = document.createElement('div');
+      dungeonScene.className = 'dungeon-scene';
+
+      const demonContainer = document.createElement('div');
+      demonContainer.className = 'demon-container';
+      demonContainer.id = 'demonContainer';
+
+      const demonBody = document.createElement('div');
+      demonBody.className = `demon-body demon-${stage.difficulty}`;
+
+      const demonHead = document.createElement('div');
+      demonHead.className = 'demon-head';
+      demonHead.textContent = demonEmojis[stage.difficulty] || '😈';
+
+      const demonHorns = document.createElement('div');
+      demonHorns.className = 'demon-horns';
+
+      const leftHorn = document.createElement('div');
+      leftHorn.className = 'demon-horn';
+      const rightHorn = document.createElement('div');
+      rightHorn.className = 'demon-horn';
+
+      demonHorns.appendChild(leftHorn);
+      demonHorns.appendChild(rightHorn);
+      demonHead.appendChild(demonHorns);
+
+      const demonTorso = document.createElement('div');
+      demonTorso.className = 'demon-torso';
+
+      const demonArms = document.createElement('div');
+      demonArms.className = 'demon-arms';
+
+      const leftArm = document.createElement('div');
+      leftArm.className = 'demon-arm left';
+      const rightArm = document.createElement('div');
+      rightArm.className = 'demon-arm right';
+
+      demonArms.appendChild(leftArm);
+      demonArms.appendChild(rightArm);
+      demonTorso.appendChild(demonArms);
+
+      const demonLegs = document.createElement('div');
+      demonLegs.className = 'demon-legs';
+
+      const leftLeg = document.createElement('div');
+      leftLeg.className = 'demon-leg';
+      const rightLeg = document.createElement('div');
+      rightLeg.className = 'demon-leg';
+
+      demonLegs.appendChild(leftLeg);
+      demonLegs.appendChild(rightLeg);
+
+      demonBody.appendChild(demonHead);
+      demonBody.appendChild(demonTorso);
+      demonBody.appendChild(demonLegs);
+      demonContainer.appendChild(demonBody);
+
+      dungeonScene.appendChild(demonContainer);
+
+      const problemFrame = document.createElement('div');
+      problemFrame.className = 'problem-frame';
+
+      const demonProblem = document.createElement('div');
+      demonProblem.className = 'demon-problem';
+      demonProblem.innerHTML = stage.problem;
+
+      problemFrame.appendChild(demonProblem);
+      dungeonScene.appendChild(problemFrame);
+
+      const slash = document.createElement('div');
+      slash.className = 'slash';
+      slash.id = 'slash';
+      dungeonScene.appendChild(slash);
+
+      const explosion = document.createElement('div');
+      explosion.className = 'explosion';
+      explosion.id = 'explosion';
+      dungeonScene.appendChild(explosion);
+
+      gameArea.appendChild(dungeonScene);
+
+      const choiceGrid = document.createElement('div');
+      choiceGrid.className = 'choice-grid';
+
+      const shuffledChoices = shuffleArray(stage.choices);
+
+      shuffledChoices.forEach(choice => {
+        const card = document.createElement('div');
+        card.className = 'choice-card';
+        card.innerHTML = choice;
+
+        card.onclick = () => {
+          const selectedAnswer = card.dataset.answer || choice;
+          checkDungeonAnswer(selectedAnswer, stage.answer);
+        };
+
+        if (typeof choice === 'string' && choice.includes('fraction')) {
+          card.dataset.answer = choice;
+        }
+
+        choiceGrid.appendChild(card);
+      });
+
+      gameArea.appendChild(choiceGrid);
+
+      if (isPressureMode) {
+        startTimer(() => {
+          handleTimeout();
+        });
+      }
+    }
+
+    function handleTimeout() {
+      const sid = session;
+      const choices = document.querySelectorAll('.choice-card');
+      choices.forEach(c => c.style.pointerEvents = 'none');
+
+      const explosion = document.getElementById('explosion');
+      explosion.classList.add('active');
+
+      const demonContainer = document.getElementById('demonContainer');
+      demonContainer.classList.remove('approaching');
+      demonContainer.classList.add('victory');
+
+      const demonHead = demonContainer.querySelector('.demon-head');
+      setTimeout(() => {
+        demonHead.textContent = '😁';
+      }, 500);
+
+      const message = document.createElement('div');
+      message.className = 'message';
+      message.textContent = '⏰ 時間切れ！悪魔の勝利です... 💀';
+      message.style.color = '#ff0000';
+      message.style.position = 'fixed';
+      message.style.top = '50%';
+      message.style.left = '50%';
+      message.style.transform = 'translate(-50%, -50%)';
+      message.style.background = 'white';
+      message.style.padding = '30px 50px';
+      message.style.borderRadius = '12px';
+      message.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+      message.style.zIndex = '1000';
+      message.style.fontSize = '24px';
+      message.style.fontWeight = 'bold';
+      document.body.appendChild(message);
+
+      setTimeout(() => {
+        message.remove();
+        if (sid !== session) return;
+        showResultNav('⏰ 時間切れ…', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+      }, 3000);
+    }
+
+    function checkDungeonAnswer(selected, correct) {
+      clearTimer();
+      const sid = session;
+
+      const demonContainer = document.getElementById('demonContainer');
+      const slash = document.getElementById('slash');
+      const choices = document.querySelectorAll('.choice-card');
+
+      choices.forEach(c => c.style.pointerEvents = 'none');
+
+      if (selected === correct) {
+        slash.classList.add('active');
+
+        setTimeout(() => {
+          demonContainer.classList.add('defeated');
+        }, 400);
+
+        setTimeout(() => {
+          if (sid !== session) return;
+          const maxStages = 10;
+          if (currentStage < maxStages - 1) {
+            currentStage++;
+            loadStage();
+          } else {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+
+            const finalMessage = document.createElement('div');
+            finalMessage.className = 'message';
+            if (isHellMode) {
+              finalMessage.textContent = '🎉🔥 鬼連チャンモードをクリア！あなたは真の勇者です！ 🔥🎉';
+            } else if (isPressureMode) {
+              finalMessage.textContent = '🎉⚡ プレッシャーモードをクリア！素晴らしい集中力です！ ⚡🎉';
+            } else {
+              finalMessage.textContent = '🎉 このモードを全問クリアしました！おめでとうございます！';
+            }
+            finalMessage.style.fontSize = '28px';
+            finalMessage.style.color = '#4caf50';
+            gameArea.appendChild(finalMessage);
+
+            // 【ブラッシュアップ】元は 3 秒後に自動でメニューに戻っていた。次を選べるボタンを出す
+            showResultNav('🎉 クリア！', true);
+          }
+        }, 1200);
+      } else {
+        slash.classList.add('failed');
+        demonContainer.classList.add('shake');
+
+        const taunts = [
+          "効かない！",
+          "なんだ！その弱い攻撃は",
+          "もっと勉強してこい！",
+          "お前の力はその程度か",
+          "甘いな...貴様の攻撃は",
+          "笑わせるな！",
+          "無駄だ！無駄無駄ァ！"
+        ];
+
+        const speechBubble = document.createElement('div');
+        speechBubble.className = 'demon-speech-bubble active';
+        speechBubble.textContent = taunts[Math.floor(Math.random() * taunts.length)];
+        demonContainer.appendChild(speechBubble);
+
+        setTimeout(() => {
+          slash.classList.remove('failed');
+          demonContainer.classList.remove('shake');
+          speechBubble.remove();
+        }, 2000);
+
+        if (isHellMode) {
+          setTimeout(() => {
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.textContent = '💀 鬼連チャン失敗！ゲームオーバー 💀';
+            message.style.color = '#ff0000';
+            message.style.position = 'fixed';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.background = 'white';
+            message.style.padding = '30px 50px';
+            message.style.borderRadius = '12px';
+            message.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+            message.style.zIndex = '1000';
+            message.style.fontSize = '24px';
+            message.style.fontWeight = 'bold';
+            document.body.appendChild(message);
+
+            setTimeout(() => {
+              message.remove();
+              if (sid !== session) return;
+              showResultNav('💀 ゲームオーバー', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+            }, 2500);
+          }, 2000);
+        } else if (isPressureMode) {
+          setTimeout(() => {
+            const explosion = document.getElementById('explosion');
+            explosion.classList.add('active');
+
+            demonContainer.classList.remove('approaching');
+            demonContainer.classList.add('victory');
+
+            const demonHead = demonContainer.querySelector('.demon-head');
+            setTimeout(() => {
+              demonHead.textContent = '😁';
+            }, 500);
+
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.textContent = '💥 不正解！悪魔の勝利です... 💀';
+            message.style.color = '#ff0000';
+            message.style.position = 'fixed';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.background = 'white';
+            message.style.padding = '30px 50px';
+            message.style.borderRadius = '12px';
+            message.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+            message.style.zIndex = '1000';
+            message.style.fontSize = '24px';
+            message.style.fontWeight = 'bold';
+            document.body.appendChild(message);
+
+            setTimeout(() => {
+              message.remove();
+              if (sid !== session) return;
+              showResultNav('💥 悪魔の勝利…', false);   // 【ブラッシュアップ】もう一度ちょうせんできるように
+            }, 3000);
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            if (sid !== session) return;
+            // 【ブラッシュアップ】まちがえた選択肢は押せないままにして、ほかから選べるようにする
+            choices.forEach(c => { if (c.innerHTML !== selected && !c.classList.contains('wrong-picked')) c.style.pointerEvents = 'auto'; else { c.classList.add('wrong-picked'); c.style.opacity = '0.45'; } });
+          }, 2000);
+        }
+      }
+    }
+
+    // 【ブラッシュアップ】クリア・ゲームオーバーのあとに出すボタン（同じモード・次のダンジョン・えらび直す・ほかの教材）
+    function showResultNav(title, ok) {
+      clearTimer();
+      const gameArea = document.getElementById('gameArea');
+      gameArea.querySelectorAll('.choice-grid, .result-nav').forEach(g => g.remove());
+      const nav = document.createElement('div');
+      nav.className = 'result-nav';
+      const modeLabel = isHellMode ? '（鬼連チャン）' : isPressureMode ? '（プレッシャー）' : '';
+      nav.innerHTML =
+        '<div class="result-nav-title ' + (ok ? 'ok' : 'ng') + '">' + title + '</div>' +
+        '<button class="result-btn main" onclick="startMode(currentMode)">' + (ok ? '同じモードでもう一度' : 'もう一度ちょうせん') + modeLabel + '</button>' +
+        (ok && currentMode < 6 ? '<button class="result-btn next" onclick="goNextDungeon()">次のダンジョンへ ▶</button>' : '') +
+        '<button class="result-btn" onclick="backToMenu()">ダンジョンをえらび直す</button>' +
+        '<a href="../remake.html">ほかの教材をえらぶ</a>';
+      gameArea.appendChild(nav);
+      nav.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function goNextDungeon() {
+      if (currentMode === 1) { isHellMode = false; isPressureMode = false; }
+      startMode(currentMode + 1);
+    }
+
+    async function onConfigChange(config) {
+      const container = document.getElementById('game-container');
+      const title = document.getElementById('gameTitle');
+      const modeText = document.getElementById('modeSelectionText');
+
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const buttonColor = config.button_color || defaultConfig.button_color;
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+
+      container.style.background = `linear-gradient(135deg, ${bgColor} 0%, #764ba2 100%)`;
+      title.textContent = config.game_title || defaultConfig.game_title;
+      modeText.textContent = config.mode_selection_text || defaultConfig.mode_selection_text;
+
+      document.body.style.fontFamily = `${customFont}, 'Hiragino Sans', sans-serif`;
+      document.body.style.fontSize = `${baseSize}px`;
+
+      const gameTitle = document.querySelector('.game-title');
+      if (gameTitle) gameTitle.style.fontSize = `${baseSize * 2}px`;
+
+      const modeSelText = document.querySelector('.mode-selection-text');
+      if (modeSelText) modeSelText.style.fontSize = `${baseSize * 1.125}px`;
+
+      document.querySelectorAll('.mode-title').forEach(el => {
+        el.style.fontSize = `${baseSize * 1.25}px`;
+        el.style.color = textColor;
+      });
+
+      document.querySelectorAll('.back-button').forEach(el => {
+        el.style.background = buttonColor;
+      });
+
+      document.querySelectorAll('.mode-number').forEach(el => {
+        el.style.background = buttonColor;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.button_color || defaultConfig.button_color,
+              set: (value) => {
+                config.button_color = value;
+                window.elementSdk.setConfig({ button_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["mode_selection_text", config.mode_selection_text || defaultConfig.mode_selection_text]
+        ])
+      });
+    }
+  </script>
+ </body>
 </html>
