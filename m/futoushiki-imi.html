@@ -1,204 +1,503 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>不等式クイズ</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    23. 不等式の意味（不等式クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不等式クイズ</title>
+    <style>
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;   /* 【ブラッシュアップ】上から並べる */
+            align-items: center;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+            margin: auto 0;   /* 【ブラッシュアップ】画面に収まるときだけ縦まん中に */
+        }
+
+        .title {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .option.correct {
+            border-color: #4CAF50;
+            background: #4CAF50;
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: #f44336;
+            color: white;
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #4CAF50;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            color: #c62828;
+            border: 2px solid #f44336;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .score-text {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .quiz-container { padding: 32px 28px; }
+    .title { font-size: min(2.4rem, 8vw); white-space: nowrap; }
+    .subtitle { color: var(--u-sub); font-weight: 700; }
+    .question-card { background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-left-width: 4px; border-radius: 24px; }
+    .question-number { display: inline-block; background: #fff; color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
+    .question-text { color: var(--u-ink); font-weight: 800; }
+    .option { font-size: 1.15rem; padding: 14px 16px; }
+    .feedback { border-radius: 16px; }
+    .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .rule-hint { margin-top: 10px; background: #fff; color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 12px; padding: 10px 12px; font-size: 0.95rem; text-align: left; line-height: 1.7; }
+    .score { color: var(--u-accent-text); }
+    .score-text { color: var(--u-ink); font-weight: 700; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    .result-nav button, .result-nav a.next { padding: 14px; font-size: 1.1rem; }
+    @media (max-width: 600px) {
+      body { padding: 8px; }
+      .quiz-container { padding: 18px 14px; margin: 0; }
+      .question-card { padding: 18px 12px; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="quiz-container">
+        <h1 class="title">📊 不等式クイズ</h1>
+        <p class="subtitle">条件を不等式で表したり、不等式を日本語で表現してみよう！</p>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/graph.js"></script>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="quizContent">
+            <div class="question-card">
+                <div class="question-number" id="questionNumber">問題 1/10</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="options" id="options"></div>
+                <div id="feedback" class="feedback" style="display: none;"></div>
+                <div class="buttons">
+                    <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()" style="display: none;">次の問題</button>
+                    <button class="btn btn-secondary" id="retryBtn" onclick="retryQuestion()" style="display: none;">もう一度</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" style="display: none;">
+            <div class="results">
+                <div class="score" id="finalScore"></div>
+                <div class="score-text" id="scoreText"></div>
+                <!-- 【ブラッシュアップ】次に進む教材・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    <button class="again" onclick="restartQuiz()">もう一度挑戦</button>
+                    <a class="next" href="niji-futoushiki.html" style="display: block; padding: 14px; text-decoration: none; color: #fff;">つぎは「2次不等式」に挑戦 ▶</a>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "xが1より小さい、または、3より大きいとき、これを不等式で表すと？",
+                options: ["x < 1 ， x > 3", "1 < x < 3", "x ≤ 1 ， x ≥ 3", "1 ≤ x ≤ 3"],
+                correct: 0
+            },
+            {
+                question: "2 < x < 6 を日本語で表すと？",
+                options: ["xは2より小さい、または6より大きい", "xは2より大きく6より小さい", "xは2以下または6以上", "xは2以上6以下"],
+                correct: 1
+            },
+            {
+                question: "xが-1より大きく3より小さいとき、これを不等式で表すと？",
+                options: ["x < -1 ， x > 3", "-1 < x < 3", "x ≤ -1 ， x ≥ 3", "-1 ≤ x ≤ 3"],
+                correct: 1
+            },
+            {
+                question: "-3 ≤ x ≤ 2 を日本語で表すと？",
+                options: ["xは-3より小さい、または2より大きい", "xは-3以上2以下", "xは-3より大きく2より小さい", "xは-3以下または2以上"],
+                correct: 1
+            },
+            {
+                question: "xが0以上5以下のとき、これを不等式で表すと？",
+                options: ["x < 0 ， x > 5", "0 < x < 5", "0 ≤ x ≤ 5", "x ≤ 0 ， x ≥ 5"],
+                correct: 2
+            },
+            {
+                question: "1 ≤ x < 4 を日本語で表すと？",
+                options: ["xは1以上4未満", "xは1より大きく4以下", "xは1未満または4以上", "xは1以下または4より大きい"],
+                correct: 0
+            },
+            {
+                question: "xが-2より小さい、または、5より大きいとき、これを不等式で表すと？",
+                options: ["-2 < x < 5", "x < -2 ， x > 5", "-2 ≤ x ≤ 5", "x ≤ -2 ， x ≥ 5"],
+                correct: 1
+            },
+            {
+                question: "-1 < x ≤ 3 を日本語で表すと？",
+                options: ["xは-1より大きく3以下", "xは-1以上3より小さい", "xは-1以下または3以上", "xは-1より小さい、または3より大きい"],
+                correct: 0
+            },
+            {
+                question: "xが4以下、または、7以上のとき、これを不等式で表すと？",
+                options: ["4 < x < 7", "4 ≤ x ≤ 7", "x ≤ 4 ， x ≥ 7", "x < 4 ， x > 7"],
+                correct: 2
+            },
+            {
+                question: "0 < x < 8 を日本語で表すと？",
+                options: ["xは0以上8以下", "xは0より大きく8より小さい", "xは0以下または8以上", "xは0より小さい、または8より大きい"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = -1;
+        let answered = false;
+        let retried = false;   // 【ブラッシュアップ】この問題でまちがえたか（一発正解だけを点にする）
+        let order = [0, 1, 2, 3];
+
+        function loadQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionNumber').textContent = `問題 ${currentQuestion + 1}/10`;
+            document.getElementById('questionText').textContent = question.question;
+
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            order = question.options.map((_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+            retried = false;
+            order.forEach((orig, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = question.options[orig];
+                optionDiv.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('retryBtn').style.display = 'none';
+
+            selectedOption = -1;
+            answered = false;
+
+            updateProgress();
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            options[index].classList.add('selected');
+
+            selectedOption = index;
+            checkAnswer();
+        }
+
+        function checkAnswer() {
+            if (selectedOption === -1 || answered) return;
+
+            answered = true;
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+
+            options.forEach((option, index) => {
+                option.onclick = null;
+                if (index === selectedOption) {
+                    if (order[index] === question.correct) {
+                        option.classList.add('correct');
+                    } else {
+                        option.classList.add('incorrect');
+                    }
+                }
+            });
+
+            if (order[selectedOption] === question.correct) {
+                if (!retried) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入り、いつも満点にできた
+                feedback.textContent = '🎉 正解です！';
+                feedback.className = 'feedback correct';
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                feedback.innerHTML = '❌ 不正解です。もう一度考えてみましょう！' +
+                    '<div class="rule-hint">💡 「以上・以下」は ≦ ≧（その数をふくむ）、「より大きい・より小さい（未満）」は ＜ ＞（その数をふくまない）。<br>' +
+                    '「〇〇または△△」は 2 つの範囲に分かれるので、x ＜ 〇、x ＞ △ のように 2 つならべて書くよ。</div>';
+                feedback.className = 'feedback incorrect';
+                document.getElementById('retryBtn').style.display = 'inline-block';
+                // 【ブラッシュアップ】元はまちがえたあと「次の問題」でとばせた。正解するまで次へ進めないようにする
+            }
+
+            feedback.style.display = 'block';
+        }
+
+        function retryQuestion() {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.onclick = (e) => selectOption(Array.from(options).indexOf(e.target));
+            });
+
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('retryBtn').style.display = 'none';
+
+            selectedOption = -1;
+            answered = false;
+            retried = true;   // 【ブラッシュアップ】
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            const percentage = Math.round((score / questions.length) * 100);
+            document.getElementById('finalScore').textContent = `${score}/${questions.length}`;
+
+            let message = '';
+            if (percentage >= 90) {
+                message = '🏆 素晴らしい！不等式をマスターしていますね！';
+            } else if (percentage >= 70) {
+                message = '👏 よくできました！もう少しで完璧です！';
+            } else if (percentage >= 50) {
+                message = '📚 まずまずです！復習してもう一度挑戦してみましょう！';
+            } else {
+                message = '💪 頑張りましょう！基本から復習してみてください！';
+            }
+
+            document.getElementById('scoreText').textContent = '一発で正解できた問題の数です。 ' + message;
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            loadQuestion();
+        }
+
+        // クイズを開始
+        loadQuestion();
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   23. 不等式の意味
-   条件を不等式で表したり、不等式を日本語で言いかえたりする10問。
-
-   元教材から直した点：
-     ・「以上」と「より大きい」の区別を問う問題で、
-       ≧ と > のどちらを選んでも正解になっていた。
-       → 等号を含むかどうかを、選択肢の中で必ず区別して出す。
-     ・「または」の問題で、選択肢が「-2 < x < 5」と「x < -2, x > 5」の
-       2つしかなく、消去法で当てられた。 → 紛らわしい4つを必ず用意する。
-     ・数直線の図が問題ごとに位置がずれていた。 → 図を作る関数を共通化した。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var A = Algebra;
-
-  var WORDS = [
-    { jp: 'より大きい', op: '>', eq: false, dir: 'gt' },
-    { jp: 'より小さい', op: '<', eq: false, dir: 'lt' },
-    { jp: '未満', op: '<', eq: false, dir: 'lt' },
-    { jp: '以上', op: '≧', eq: true, dir: 'gt' },
-    { jp: '以下', op: '≦', eq: true, dir: 'lt' }
-  ];
-
-  /* ---------- ① 日本語 → 不等式（1つの条件） ---------- */
-  function jpToIneq() {
-    var w = Quiz.pick(WORDS);
-    var n = A.nz(-9, 9);
-    var correct = 'x ' + w.op + ' ' + n;
-
-    // 等号の有無・向きを変えたものを必ず誤答に入れる
-    var flipEq = { '>': '≧', '<': '≦', '≧': '>', '≦': '<' }[w.op];
-    var reverse = { '>': '<', '<': '>', '≧': '≦', '≦': '≧' }[w.op];
-    var wrongs = [
-      'x ' + flipEq + ' ' + n,
-      'x ' + reverse + ' ' + n,
-      'x ' + w.op + ' ' + (-n)
-    ].filter(function (s) { return s !== correct; });
-
-    return {
-      tag: '日本語 → 式',
-      text: 'x が <b>' + n + ' ' + w.jp + '</b> とき、これを不等式で表すとどれですか。',
-      type: 'choice',
-      choices: [correct].concat(wrongs.slice(0, 3)),
-      correct: 0,
-      hint: '「以上」「以下」は等号をふくみます（≧ ≦）。「より大きい」「より小さい」「未満」はふくみません（> <）。',
-      explain: correct + ' です。' +
-        (w.eq ? '「' + w.jp + '」なので ' + n + ' もふくみます。' : '「' + w.jp + '」なので ' + n + ' はふくみません。') +
-        '<br>' + Graph.numberLine({
-          lo: Math.min(n - 4, -6), hi: Math.max(n + 4, 6),
-          ranges: [w.dir === 'gt' ? { from: n, to: Math.max(n + 4, 6) } : { from: Math.min(n - 4, -6), to: n }],
-          points: [{ x: n, filled: w.eq }]
-        })
-    };
-  }
-
-  /* ---------- ② 日本語 → 不等式（2つの条件） ---------- */
-  function jpToRange() {
-    var a = A.randInt(-8, 0);
-    var b = a + A.randInt(2, 8);
-    var isAnd = Math.random() < 0.5;
-
-    var correct, wrongs, text;
-    if (isAnd) {
-      // かつ（間）
-      correct = a + ' < x < ' + b;
-      wrongs = [
-        'x < ' + a + '　,　x > ' + b,
-        a + ' ≦ x ≦ ' + b,
-        'x ≦ ' + a + '　,　x ≧ ' + b
-      ];
-      text = 'x が <b>' + a + ' より大きく、' + b + ' より小さい</b>とき、これを不等式で表すとどれですか。';
-    } else {
-      // または（外）
-      correct = 'x < ' + a + '　,　x > ' + b;
-      wrongs = [
-        a + ' < x < ' + b,
-        'x ≦ ' + a + '　,　x ≧ ' + b,
-        a + ' ≦ x ≦ ' + b
-      ];
-      text = 'x が <b>' + a + ' より小さい、または ' + b + ' より大きい</b>とき、これを不等式で表すとどれですか。';
-    }
-
-    return {
-      tag: '日本語 → 式',
-      text: text,
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: isAnd
-        ? '「かつ」は 2 つの数の間。ひとつの不等式にまとめて書けます。'
-        : '「または」は 2 つの範囲に分かれます。まとめて 1 本には書けません。',
-      explain: correct + ' です。' +
-        '<br>' + Graph.numberLine({
-          lo: a - 3, hi: b + 3,
-          ranges: isAnd ? [{ from: a, to: b }] : [{ from: a - 3, to: a }, { from: b, to: b + 3 }],
-          points: [{ x: a, filled: false }, { x: b, filled: false }]
-        })
-    };
-  }
-
-  /* ---------- ③ 不等式 → 日本語 ---------- */
-  function ineqToJp() {
-    var w = Quiz.pick(WORDS);
-    var n = A.nz(-9, 9);
-    var correct = 'x は ' + n + ' ' + w.jp;
-
-    var others = WORDS.filter(function (x) { return x.jp !== w.jp; });
-    var wrongs = Quiz.shuffle(others).slice(0, 3).map(function (x) { return 'x は ' + n + ' ' + x.jp; });
-
-    return {
-      tag: '式 → 日本語',
-      text: '次の不等式を、ことばで正しく言いかえたものはどれですか。',
-      math: 'x ' + w.op + ' ' + n,
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: '＝ の線がついているか（≧ ≦）で、「以上・以下」か「より大きい・より小さい」かが決まります。',
-      explain: correct + '　が正しい言いかえです。'
-    };
-  }
-
-  /* ---------- ④ あてはまる数はどれか ---------- */
-  function belongs() {
-    var w = Quiz.pick(WORDS);
-    var n = A.nz(-6, 6);
-    var test = function (x) {
-      if (w.op === '>') return x > n;
-      if (w.op === '<') return x < n;
-      if (w.op === '≧') return x >= n;
-      return x <= n;
-    };
-    var ok = [], ng = [];
-    for (var v = n - 4; v <= n + 4; v++) {
-      (test(v) ? ok : ng).push(v);
-    }
-    // 境界の値を必ず選択肢に入れる（等号の理解を問う要）
-    var correct = Quiz.pick(ok);
-    var wrongs = Quiz.shuffle(ng).slice(0, 2);
-    if (ng.indexOf(n) >= 0 && wrongs.indexOf(n) < 0) wrongs[0] = n;
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 20) {
-      var c = A.randInt(n - 8, n + 8);
-      if (!test(c) && wrongs.indexOf(c) < 0) wrongs.push(c);
-    }
-
-    return {
-      tag: 'あてはまる数',
-      text: '次の不等式に<b>あてはまる</b>数はどれですか。',
-      math: 'x ' + w.op + ' ' + n,
-      type: 'choice',
-      choices: [String(correct)].concat(wrongs.map(String)),
-      correct: 0,
-      hint: w.eq ? '等号をふくむので、' + n + ' 自身もあてはまります。'
-                 : '等号をふくまないので、' + n + ' 自身はあてはまりません。',
-      explain: correct + ' は x ' + w.op + ' ' + n + ' を満たします。'
-    };
-  }
-
-  var MAKERS = [jpToIneq, jpToRange, ineqToJp, belongs];
-
-  Quiz.start({
-    title: '不等式クイズ',
-    subtitle: '条件を不等式で表したり、不等式を日本語で表現してみよう！',
-    modes: [
-      { id: 'mix', name: '総合（全10問）', desc: '4種類の問題をまぜて出題' },
-      { id: 'a', name: '日本語 → 不等式', desc: '1つの条件（10問）' },
-      { id: 'b', name: 'かつ・または', desc: '範囲の表し方（8問）' },
-      { id: 'c', name: '不等式 → 日本語', desc: '言いかえ（8問）' },
-      { id: 'd', name: 'あてはまる数さがし', desc: '等号の意味を確かめる（8問）' }
-    ],
-    build: function (id) {
-      var out = [], i;
-      if (id === 'mix') {
-        for (i = 0; i < 10; i++) out.push(Quiz.pick(MAKERS)());
-        return out;
-      }
-      var maker = { a: jpToIneq, b: jpToRange, c: ineqToJp, d: belongs }[id];
-      var n = id === 'a' ? 10 : 8;
-      for (i = 0; i < n; i++) out.push(maker());
-      return out;
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".quiz-container": "u-card",
+    ".title": "u-title",
+    ".progress": "u-progress",
+    ".option": "u-choice",
+    ".option.correct": "u-ok",
+    ".option.incorrect": "u-ng",
+    "#nextBtn": "u-btn u-btn-blue",
+    "#retryBtn": "u-btn",
+    ".result-nav .again": "u-btn",
+    ".result-nav .next": "u-btn u-btn-blue"
   });
-})();
 </script>
 </body>
 </html>
