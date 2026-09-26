@@ -96,6 +96,75 @@
         @media (prefers-reduced-motion: reduce) {
             .float-icon, .btn-wrong { animation: none; }
         }
+
+        /* 【ブラッシュアップ】日本語を「言葉の切れ目」で改行する。
+           これが無いと「マスターしよ／う！」のように変なところで折り返す。
+           （新しめの Chrome で有効。古いブラウザでは今までどおりの改行になるだけ） */
+        body { word-break: auto-phrase; line-break: strict; }
+        h1, h2, #result-badge, #quiz-instruction { text-wrap: balance; }
+
+        .badge-sub { display: block; font-size: .5em; margin-top: .3em; }
+
+        /* ------------------------------------------------------------------
+           【ブラッシュアップ】スマホ用の表示
+           画面の幅が 640px 以下のときだけ、下の設定に自動で切り替わる。
+           PC で開いたときの見た目は今までと同じ。
+           ------------------------------------------------------------------ */
+        @media (max-width: 640px) {
+            /* 余白と枠を細くして、画面いっぱいに使う */
+            body { padding: 8px; }
+            #app {
+                border-width: 5px;
+                border-radius: 28px;
+                padding: 18px 14px 22px;
+                margin-top: 6px;
+            }
+            .back-link { padding: 2px 6px; font-size: .9rem; }
+            #app > .w-full.h-6 { height: 14px; margin-bottom: 16px; }   /* 進行度バー */
+            #header-info { margin-bottom: 14px; padding: 0; }
+
+            /* スタート画面 */
+            #start-screen { padding-top: 18px; padding-bottom: 12px; }
+            #start-screen > * + * { margin-top: 22px; }
+            #start-screen .text-6xl { font-size: 4.2rem; }
+            #start-screen h1 { font-size: 2.35rem; }
+            #start-screen p { font-size: 1.1rem; }
+            #start-screen button { font-size: 2.2rem; padding: 26px 0; }
+
+            /* 問題画面：問題文と選択肢とヒントが 1 画面に収まるように */
+            #quiz-screen .mb-8 { margin-bottom: 16px; }
+            #quiz-instruction { font-size: 1.05rem; padding: 8px 16px; margin-bottom: 14px; }
+            #question-text { font-size: 2.6rem; }
+            #choice-container {
+                grid-template-columns: 1fr 1fr;       /* 選択肢を 2 列にする */
+                gap: 10px;
+            }
+            #choice-container button {
+                padding: 20px 6px;
+                font-size: 2.1rem;                    /* 数式はできるだけ大きく */
+                border-radius: 22px;
+                min-height: 108px;
+            }
+            #try-again-msg { font-size: 1.15rem; }
+            #try-again-hint { font-size: 1.05rem; }
+
+            /* 解説画面 */
+            #result-badge { font-size: 2.6rem; }
+            #correct-answer-math { font-size: 2.6rem; }
+            #explanation-screen > .bg-slate-50 { padding: 16px 14px; border-radius: 22px; margin-bottom: 16px; }
+            #explanation-text p.text-2xl { font-size: 1.3rem; line-height: 1.6; }
+            #explanation-text .text-4xl { font-size: 1.6rem; }
+            #explanation-text .text-xl { font-size: 1rem; }
+            #explanation-text .p-5 { padding: 12px; }
+            #next-btn { font-size: 1.6rem; padding: 22px 0; }
+
+            /* 結果画面 */
+            #result-screen { padding-top: 16px; padding-bottom: 8px; }
+            #result-screen > * + * { margin-top: 20px; }
+            #result-screen h2 { font-size: 2rem; }
+            #result-screen .text-8xl { font-size: 4.5rem; }
+            #result-comment { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
@@ -388,7 +457,7 @@
 
             // 【ブラッシュアップ】一発で正解できなかったときは、見出しを変える
             document.getElementById('result-badge').innerHTML =
-                currentMistakes === 0 ? '✨ せいかい！ ✨' : '👍 せいかい！（つぎは一発で！）';
+                currentMistakes === 0 ? '✨ せいかい！ ✨' : '👍 せいかい！<span class="badge-sub">つぎは一発でいこう！</span>';
 
             // 【ブラッシュアップ】選んだ書き方が「別の正しい書き方」のときは、それを答えとして大きく出す
             const main = selected || currentQ.a[0];
