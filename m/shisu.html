@@ -6,7 +6,7 @@
     <!--
       08. 指数法則（指数法則★MASTER）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -80,8 +80,25 @@
             .done-box h2 { font-size: 2rem; }
         }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .container { box-sizing: border-box; }
+    .box-q { border: 3px solid var(--u-line); background: #f8fafc; }
+    .txt-q { color: var(--u-ink); }
+    .ans-display { border: 4px dashed #fde68a; background: var(--u-soft-yellow); color: var(--u-ink); }
+    .palette { background: var(--u-soft-blue); }
+    .btn-p { border: 2px solid var(--u-line-dark); border-bottom-width: 4px; border-radius: 12px; color: var(--u-ink); }
+    .btn-p.sup { background: #ffe4e6; }
+    #qInfo { padding: 4px 16px; font-size: 1.2rem !important; }
+    .done-box h2 { color: var(--u-accent-text); }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div class="container">
@@ -266,6 +283,7 @@ function judgeChoice(k, btn) {
     if (k === st.prob.a) {
         document.getElementById('fb').innerHTML = '<span style="color:var(--secondary);">⭕ 正解！</span>';
         st.solved = true; document.getElementById('btnNext').style.display = 'block';
+        btn.classList.add('is-correct');   // 【ブラッシュアップ】正解の選択肢に色をつける
     } else {
         document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！</span>';
         btn.disabled = true;   // 【ブラッシュアップ】薄くするだけでなく、押せなくする
@@ -299,6 +317,24 @@ function judgeBuild() {
         document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！パーツを確認してね</span>';
     }
 }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    "#scrHome h1": "u-title",
+    ".lv-menu .btn-main": "u-choice",
+    ".done-box .btn-action": "u-btn",
+    ".done-box .btn-main": "u-btn u-btn-plain",
+    "#scrQuiz > div:first-child button": "u-btn u-btn-plain",
+    "#qInfo": "u-pill",
+    ".btn-choice": "u-choice",
+    ".btn-choice.is-correct": "u-ok",
+    ".btn-choice:disabled": "u-ng",
+    "#btnJudge": "u-btn",
+    "#btnNext": "u-btn u-btn-blue",
+    ".btn-hint": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>

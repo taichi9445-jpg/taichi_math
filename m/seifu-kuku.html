@@ -6,7 +6,7 @@
     <!--
       05. 正負の九九（正負の数 スーパーチャレンジ！）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -143,8 +143,27 @@
         }
         .result-nav { display: flex; flex-direction: column; gap: .8rem; max-width: 22rem; margin: 0 auto; }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #main-container { max-width: 640px; margin: 8px auto 24px; box-sizing: border-box; }
+    #start-screen h1 { font-size: min(2.6rem, 9vw) !important; }
+    #start-screen .mode-card span.text-gray-700 { color: var(--u-ink) !important; }
+    #start-screen .mode-card span.text-gray-400 { color: var(--u-sub) !important; }
+    #game-info-left { color: var(--u-title) !important; }
+    #game-info-right { color: var(--u-accent-text) !important; }
+    #timer-display { color: var(--u-ng) !important; }
+    .problem-text { color: var(--u-ink); }
+    #result-comment { color: var(--u-ink) !important; }
+    #hint-panel { background: var(--u-soft-blue) !important; border-color: var(--u-soft-blue-line) !important; }
+    #hint-panel .text-indigo-600 { color: var(--u-title) !important; }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 
     <div id="main-container" class="ud-card p-6 md:p-10 text-center overflow-hidden">
@@ -453,5 +472,25 @@
             if (e.key === 'Enter') handleAnswer(parseInt(e.target.value), null);
         });
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#main-container": "u-card",
+    "#start-screen h1": "u-title",
+    "#start-screen .mode-card": "u-choice",
+    "[id^=\"type-select\"]:is(.bg-indigo-600)": "u-btn u-btn-blue",
+    "[id^=\"type-select\"]:is(.bg-gray-200)": "u-btn u-btn-plain",
+    "#home-btn-container button": "u-btn u-btn-plain",
+    "#game-screen > .w-full.bg-gray-200": "u-progress",
+    ".choice-btn": "u-choice",
+    ".choice-btn.choice-selected-correct": "u-ok",
+    ".choice-btn.choice-selected-wrong": "u-ng",
+    "#answer-input": "u-input",
+    "#input-submit-btn": "u-btn",
+    "#result-title": "u-title",
+    ".result-nav button.bg-orange-500": "u-btn",
+    ".result-nav button.bg-white": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>
