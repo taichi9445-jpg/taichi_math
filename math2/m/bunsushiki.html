@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+
+    <!--
+      数学Ⅱ 02. 分数式の計算（分数式マスター Pro）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../../assets/port.css">
+    <script src="../../assets/port.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分数式マスター Pro</title>
+    <!-- KaTeX for Math -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Tailwind CSS -->
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+         本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+         同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+    <link rel="stylesheet" href="../../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --secondary: #f8fafc;
+            --accent: #f59e0b;
+        }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .math-xl .katex { font-size: 2.2rem !important; }
+        @media (max-width: 640px) { .math-xl .katex { font-size: 1.6rem !important; } }
+        .math-md .katex { font-size: 1.3rem !important; }
+        .math-sm .katex { font-size: 1.1rem !important; }
+
+        .bubble-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+        .bubble-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .tile {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            margin: 3px;
+        }
+        .tile-special {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #d97706;
+            font-size: 0.9rem;
+        }
+
+        .fraction-builder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .drop-zone {
+            min-height: 80px;
+            width: 100%;
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px;
+            background-color: #ffffff;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            gap: 6px;
+            transition: border-color 0.3s;
+        }
+        .drop-zone.active {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+        .fraction-line-ui {
+            width: 90%;
+            height: 4px;
+            background-color: #334155;
+            border-radius: 2px;
+        }
+        .fraction-line-ui.hidden-line {
+            opacity: 0.1;
+            background-color: #cbd5e1;
+        }
+
+        .placed-tile {
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .placed-tile-special {
+            background: #d97706;
+            font-size: 0.9rem;
+        }
+
+        .choice-card {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 1.5rem;
+            padding: 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+        }
+        .choice-card:hover {
+            border-color: var(--primary);
+            background-color: #f0f7ff;
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* 【ブラッシュアップ】 */
+        .port-back { max-width: 48rem; }
+        .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+        .order-note { background: #fefce8; border: 2px solid #fde68a; color: #854d0e; border-radius: 1rem; padding: 10px 12px; font-weight: bold; font-size: 0.95rem; margin-bottom: 16px; }
+
+        /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+        @media (max-width: 640px) {
+            header h1 { font-size: min(1.875rem, 7.6vw); white-space: nowrap; }
+            .tile { font-size: 1.25rem; min-height: 48px; padding: 8px 12px; }
+            .choice-card { min-height: 88px; padding: 10px; }
+            #result-screen { padding: 28px 16px; }
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-6 text-slate-800">
+
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div id="app" class="max-w-3xl mx-auto">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-black text-blue-700 tracking-tight">分数式マスター Pro</h1>
+            <p class="text-slate-500 font-bold text-sm">解くたびに問題が変わる！ランダム演習</p>
+        </header>
+
+        <!-- メニュー -->
+        <div id="menu-screen" class="space-y-6 fade-in">
+            <div class="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-xl border-4 border-blue-100">
+                <div class="mb-8">
+                    <p class="text-center text-xs font-black text-slate-400 mb-4 tracking-widest uppercase">1. 回答スタイル</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="setMethod('select')" id="btn-m-select" class="bubble-btn bg-white border-4 border-blue-500 text-blue-600 py-4 rounded-2xl font-black text-lg">えらぶ</button>
+                        <button onclick="setMethod('drag')" id="btn-m-drag" class="bubble-btn bg-slate-100 border-4 border-transparent text-slate-400 py-4 rounded-2xl font-black text-lg">つなげる</button>
+                    </div>
+                </div>
+
+                <p class="text-center text-xs font-black text-slate-400 mb-4 tracking-widest uppercase">2. 学習コース（ランダム5問）</p>
+                <div class="grid gap-4">
+                    <button onclick="initQuiz('reduce')" class="bubble-btn bg-emerald-500 text-white py-6 rounded-2xl font-black text-xl hover:bg-emerald-600">✂️ 約分の基礎〜応用</button>
+                    <button onclick="initQuiz('multiply')" class="bubble-btn bg-sky-500 text-white py-6 rounded-2xl font-black text-xl hover:bg-sky-600">✖️ かけ算・わり算</button>
+                    <button onclick="initQuiz('add')" class="bubble-btn bg-indigo-500 text-white py-6 rounded-2xl font-black text-xl hover:bg-indigo-600">➕ たし算・ひき算</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- クイズ -->
+        <div id="quiz-screen" class="hidden fade-in">
+            <div class="bg-white p-4 sm:p-8 rounded-[2.5rem] shadow-xl border-4 border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <span id="progress-text" class="px-6 py-2 bg-blue-100 text-blue-700 rounded-full font-black text-sm">1 / 5</span>
+                    <button onclick="backToMenu()" class="text-slate-400 font-bold hover:text-red-500">終了</button>
+                </div>
+
+                <div id="question-container" class="text-center py-6 math-xl overflow-x-auto min-h-[140px] flex items-center justify-center"></div>
+
+                <div id="answer-section" class="mt-4">
+                    <div id="select-area" class="hidden grid gap-4 grid-cols-1 sm:grid-cols-2"></div>
+                    <div id="drag-area" class="hidden">
+                        <div class="fraction-builder">
+                            <div id="numerator-zone" class="drop-zone" onclick="setActiveZone('num')"></div>
+                            <div id="fraction-line" class="fraction-line-ui"></div>
+                            <div id="denominator-zone" class="drop-zone" onclick="setActiveZone('den')"></div>
+                        </div>
+                        <div id="tile-pool" class="flex flex-wrap justify-center mt-8 p-4 bg-slate-50 rounded-3xl gap-2"></div>
+                        <div class="flex gap-4 mt-8">
+                            <button onclick="clearTiles()" class="flex-1 bubble-btn bg-slate-200 text-slate-600 py-4 rounded-2xl font-black">消す</button>
+                            <button onclick="checkAnswer()" class="flex-[2] bubble-btn bg-orange-500 text-white py-4 rounded-2xl font-black text-xl">答え合わせ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果 -->
+        <div id="result-screen" class="hidden text-center fade-in bg-white p-10 rounded-[3rem] shadow-2xl border-4 border-blue-500">
+            <div class="text-8xl mb-6">🏁</div>
+            <h2 class="text-3xl font-black text-slate-800">全問終了！</h2>
+            <!-- 【ブラッシュアップ】元は「もう一度解く」で正解しても点に入り、いつも 5 / 5 になっていた。一発で正解した数を出す -->
+            <p class="text-sm font-bold text-slate-400 mt-8">一発で正解できた問題</p>
+            <div class="text-7xl font-black text-blue-600 mt-2 mb-10" id="final-score">0 / 5</div>
+            <!-- 【ブラッシュアップ】同じコース・次のコース・えらび直す・ほかの教材 を選べるようにした -->
+            <div class="flex flex-col gap-3">
+                <button onclick="initQuiz(currentMode)" class="bubble-btn bg-blue-600 text-white py-4 rounded-2xl font-black text-lg">同じコースでもう一度</button>
+                <button id="btn-next-course" onclick="initQuiz(COURSES[COURSES.indexOf(currentMode) + 1])" class="bubble-btn bg-emerald-500 text-white py-4 rounded-2xl font-black text-lg"></button>
+                <button onclick="backToMenu()" class="bubble-btn bg-slate-100 text-slate-600 py-4 rounded-2xl font-black text-lg">コースをえらび直す</button>
+                <a href="../remake.html" class="text-sm font-bold text-slate-400 py-2">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+
+        <!-- フィードバック -->
+        <div id="feedback-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+            <div id="feedback-card" class="bg-white w-full max-w-2xl rounded-[2.5rem] p-6 sm:p-10 text-center shadow-2xl max-h-[95vh] overflow-y-auto custom-scroll"></div>
+        </div>
+    </div>
+
+    <script>
+        let answerMethod = 'select';
+        let qIndex = 0;
+        let score = 0;
+        let activeZone = 'num';
+        let selectedNum = [];
+        let selectedDen = [];
+        let currentQuestions = [];
+        let currentMode = 'reduce';
+        let answered = false;     // 【ブラッシュアップ】答えたあとの連打で、点が 2 回入らないように
+        let missedThis = false;   // 【ブラッシュアップ】この問題で一度まちがえたか（一発正解だけを数える）
+        let orderNote = '';       // 【ブラッシュアップ】書き方のちがう正解のときに出す一言
+        const COURSES = ['reduce', 'multiply', 'add'];
+        const COURSE_NAMES = { reduce: '✂️ 約分', multiply: '✖️ かけ算・わり算', add: '➕ たし算・ひき算' };
+
+        function shuffleArr(a) {
+            for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+            return a;
+        }
+        // 【ブラッシュアップ】並べた式の値を計算する（x, y, a, b に数を入れて、正解と同じ式か確かめるため）
+        function evalExpr(s, v) {
+            if (!s || !/^[0-9xyab+\-()^]+$/.test(s)) return NaN;
+            const e = s.replace(/\^(\d+)/g, '**$1')
+                       .replace(/([0-9xyab)])(?=[xyab(])/g, '$1*')
+                       .replace(/\)(?=\d)/g, ')*')
+                       .replace(/(^|\()-/g, '$10-');
+            try { const r = Function('x', 'y', 'a', 'b', 'return (' + e + ');')(v.x, v.y, v.a, v.b); return typeof r === 'number' ? r : NaN; }
+            catch (err) { return NaN; }
+        }
+        const TEST_POINTS = [{ x: 1.37, y: 2.11, a: -0.73, b: 3.29 }, { x: -2.6, y: 0.47, a: 1.9, b: -1.3 }, { x: 4.2, y: -1.8, a: 2.7, b: 0.61 }];
+        function sameValue(p, q) {
+            return TEST_POINTS.every(v => { const a = evalExpr(p, v), b = evalExpr(q, v); return isFinite(a) && isFinite(b) && Math.abs(a - b) < 1e-6; });
+        }
+
+        // 問題データベース
+        const masterDB = {
+            reduce: [
+                { q: "\\frac{10x^2}{2x}", a_num: ["5x"], a_den: ["1"], display: "5x", steps: ["10と2を約分して5になります。","$x^2$を$x$で割ると$x$が残ります。"], choices: ["5x", "5", "2x", "\\frac{5}{x}"] },
+                { q: "\\frac{6ab^2}{3a^2b}", a_num: ["2b"], a_den: ["a"], display: "\\frac{2b}{a}", steps: ["6と3を約分して2になります。","$a$と$a^2$を約分して分母に$a$が残ります。","$b^2$と$b$を約分して分子に$b$が残ります。"], choices: ["\\frac{2b}{a}", "\\frac{2a}{b}", "2ab", "\\frac{b}{2a}"] },
+                { q: "\\frac{12x^3y}{4xy^2}", a_num: ["3x^2"], a_den: ["y"], display: "\\frac{3x^2}{y}", steps: ["12÷4=3です。","$x^3$÷$x$=$x^2$が分子に残ります。","$y \\div y^2 = \\frac{1}{y}$ なので、分母に$y$が残ります。"], choices: ["\\frac{3x^2}{y}", "3x^2y", "\\frac{x^2}{3y}", "3x"] },
+                { q: "\\frac{4x+8}{x+2}", a_num: ["4"], a_den: ["1"], display: "4", steps: ["分子を4でくくります：$4(x+2)$","分母の$(x+2)$と約分します。"], choices: ["4", "4x", "x+2", "2"] },
+                { q: "\\frac{a^2-3a}{a}", a_num: ["a-3"], a_den: ["1"], display: "a-3", steps: ["分子を$a$でくくります：$a(a-3)$","分母の$a$と約分します。"], choices: ["a-3", "a^2-3", "-3a", "a+3"] },
+                { q: "\\frac{5x-10}{x^2-2x}", a_num: ["5"], a_den: ["x"], display: "\\frac{5}{x}", steps: ["分子を5でくくります：$5(x-2)$","分母を$x$でくくります：$x(x-2)$","共通因数$(x-2)$を約分します。"], choices: ["\\frac{5}{x}", "5", "x", "\\frac{x}{5}"] },
+                { q: "\\frac{x^2-9}{x+3}", a_num: ["x-3"], a_den: ["1"], display: "x-3", steps: ["分子を因数分解します：$(x+3)(x-3)$","$(x+3)$を約分します。"], choices: ["x-3", "x+3", "x^2+3", "1"] },
+                { q: "\\frac{x^2-1}{x^2-2x+1}", a_num: ["x+1"], a_den: ["x-1"], display: "\\frac{x+1}{x-1}", steps: ["分子：$(x+1)(x-1)$","分母：$(x-1)^2$","$(x-1)$を1つずつ約分します。"], choices: ["\\frac{x+1}{x-1}", "\\frac{x-1}{x+1}", "1", "x+1"] },
+                { q: "\\frac{x^2+5x+6}{x^2-x-6}", a_num: ["x+3"], a_den: ["x-3"], display: "\\frac{x+3}{x-3}", steps: ["分子：$(x+3)(x+2)$","分母：$(x-3)(x+2)$","$(x+2)$を約分します。"], choices: ["\\frac{x+3}{x-3}", "\\frac{x-3}{x+3}", "1", "\\frac{x+2}{x-2}"] },
+                { q: "\\frac{x^2-4x+4}{2x-4}", a_num: ["x-2"], a_den: ["2"], display: "\\frac{x-2}{2}", steps: ["分子：$(x-2)^2$","分母：$2(x-2)$","$(x-2)$を約分します。"], choices: ["\\frac{x-2}{2}", "x-2", "\\frac{2}{x-2}", "2"] }
+            ],
+            multiply: [
+                { q: "\\frac{x}{y} \\times \\frac{y^2}{x^2}", a_num: ["y"], a_den: ["x"], display: "\\frac{y}{x}", steps: ["分子と分母の$x$を約分して分母に$x$が残ります。","分子と分母の$y$を約分して分子に$y$が残ります。"], choices: ["\\frac{y}{x}", "\\frac{x}{y}", "xy", "1"] },
+                { q: "\\frac{2a}{3b} \\div \\frac{4a^2}{9b}", a_num: ["3"], a_den: ["2a"], display: "\\frac{3}{2a}", steps: ["逆数の掛け算にします：$\\frac{2a}{3b} \\times \\frac{9b}{4a^2}$","係数を約分：$18/12 = 3/2$","文字を約分：$ab / ba^2 = 1/a$"], choices: ["\\frac{3}{2a}", "\\frac{2a}{3}", "\\frac{3b}{2a}", "\\frac{1}{2a}"] },
+                { q: "\\frac{x+2}{x-1} \\times \\frac{x^2-1}{x^2-4}", a_num: ["x+1"], a_den: ["x-2"], display: "\\frac{x+1}{x-2}", steps: ["因数分解します：$\\frac{x+2}{x-1} \\times \\frac{(x+1)(x-1)}{(x+2)(x-2)}$","$(x+2)$と$(x-1)$を約分します。"], choices: ["\\frac{x+1}{x-2}", "\\frac{x-1}{x+2}", "\\frac{x+2}{x-1}", "1"] },
+                { q: "\\frac{a-b}{4} \\div \\frac{a^2-b^2}{8}", a_num: ["2"], a_den: ["a+b"], display: "\\frac{2}{a+b}", steps: ["逆数にします：$\\frac{a-b}{4} \\times \\frac{8}{(a+b)(a-b)}$","$(a-b)$を約分し、$8/4=2$となります。"], choices: ["\\frac{2}{a+b}", "\\frac{a+b}{2}", "2(a-b)", "\\frac{1}{a+b}"] },
+                { q: "\\frac{x^2+3x}{x-2} \\times \\frac{x^2-4}{x+3}", a_num: ["x(x+2)"], a_den: ["1"], display: "x(x+2)", steps: ["各部分を因数分解：$\\frac{x(x+3)}{x-2} \\times \\frac{(x+2)(x-2)}{x+3}$","$(x+3)$と$(x-2)$を約分します。"], choices: ["x(x+2)", "x+2", "x(x-2)", "x^2+2"] },
+                { q: "\\frac{x-3}{x^2-1} \\div \\frac{x^2-9}{x+1}", a_num: ["1"], a_den: ["(x-1)(x+3)"], display: "\\frac{1}{(x-1)(x+3)}", steps: ["逆数の掛け算：$\\frac{x-3}{(x+1)(x-1)} \\times \\frac{x+1}{(x+3)(x-3)}$","$(x-3)$と$(x+1)$を約分します。"], choices: ["\\frac{1}{(x-1)(x+3)}", "\\frac{1}{(x+1)(x-3)}", "x+3", "1"] }
+            ],
+            add: [
+                { q: "\\frac{a}{x} + \\frac{b}{x}", a_num: ["a+b"], a_den: ["x"], display: "\\frac{a+b}{x}", steps: ["分母が同じなので分子をそのまま足します。"], choices: ["\\frac{a+b}{x}", "\\frac{ab}{x}", "\\frac{a+b}{2x}", "a+b"] },
+                { q: "\\frac{3x+1}{x-2} - \\frac{2x+3}{x-2}", a_num: ["1"], a_den: ["1"], display: "1", steps: ["分子を引きます：$(3x+1) - (2x+3) = x-2$","$\\frac{x-2}{x-2}$なので1になります。"], choices: ["1", "\\frac{x+4}{x-2}", "x+4", "0"] },
+                { q: "\\frac{1}{x-1} + \\frac{1}{x+1}", a_num: ["2x"], a_den: ["(x-1)(x+1)"], display: "\\frac{2x}{x^2-1}", steps: ["通分します：$\\frac{(x+1) + (x-1)}{(x-1)(x+1)}$","分子を計算すると$2x$になります。"], choices: ["\\frac{2x}{x^2-1}", "\\frac{2}{x^2-1}", "\\frac{x}{x^2-1}", "2x"] },
+                { q: "\\frac{2}{x} - \\frac{1}{x+1}", a_num: ["x+2"], a_den: ["x(x+1)"], display: "\\frac{x+2}{x(x+1)}", steps: ["通分します：$\\frac{2(x+1) - x}{x(x+1)}$","分子を展開：$2x+2-x = x+2$"], choices: ["\\frac{x+2}{x(x+1)}", "\\frac{x-2}{x(x+1)}", "\\frac{1}{x(x+1)}", "x+2"] },
+                { q: "\\frac{x}{x-3} + \\frac{3}{3-x}", a_num: ["1"], a_den: ["1"], display: "1", steps: ["$3-x$ は $-(x-3)$ と等しいです。","$\\frac{x}{x-3} - \\frac{3}{x-3} = \\frac{x-3}{x-3} = 1$"], choices: ["1", "-1", "\\frac{x+3}{x-3}", "0"] },
+                { q: "\\frac{x+1}{x^2+x} + \\frac{1}{x}", a_num: ["2"], a_den: ["x"], display: "\\frac{2}{x}", steps: ["左の項を約分：$\\frac{x+1}{x(x+1)} = \\frac{1}{x}$","$\\frac{1}{x} + \\frac{1}{x} = \\frac{2}{x}$"], choices: ["\\frac{2}{x}", "\\frac{x+2}{x}", "2x", "\\frac{1}{x}"] }
+            ]
+        };
+
+        const NO_DENOMINATOR = "分母なし";
+
+        function setMethod(m) {
+            answerMethod = m;
+            document.getElementById('btn-m-select').className = m === 'select' ? 'bubble-btn bg-white border-4 border-blue-500 text-blue-600 py-4 rounded-2xl font-black text-lg' : 'bubble-btn bg-slate-100 border-4 border-transparent text-slate-400 py-4 rounded-2xl font-black text-lg';
+            document.getElementById('btn-m-drag').className = m === 'drag' ? 'bubble-btn bg-white border-4 border-blue-500 text-blue-600 py-4 rounded-2xl font-black text-lg' : 'bubble-btn bg-slate-100 border-4 border-transparent text-slate-400 py-4 rounded-2xl font-black text-lg';
+        }
+
+        function backToMenu() {
+            qIndex = 0; score = 0; selectedNum = []; selectedDen = [];
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('feedback-overlay').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+
+        function initQuiz(mode) {
+            currentMode = mode;
+            missedThis = false;
+            const allQ = JSON.parse(JSON.stringify(masterDB[mode]));
+            currentQuestions = shuffleArr(allQ).slice(0, 5);
+            window.scrollTo(0, 0);
+            qIndex = 0; score = 0;
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedNum = []; selectedDen = []; activeZone = 'num';
+            answered = false;
+            orderNote = '';
+            const q = currentQuestions[qIndex];
+            document.getElementById('progress-text').innerText = `${qIndex + 1} / ${currentQuestions.length}`;
+            document.getElementById('question-container').innerHTML = `\\[ ${q.q} \\]`;
+            
+            if (answerMethod === 'select') showSelectMode();
+            else showDragMode();
+            renderMath();
+        }
+
+        function showSelectMode() {
+            document.getElementById('select-area').classList.remove('hidden');
+            document.getElementById('drag-area').classList.add('hidden');
+            const area = document.getElementById('select-area');
+            area.innerHTML = '';
+            
+            const q = currentQuestions[qIndex];
+            let choices = shuffleArr([...q.choices]);
+
+            choices.forEach(c => {
+                const btn = document.createElement('div');
+                btn.className = 'choice-card math-md shadow-sm bubble-btn';
+                btn.innerHTML = `\\[ ${c} \\]`;
+                btn.onclick = () => handleResult(c === q.display);
+                area.appendChild(btn);
+            });
+        }
+
+        function showDragMode() {
+            document.getElementById('select-area').classList.add('hidden');
+            document.getElementById('drag-area').classList.remove('hidden');
+            setActiveZone('num');
+            
+            const pool = document.getElementById('tile-pool');
+            pool.innerHTML = '';
+
+            let base = ["x","y","a","b","2","3","4","5","6","+","-","x^2","a^2","(x+1)","(x-1)","(x+2)","(x-2)","(x-3)","(x+3)","(a+b)","xy"];
+            let q = currentQuestions[qIndex];
+            let qParts = [...q.a_num, ...q.a_den];
+            
+            let allParts = [...new Set([...qParts, ...base.sort(() => Math.random() - 0.5).slice(0, 8)])];
+            allParts = allParts.filter(p => p !== NO_DENOMINATOR && p !== "1");
+            allParts.push("1", NO_DENOMINATOR);
+            
+            allParts.sort((a,b) => {
+                if(a === NO_DENOMINATOR) return 1;
+                if(b === NO_DENOMINATOR) return -1;
+                return a.localeCompare(b);
+            }).forEach(p => {
+                const t = document.createElement('div');
+                const isSpecial = p === NO_DENOMINATOR;
+                t.className = `tile bubble-btn shadow-sm ${isSpecial ? 'tile-special' : ''}`;
+                t.innerHTML = isSpecial ? p : `$${p}$`;
+                t.onclick = () => addTile(p);
+                pool.appendChild(t);
+            });
+            updateZones();
+        }
+
+        function setActiveZone(z) {
+            activeZone = z;
+            document.getElementById('numerator-zone').className = `drop-zone ${z === 'num' ? 'active' : ''}`;
+            document.getElementById('denominator-zone').className = `drop-zone ${z === 'den' ? 'active' : ''}`;
+        }
+
+        function addTile(val) {
+            if (activeZone === 'num') {
+                if (val === NO_DENOMINATOR) return; 
+                selectedNum.push(val);
+            } else {
+                if (val === NO_DENOMINATOR) { selectedDen = [NO_DENOMINATOR]; } 
+                else {
+                    selectedDen = selectedDen.filter(v => v !== NO_DENOMINATOR);
+                    selectedDen.push(val);
+                }
+            }
+            updateZones();
+        }
+
+        function removeTile(zone, idx) {
+            if (zone === 'num') selectedNum.splice(idx, 1);
+            else selectedDen.splice(idx, 1);
+            updateZones();
+        }
+
+        function updateZones() {
+            const nz = document.getElementById('numerator-zone');
+            const dz = document.getElementById('denominator-zone');
+            const fLine = document.getElementById('fraction-line');
+
+            nz.innerHTML = selectedNum.length ? '' : '<span class="text-slate-300 text-xs font-bold uppercase tracking-widest">分子</span>';
+            selectedNum.forEach((v, i) => {
+                const t = document.createElement('div');
+                t.className = 'placed-tile cursor-pointer hover:bg-red-500';
+                t.innerHTML = `$${v}$`;
+                t.onclick = (e) => { e.stopPropagation(); removeTile('num', i); };
+                nz.appendChild(t);
+            });
+
+            dz.innerHTML = selectedDen.length ? '' : '<span class="text-slate-300 text-xs font-bold uppercase tracking-widest">分母</span>';
+            let hasNoDenom = false;
+            selectedDen.forEach((v, i) => {
+                const t = document.createElement('div');
+                const isSpecial = v === NO_DENOMINATOR;
+                if (isSpecial) hasNoDenom = true;
+                t.className = `placed-tile cursor-pointer hover:bg-red-500 ${isSpecial ? 'placed-tile-special' : ''}`;
+                t.innerHTML = isSpecial ? v : `$${v}$`;
+                t.onclick = (e) => { e.stopPropagation(); removeTile('den', i); };
+                dz.appendChild(t);
+            });
+
+            if (hasNoDenom) fLine.classList.add('hidden-line');
+            else fLine.classList.remove('hidden-line');
+            renderMath();
+        }
+
+        function clearTiles() { selectedNum = []; selectedDen = []; updateZones(); }
+
+        function checkAnswer() {
+            const q = currentQuestions[qIndex];
+            const inputNum = selectedNum.join("");
+            const inputDen = selectedDen.join("");
+            const correctNum = q.a_num.join("");
+            const correctDen = q.a_den.join("");
+
+            // 【ブラッシュアップ】何も並べずに押したときは、まちがい扱いにしない
+            if (!inputNum) {
+                const sp = document.querySelector('#numerator-zone span');
+                if (sp) { sp.textContent = '分子にタイルを入れてから答え合わせしよう'; sp.className = 'text-red-400 text-sm font-bold'; }
+                return;
+            }
+
+            let isCorrect = (inputNum === correctNum && inputDen === correctDen);
+            if (inputDen === NO_DENOMINATOR && correctDen === "1" && inputNum === correctNum) isCorrect = true;
+            if ((correctDen === "1" || correctDen === "") && inputDen === "" && inputNum === correctNum) isCorrect = true;
+
+            // 【ブラッシュアップ】元は (x+1)(x-1) を (x-1)(x+1) の順に並べたり、x(x+1) を x²+x と書いたりすると
+            //   「おしい！」になっていた。分子・分母がそれぞれ正解と同じ式なら正解にする。
+            if (!isCorrect) {
+                const den = (inputDen === '' || inputDen === NO_DENOMINATOR) ? '1' : inputDen;
+                const cden = correctDen || '1';
+                if ((sameValue(inputNum, correctNum) && sameValue(den, cden)) ||
+                    (sameValue('-(' + inputNum + ')', correctNum) && sameValue('-(' + den + ')', cden))) {
+                    isCorrect = true;
+                    orderNote = '💡 答えは $' + q.display + '$ のように書くこともできるよ。';
+                }
+            }
+
+            handleResult(isCorrect);
+        }
+
+        function handleResult(isCorrect) {
+            if (answered) return;
+            answered = true;
+            if (isCorrect && !missedThis) score++;
+            if (!isCorrect) missedThis = true;
+            showFeedback(isCorrect);
+        }
+
+        function getQABlockHtml(q) {
+            return `
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded-3xl border-2 border-slate-100 flex-1 w-full">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 text-center">問題</span>
+                        <div class="math-md">\\[ ${q.q} \\]</div>
+                    </div>
+                    <div class="hidden sm:block text-2xl text-slate-300">＝</div>
+                    <div class="bg-blue-50 p-4 rounded-3xl border-2 border-blue-100 flex-1 w-full">
+                        <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-2 text-center">正解</span>
+                        <div class="math-md text-blue-600">\\[ ${q.display} \\]</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showFeedback(isCorrect) {
+            const q = currentQuestions[qIndex];
+            const overlay = document.getElementById('feedback-overlay');
+            const card = document.getElementById('feedback-card');
+            overlay.classList.remove('hidden');
+            
+            const qaBlock = getQABlockHtml(q);
+
+            if (isCorrect) {
+                card.innerHTML = `
+                    <div class="text-6xl mb-4">✨</div>
+                    <h2 class="text-3xl font-black text-green-600 mb-6">正解！</h2>
+                    ${orderNote ? `<div class="order-note">${orderNote}</div>` : ""}
+                    ${qaBlock}
+                    <div class="bg-slate-50 p-6 rounded-[2rem] text-left mb-6">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">解説ステップ</p>
+                        <ul class="space-y-3 text-sm font-bold text-slate-600">
+                            ${q.steps.map(s => `<li>・${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <button onclick="nextQuestion()" class="w-full bubble-btn bg-blue-600 text-white py-5 rounded-2xl font-black text-xl">次の問題へ</button>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="text-6xl mb-4">🤔</div>
+                    <h2 class="text-3xl font-black text-slate-700 mb-2">おしい！</h2>
+                    <p class="text-slate-500 font-bold mb-8">どこで間違えたか確認しよう。</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button onclick="closeFeedback()" class="bubble-btn bg-slate-200 text-slate-700 py-5 rounded-2xl font-black text-lg">もう一度解く</button>
+                        <button onclick="showExplanation()" class="bubble-btn bg-orange-500 text-white py-5 rounded-2xl font-black text-lg">正解・解説を見る</button>
+                    </div>
+                `;
+            }
+            renderMath();
+        }
+
+        function showExplanation() {
+            const q = currentQuestions[qIndex];
+            const card = document.getElementById('feedback-card');
+            const qaBlock = getQABlockHtml(q);
+
+            card.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-800 mb-6">解説と答え</h2>
+                ${qaBlock}
+                <div class="text-left space-y-4 mb-8 bg-slate-50 p-6 rounded-[2rem]">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">ステップ解説</p>
+                    ${q.steps.map((s, i) => `
+                        <div class="flex gap-3">
+                            <span class="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black">${i+1}</span>
+                            <p class="text-slate-600 font-bold leading-relaxed">${s}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="nextQuestion()" class="w-full bubble-btn bg-slate-800 text-white py-5 rounded-2xl font-black text-xl">次の問題へ</button>
+            `;
+            renderMath();
+        }
+
+        // 【ブラッシュアップ】「もう一度解く」で閉じたら、また答えられるようにする
+        function closeFeedback() { document.getElementById('feedback-overlay').classList.add('hidden'); answered = false; }
+
+        function nextQuestion() {
+            // 【ブラッシュアップ】「次の問題へ」を 2 回続けて押すと、次の問題の選択肢まで押されてしまうのを防ぐ
+            if (document.getElementById('feedback-overlay').classList.contains('hidden')) return;
+            closeFeedback();
+            missedThis = false;
+            qIndex++;
+            if (qIndex < currentQuestions.length) loadQuestion();
+            else showResult();
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+            const nextMode = COURSES[COURSES.indexOf(currentMode) + 1];
+            const nextBtn = document.getElementById('btn-next-course');
+            nextBtn.classList.toggle('hidden', !nextMode);
+            if (nextMode) nextBtn.textContent = 'つぎは ' + COURSE_NAMES[nextMode] + ' へ ▶';
+            window.scrollTo(0, 0);
+        }
+
+        function renderMath() {
+            if (!window.renderMathInElement) return;   // 【ブラッシュアップ】KaTeX が読み込めていなくても止まらないように
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "\\[", right: "\\]", display: true},
+                    {left: "$", right: "$", display: false}
+                ]
+            });
+        }
+        window.onload = renderMath;
+
+        // 【ブラッシュアップ】KaTeX が 6 秒たっても読み込めなければ、数式を読める文字に直して表示する
+        setTimeout(() => {
+            if (window.renderMathInElement) return;
+            window.renderMathInElement = (el) => PortMath.plainMath(el);
+            renderMath();
+        }, 6000);
+    </script>
+</body>
+</html>

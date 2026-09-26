@@ -59,7 +59,7 @@
            .replace(/\\text\s*\{([^{}]*)\}/g, '$1');
     }
     return t
-      .replace(/\\pm/g, '±').replace(/\\times/g, '×').replace(/\\div/g, '÷')
+      .replace(/\\pm/g, '±').replace(/\\times/g, '×').replace(/\\div/g, '÷').replace(/\\cdot/g, '·')
       .replace(/\\left|\\right/g, '').replace(/\\sqrt\s*(\d+)/g, '√$1')
       .replace(/\^\{?2\}?/g, '²').replace(/\^\{?3\}?/g, '³')
       .replace(/\\\(|\\\)|\\\[|\\\]|\$\$|\$/g, '')

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+
+    <!--
+      数学Ⅱ 03. 組み立て除法（組み立て除法マスター）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../../assets/port.css">
+    <script src="../../assets/port.js"></script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定とタイトルを、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>組み立て除法マスター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #FFF9E6;
+      --line-blue: #004D99;
+      --accent: #FF6F61;
+      --correct: #059669;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      background-color: var(--bg-color);
+      margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh;
+    }
+
+    .container {
+      background: white; padding: 30px 40px; border-radius: 20px; border: 4px solid var(--line-blue);
+      box-shadow: 0 10px 0 #ddd; width: 920px; position: relative; margin: auto 20px;
+    }
+
+    .problem-box {
+      font-size: 2rem; border: 3px solid var(--line-blue); padding: 15px;
+      margin-bottom: 30px; display: inline-block; min-width: 500px; background: #fff; text-align: center;
+    }
+
+    .level-badge {
+      position: absolute; top: 20px; right: 40px; background: var(--line-blue);
+      color: white; padding: 5px 20px; border-radius: 10px; font-size: 1.1rem;
+    }
+
+    .division-area {
+      display: grid; gap: 10px; align-items: center; justify-content: center; margin-right: 120px;
+    }
+
+    .grid-cubic { grid-template-columns: repeat(4, 130px); grid-template-rows: 80px 100px 15px 100px; }
+    .grid-quadratic { grid-template-columns: repeat(3, 130px); grid-template-rows: 80px 100px 15px 100px; }
+
+    .num-display { font-size: 3rem; text-align: center; color: #333; height: 80px; display: flex; align-items: center; justify-content: center;}
+
+    .divisor-container {
+      position: absolute; right: 80px; top: 160px;
+      border-left: 3px solid var(--line-blue); border-bottom: 3px solid var(--line-blue);
+      height: 140px; width: 100px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem;
+    }
+
+    .cell-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
+
+    .input-box {
+      width: 105px; height: 80px; font-size: 2.5rem; text-align: center;
+      border: 2px solid #ccc; border-radius: 12px; font-family: inherit; outline: none; z-index: 1; background: white;
+    }
+
+    /* 【重要】答えをチラ見させるオーバーレイ */
+    .ans-overlay {
+      position: absolute; color: rgba(255, 0, 0, 0.6); font-size: 2.5rem; font-weight: bold;
+      pointer-events: none; z-index: 10; display: none; background: rgba(255, 255, 255, 0.8);
+      width: 90%; height: 80%; line-height: 65px; text-align: center; border-radius: 10px;
+    }
+
+    .main-line { height: 4px; background: var(--line-blue); }
+
+    .remainder-wrapper { position: relative; display: flex; align-items: center; justify-content: center; height: 100%; }
+    .remainder-line {
+      position: absolute; top: -10px; left: -10px; bottom: -10px; right: -10px;
+      border-left: 3px solid var(--line-blue); border-bottom: 3px solid var(--line-blue); pointer-events: none;
+    }
+
+    .result-section { margin-top: 30px; padding: 20px; border-top: 3px dashed var(--line-blue); display: none; }
+    .result-container { display: flex; justify-content: space-around; gap: 30px; }
+    .result-column { flex: 1; display: flex; flex-direction: column; align-items: center; }
+    .label-tag { font-size: 1.5rem; color: var(--line-blue); margin-bottom: 10px; }
+
+    .ans-slot {
+      width: 100%; height: 60px; border: 2px solid var(--line-blue); border-radius: 15px;
+      text-align: center; line-height: 60px; font-size: 1.8rem; color: var(--accent);
+      cursor: pointer; background: #fff; margin-bottom: 20px; position: relative;
+    }
+    
+    .choice-area { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .choice-btn {
+      padding: 10px 20px; border: 2px solid var(--line-blue); border-radius: 30px;
+      background: white; cursor: pointer; font-size: 1.2rem; transition: 0.2s; font-family: inherit;
+    }
+    .choice-btn:hover { background: #E6F0FF; transform: scale(1.05); }
+
+    .btn-area { display: flex; gap: 20px; justify-content: center; margin-top: 25px; }
+    .btn { padding: 12px 35px; font-size: 1.4rem; border: none; border-radius: 50px; cursor: pointer; font-family: inherit; transition: 0.2s; -webkit-user-select: none; user-select: none; }
+    .check-btn { background: var(--accent); color: white; box-shadow: 0 5px 0 #b91c1c; }
+    .hint-btn { background: #eee; color: #666; box-shadow: 0 5px 0 #ccc; }
+    .next-btn { background: var(--correct); color: white; box-shadow: 0 5px 0 #047857; display: none; }
+
+    #msg { font-size: 1.6rem; margin-top: 15px; text-align: center; font-weight: bold; height: 30px; }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { width: 100%; max-width: 1000px; }
+    .choice-btn.picked { background: var(--line-blue); color: white; }
+    .finish-panel { display: none; text-align: center; padding: 20px 0; }
+    .container.finished > *:not(#finish) { display: none !important; }
+    .container.finished #finish { display: block; }
+    .finish-title { font-size: min(2.2rem, 7.4vw); color: var(--line-blue); margin-bottom: 20px; white-space: nowrap; }
+    .finish-label { font-size: 1.1rem; color: #666; margin: 0; }
+    .finish-score { font-size: 4rem; color: var(--accent); margin: 6px 0 26px; }
+    .finish-nav { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .finish-nav .btn { width: 100%; max-width: 380px; }
+    .finish-nav a { color: #666; }
+
+    /* 【ブラッシュアップ】スマホ・タブレット用の表示（画面の幅が 960px 以下のときだけ切り替わる）
+       元は横 920px に固定で、割る数を右上に重ねて置いていたため、スマホでは表が画面からはみ出していた。
+       表のマスを画面の幅に合わせて小さくし、割る数を表のすぐ右に並べる。 */
+    @media (max-width: 960px) {
+      body { --cellh: min(13vw, 70px); }
+      .container { width: auto; max-width: 920px; padding: 16px 10px; margin: 8px; box-sizing: border-box; align-self: stretch; }
+      .level-badge { top: 10px; right: 10px; font-size: 0.95rem; padding: 4px 12px; }
+      .problem-box { display: block; min-width: 0; width: 100%; box-sizing: border-box; font-size: min(1.5rem, 4.4vw); padding: 10px 6px; margin: 34px 0 16px; white-space: nowrap; overflow-x: auto; }
+      .division-row { display: flex; justify-content: center; align-items: flex-start; gap: 6px; }
+      .division-area { margin-right: 0; gap: 6px 4px; }
+      .grid-cubic { grid-template-columns: repeat(4, min(17vw, 100px)); grid-template-rows: var(--cellh) var(--cellh) 4px var(--cellh); }
+      .grid-quadratic { grid-template-columns: repeat(3, min(22vw, 110px)); grid-template-rows: var(--cellh) var(--cellh) 4px var(--cellh); }
+      .num-display { font-size: calc(var(--cellh) * 0.6); height: var(--cellh); }
+      .input-box { width: 100%; height: var(--cellh); font-size: calc(var(--cellh) * 0.5); box-sizing: border-box; border-radius: 8px; padding: 0; }
+      .divisor-container { position: static; width: min(14vw, 80px); height: calc(var(--cellh) * 2 + 6px); font-size: calc(var(--cellh) * 0.6); box-sizing: border-box; }
+      .divisor-container .input-box { width: 90% !important; height: var(--cellh) !important; }
+      .ans-overlay { font-size: calc(var(--cellh) * 0.5); line-height: calc(var(--cellh) * 0.8); }
+      .remainder-line { top: -4px; left: -3px; bottom: -4px; right: -3px; }
+      .result-section { margin-top: 18px; padding: 14px 0; }
+      .result-container { flex-direction: column; gap: 12px; }
+      .label-tag { font-size: 1.2rem; margin-bottom: 6px; }
+      .ans-slot { height: 52px; line-height: 52px; font-size: 1.5rem; margin-bottom: 10px; }
+      .choice-btn { font-size: 1.15rem; padding: 10px 16px; }
+      .btn-area { flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+      .btn { font-size: 1.1rem; padding: 12px 22px; }
+      #msg { font-size: 1.15rem; height: auto; min-height: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+<div class="container">
+  <div class="level-badge" id="level-text">第 1 問 / 5</div>
+  <div class="problem-box" id="problem-display"></div>
+
+  <div class="division-row">
+    <div class="division-area" id="grid"></div>
+    <div id="divisor-area-wrapper"></div>
+  </div>
+
+  <div id="result-step" class="result-section">
+    <div class="result-container">
+      <div class="result-column">
+        <div class="label-tag">【 商 】</div>
+        <div id="slot-quotient" class="ans-slot" onclick="clearSlot('quotient')">選んでね<div class="ans-overlay" id="hint-q"></div></div>
+        <div id="choices-quotient" class="choice-area"></div>
+      </div>
+      <div class="result-column">
+        <div class="label-tag">【 余り 】</div>
+        <div id="slot-remainder" class="ans-slot" onclick="clearSlot('remainder')">選んでね<div class="ans-overlay" id="hint-r"></div></div>
+        <div id="choices-remainder" class="choice-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-area">
+    <button class="btn hint-btn" 
+      onmousedown="showVisualHint()" onmouseup="hideVisualHint()" onmouseleave="hideVisualHint()"
+      ontouchstart="showVisualHint()" ontouchend="hideVisualHint()">答えを見る（長押し）</button>
+    <button class="btn check-btn" id="check-btn" onclick="checkAnswer()">答えあわせ</button>
+    <button class="btn next-btn" id="next-btn" onclick="nextLevel()">次の問題へ</button>
+  </div>
+  <div id="msg"></div>
+
+  <!-- 【ブラッシュアップ】元は 5 問目のあと、何も言わずに 1 問目に戻っていた。クリア画面を出して、次を選べるようにした -->
+  <div id="finish" class="finish-panel">
+    <div id="finish-title" class="finish-title"></div>
+    <p class="finish-label">ヒントなし・一発でできた問題</p>
+    <div id="finish-score" class="finish-score"></div>
+    <div class="finish-nav">
+      <button class="btn check-btn" id="finish-random" onclick="startSet('random')"></button>
+      <button class="btn hint-btn" id="finish-again" onclick="startSet('basic')"></button>
+      <a href="../remake.html">ほかの教材をえらぶ</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentLevel = 1;
+  let currentProblem = null;
+  let isStep2 = false;
+
+  const problemBank = [
+    { q: "x² + 5x + 6", div: -2, coefs: [1, 5, 6], divDisp: "-2", type: 2, allBlank: false, qTxt: "x+3", rTxt: "0" },
+    { q: "x³ + 2x² - 5x - 6", div: 2, coefs: [1, 2, -5, -6], divDisp: "2", type: 3, allBlank: false, qTxt: "x²+4x+3", rTxt: "0" },
+    { q: "x³ - 7x - 6", div: -1, coefs: [1, 0, -7, -6], divDisp: "-1", type: 3, allBlank: false, qTxt: "x²-x-6", rTxt: "0" },
+    { q: "x² + 3x + 5", div: -1, coefs: [1, 3, 5], divDisp: "-1", type: 2, allBlank: true, qTxt: "x+2", rTxt: "3" },
+    { q: "x³ - 2x² + 4x + 1", div: 2, coefs: [1, -2, 4, 1], divDisp: "2", type: 3, allBlank: true, qTxt: "x²+4", rTxt: "9" }
+  ];
+
+  // 【ブラッシュアップ】
+  let problems = problemBank;   // いま解いている 5 問
+  let quizMode = 'basic';       // 'basic'（この 5 問）/ 'random'（ランダム 5 問）
+  let missThis = false;         // この問題で、まちがえた・答えを見た
+  let cleanCount = 0;           // ヒントなし・一発でできた問題の数
+
+  function shuffleArr(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  // [1, 4, 3] → "x²+4x+3"（spaced なら "x² + 4x + 3"）
+  function fmtPoly(coefs, spaced) {
+    const deg = coefs.length - 1;
+    const sup = ['', '', '²', '³', '⁴'];
+    let out = '';
+    coefs.forEach((c, i) => {
+      if (c === 0) return;
+      const p = deg - i, abs = Math.abs(c);
+      const body = p === 0 ? String(abs) : (abs === 1 ? '' : abs) + 'x' + sup[p];
+      if (out === '') out = (c < 0 ? '-' : '') + body;
+      else out += (spaced ? (c < 0 ? ' - ' : ' + ') : (c < 0 ? '-' : '+')) + body;
+    });
+    return out || '0';
+  }
+  // 組み立て除法の下の段（最後が余り）
+  function synth(coefs, c) {
+    const b = [coefs[0]];
+    for (let i = 1; i < coefs.length; i++) b.push(coefs[i] + b[i - 1] * c);
+    return b;
+  }
+  // 【ブラッシュアップ】ランダム問題：（x − c）×（商）＋ 余り から、わられる式を作る
+  function makeRandomProblems() {
+    const ri = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+    const list = [];
+    [2, 2, 3, 3, 3].forEach((type, i) => {
+      for (let tries = 0; tries < 500; tries++) {
+        const c = [-3, -2, -1, 1, 2, 3][ri(0, 5)];
+        const qc = [1];
+        for (let k = 1; k < type; k++) qc.push(ri(-4, 5));
+        const r = (i % 2 === 0) ? 0 : (ri(-6, 9) || 3);   // 割り切れる問題と、余りが出る問題をまぜる
+        const a = [1];
+        for (let k = 1; k < type; k++) a.push(qc[k] - c * qc[k - 1]);
+        a.push(r - c * qc[type - 1]);
+        if (a.some(v => Math.abs(v) > 15)) continue;
+        const q = fmtPoly(a, true);
+        if (list.some(p => p.q === q)) continue;
+        list.push({ q: q, div: c, coefs: a, divDisp: String(c), type: type, allBlank: i >= 3, qTxt: fmtPoly(qc), rTxt: String(r) });
+        break;
+      }
+    });
+    return list;
+  }
+  function startSet(mode) {
+    quizMode = mode;
+    problems = mode === 'random' ? makeRandomProblems() : problemBank;
+    currentLevel = 1;
+    cleanCount = 0;
+    initProblem();
+    window.scrollTo(0, 0);
+  }
+  function showFinish() {
+    document.querySelector('.container').classList.add('finished');
+    document.getElementById('finish-title').innerText = quizMode === 'random' ? '🎉 ランダム 5 問クリア！' : '🎉 5 問ぜんぶクリア！';
+    document.getElementById('finish-score').innerText = cleanCount + ' / ' + problems.length;
+    document.getElementById('finish-random').innerText = quizMode === 'random' ? 'もう一度ランダム 5 問 ▶' : 'ランダム問題 5 問にチャレンジ ▶';
+    document.getElementById('finish-again').innerText = quizMode === 'random' ? '最初の 5 問にもどる' : '同じ 5 問をもう一度';
+    window.scrollTo(0, 0);
+  }
+  // 全角の数字や、いろいろなマイナス記号も受け付ける
+  function normNum(s) {
+    return String(s).replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
+      .replace(/[−－ー―‐]/g, '-').replace(/＋/g, '+').replace(/\s/g, '');
+  }
+
+  function initProblem() {
+    currentProblem = JSON.parse(JSON.stringify(problems[currentLevel - 1]));
+    isStep2 = false;
+    missThis = false;
+    document.querySelector('.container').classList.remove('finished');
+    const c = currentProblem.div;
+    const a = currentProblem.coefs;
+    const ans = { divVal: currentProblem.divDisp };
+    
+    if (currentProblem.type === 2) {
+      ans.c1 = a[0]; ans.c2 = a[1]; ans.c3 = a[2];
+      ans.ans1 = a[0]; ans.ans2 = a[0] * c; ans.ans3 = a[1] + ans.ans2; ans.ans4 = ans.ans3 * c; ans.ans5 = a[2] + ans.ans4;
+    } else {
+      ans.c1 = a[0]; ans.c2 = a[1]; ans.c3 = a[2]; ans.c4 = a[3];
+      ans.ans1 = a[0]; ans.ans2 = a[0] * c; ans.ans3 = a[1] + ans.ans2; ans.ans4 = ans.ans3 * c; ans.ans5 = a[2] + ans.ans4; ans.ans6 = ans.ans5 * c; ans.ans7 = a[3] + ans.ans6;
+    }
+    currentProblem.fullAnswers = ans;
+    renderGrid();
+    document.getElementById("result-step").style.display = "none";
+    document.getElementById("slot-quotient").childNodes[0].nodeValue = "選んでね";
+    document.getElementById("slot-remainder").childNodes[0].nodeValue = "選んでね";
+    document.getElementById("hint-q").innerText = currentProblem.qTxt;
+    document.getElementById("hint-r").innerText = currentProblem.rTxt;
+  }
+
+  function renderGrid() {
+    document.getElementById("level-text").innerText = `${quizMode === 'random' ? 'ランダム ' : ''}第 ${currentLevel} 問 / ${problems.length}`;
+    const sign = currentProblem.div > 0 ? '-' : '+';
+    const absDiv = Math.abs(currentProblem.div);
+    document.getElementById("problem-display").innerHTML = `問題： (${currentProblem.q}) ÷ (x ${sign} ${absDiv})`;
+    
+    const divWrapper = document.getElementById("divisor-area-wrapper");
+    const grid = document.getElementById("grid");
+    const a = currentProblem.coefs;
+    const ans = currentProblem.fullAnswers;
+    const isAB = currentProblem.allBlank;
+
+    divWrapper.innerHTML = isAB ? 
+      `<div class="divisor-container"><div class="cell-wrapper"><input type="text" class="input-box" id="divVal" tabindex="1" style="width:80px; height:70px;"><div class="ans-overlay">${ans.divVal}</div></div></div>` :
+      `<div id="divisor-box" class="divisor-container">${currentProblem.divDisp}</div>`;
+
+    if (currentProblem.type === 2) {
+      grid.className = "division-area grid-quadratic";
+      grid.innerHTML = `
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c1" tabindex="2"><div class="ans-overlay">${ans.c1}</div></div>` : `<div class="num-display">${a[0]}</div>`}
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c2" tabindex="3"><div class="ans-overlay">${ans.c2}</div></div>` : `<div class="num-display">${a[1]}</div>`}
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c3" tabindex="4"><div class="ans-overlay">${ans.c3}</div></div>` : `<div class="num-display">${a[2]}</div>`}
+        <div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans2" tabindex="${isAB?6:2}"><div class="ans-overlay">${ans.ans2}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans4" tabindex="${isAB?8:4}"><div class="ans-overlay">${ans.ans4}</div></div>
+        <div class="main-line" style="grid-column: 1 / 4;"></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans1" tabindex="${isAB?5:1}"><div class="ans-overlay">${ans.ans1}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans3" tabindex="${isAB?7:3}"><div class="ans-overlay">${ans.ans3}</div></div>
+        <div class="remainder-wrapper"><div class="remainder-line"></div>
+          <div class="cell-wrapper"><input type="text" class="input-box" id="ans5" tabindex="${isAB?9:5}"><div class="ans-overlay">${ans.ans5}</div></div>
+        </div>
+      `;
+    } else {
+      grid.className = "division-area grid-cubic";
+      grid.innerHTML = `
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c1" tabindex="2"><div class="ans-overlay">${ans.c1}</div></div>` : `<div class="num-display">${a[0]}</div>`}
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c2" tabindex="3"><div class="ans-overlay">${ans.c2}</div></div>` : `<div class="num-display">${a[1]}</div>`}
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c3" tabindex="4"><div class="ans-overlay">${ans.c3}</div></div>` : `<div class="num-display">${a[2]}</div>`}
+        ${isAB ? `<div class="cell-wrapper"><input type="text" class="input-box" id="c4" tabindex="5"><div class="ans-overlay">${ans.c4}</div></div>` : `<div class="num-display">${a[3]}</div>`}
+        <div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans2" tabindex="${isAB?7:2}"><div class="ans-overlay">${ans.ans2}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans4" tabindex="${isAB?9:4}"><div class="ans-overlay">${ans.ans4}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans6" tabindex="${isAB?11:6}"><div class="ans-overlay">${ans.ans6}</div></div>
+        <div class="main-line" style="grid-column: 1 / 5;"></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans1" tabindex="${isAB?6:1}"><div class="ans-overlay">${ans.ans1}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans3" tabindex="${isAB?8:3}"><div class="ans-overlay">${ans.ans3}</div></div>
+        <div class="cell-wrapper"><input type="text" class="input-box" id="ans5" tabindex="${isAB?10:5}"><div class="ans-overlay">${ans.ans5}</div></div>
+        <div class="remainder-wrapper"><div class="remainder-line"></div>
+          <div class="cell-wrapper"><input type="text" class="input-box" id="ans7" tabindex="${isAB?12:7}"><div class="ans-overlay">${ans.ans7}</div></div>
+        </div>
+      `;
+    }
+    document.getElementById("msg").innerText = "";
+    document.getElementById("next-btn").style.display = "none";
+    document.getElementById("check-btn").style.display = "inline-block";
+  }
+
+  function checkAnswer() {
+    const userAns = currentProblem.fullAnswers;
+    const msg = document.getElementById("msg");
+    let isAllCorrect = true, hasWrong = false;
+    for (let id in userAns) {
+      const input = document.getElementById(id);
+      if (!input) continue;
+      // 【ブラッシュアップ】元は「空のマス」を 0 と同じあつかいにしていて、答えが 0 のマスは空でも正解になった。
+      //   また全角の数字（「３」）や全角のマイナス（「－」）は、合っていても「ちがう」になった。
+      const v = normNum(input.value);
+      if (v === '') {
+        isAllCorrect = false;
+        input.style.borderColor = "#ccc";
+        input.style.background = "white";
+      } else if (/^[+-]?\d+$/.test(v) && Number(v) === Number(userAns[id])) {
+        input.style.borderColor = "var(--correct)";
+        input.style.background = "#EFFFFD";
+      } else {
+        isAllCorrect = false;
+        hasWrong = true;
+        input.style.borderColor = "var(--accent)";
+        input.style.background = "#FFEAEA";
+      }
+    }
+    if (!isAllCorrect) {
+      if (hasWrong) {
+        missThis = true;
+        msg.innerText = "組み立て除法がちがうよ！";
+      } else {
+        msg.innerText = "まだ空いているマスがあるよ（0 のときも 0 と書こう）";
+      }
+      msg.style.color = "var(--accent)";
+      return;
+    }
+    if (!isStep2) {
+      isStep2 = true;
+      msg.innerText = "正解！下の【商】と【余り】を選んでね！";
+      msg.style.color = "var(--correct)";
+      setupStep2();
+      return;
+    }
+    const qSlot = document.getElementById("slot-quotient").childNodes[0].nodeValue;
+    const rSlot = document.getElementById("slot-remainder").childNodes[0].nodeValue;
+    // 【ブラッシュアップ】まだ選んでいないときは、まちがい扱いにしない（「答えあわせ」の 2 度押しで「ちがう」と出ていた）
+    if (qSlot === "選んでね" || rSlot === "選んでね") {
+      msg.innerText = "下の【商】と【余り】を選んでね！";
+      msg.style.color = "var(--line-blue)";
+      return;
+    }
+    if (qSlot === currentProblem.qTxt && rSlot === currentProblem.rTxt) {
+      if (!missThis) cleanCount++;
+      const last = currentLevel >= problems.length;
+      msg.innerHTML = last ? "✨ 完璧です！ 5 問クリア！ ✨" : "✨ 完璧です！ ✨";
+      msg.style.color = "var(--correct)";
+      document.getElementById("next-btn").innerText = last ? "結果を見る" : "次の問題へ";
+      document.getElementById("next-btn").style.display = "inline-block";
+      document.getElementById("check-btn").style.display = "none";
+    } else {
+      missThis = true;
+      msg.innerText = "商か余りがちがうみたい。よく見て選ぼう！";
+      msg.style.color = "var(--accent)";
+    }
+  }
+
+  function setupStep2() {
+    document.getElementById("result-step").style.display = "block";
+    createChoices("quotient", currentProblem.qTxt);
+    createChoices("remainder", currentProblem.rTxt);
+  }
+
+  // 【ブラッシュアップ】選択肢の作り方
+  //   元は余りの選択肢で「0」が 2 つ並ぶことがあり（0 と、その符号を変えた -0 → 0）、
+  //   商の選択肢も「x+4x+3」のような形や、関係のない値が多かった。
+  //   まちがえやすい答え（割る数の符号をまちがえた・次数を下げ忘れた・符号の取りちがえ）を入れる。
+  function createChoices(type, correct) {
+    const area = document.getElementById(`choices-${type}`);
+    area.innerHTML = "";
+    const p = currentProblem;
+    const b = synth(p.coefs, p.div);       // 正しい下の段（最後が余り）
+    const bw = synth(p.coefs, -p.div);     // 割る数の符号をまちがえたとき
+    let cands, fallback;
+    if (type === "quotient") {
+      const qc = b.slice(0, -1);
+      cands = [fmtPoly(bw.slice(0, -1)), fmtPoly([...qc, 0]), fmtPoly(qc.map((v, i) => i === 0 ? v : -v))];
+      fallback = ["x-1", "x+1", "x²+x+1", "x²-1", "x+2", "x-2"];
+    } else {
+      const r = b[b.length - 1];
+      cands = [String(bw[bw.length - 1]), String(-r), String(b[b.length - 2]), String(r + 1)];
+      fallback = ["0", "1", "-1", "2", "-2", "3", "-3"];
+    }
+    const choices = [correct];
+    shuffleArr(cands).concat(shuffleArr(fallback)).forEach(d => { if (choices.length < 4 && !choices.includes(d)) choices.push(d); });
+    shuffleArr(choices);
+    choices.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.innerText = c;
+      btn.onclick = () => {
+        document.getElementById(`slot-${type}`).childNodes[0].nodeValue = c;
+        area.querySelectorAll('.choice-btn').forEach(x => x.classList.toggle('picked', x === btn));
+      };
+      area.appendChild(btn);
+    });
+  }
+
+  function clearSlot(type) {
+    document.getElementById(`slot-${type}`).childNodes[0].nodeValue = "選んでね";
+    document.querySelectorAll(`#choices-${type} .choice-btn`).forEach(x => x.classList.remove('picked'));
+  }
+
+  // 【重要】答えチラ見機能の実装
+  function showVisualHint() {
+    missThis = true;
+    document.querySelectorAll('.ans-overlay').forEach(el => el.style.display = 'block');
+  }
+  function hideVisualHint() {
+    document.querySelectorAll('.ans-overlay').forEach(el => el.style.display = 'none');
+  }
+
+  function nextLevel() {
+    if (document.getElementById("next-btn").style.display === "none") return;   // 【ブラッシュアップ】2 度押しで 1 問とばさないように
+    if (currentLevel >= problems.length) { showFinish(); return; }
+    currentLevel++;
+    initProblem();
+    window.scrollTo(0, 0);
+  }
+  window.onload = initProblem;
+</script>
+</body>
+</html>

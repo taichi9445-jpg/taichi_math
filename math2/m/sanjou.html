@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+
+    <!--
+      数学Ⅱ 01. 3乗の展開・因数分解（数学パズル）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../../assets/port.css">
+    <script src="../../assets/port.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学パズル｜3乗の展開・因数分解</title>
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Tailwind CSS -->
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+         本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+         同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+    <link rel="stylesheet" href="../../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #f0f9ff;
+            color: #333;
+            /* スクロールを制限せず、自然な挙動に */
+            overflow-y: visible;
+            min-height: 100vh;
+        }
+
+        #app {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 12px;
+            display: block; /* Flexによる高さ制限を回避 */
+        }
+
+        .math-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 1rem 0;
+        }
+
+        .bubble-btn {
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .bubble-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .katex-display {
+            margin: 0.5em 0 !important;
+        }
+        .katex {
+            font-size: 1.2em !important;
+        }
+
+        .tile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            min-width: 3rem;
+            height: 3rem;
+            margin: 4px;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .answer-slot {
+            min-height: 4rem;
+            border: 3px dashed #cbd5e1;
+            border-radius: 1rem;
+            background-color: #f8fafc;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            gap: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .placed-tile {
+            background: #3b82f6;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .step-box {
+            background: #f8fafc;
+            border-left: 5px solid #3b82f6;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 0 0.75rem 0.75rem 0;
+            font-size: 1rem;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background-color: white;
+            border: 2px solid #e2e8f0;
+            padding: 1.2rem;
+            border-radius: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+        .choice-btn:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 【ブラッシュアップ】 */
+        .port-back { max-width: 600px; }
+        /* 長い式は、はみ出さずに横に動かして見られるように */
+        .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+        .order-note { background: #fefce8; border: 2px solid #fde68a; color: #854d0e; border-radius: 1rem; padding: 10px 12px; font-weight: bold; font-size: 0.95rem; margin-bottom: 16px; }
+
+        /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+        @media (max-width: 640px) {
+            #app { padding: 8px; }
+            .card { padding: 14px 10px; }
+            .math-display { font-size: 1.6rem; padding: 0.5rem 0; }
+            .choice-btn { padding: 0.9rem 0.4rem; }
+            .tile { min-width: 3.2rem; height: 3.2rem; font-size: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div id="app">
+        <header class="text-center py-4">
+            <h1 class="text-2xl font-black text-blue-600 tracking-tight">数学パズル</h1>
+        </header>
+
+        <!-- メニュー画面 -->
+        <div id="menu-screen" class="card fade-in">
+            <div class="space-y-8 py-4">
+                <div class="text-center">
+                    <p class="text-sm font-bold text-blue-500 mb-4 uppercase tracking-widest">回答スタイル</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="setMethod('select')" id="btn-method-select" class="bubble-btn bg-white border-4 border-blue-400 py-4 rounded-2xl font-bold text-blue-600 text-lg">えらぶ</button>
+                        <button onclick="setMethod('drag')" id="btn-method-drag" class="bubble-btn bg-gray-100 border-4 border-transparent py-4 rounded-2xl font-bold text-gray-500 text-lg">つなげる</button>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-widest">コースを選択</p>
+                    <div class="grid gap-4">
+                        <button onclick="startQuiz('sq')" class="bubble-btn bg-emerald-400 text-white py-5 rounded-2xl font-black text-xl hover:bg-emerald-500">🌱 2乗の公式</button>
+                        <button onclick="startQuiz('cb_exp')" class="bubble-btn bg-sky-400 text-white py-5 rounded-2xl font-black text-xl hover:bg-sky-500">🚀 3乗の展開</button>
+                        <button onclick="startQuiz('cb_fac')" class="bubble-btn bg-indigo-500 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-600">💎 3乗の因数分解</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- クイズ画面 -->
+        <div id="quiz-screen" class="hidden card fade-in">
+            <div id="dynamic-content"></div>
+        </div>
+
+        <!-- 結果画面 -->
+        <div id="result-screen" class="hidden card fade-in text-center py-10">
+            <div class="text-6xl mb-6">🎉</div>
+            <h2 class="text-2xl font-black">All Done!</h2>
+            <!-- 【ブラッシュアップ】元は「解きなおす」で正解しても点に入り、いつも 5 / 5 になっていた。一発で正解した数を出す -->
+            <p class="text-sm font-bold text-gray-400 mt-6">一発で正解できた問題</p>
+            <div class="text-7xl font-black text-blue-500 mt-2 mb-8" id="final-result"></div>
+            <!-- 【ブラッシュアップ】同じコース・次のコース・えらび直す・ほかの教材 を選べるようにした -->
+            <div class="flex flex-col gap-3">
+                <button onclick="startQuiz(currentMode)" class="bubble-btn bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg">同じコースでもう一度</button>
+                <button id="btn-next-course" onclick="startQuiz(COURSES[COURSES.indexOf(currentMode) + 1])" class="bubble-btn bg-emerald-500 text-white py-4 rounded-2xl font-bold text-lg"></button>
+                <button onclick="exitQuiz()" class="bubble-btn bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-lg">コースをえらび直す</button>
+                <a href="../remake.html" class="text-sm font-bold text-gray-400 py-2">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let answerMethod = 'select';
+        let qIndex = 0;
+        let correctCount = 0;
+        let currentQuestions = [];
+        let selectedTiles = [];
+        let currentMode = 'sq';
+        let answered = false;     // 【ブラッシュアップ】答えたあとの連打で、点が 2 回入らないように
+        let missedThis = false;   // 【ブラッシュアップ】この問題で一度まちがえたか（一発正解だけを数える）
+        let orderNote = '';       // 【ブラッシュアップ】順番のちがう正解のときに出す一言
+        const COURSES = ['sq', 'cb_exp', 'cb_fac'];
+        const COURSE_NAMES = { sq: '🌱 2乗の公式', cb_exp: '🚀 3乗の展開', cb_fac: '💎 3乗の因数分解' };
+
+        function shuffleArr(a) {
+            for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+            return a;
+        }
+
+        // 【ブラッシュアップ】式の値を計算する（x に数を入れて、2 つの式が同じかどうかを確かめるため）
+        function evalExpr(s, x) {
+            if (!/^[0-9x+\-()^]+$/.test(s)) return NaN;
+            const e = s.replace(/(^|\()-/g, '$10-')
+                       .replace(/\^/g, '**')
+                       .replace(/(\d)(x|\()/g, '$1*$2')
+                       .replace(/\)(\(|x|\d)/g, ')*$1')
+                       .replace(/x(\(|x|\d)/g, 'x*$1');
+            try { const v = Function('x', 'return (' + e + ');')(x); return typeof v === 'number' ? v : NaN; }
+            catch (err) { return NaN; }
+        }
+        function sameValue(a, b) {
+            return [1.3, -0.7, 2.9, -2.2, 0.4].every(x => {
+                const va = evalExpr(a, x), vb = evalExpr(b, x);
+                return isFinite(va) && isFinite(vb) && Math.abs(va - vb) < 1e-6;
+            });
+        }
+        // (x+2)(x^2-2x+4) → ["x+2", "x^2-2x+4"]、(x+8)^2 → ["x+8", "x+8"]。かっこの形でなければ null
+        function factorsOf(s) {
+            if (!/^(\([^()]+\)(\^\d)?)+$/.test(s)) return null;
+            const out = [];
+            s.replace(/\(([^()]+)\)(?:\^(\d))?/g, (m, inner, k) => { for (let i = 0; i < (k ? +k : 1); i++) out.push(inner); return m; });
+            return out;
+        }
+        // 展開した式の各項の次数（同じ次数の項が 2 つあれば、まだまとめきれていない）
+        function termPowers(s) {
+            return s.split(/[+-]/).filter(Boolean).map(t => t.includes('x') ? ((t.match(/\^(\d)/) || [0, '1'])[1]) : '0');
+        }
+        // 並べた答えが、正解と同じ式か（順番がちがうだけなら正解にする）
+        function isEquivalentAnswer(s, canon) {
+            if (canon.includes('(')) {
+                const fs = factorsOf(s), fc = factorsOf(canon);
+                if (!fs || !fc || fs.length !== fc.length) return false;
+                const rest = fc.slice();
+                return fs.every(f => { const i = rest.findIndex(g => sameValue(f, g)); if (i < 0) return false; rest.splice(i, 1); return true; });
+            }
+            if (/[()]/.test(s)) return false;
+            const ps = termPowers(s), pc = termPowers(canon);
+            return ps.length === pc.length && new Set(ps).size === ps.length && sameValue(s, canon);
+        }
+
+        function cleanMath(str) {
+            if (!str) return str;
+            return str.replace(/\^1\b/g, '').replace(/^1x/g, 'x').replace(/\+1x/g, '+x').replace(/-1x/g, '-x').replace(/\(1x/g, '(x').replace(/\+0\b/g, '').replace(/-0\b/g, '').replace(/\(\+/g, '(').replace(/\+\-/g, '-').replace(/\-\+/g, '-');
+        }
+
+        // 【ブラッシュアップ】問題の作り方
+        //   元は毎回まったく同じ 5 問で、「3乗の因数分解」は x³+1, x³+8, x³+27, x³+1, x³+8 のくり返しだった。
+        //   また 3乗は「和」の形しか出なかった。数をランダムにし、(x−a)³ と x³−a³ の形も入れた。
+        //   選択肢も、元は「答えのうしろに x を付けたもの」「x²+1」などだったので、
+        //   まちがえやすい形（2 や 3 を忘れる・符号を取りちがえる など）にした。
+        function mono(c, p) {   // 係数 c・次数 p の項。係数の 1 と x^1 の ^1 は書かない
+            if (p === 0) return String(c);
+            return (c === 1 ? '' : String(c)) + 'x' + (p === 1 ? '' : '^' + p);
+        }
+        function poly(terms) {  // [[係数, 次数], ...] → "x^3-6x^2+12x-8"
+            return terms.filter(t => t[0] !== 0).map((t, i) => {
+                const sign = t[0] < 0 ? '-' : (i === 0 ? '' : '+');
+                return sign + mono(Math.abs(t[0]), t[1]);
+            }).join('');
+        }
+        // 答えの式を、並べるタイルに分ける（元の parts と同じ分け方）
+        function tokenize(s) { return s.match(/\(|\)|[+-]|\^\d|\d*x(\^\d)?|\d+/g) || []; }
+        // まちがいの選択肢を 3 つ（正解と同じ値になるものは除く）
+        function pickDummies(ans, list) {
+            const out = [];
+            shuffleArr(list.slice()).forEach(d => { if (out.length < 3 && !out.includes(d) && !sameValue(d, ans)) out.push(d); });
+            return out;
+        }
+
+        const Generator = {
+            sq: (step, n) => {
+                const type = ['plus', 'minus', 'diff', 'factor'][step % 4];
+                const n2 = n * n;
+                if (type === 'plus') {
+                    const ans = poly([[1, 2], [2 * n, 1], [n2, 0]]);
+                    return { q: `(x+${n})^2`, a: ans, h: "(a+b)^2 = a^2+2ab+b^2", fn: "和の平方",
+                        steps: [{ t: "公式", d: `x^2 + 2 \\cdot x \\cdot ${n} + ${n}^2` }, { t: "計算", d: ans }],
+                        parts: tokenize(ans), dummy: [mono(n, 1)],
+                        wrongs: [poly([[1, 2], [n, 1], [n2, 0]]), poly([[1, 2], [n2, 0]]), poly([[1, 2], [2 * n, 1], [2 * n, 0]]), poly([[1, 2], [-2 * n, 1], [n2, 0]])] };
+                } else if (type === 'minus') {
+                    const ans = poly([[1, 2], [-2 * n, 1], [n2, 0]]);
+                    return { q: `(x-${n})^2`, a: ans, h: "(a-b)^2 = a^2-2ab+b^2", fn: "差の平方",
+                        steps: [{ t: "公式", d: `x^2 - 2 \\cdot x \\cdot ${n} + ${n}^2` }, { t: "計算", d: ans }],
+                        parts: tokenize(ans), dummy: [mono(n, 1)],
+                        wrongs: [poly([[1, 2], [-2 * n, 1], [-n2, 0]]), poly([[1, 2], [-n2, 0]]), poly([[1, 2], [-n, 1], [n2, 0]]), poly([[1, 2], [2 * n, 1], [n2, 0]])] };
+                } else if (type === 'diff') {
+                    const ans = `(x+${n})(x-${n})`;
+                    return { q: `x^2 - ${n2}`, a: ans, h: "a^2-b^2 = (a+b)(a-b)", fn: "平方の差",
+                        steps: [{ t: "変形", d: `x^2 - ${n}^2` }, { t: "完成", d: ans }],
+                        parts: tokenize(ans), dummy: ["^2"],
+                        wrongs: [`(x-${n})^2`, `(x+${n})^2`, `(x+${n2})(x-${n2})`] };
+                } else {
+                    const ans = `(x+${n})^2`;
+                    return { q: poly([[1, 2], [2 * n, 1], [n2, 0]]), a: ans, h: "a^2+2ab+b^2 = (a+b)^2", fn: "因数分解",
+                        steps: [{ t: "確認", d: `x^2 + 2 \\cdot ${n} \\cdot x + ${n}^2` }, { t: "完成", d: ans }],
+                        parts: tokenize(ans), dummy: [String(2 * n)],
+                        wrongs: [`(x+${2 * n})^2`, `(x-${n})^2`, `(x+${n})(x-${n})`, `(x+${n2})^2`] };
+                }
+            },
+            cb_exp: (step, n) => {
+                const n2 = n * n, n3 = n * n * n;
+                if (step % 2 === 0) {
+                    const ans = poly([[1, 3], [3 * n, 2], [3 * n2, 1], [n3, 0]]);
+                    return { q: `(x+${n})^3`, a: ans, h: "(a+b)^3=a^3+3a^2b+3ab^2+b^3", fn: "3乗の展開（和）",
+                        steps: [{ t: "適用", d: `x^3+3 \\cdot x^2 \\cdot ${n}+3 \\cdot x \\cdot ${n}^2+${n}^3` }, { t: "計算", d: ans }],
+                        parts: tokenize(ans), dummy: [mono(n, 2)],
+                        wrongs: [poly([[1, 3], [n3, 0]]), poly([[1, 3], [n, 2], [n2, 1], [n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n, 1], [n3, 0]]),
+                                 poly([[1, 3], [3 * n2, 2], [3 * n, 1], [n3, 0]]), poly([[1, 3], [-3 * n, 2], [3 * n2, 1], [-n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n2, 1], [3 * n, 0]])] };
+                } else {
+                    const ans = poly([[1, 3], [-3 * n, 2], [3 * n2, 1], [-n3, 0]]);
+                    return { q: `(x-${n})^3`, a: ans, h: "(a-b)^3=a^3-3a^2b+3ab^2-b^3", fn: "3乗の展開（差）",
+                        steps: [{ t: "適用", d: `x^3-3 \\cdot x^2 \\cdot ${n}+3 \\cdot x \\cdot ${n}^2-${n}^3` }, { t: "計算", d: ans }],
+                        parts: tokenize(ans), dummy: [mono(n, 2)],
+                        wrongs: [poly([[1, 3], [-n3, 0]]), poly([[1, 3], [-3 * n, 2], [-3 * n2, 1], [-n3, 0]]), poly([[1, 3], [3 * n, 2], [3 * n2, 1], [n3, 0]]),
+                                 poly([[1, 3], [-n, 2], [n2, 1], [-n3, 0]]), poly([[1, 3], [-3 * n, 2], [3 * n2, 1], [n3, 0]])] };
+                }
+            },
+            cb_fac: (step, r) => {
+                const r2 = r * r, r3 = r * r * r;
+                if (step % 2 === 0) {
+                    const ans = `(x+${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`;
+                    return { q: `x^3 + ${r3}`, a: ans, h: "a^3+b^3=(a+b)(a^2-ab+b^2)", fn: "3乗の因数分解（和）",
+                        steps: [{ t: "変形", d: `x^3 + ${r}^3` }, { t: "適用", d: `(x+${r})(x^2 - x \\cdot ${r} + ${r}^2)` }],
+                        parts: tokenize(ans), dummy: [mono(2 * r, 1)],
+                        wrongs: [`(x+${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`, `(x-${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`,
+                                 `(x+${r})(${poly([[1, 2], [-2 * r, 1], [r2, 0]])})`, `(x+${r})^3`] };
+                } else {
+                    const ans = `(x-${r})(${poly([[1, 2], [r, 1], [r2, 0]])})`;
+                    return { q: `x^3 - ${r3}`, a: ans, h: "a^3-b^3=(a-b)(a^2+ab+b^2)", fn: "3乗の因数分解（差）",
+                        steps: [{ t: "変形", d: `x^3 - ${r}^3` }, { t: "適用", d: `(x-${r})(x^2 + x \\cdot ${r} + ${r}^2)` }],
+                        parts: tokenize(ans), dummy: [mono(2 * r, 1)],
+                        wrongs: [`(x-${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`, `(x+${r})(${poly([[1, 2], [-r, 1], [r2, 0]])})`,
+                                 `(x-${r})(${poly([[1, 2], [2 * r, 1], [r2, 0]])})`, `(x-${r})^3`] };
+                }
+            }
+        };
+
+        function setMethod(method) {
+            answerMethod = method;
+            document.getElementById('btn-method-select').className = method === 'select' ? 'bubble-btn bg-white border-4 border-blue-400 py-4 rounded-2xl font-bold text-blue-600 text-lg' : 'bubble-btn bg-gray-100 border-4 border-transparent py-4 rounded-2xl font-bold text-gray-500 text-lg';
+            document.getElementById('btn-method-drag').className = method === 'drag' ? 'bubble-btn bg-white border-4 border-blue-400 py-4 rounded-2xl font-bold text-blue-600 text-lg' : 'bubble-btn bg-gray-100 border-4 border-transparent py-4 rounded-2xl font-bold text-gray-500 text-lg';
+        }
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            const nums = shuffleArr(mode === 'sq' ? [2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5]);
+            currentQuestions = Array.from({length: 5}, (_, i) => Generator[mode](i, nums[i]));
+            qIndex = 0; correctCount = 0; missedThis = false;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            selectedTiles = [];
+            answered = false;
+            orderNote = '';
+            const data = currentQuestions[qIndex];
+            const content = document.getElementById('dynamic-content');
+            
+            // 画面を完全にリセット
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <span class="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-black tracking-widest">${qIndex + 1} / 5</span>
+                    <button onclick="exitQuiz()" class="text-xs font-bold text-gray-400 hover:text-red-400 transition-colors">中断する</button>
+                </div>
+                <div class="text-center py-6">
+                    <div class="math-display">\\[ ${data.q} \\]</div>
+                </div>
+                <div id="answer-area" class="fade-in"></div>
+                <div id="hint-area" class="mt-6 p-4 bg-orange-50 border-2 border-dashed border-orange-200 rounded-xl text-lg text-center hidden">
+                    <div class="text-orange-500 font-bold text-xs mb-2 uppercase tracking-tighter">Hint Formula</div>
+                    \\[ ${data.h} \\]
+                </div>
+                <button onclick="toggleHint()" class="mt-6 w-full text-xs text-orange-400 font-bold tracking-widest uppercase py-2">Show Hint</button>
+            `;
+            renderAnswerArea(data);
+            renderMath();
+        }
+
+        function toggleHint() {
+            const h = document.getElementById('hint-area');
+            h.classList.toggle('hidden');
+            renderMath();
+        }
+
+        function renderAnswerArea(data) {
+            const area = document.getElementById('answer-area');
+            if (answerMethod === 'select') {
+                area.className = "choice-grid";
+                // 選択肢の生成
+                const opts = shuffleArr([data.a, ...pickDummies(data.a, data.wrongs)]);
+                opts.forEach(opt => {
+                    const b = document.createElement('button');
+                    b.className = "bubble-btn choice-btn";
+                    b.innerHTML = `\\[ ${opt} \\]`;
+                    b.onclick = () => (opt === data.a) ? handleCorrect() : handleWrong();
+                    area.appendChild(b);
+                });
+            } else {
+                area.className = "";
+                area.innerHTML = `
+                    <div class="answer-slot" id="answer-slot"></div>
+                    <div id="tile-pool" class="flex flex-wrap justify-center border-t border-slate-100 pt-6"></div>
+                    <button onclick="checkDragAnswer()" class="w-full bubble-btn bg-orange-500 text-white py-5 rounded-2xl font-black text-xl mt-8">答え合わせ</button>
+                `;
+                
+                // タイルのソートロジック
+                const getPriority = (str) => {
+                    if (str.includes('x')) {
+                        const match = str.match(/\^(\d+)/);
+                        const power = match ? parseInt(match[1]) : 1;
+                        return power + 100; // 文字式（次数の高い順に後で反転）
+                    }
+                    if (/^\d+$/.test(str)) return 50; // 数字
+                    if (['+', '-', '^', '^2', '^3'].includes(str)) return 20; // 記号
+                    if (['(', ')'].includes(str)) return 10; // 括弧
+                    return 0;
+                };
+
+                const tiles = [...new Set([...data.parts, ...data.dummy])].sort((a, b) => {
+                    const pa = getPriority(a);
+                    const pb = getPriority(b);
+                    if (pa !== pb) return pb - pa; // 優先度が高い順
+                    if (pa > 100) return b.localeCompare(a); // 文字式同士は文字列長や次数で
+                    return a.localeCompare(b);
+                });
+
+                tiles.forEach(p => {
+                    const t = document.createElement('div');
+                    t.className = 'tile bubble-btn shadow-sm';
+                    t.innerHTML = `$${p}$`;
+                    t.onclick = () => { if(selectedTiles.length < 15) { selectedTiles.push(p); updateAnswerSlot(); } };
+                    document.getElementById('tile-pool').appendChild(t);
+                });
+                updateAnswerSlot();
+            }
+        }
+
+        function updateAnswerSlot() {
+            const slot = document.getElementById('answer-slot');
+            slot.innerHTML = selectedTiles.length === 0 ? '<span class="text-gray-300 text-sm font-bold">タイルを選んで並べてください</span>' : '';
+            selectedTiles.forEach((val, i) => {
+                const div = document.createElement('div');
+                div.className = 'placed-tile cursor-pointer hover:bg-red-500 transition-colors';
+                div.innerHTML = `$${val}$`;
+                div.onclick = (e) => { e.stopPropagation(); selectedTiles.splice(i, 1); updateAnswerSlot(); };
+                slot.appendChild(div);
+            });
+            renderMath();
+        }
+
+        function checkDragAnswer() {
+            if (answered) return;
+            // 【ブラッシュアップ】何も並べずに押したときは、まちがい扱いにしない
+            if (selectedTiles.length === 0) {
+                const hint = document.querySelector('#answer-slot span');
+                if (hint) { hint.textContent = 'タイルを並べてから答え合わせしよう'; hint.className = 'text-red-400 text-sm font-bold'; }
+                return;
+            }
+            const s = selectedTiles.join("");
+            const canon = currentQuestions[qIndex].parts.join("");
+            if (s === canon) handleCorrect();
+            // 【ブラッシュアップ】元は (x-6)(x+6) のように順番がちがうだけの正しい答えも「おしい！」になっていた
+            else if (isEquivalentAnswer(s, canon)) {
+                orderNote = canon.includes('(')
+                    ? `💡 ふつうは $${canon}$ と書くよ。`
+                    : `💡 次数の高い順に $${canon}$ と書くのがふつうだよ。`;
+                handleCorrect();
+            }
+            else handleWrong();
+        }
+
+        function handleCorrect() {
+            if (answered) return;
+            answered = true;
+            if (!missedThis) correctCount++;
+            renderFeedback(true);
+        }
+
+        function handleWrong() {
+            if (answered) return;
+            answered = true;
+            missedThis = true;
+            const content = document.getElementById('dynamic-content');
+            content.innerHTML = `
+                <div class="text-center py-8 fade-in">
+                    <div class="text-7xl mb-6">🤔</div>
+                    <h3 class="text-2xl font-black text-slate-700">おしい！</h3>
+                    <p class="text-gray-500 mt-2 font-bold">もう一度考えてみよう</p>
+                    <div class="mt-10 space-y-4">
+                        <button onclick="showQuestion()" class="w-full bubble-btn bg-blue-600 text-white py-5 rounded-2xl text-xl font-bold">解きなおす</button>
+                        <button onclick="renderFeedback(false)" class="text-sm text-gray-400 font-bold block w-full py-4">答えと解説を見る</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderFeedback(isCorrect) {
+            const q = currentQuestions[qIndex];
+            const content = document.getElementById('dynamic-content');
+            content.innerHTML = `
+                <div class="text-center fade-in">
+                    <h3 class="text-xl font-black ${isCorrect ? 'text-green-600' : 'text-slate-600'} mb-6">${isCorrect ? "正解です！" : "解説を読みましょう"}</h3>
+                    ${isCorrect && orderNote ? `<div class="order-note">${orderNote}</div>` : ""}
+                    <div class="text-left space-y-4">
+                        <div class="bg-blue-50 p-5 rounded-2xl border-2 border-blue-100">
+                            <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">${q.fn}</p>
+                            <div class="text-lg font-bold">\\[ ${q.h} \\]</div>
+                        </div>
+                        ${q.steps.map(s => `<div class="step-box"><p class="font-bold text-[10px] text-gray-400 uppercase mb-1">${s.t}</p>\\[ ${s.d} \\]</div>`).join("")}
+                        <div class="bg-slate-50 p-5 rounded-2xl text-center">
+                            <p class="text-xs text-gray-400 font-bold uppercase mb-1">Answer</p>
+                            <div class="text-2xl font-black text-blue-600">\\[ ${q.a} \\]</div>
+                        </div>
+                    </div>
+                    <button onclick="nextQuestion()" class="w-full bubble-btn bg-slate-800 text-white py-5 rounded-2xl font-black text-lg mt-8">
+                        ${qIndex < 4 ? "次の問題へ" : "結果を見る"}
+                    </button>
+                </div>
+            `;
+            renderMath();
+            // スクロール位置を一番上へ（解説が長い場合用）
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextQuestion() {
+            qIndex++;
+            missedThis = false;
+            if (qIndex < 5) showQuestion();
+            else showResult();
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-result').innerText = `${correctCount} / 5`;
+            const nextMode = COURSES[COURSES.indexOf(currentMode) + 1];
+            const nextBtn = document.getElementById('btn-next-course');
+            nextBtn.classList.toggle('hidden', !nextMode);
+            if (nextMode) nextBtn.textContent = 'つぎは ' + COURSE_NAMES[nextMode] + ' へ ▶';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function exitQuiz() {
+            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderMath() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.getElementById('app'), {
+                    delimiters: [
+                        {left: "\\[", right: "\\]", display: true},
+                        {left: "$", right: "$", display: false}
+                    ]
+                });
+            }
+        }
+
+        window.onload = renderMath;
+
+        // 【ブラッシュアップ】KaTeX が 6 秒たっても読み込めなければ、数式を読める文字に直して表示する
+        setTimeout(() => {
+            if (window.renderMathInElement) return;
+            window.renderMathInElement = (el) => PortMath.plainMath(el);
+            renderMath();
+        }, 6000);
+    </script>
+</body>
+</html>

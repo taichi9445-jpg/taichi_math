@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学Ⅱ デジタル教材（作り直し版）</title>
+<link rel="stylesheet" href="../assets/base.css">
+<style>
+  .hero {
+    background: linear-gradient(135deg, #2f6fed 0%, #6f4cd8 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: clamp(22px, 5vw, 38px);
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { margin: 0 0 8px; font-size: clamp(23px, 5.5vw, 34px); line-height: 1.3; }
+  .hero p { margin: 0; opacity: .9; font-size: .96em; }
+
+  .unit { margin-bottom: 26px; }
+  .unit > h2 {
+    font-size: clamp(17px, 3.2vw, 21px);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .unit > h2 .count { font-size: .7em; font-weight: 500; color: var(--ink-soft); }
+  .unit > .lead { color: var(--ink-soft); font-size: .9em; margin: 0 0 12px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: 12px;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    min-height: 96px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--c, var(--brand));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform .1s ease, box-shadow .15s ease;
+  }
+  .item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16,24,40,.06), 0 14px 30px rgba(16,24,40,.12);
+  }
+  .item .no { font-size: .74em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .item .name { font-weight: 700; font-size: 1.02em; line-height: 1.4; }
+  .item .desc { font-size: .84em; color: var(--ink-soft); line-height: 1.5; }
+
+  .u1 { --c: #2f6fed; }
+  .u2 { --c: #10a05a; }
+  .u3 { --c: #e79b16; }
+  .u4 { --c: #d1477a; }
+
+  footer { color: var(--ink-soft); font-size: .84em; text-align: center; padding: 20px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>数学Ⅱ デジタル教材<span style="display:inline-block">（作り直し版・試作）</span></h1>
+    <p>元の教材を作り直した試作版です。<a href="index.html" style="color:#fff;font-weight:700">← 元の教材の一覧へ戻る</a></p>
+  </div>
+
+  <section class="unit">
+    <h2>式の計算等 <span class="count">3教材</span></h2>
+    <p class="lead">3乗の展開・因数分解、分数式、組み立て除法。</p>
+    <div class="grid">
+      <a class="item u1" href="m/sanjou.html"><span class="no">01</span><span class="name">3乗の展開・因数分解</span><span class="desc">(a+b)<sup>3</sup> の展開から a<sup>3</sup>+b<sup>3</sup> の因数分解まで。「えらぶ」「つなげる」の2つの答え方で、3乗の公式をものにしよう！</span></a>
+      <a class="item u1" href="m/bunsushiki.html"><span class="no">02</span><span class="name">分数式の計算</span><span class="desc">約分・かけ算わり算・たし算ひき算の3コース。因数分解を使って、分数式をスッキリ整理しよう！</span></a>
+      <a class="item u1" href="m/kumitate.html"><span class="no">03</span><span class="name">組み立て除法</span><span class="desc">マスをうめて、商と余りをすばやく求めよう。5問クリアしたら、ランダム問題にも挑戦！</span></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2>微分積分</h2>
+    <p class="lead">微分・積分の教材は、これから作り直します。いまは <a href="index.html">元の教材の一覧</a> から使えます。</p>
+  </section>
+
+  <footer>数学Ⅱ デジタル教材</footer>
+</div>
+</body>
+</html>

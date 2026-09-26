@@ -1,167 +1,906 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>三角比の値（総合）</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <meta charset="UTF-8">
+
+    <!--
+      31. 三角比の値（三角比・三角関数マスター）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定を、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>三角比・三角関数マスター</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #eef2ff;
+      --accent: #f59e0b;
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    body { background: var(--bg-gradient); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; color: var(--text-main); }
+    .container { width: 100%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); min-height: 680px; display: flex; flex-direction: column; position: relative; }
+    .hidden { display: none !important; }
+    
+    /* メニュー画面 */
+    .menu-header { text-align: center; margin-bottom: 25px; }
+    .menu-title { font-size: 32px; color: #1e1b4b; margin-bottom: 10px; font-weight: 800; }
+    .menu-subtitle { font-size: 16px; color: #4338ca; font-weight: bold; }
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 850px; margin: 0 auto; }
+    @media (max-width: 600px) { .menu-grid { grid-template-columns: 1fr; } }
+    .menu-card { background: #fff; border-radius: 16px; padding: 22px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #e5e7eb; transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+    .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-color: var(--primary); }
+    .menu-card.special { background: #fef3c7; border: 2px dashed var(--accent); }
+    .menu-card.marathon { background: #ecfdf5; border: 2px dashed var(--success); }
+    .icon { font-size: 36px; margin-bottom: 10px; }
+    .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 6px; color: var(--primary); }
+    .menu-card.special .mode-title { color: #b45309; }
+    .menu-card.marathon .mode-title { color: #065f46; }
+    .mode-desc { font-size: 13px; color: #4b5563; line-height: 1.5; margin-bottom: 15px; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; max-width: 160px; font-size: 15px; text-align: center; }
+    .btn:hover { background: #3730a3; }
+    
+    /* クイズ画面共通 */
+    .btn-back { background: #6b7280; align-self: flex-start; margin-bottom: 15px; padding: 8px 15px; font-size: 14px; width: auto; max-width: none; border-radius: 20px; }
+    .btn-back:hover { background: #4b5563; }
+    .btn-hint { background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-left: auto; transition: background 0.2s; }
+    .btn-hint:hover { background: #d97706; }
+
+    /* クイズモードレイアウト */
+    .angle-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab { background: #e5e7eb; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 15px; border: none; white-space: nowrap; }
+    .tab.active { background: var(--accent); color: white; }
+    
+    /* 図とパネルの黄金比率（選択肢を大きく広々と） */
+    .quiz-area { display: grid; grid-template-columns: 380px 1fr; gap: 30px; flex-grow: 1; align-items: start; }
+    @media (max-width: 850px) { .quiz-area { grid-template-columns: 1fr; } }
+    
+    /* キャンバスコンテナ（コンパクトサイズに維持） */
+    .canvas-container { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; display: flex; justify-content: center; align-items: center; position: relative; min-height: 360px; padding: 10px; }
+    canvas { width: 100%; height: 100%; max-width: 340px; max-height: 340px; }
+
+    /* 回答パネル */
+    .panel { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+    .section-header { display: flex; align-items: center; margin-bottom: 10px; }
+    .section-title { font-size: 18px; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; color: #374151; }
+    .box-row { display: flex; gap: 15px; align-items: center; margin-bottom: 12px; font-size: 18px; font-weight: bold; }
+    
+    /* ドロップボックス */
+    .drop-box { width: 90px; height: 48px; border: 2px dashed #9ca3af; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center; background: #fff; font-weight: bold; font-size: 18px; cursor: pointer; transition: background 0.2s; vertical-align: middle; }
+    .drop-box.selected { border-color: var(--primary); background: var(--primary-light); }
+    .drop-box.filled { border-style: solid; border-color: #4b5563; background: #f3f4f6; }
+    .drop-box.correct { border-color: var(--success); background: #ecfdf5; color: var(--success); }
+    .drop-box.wrong { border-color: var(--error); background: #fef2f2; color: var(--error); }
+    
+    /* 選択肢チップ */
+    .chip-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; min-height: 55px; }
+    .chip { padding: 10px 18px; background: #3b82f6; color: white; border-radius: 6px; font-weight: bold; cursor: grab; user-select: none; border: none; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-flex; align-items: center; justify-content: center; min-width: 55px; }
+    
+    /* 三角比 1列・4択用スタイル（文字とボタンを特大化） */
+    .trig-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .trig-label { font-weight: 800; font-size: 20px; display: inline-flex; align-items: center; color: #1e293b; }
+    .trig-options { display: flex; gap: 15px; width: 100%; }
+    
+    /* 特大ボタン */
+    .opt-btn { background: #fff; border: 2px solid #d1d5db; height: 65px; flex: 1; border-radius: 10px; font-weight: bold; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); white-space: nowrap; }
+    .opt-btn:hover { border-color: var(--primary); background: var(--primary-light); transform: translateY(-1px); }
+    
+    .opt-btn.correct-ans { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+    .opt-btn.wrong-ans { background: var(--error) !important; color: white !important; border-color: var(--error) !important; }
+
+    /* 数学表記（マイナスを分数線の左側中央に完全に独立・配置） */
+    .math-expr-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+    .math-minus-sign { font-size: 22px; font-weight: bold; margin-right: 3px; display: inline-block; line-height: 1; }
+    .math-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; padding: 0 4px; font-size: 18px; line-height: 1.05; font-weight: bold; }
+    .math-frac .num { border-bottom: 2px solid currentColor; padding-bottom: 1px; width: 100%; text-align: center; }
+    .math-frac .den { padding-top: 1px; width: 100%; text-align: center; }
+    
+    .math-sqrt-container { display: inline-flex; align-items: center; vertical-align: middle; line-height: 1; }
+    .math-sqrt-symbol { font-size: 1.15em; line-height: 1; font-weight: normal; margin-right: -1px; transform: translateY(-1px); }
+    .math-sqrt { border-top: 1.8px solid currentColor; padding-top: 1px; display: inline-block; line-height: 1; font-size: 0.95em; }
+
+    /* 総合練習モード用UI */
+    .random-container { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
+    .random-header-bar { width: 100%; max-width: 850px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 18px; color: #4b5563; }
+    .progress-container { width: 100%; max-width: 850px; height: 14px; background: #e5e7eb; border-radius: 7px; overflow: hidden; margin-bottom: 25px; border: 1px solid #d1d5db; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s ease; }
+    .timer-display { background: #1e293b; color: #38bdf8; font-family: monospace; padding: 6px 16px; border-radius: 8px; font-size: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+    
+    .question-large-box { background: #f8fafc; border: 3px solid #e2e8f0; border-radius: 16px; width: 100%; max-width: 850px; text-align: center; padding: 45px 20px; margin-bottom: 35px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    .question-text-huge { font-size: 68px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
+    
+    .grid-6-huge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; width: 100%; max-width: 850px; }
+    @media (max-width: 600px) { .grid-6-huge { grid-template-columns: repeat(2, 1fr); gap: 15px; } }
+    .grid-6-huge .opt-btn { height: 90px; font-size: 26px; border-radius: 14px; border-width: 2.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .grid-6-huge .opt-btn:hover { transform: scale(1.02); }
+
+    /* 結果画面 */
+    .result-screen { text-align: center; padding: 40px 20px; }
+    .result-title { font-size: 36px; color: var(--success); font-weight: bold; margin-bottom: 20px; }
+    .result-time { font-size: 52px; font-weight: 800; color: #1e293b; margin-bottom: 30px; font-family: monospace; }
+    
+    /* モーダルポップアップ */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
+    .modal-title { font-size: 22px; font-weight: bold; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    .modal-row { display: flex; justify-content: space-between; padding: 12px 20px; font-size: 18px; border-bottom: 1px solid #f3f4f6; align-items: center; }
+    .modal-label { font-weight: bold; color: #4b5563; }
+    .modal-value { font-weight: bold; color: #111827; font-size: 20px; }
+    .btn-close { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; margin-top: 20px; cursor: pointer; width: 100%; font-size: 16px; }
+    .btn-close:hover { background: #1f2937; }
+
+    /* 【ブラッシュアップ】 */
+    body { flex-direction: column; }
+    .port-back { width: 100%; max-width: 1200px; color: #fff; }
+    .opt-btn:disabled { opacity: .45; cursor: default; transform: none; }
+    .tab.done { background: #d1fae5; color: #065f46; }
+    .tab.done::after { content: ' ✓'; }
+    .tab.done.active { background: var(--success); color: #fff; }
+    .drop-box.correct { cursor: default; }
+    .chip-guide { font-size: 13px; color: #6b7280; margin: -4px 0 4px; }
+    .btn-sub { background: #e5e7eb; color: #374151; }
+    .btn-sub:hover { background: #d1d5db; }
+    .angle-clear { background: #ecfdf5; border: 2px solid var(--success); border-radius: 14px; padding: 16px; text-align: center; }
+    .angle-clear-msg { font-size: 20px; font-weight: 800; color: #065f46; margin-bottom: 12px; }
+    .angle-clear-btns, .result-nav { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .angle-clear-btns .btn, .result-nav .btn { max-width: 340px; width: 100%; padding: 12px 16px; font-size: 16px; }
+    .result-nav a { color: #6b7280; margin-top: 4px; }
+    .result-miss { font-size: 18px; font-weight: bold; color: #4b5563; margin: -14px 0 24px; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 14px 10px; min-height: 0; border-radius: 16px; }
+      .menu-header { margin-bottom: 16px; }
+      .menu-title { font-size: min(28px, 7vw); white-space: nowrap; }
+      .menu-subtitle { font-size: 14px; }
+      .menu-grid { gap: 12px; }
+      .menu-card { padding: 16px; }
+      .mode-title { font-size: 19px; }
+      .mode-desc { font-size: 15px; margin-bottom: 10px; }
+      .btn { font-size: 16px; padding: 12px 25px; max-width: 220px; }
+      .btn-back { font-size: 14px; padding: 8px 14px; margin-bottom: 10px; }
+      .angle-tabs { margin-bottom: 12px; }
+      .tab { font-size: 16px; padding: 8px 14px; }
+      .quiz-area { gap: 16px; }
+      .canvas-container { min-height: 0; padding: 6px; }
+      canvas { width: 100%; height: auto; max-width: 300px; }
+      .section-title { font-size: 17px; }
+      .btn-hint { font-size: 14px; padding: 7px 12px; white-space: nowrap; }
+      .box-row { flex-wrap: wrap; gap: 8px; font-size: 18px; }
+      .drop-box { width: 80px; height: 52px; font-size: 20px; }
+      .chip { font-size: 20px; padding: 10px 14px; min-width: 62px; min-height: 52px; }
+      .chip-guide { font-size: 14px; }
+      .trig-row { grid-template-columns: 1fr; gap: 6px; margin-bottom: 14px; }
+      .trig-label { font-size: 21px; }
+      .trig-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .opt-btn { height: 62px; font-size: 20px; padding: 0 2px; }
+      .opt-btn.long { font-size: 15px; }
+      .pc-only { display: none; }
+      /* 分数・ルートを大きく（元は 18px のまま固定だった） */
+      .opt-btn .math-frac, .drop-box .math-frac, .chip .math-frac { font-size: 20px; }
+      .grid-6-huge .opt-btn .math-frac { font-size: 25px; }
+      .grid-6-huge .math-minus-sign { font-size: 26px; }
+      .random-header-bar { font-size: 16px; }
+      .timer-display { font-size: 18px; padding: 5px 12px; }
+      .progress-container { margin-bottom: 16px; }
+      .question-large-box { padding: 26px 8px; margin-bottom: 18px; }
+      .question-text-huge { font-size: min(52px, 12.4vw); white-space: nowrap; }
+      .grid-6-huge { gap: 10px; }
+      .grid-6-huge .opt-btn { height: 78px; font-size: 24px; }
+      .result-screen { padding: 20px 6px; }
+      .result-title { font-size: min(30px, 7.4vw); white-space: nowrap; }
+      .result-time { font-size: 44px; }
+      .angle-clear-msg { font-size: 18px; }
+      .modal-content { padding: 20px 14px; }
+      .modal-row { padding: 10px 8px; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../data/sankakuhi-zahyou.js"></script>
+<a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+<div class="container" id="app">
+  <div id="view-menu">
+    <div class="menu-header">
+      <h1 class="menu-title">三角比・三角関数マスター</h1>
+      <p class="menu-subtitle">学習モードまたは総合演習を選択してください</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-card">
+        <div class="icon">📐</div>
+        <div class="mode-title">基本モード</div>
+        <div class="mode-desc">30°, 45°, 60°<br>120°, 135°, 150°</div>
+        <button class="btn" onclick="startMode('basic')">スタート</button>
+      </div>
+      <div class="menu-card">
+        <div class="icon">⭐</div>
+        <div class="mode-title">ちょい発展</div>
+        <div class="mode-desc">0°, 90°, 180°</div>
+        <button class="btn" onclick="startMode('slight')">スタート</button>
+      </div>
+      <div class="menu-card">
+        <div class="icon">🚀</div>
+        <div class="mode-title">超発展モード</div>
+        <div class="mode-desc">210°, 225°, 240°<br>300°, 315°, 330°</div>
+        <button class="btn" onclick="startMode('super')">スタート</button>
+      </div>
+      <div class="menu-card">
+        <div class="icon">👑</div>
+        <div class="mode-title">超超発展</div>
+        <div class="mode-desc">270°, 360°</div>
+        <button class="btn" onclick="startMode('ultra')">スタート</button>
+      </div>
+      <div class="menu-card special">
+        <div class="icon">🔥</div>
+        <div class="mode-title">総合練習 (ランダム10選)</div>
+        <div class="mode-desc">全51パターンから10問を厳選抽出！<br>スピード勝負のタイムアタック！</div>
+        <button class="btn" style="background:var(--accent); max-width: 200px;" onclick="startMode('rand10')">タイムアタック</button>
+      </div>
+      <div class="menu-card marathon">
+        <div class="icon">🏆</div>
+        <div class="mode-title">総合練習 (51問全問マラソン)</div>
+        <div class="mode-desc">全角度のsin, cos, tanを網羅！<br>完全制覇のタイムを計測します。</div>
+        <button class="btn" style="background:var(--success); max-width: 200px;" onclick="startMode('marathon')">マラソン開始</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-quiz" class="hidden">
+    <button class="btn btn-back" onclick="backToMenu()">メニューに戻る</button>
+    <div class="angle-tabs" id="tabs-container"></div>
+    
+    <div class="quiz-area">
+      <div class="canvas-container">
+        <canvas id="graphCanvas" width="340" height="340"></canvas>
+      </div>
+      
+      <div class="panel">
+        <div>
+          <div class="section-header">
+            <div class="section-title">座標と動径を求めよう</div>
+            <button class="btn-hint" onclick="openHintModal()">答えを見る</button>
+          </div>
+          <div class="box-row">
+            点Pの座標: ( 
+            <div class="drop-box" id="box-px" onclick="selectBox('box-px')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-px')"></div> , 
+            <div class="drop-box" id="box-py" onclick="selectBox('box-py')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-py')"></div> )
+          </div>
+          <div class="box-row">
+            動径の長さ r = 
+            <div class="drop-box" id="box-r" onclick="selectBox('box-r')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-r')"></div>
+          </div>
+          <!-- 【ブラッシュアップ】スマホではドラッグできないので、タップで入れる方法を書いておく -->
+          <p class="chip-guide">枠をえらんで、下のカードをタップ<span class="pc-only">（ドラッグでもOK）</span></p>
+          <div class="chip-container" id="coords-chips"></div>
+        </div>
+        
+        <hr style="border:0; border-top:1px solid #e5e7eb; margin: 5px 0;">
+        
+        <div>
+          <div class="section-title" style="margin-bottom: 15px;">三角比を求めよう</div>
+          <div class="trig-row">
+            <span class="trig-label">sin θ =</span>
+            <div class="trig-options" id="opts-sin"></div>
+          </div>
+          <div class="trig-row">
+            <span class="trig-label">cos θ =</span>
+            <div class="trig-options" id="opts-cos"></div>
+          </div>
+          <div class="trig-row">
+            <span class="trig-label">tan θ =</span>
+            <div class="trig-options" id="opts-tan"></div>
+          </div>
+        </div>
+        <!-- 【ブラッシュアップ】元は全部答えても何も起きなかった。クリアを知らせて、次の角度・次のモードへ進めるようにした -->
+        <div class="angle-clear hidden" id="angle-clear">
+          <div class="angle-clear-msg" id="angle-clear-msg"></div>
+          <div class="angle-clear-btns" id="angle-clear-btns"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-random" class="hidden">
+    <button class="btn btn-back" onclick="backToMenu()">中断してメニューに戻る</button>
+    <div class="random-container">
+      <div class="random-header-bar">
+        <div id="rand-progress-text">問題 1 / 10</div>
+        <div class="timer-display" id="rand-timer">00:00.0</div>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" id="rand-progress-bar"></div>
+      </div>
+      
+      <div class="question-large-box">
+        <div class="question-text-huge" id="rand-question">sin 30° = ?</div>
+      </div>
+      
+      <div class="grid-6-huge" id="rand-options"></div>
+    </div>
+  </div>
+
+  <div id="view-result" class="hidden">
+    <div class="result-screen">
+      <div class="icon" style="font-size: 70px;">🎉</div>
+      <div class="result-title" id="result-title-text">タイムアタック(10問)クリア！</div>
+      <p style="font-size: 18px; color: #4b5563; margin-bottom: 10px;">あなたの記録</p>
+      <div class="result-time" id="result-final-time">00:45.2</div>
+      <div class="result-miss" id="result-miss"></div>
+      <!-- 【ブラッシュアップ】同じモードでもう一度・次のモード・えらび直す・ほかの教材 を選べるようにした -->
+      <div class="result-nav">
+        <button class="btn" onclick="startMode(currentMode)">同じモードでもう一度</button>
+        <button class="btn hidden" id="btn-result-next" style="background:var(--success);" onclick="startMode('marathon')">つぎは 51問マラソンに挑戦 ▶</button>
+        <button class="btn btn-sub" onclick="backToMenu()">モードをえらび直す</button>
+        <a href="../remake.html">ほかの教材をえらぶ</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="hint-modal">
+  <div class="modal-content">
+    <div class="modal-title" id="modal-angle-title">0° の答え</div>
+    <div class="modal-row"><span class="modal-label">点Pの x 座標</span><span class="modal-value" id="hint-x"></span></div>
+    <div class="modal-row"><span class="modal-label">点Pの y 座標</span><span class="modal-value" id="hint-y"></span></div>
+    <div class="modal-row"><span class="modal-label">動径の長さ r</span><span class="modal-value" id="hint-r"></span></div>
+    <div class="modal-row"><span class="modal-label">sin θ</span><span class="modal-value" id="hint-sin"></span></div>
+    <div class="modal-row"><span class="modal-label">cos θ</span><span class="modal-value" id="hint-cos"></span></div>
+    <div class="modal-row"><span class="modal-label">tan θ</span><span class="modal-value" id="hint-tan"></span></div>
+    <button class="btn-close" onclick="closeHintModal()">閉じる</button>
+  </div>
+</div>
+
 <script>
-/* ---------------------------------------------------------------------------
-   31. 三角比の値（総合）
-   0°〜180° の sin・cos・tan を、値・角度の両方向から確認する。
-   角度ごとの値のデータは、三角比（座標）の教材と同じものを使っている。
+  // マスターデータ (▲はルート記号の内部マーカー)
+  const anglesData = {
+    30:  { x:'▲3',  y:'1',   r:'2',  sin:'1/2',     cos:'▲3/2',    tan:'1/▲3' },
+    45:  { x:'1',   y:'1',   r:'▲2', sin:'1/▲2',    cos:'1/▲2',    tan:'1' },
+    60:  { x:'1',   y:'▲3',  r:'2',  sin:'▲3/2',    cos:'1/2',     tan:'▲3' },
+    120: { x:'-1',  y:'▲3',  r:'2',  sin:'▲3/2',    cos:'-1/2',    tan:'-▲3' },
+    135: { x:'-1',  y:'1',   r:'▲2', sin:'1/▲2',    cos:'-1/▲2',   tan:'-1' },
+    150: { x:'-▲3', y:'1',   r:'2',  sin:'1/2',     cos:'-▲3/2',   tan:'-1/▲3' },
+    0:   { x:'1',   y:'0',   r:'1',  sin:'0',       cos:'1',       tan:'0' },
+    90:  { x:'0',   y:'1',   r:'1',  sin:'1',       cos:'0',       tan:'定義なし' },
+    180: { x:'-1',  y:'0',   r:'1',  sin:'0',       cos:'-1',      tan:'0' },
+    210: { x:'-▲3', y:'-1',  r:'2',  sin:'-1/2',    cos:'-▲3/2',   tan:'1/▲3' },
+    225: { x:'-1',  y:'-1',  r:'▲2', sin:'-1/▲2',   cos:'-1/▲2',   tan:'1' },
+    240: { x:'-1',  y:'-▲3', r:'2',  sin:'-▲3/2',   cos:'-1/2',    tan:'▲3' },
+    300: { x:'1',   y:'-▲3', r:'2',  sin:'-▲3/2',   cos:'1/2',     tan:'-▲3' },
+    315: { x:'1',   y:'-1',  r:'▲2', sin:'-1/▲2',   cos:'1/▲2',    tan:'-1' },
+    330: { x:'▲3',  y:'-1',  r:'2',  sin:'-1/2',    cos:'▲3/2',    tan:'-1/▲3' },
+    270: { x:'0',   y:'-1',  r:'1',  sin:'-1',      cos:'0',       tan:'定義なし' },
+    360: { x:'1',   y:'0',   r:'1',  sin:'0',       cos:'1',       tan:'0' }
+  };
 
-   元教材は開発中のURL（.../dev）で公開されていて、
-   本人以外がアクセスすると「ページが見つかりません」になっていた。
-   ここでは誰でも開ける形で作り直している。
+  const modes = {
+    basic: [30, 45, 60, 120, 135, 150],
+    slight: [0, 90, 180],
+    super: [210, 225, 240, 300, 315, 330],
+    ultra: [270, 360]
+  };
 
-   そのほか直した点：
-     ・tan 90° が「0」と表示されていた。 → 正しく「定義されない」を扱う。
-     ・鈍角の符号（cos 120° = −1/2 など）が一部まちがっていた。
-       → 単位円の座標から機械的に決めるので、符号がずれない。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+  let currentMode = '';
+  let currentAngle = 0;
+  let selectedBoxId = null;
+  
+  // アニメーション用
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  let animCurrentAngle = 0;
+  let animTargetAngle = 0;
+  let animStartTime = null;
+  let animId = null;
+  const ANIM_DURATION = 1000;
 
-  var DATA = window.DATA_SANKAKUHI_ZAHYOU;
-  // 数学Ⅰで扱う 0°〜180°
-  var ANGLES = Object.keys(DATA).map(Number)
-    .filter(function (a) { return a >= 0 && a <= 180; })
-    .sort(function (a, b) { return a - b; });
+  // 総合演習用
+  let randomQuestionsList = [];
+  let currentRandIndex = 0;
+  let totalRandQuestions = 0;
+  let timerInterval = null;
+  let startTimeStamp = 0;
+  let randMiss = 0;        // 【ブラッシュアップ】まちがえた回数（結果画面に出す）
+  let randLocked = false;  // 【ブラッシュアップ】正解のあと、次の問題が出るまでは受け付けない
+  let doneAngles = new Set();  // 【ブラッシュアップ】このモードでクリアした角度
 
-  var FAMOUS = [0, 30, 45, 60, 90];
-  var OBTUSE = [120, 135, 150, 180];
+  const MODE_ORDER = ['basic', 'slight', 'super', 'ultra', 'rand10', 'marathon'];
+  const MODE_NAMES = { basic: '基本モード', slight: 'ちょい発展', super: '超発展モード', ultra: '超超発展', rand10: '総合練習（ランダム10選）', marathon: '総合練習（51問マラソン）' };
 
-  function valueOf(angle, fn) {
-    var d = DATA[angle];
-    var v = d[fn];
-    return v === '定義なし' ? '定義されない' : v;
+  // 【ブラッシュアップ】元の並べかえ（sort と Math.random）は、かたよりが出る。きちんと混ぜる。
+  function shuffleArr(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
   }
 
-  /* ---------- ① 角度 → 値 ---------- */
-  function angleToValue(pool) {
-    var angle = Quiz.pick(pool);
-    var fn = Quiz.pick(['sin', 'cos', 'tan']);
-    var correct = valueOf(angle, fn);
-
-    // 同じ角の他の三角比、符号ちがい、よくある混同を誤答にする
-    var cands = [];
-    ['sin', 'cos', 'tan'].forEach(function (f) {
-      if (f !== fn) cands.push(valueOf(angle, f));
-    });
-    cands.push(correct.charAt(0) === '-' ? correct.slice(1) : '-' + correct);
-    ANGLES.forEach(function (a) { if (a !== angle) cands.push(valueOf(a, fn)); });
-
-    var choices = [correct];
-    Quiz.shuffle(cands).forEach(function (c) {
-      if (choices.length < 4 && c !== correct && choices.indexOf(c) < 0) choices.push(c);
-    });
-
-    return {
-      tag: angle > 90 ? '鈍角' : '鋭角・直角',
-      text: '次の値を求めなさい。',
-      math: fn + ' ' + angle + '°',
-      mathPlain: true,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: '単位円で考えます。点の座標は ( ' + DATA[angle].x + ' , ' + DATA[angle].y + ' )、r = ' + DATA[angle].r +
-        '。sin = y/r、cos = x/r、tan = y/x です。',
-      explain: fn + ' ' + angle + '° = ' + correct +
-        (correct === '定義されない' ? '（x = 0 なので y ÷ x が計算できません）' : '')
-    };
-  }
-
-  /* ---------- ② 値 → 角度 ---------- */
-  function valueToAngle(pool) {
-    var angle = Quiz.pick(pool.filter(function (a) {
-      return valueOf(a, 'sin') !== '定義されない';
-    }));
-    var fn = Quiz.pick(['sin', 'cos']);
-    var v = valueOf(angle, fn);
-
-    var choices = [angle + '°'];
-    Quiz.shuffle(ANGLES).forEach(function (a) {
-      if (choices.length < 4 && a !== angle && valueOf(a, fn) !== v && choices.indexOf(a + '°') < 0) {
-        choices.push(a + '°');
-      }
-    });
-
-    return {
-      tag: '逆に求める',
-      text: '0° ≦ θ ≦ 180° のとき、次を満たす θ を求めなさい。',
-      math: fn + ' θ = ' + v,
-      mathPlain: true,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: fn === 'sin' ? 'sin は 0°〜180° で 0 以上です。' : 'cos は 90° より大きい角で負になります。',
-      explain: fn + ' ' + angle + '° = ' + v + ' なので、θ = ' + angle + '° です。'
-    };
-  }
-
-  /* ---------- ③ 符号の判定 ---------- */
-  function signQuestion() {
-    var angle = Quiz.pick(ANGLES.filter(function (a) { return a !== 0 && a !== 90 && a !== 180; }));
-    var fn = Quiz.pick(['sin', 'cos', 'tan']);
-    var v = valueOf(angle, fn);
-    var sign = v.charAt(0) === '-' ? '負（マイナス）' : '正（プラス）';
-
-    return {
-      tag: '符号',
-      text: '0° < θ < 180° のとき、次の値は正・負のどちらですか。',
-      math: fn + ' ' + angle + '°',
-      mathPlain: true,
-      type: 'choice',
-      choices: ['正（プラス）', '負（マイナス）'],
-      correct: sign === '正（プラス）' ? 0 : 1,
-      noShuffle: true,
-      hint: '単位円で、点の x 座標と y 座標の符号を考えます。' +
-        '（' + angle + '° の点は x = ' + DATA[angle].x + '、y = ' + DATA[angle].y + '）',
-      explain: fn + ' ' + angle + '° = ' + v + ' なので ' + sign + ' です。'
-    };
-  }
-
-  function build(makers, pool, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(Quiz.pick(makers)(pool));
-    return out;
-  }
-
-  Quiz.start({
-    title: '三角比の値（総合）',
-    subtitle: '0°〜180° の sin・cos・tan を、値からも角度からも確かめよう。',
-    modes: [
-      { id: 'famous', group: '角度 → 値', name: '有名角（0°〜90°）', desc: '10問' },
-      { id: 'obtuse', group: '角度 → 値', name: '鈍角をふくむ（90°〜180°）', desc: '10問' },
-      { id: 'all', group: '角度 → 値', name: '0°〜180° 総合', desc: '12問' },
-      { id: 'rev', group: '値 → 角度', name: '角度を求める', desc: '10問' },
-      { id: 'sign', group: '符号', name: '正か負かを判定', desc: '10問' },
-      { id: 'final', group: '仕上げ', name: '総合テスト', desc: '全種類まぜて15問' }
-    ],
-    build: function (id) {
-      if (id === 'famous') return build([angleToValue], FAMOUS, 10);
-      if (id === 'obtuse') return build([angleToValue], OBTUSE.concat([90]), 10);
-      if (id === 'all') return build([angleToValue], ANGLES, 12);
-      if (id === 'rev') return build([valueToAngle], ANGLES, 10);
-      if (id === 'sign') {
-        var out = [];
-        for (var i = 0; i < 10; i++) out.push(signQuestion());
-        return out;
-      }
-      var mixed = build([angleToValue, valueToAngle], ANGLES, 10);
-      for (var j = 0; j < 5; j++) mixed.push(signQuestion());
-      return Quiz.shuffle(mixed);
+  // 【ブラッシュアップ】選択肢の作り方
+  //   元は、選択肢の残りをいつも同じ順の表から取っていたので、総合練習では毎回ほぼ
+  //   「0, 1, −1, 1/2, −1/2」が並び、tan 90° でも 0 が選択肢に出てこなかった。
+  //   まちがえやすい値（符号ちがい・sin と cos の取りちがえ・tan の逆数・0 と 定義なし）を先に入れる。
+  const TRIG_VALUES = ['0', '1', '-1', '1/2', '-1/2', '▲3/2', '-▲3/2', '1/▲2', '-1/▲2', '▲3', '-▲3', '1/▲3', '-1/▲3', '定義なし'];
+  const NEAR = {
+    '1/2': ['▲3/2', '1/▲2'], '▲3/2': ['1/2', '1/▲2'], '1/▲2': ['1/2', '▲3/2', '1'],
+    '▲3': ['1/▲3', '▲3/2'], '1/▲3': ['▲3', '1/2'], '1': ['0', '1/▲2', '▲3'],
+    '0': ['定義なし', '1', '-1'], '定義なし': ['0', '1']
+  };
+  function makeChoices(correct, n) {
+    const minus = correct.startsWith('-');
+    const abs = minus ? correct.slice(1) : correct;
+    const signed = (v) => (minus && v !== '0' && v !== '定義なし') ? '-' + v : v;
+    let traps = [];
+    if (correct !== '0' && correct !== '定義なし') traps.push(minus ? abs : '-' + abs);
+    traps = traps.concat(shuffleArr((NEAR[abs] || []).map(signed)));
+    traps = traps.concat(shuffleArr(TRIG_VALUES.slice()));
+    const choices = [correct];
+    for (const v of traps) {
+      if (choices.length >= n) break;
+      if (!choices.includes(v)) choices.push(v);
     }
-  });
-})();
+    return shuffleArr(choices);
+  }
+
+  // 数式成形フォーマッタ（マイナス独立制御＆タグの文字列漏れバグを完全防止）
+  function formatMathHtml(str) {
+    if (str === '定義なし' || !str) return str || '';
+    
+    let hasGlobalMinus = false;
+    let workingStr = str;
+
+    if (workingStr.startsWith('-')) {
+      hasGlobalMinus = true;
+      workingStr = workingStr.substring(1);
+    }
+
+    const processSqrt = (s) => {
+      if (s.includes('▲')) {
+        let inside = s.replace(/▲/g, '');
+        let localMinus = '';
+        if (inside.startsWith('-')) {
+          localMinus = '-';
+          inside = inside.substring(1);
+        }
+        return `${localMinus}<span class="math-sqrt-container"><span class="math-sqrt-symbol">√</span><span class="math-sqrt">${inside}</span></span>`;
+      }
+      return s;
+    };
+
+    let innerHtml = '';
+    if (workingStr.includes('/')) {
+      const parts = workingStr.split('/');
+      let numStr = parts[0];
+      let denStr = parts[1];
+      if (numStr.startsWith('-')) {
+        hasGlobalMinus = !hasGlobalMinus;
+        numStr = numStr.substring(1);
+      }
+      if (denStr.startsWith('-')) {
+        hasGlobalMinus = !hasGlobalMinus;
+        denStr = denStr.substring(1);
+      }
+      
+      const numeratorHTML = processSqrt(numStr);
+      const denominatorHTML = processSqrt(denStr);
+      innerHtml = `<span class="math-frac"><span class="num">${numeratorHTML}</span><span class="den">${denominatorHTML}</span></span>`;
+    } else {
+      innerHtml = processSqrt(workingStr);
+    }
+
+    if (hasGlobalMinus) {
+      return `<span class="math-expr-wrapper"><span class="math-minus-sign">－</span>${innerHtml}</span>`;
+    }
+    return `<span class="math-expr-wrapper">${innerHtml}</span>`;
+  }
+
+  function startMode(mode) {
+    currentMode = mode;
+    doneAngles = new Set();
+    window.scrollTo(0, 0);
+    document.getElementById('view-menu').classList.add('hidden');
+    document.getElementById('view-result').classList.add('hidden');
+    
+    if(mode === 'rand10' || mode === 'marathon') {
+      document.getElementById('view-quiz').classList.add('hidden');
+      document.getElementById('view-random').classList.remove('hidden');
+      buildRandomQuestions(mode);
+    } else {
+      document.getElementById('view-random').classList.add('hidden');
+      document.getElementById('view-quiz').classList.remove('hidden');
+      setupTabs(modes[mode]);
+      loadQuestion(modes[mode][0]);
+    }
+  }
+
+  function backToMenu() {
+    clearInterval(timerInterval);
+    document.getElementById('view-quiz').classList.add('hidden');
+    document.getElementById('view-random').classList.add('hidden');
+    document.getElementById('view-result').classList.add('hidden');
+    document.getElementById('view-menu').classList.remove('hidden');
+    if(animId) cancelAnimationFrame(animId);
+  }
+
+  function setupTabs(angles) {
+    const container = document.getElementById('tabs-container');
+    container.innerHTML = '';
+    angles.forEach(angle => {
+      const btn = document.createElement('button');
+      btn.className = 'tab';
+      btn.innerText = angle + '°';
+      btn.onclick = () => loadQuestion(angle);
+      btn.id = 'tab-' + angle;
+      container.appendChild(btn);
+    });
+  }
+
+  function loadQuestion(angle) {
+    currentAngle = angle;
+    selectedBoxId = null;
+    
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const activeTab = document.getElementById('tab-' + angle);
+    if(activeTab) activeTab.classList.add('active');
+
+    ['box-px', 'box-py', 'box-r'].forEach(id => {
+      const box = document.getElementById(id);
+      box.innerHTML = '';
+      box.className = 'drop-box';
+      box.removeAttribute('data-value');
+    });
+    // 【ブラッシュアップ】はじめから x の枠をえらんでおく（カードをタップするだけで入る）
+    selectBox('box-px');
+    document.getElementById('angle-clear').classList.add('hidden');
+
+    const data = anglesData[angle];
+    
+    // 【修正：正解保証アルゴリズム】必ずx, y, rの正解データを最初に確定させる
+    // 【ブラッシュアップ】45° や 90° では同じ値（1）が 2 枚出ていたので、1 枚にまとめる
+    let pool = [...new Set([data.x, data.y, data.r])];
+    
+    // 足りないダミー選択肢をユニークに補填
+    const defaults = ['1', '-1', '2', '▲2', '▲3', '-▲3', '0'];
+    for (let i = 0; i < defaults.length; i++) {
+      if (pool.length >= 6) break;
+      if (!pool.includes(defaults[i])) {
+        pool.push(defaults[i]);
+      }
+    }
+    // 完全にシャッフル
+    shuffleArr(pool);
+
+    const chipContainer = document.getElementById('coords-chips');
+    chipContainer.innerHTML = '';
+    pool.forEach(val => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = formatMathHtml(val);
+      chip.draggable = true;
+      chip.ondragstart = (e) => { e.dataTransfer.setData('text', val); };
+      chip.onclick = () => handleChipTap(val);
+      chipContainer.appendChild(chip);
+    });
+
+    setupTrigOptions('sin', data.sin);
+    setupTrigOptions('cos', data.cos);
+    setupTrigOptions('tan', data.tan);
+
+    startCanvasAnimation(angle);
+  }
+
+  function setupTrigOptions(type, correctVal) {
+    const container = document.getElementById('opts-' + type);
+    container.innerHTML = '';
+
+    let choices = makeChoices(correctVal, 4);
+
+    choices.forEach(val => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = formatMathHtml(val);
+      if (val === '定義なし') btn.classList.add('long');
+      // 【ブラッシュアップ】元は正解のあとにほかを押すと、正解の印が消えて「まちがい」になった。
+      //   正解したらその行は固定し、まちがえた選択肢は押せなくする。
+      btn.onclick = () => {
+        if (container.querySelector('.correct-ans')) return;
+        if(val === correctVal) {
+          btn.classList.add('correct-ans');
+        } else {
+          btn.classList.add('wrong-ans');
+          btn.disabled = true;
+        }
+        checkCoordsCorrectness();
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  // 【ブラッシュアップ】座標・r・sin・cos・tan が全部そろったら、クリアを知らせる
+  function checkAngleClear() {
+    const boxesOk = ['box-px', 'box-py', 'box-r'].every(id => document.getElementById(id).classList.contains('correct'));
+    const trigOk = ['sin', 'cos', 'tan'].every(t => document.querySelector('#opts-' + t + ' .correct-ans'));
+    const panel = document.getElementById('angle-clear');
+    if (!boxesOk || !trigOk || !panel.classList.contains('hidden')) return;
+
+    doneAngles.add(currentAngle);
+    const tab = document.getElementById('tab-' + currentAngle);
+    if (tab) tab.classList.add('done');
+
+    const list = modes[currentMode];
+    const rest = list.filter(a => !doneAngles.has(a));
+    const msg = document.getElementById('angle-clear-msg');
+    const btns = document.getElementById('angle-clear-btns');
+    btns.innerHTML = '';
+    const addBtn = (label, fn, cls) => {
+      const b = document.createElement('button');
+      b.className = cls; b.textContent = label; b.onclick = fn;
+      btns.appendChild(b);
+    };
+    if (rest.length) {
+      msg.textContent = '🎉 ' + currentAngle + '° かんぺき！（のこり ' + rest.length + ' こ）';
+      const next = list.slice(list.indexOf(currentAngle) + 1).find(a => !doneAngles.has(a)) ?? rest[0];
+      addBtn('つぎの角度（' + next + '°）へ ▶', () => { loadQuestion(next); window.scrollTo(0, 0); }, 'btn');
+    } else {
+      msg.textContent = '🏆 ' + MODE_NAMES[currentMode] + ' の角度をぜんぶクリア！';
+      const nextMode = MODE_ORDER[MODE_ORDER.indexOf(currentMode) + 1];
+      addBtn('つぎは「' + MODE_NAMES[nextMode] + '」へ ▶', () => startMode(nextMode), 'btn');
+      addBtn('このモードをもう一度', () => startMode(currentMode), 'btn btn-sub');
+      addBtn('モードをえらび直す', backToMenu, 'btn btn-sub');
+    }
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function selectBox(id) {
+    if (document.getElementById(id).classList.contains('correct')) return;   // 【ブラッシュアップ】正解した枠はそのまま
+    ['box-px', 'box-py', 'box-r'].forEach(b => document.getElementById(b).classList.remove('selected'));
+    selectedBoxId = id;
+    document.getElementById(id).classList.add('selected');
+  }
+
+  function handleChipTap(val) {
+    // 【ブラッシュアップ】元は枠をえらばずにカードを押すと何も起きなかった。空いている枠に入れる。
+    if(!selectedBoxId) {
+      const open = ['box-px', 'box-py', 'box-r'].find(id => !document.getElementById(id).classList.contains('correct'));
+      if (!open) return;
+      selectBox(open);
+    }
+    const box = document.getElementById(selectedBoxId);
+    box.setAttribute('data-value', val);
+    box.innerHTML = formatMathHtml(val);
+    box.classList.add('filled');
+    checkCoordsCorrectness();
+    // 【ブラッシュアップ】正解なら次の空いた枠へ。ちがったら同じ枠のまま入れ直せる
+    if (box.classList.contains('correct')) {
+      const next = ['box-px', 'box-py', 'box-r'].find(id => !document.getElementById(id).classList.contains('filled'));
+      selectedBoxId = null;
+      if (next) selectBox(next);
+    } else {
+      box.classList.add('selected');
+    }
+  }
+
+  function allowDrop(e) { e.preventDefault(); }
+  function handleDrop(e, boxId) {
+    e.preventDefault();
+    const val = e.dataTransfer.getData('text');
+    const box = document.getElementById(boxId);
+    if (box.classList.contains('correct')) return;   // 【ブラッシュアップ】正解した枠はそのまま
+    box.setAttribute('data-value', val);
+    box.innerHTML = formatMathHtml(val);
+    box.classList.add('filled');
+    checkCoordsCorrectness();
+  }
+
+  function checkCoordsCorrectness() {
+    const data = anglesData[currentAngle];
+    const bx = document.getElementById('box-px');
+    const by = document.getElementById('box-py');
+    const br = document.getElementById('box-r');
+
+    if(bx.classList.contains('filled')) {
+      bx.className = (bx.getAttribute('data-value') === data.x) ? 'drop-box filled correct' : 'drop-box filled wrong';
+    }
+    if(by.classList.contains('filled')) {
+      by.className = (by.getAttribute('data-value') === data.y) ? 'drop-box filled correct' : 'drop-box filled wrong';
+    }
+    if(br.classList.contains('filled')) {
+      br.className = (br.getAttribute('data-value') === data.r) ? 'drop-box filled correct' : 'drop-box filled wrong';
+    }
+    checkAngleClear();
+  }
+
+  function openHintModal() {
+    const data = anglesData[currentAngle];
+    document.getElementById('modal-angle-title').innerText = `${currentAngle}° の答え一覧`;
+    document.getElementById('hint-x').innerHTML = formatMathHtml(data.x);
+    document.getElementById('hint-y').innerHTML = formatMathHtml(data.y);
+    document.getElementById('hint-r').innerHTML = formatMathHtml(data.r);
+    document.getElementById('hint-sin').innerHTML = formatMathHtml(data.sin);
+    document.getElementById('hint-cos').innerHTML = formatMathHtml(data.cos);
+    document.getElementById('hint-tan').innerHTML = formatMathHtml(data.tan);
+    document.getElementById('hint-modal').classList.remove('hidden');
+  }
+
+  function closeHintModal() {
+    document.getElementById('hint-modal').classList.add('hidden');
+  }
+
+  function startCanvasAnimation(targetDegree) {
+    if(animId) cancelAnimationFrame(animId);
+    animTargetAngle = targetDegree;
+    animStartTime = null;
+    animId = requestAnimationFrame(updateAnimation);   // 【ブラッシュアップ】角度を続けて切りかえても、前の動きを止められるように
+  }
+
+  function updateAnimation(timestamp) {
+    if (!animStartTime) animStartTime = timestamp;
+    const elapsed = timestamp - animStartTime;
+    const progress = Math.min(elapsed / ANIM_DURATION, 1.0);
+
+    animCurrentAngle = animTargetAngle * progress;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    drawRadius(animCurrentAngle);
+
+    if (progress < 1.0) {
+      animId = requestAnimationFrame(updateAnimation);
+    } else {
+      drawPointsAndLines(animTargetAngle);
+    }
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(15, 170); ctx.lineTo(325, 170); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(170, 15); ctx.lineTo(170, 325); ctx.stroke();
+    // 【ブラッシュアップ】軸の名前と原点を書く
+    ctx.fillStyle = '#6b7280';
+    ctx.font = 'italic bold 16px serif';
+    ctx.fillText('x', 316, 162);
+    ctx.fillText('y', 178, 26);
+    ctx.fillText('O', 154, 188);
+  }
+
+  function drawRadius(deg) {
+    const rad = -deg * Math.PI / 180;
+    const rLen = 120;
+    const x = 170 + rLen * Math.cos(rad);
+    const y = 170 + rLen * Math.sin(rad);
+
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(170, 170);
+    ctx.arc(170, 170, 25, 0, rad, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(170, 170);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function drawPointsAndLines(deg) {
+    const rad = -deg * Math.PI / 180;
+    const rLen = 120;
+    const x = 170 + rLen * Math.cos(rad);
+    const y = 170 + rLen * Math.sin(rad);
+
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, 170); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(170, y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = '#1f2937';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.fillText('P', x + 8, y - 8);
+  }
+
+  function buildRandomQuestions(mode) {
+    randomQuestionsList = [];
+    const allAngles = Object.keys(anglesData);
+    const types = ['sin', 'cos', 'tan'];
+
+    allAngles.forEach(ang => {
+      types.forEach(ty => {
+        randomQuestionsList.push({ angle: ang, type: ty, correct: anglesData[ang][ty] });
+      });
+    });
+
+    shuffleArr(randomQuestionsList);
+
+    if (mode === 'rand10') {
+      randomQuestionsList = randomQuestionsList.slice(0, 10);
+      document.getElementById('result-title-text').innerText = 'タイムアタック(10問)クリア！';
+    } else {
+      document.getElementById('result-title-text').innerText = '51問全問マラソン制覇！';
+    }
+
+    totalRandQuestions = randomQuestionsList.length;
+    currentRandIndex = 0;
+    randMiss = 0;
+
+    startTimeStamp = performance.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 100);
+
+    showNextRandomQuestion();
+  }
+
+  function updateTimer() {
+    const elapsed = performance.now() - startTimeStamp;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    const ms = Math.floor((elapsed % 1000) / 100);
+    
+    const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${ms}`;
+    document.getElementById('rand-timer').innerText = timeStr;
+  }
+
+  function showNextRandomQuestion() {
+    if (currentRandIndex >= totalRandQuestions) {
+      clearInterval(timerInterval);
+      const finalTime = document.getElementById('rand-timer').innerText;
+      document.getElementById('view-random').classList.add('hidden');
+      document.getElementById('view-result').classList.remove('hidden');
+      document.getElementById('result-final-time').innerText = finalTime;
+      document.getElementById('result-miss').innerText = randMiss === 0 ? '✨ ノーミス！' : 'まちがえた回数：' + randMiss + ' 回';
+      document.getElementById('btn-result-next').classList.toggle('hidden', currentMode !== 'rand10');
+      return;
+    }
+
+    document.getElementById('rand-progress-text').innerText = `問題 ${currentRandIndex + 1} / ${totalRandQuestions}`;
+    const progressPercent = (currentRandIndex / totalRandQuestions) * 100;
+    document.getElementById('rand-progress-bar').style.width = progressPercent + '%';
+
+    const q = randomQuestionsList[currentRandIndex];
+    document.getElementById('rand-question').innerHTML = `${q.type} ${q.angle}° = <span style="color:#f59e0b;">?</span>`;
+
+    let choices = makeChoices(q.correct, 6);
+    randLocked = false;
+
+    const container = document.getElementById('rand-options');
+    container.innerHTML = '';
+    choices.forEach(val => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = formatMathHtml(val);
+      // 【ブラッシュアップ】元は正解を 2 回続けて押すと、次の問題がとばされた
+      btn.onclick = () => {
+        if (randLocked || btn.disabled) return;
+        if(val === q.correct) {
+          randLocked = true;
+          btn.classList.add('correct-ans');
+          currentRandIndex++;
+          setTimeout(() => { showNextRandomQuestion(); }, 200);
+        } else {
+          btn.classList.add('wrong-ans');
+          btn.disabled = true;
+          randMiss++;
+        }
+      };
+      container.appendChild(btn);
+    });
+  }
 </script>
 </body>
 </html>
