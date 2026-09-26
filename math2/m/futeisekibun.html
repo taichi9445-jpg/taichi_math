@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+  <!--
+    数学Ⅱ 09. 不定積分練習（不定積分練習クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../../assets/port.css">
+  <script src="../../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不定積分練習クイズ</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            color: #333;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+        }
+
+        .mode-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .mode-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3rem;
+        }
+
+        .mode-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+
+        .progress {
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .score {
+            font-weight: bold;
+            color: #38a169;
+        }
+
+        .question-card {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #2d3748;
+            text-align: center;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .option.wrong {
+            border-color: #e53e3e;
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .btn-retry {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-retry:hover {
+            background: #dd6b20;
+        }
+
+        .result-message {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .result-wrong {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .result-correct {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .final-result {
+            text-align: center;
+            padding: 40px;
+            background: #f7fafc;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .final-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+
+        .fraction span:first-child {
+            border-bottom: 1px solid currentColor;
+            padding-bottom: 2px;
+        }
+
+        .fraction span:last-child {
+            padding-top: 2px;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .enter-hint {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .input-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .input-field {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .input-field.coefficient {
+            width: 120px;
+            font-size: 2rem;
+        }
+
+        .input-field.power {
+            width: 50px;
+        }
+
+        .superscript {
+            vertical-align: super;
+            font-size: 0.8em;
+        }
+
+        .math-symbol {
+            font-size: 2.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .x-symbol {
+            font-size: 2.4rem;
+            font-weight: bold;
+            color: #2d3748;
+            font-style: italic;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .input-field.correct {
+            border-color: #38a169;
+            background: #c6f6d5;
+        }
+
+        .input-field.wrong {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .fraction-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fraction-part {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .fraction-line {
+            width: 60px;
+            height: 2px;
+            background: #333;
+        }
+
+        .input-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; }
+    .container { padding: 24px 20px; }
+    .title { font-size: min(2.3rem, 7vw); white-space: nowrap; margin: 0 0 6px; }
+    .subtitle { color: var(--u-sub); font-weight: 700; }
+    .mode-selection { gap: 12px; }
+    .mode-card { text-align: left; }
+    .mode-card h3 { color: var(--u-title); }
+    .mode-card p { color: var(--u-sub); font-weight: 700; opacity: 1; }
+    .quiz-header { background: var(--u-soft-yellow); border: 3px dashed #fde68a; border-radius: 16px; padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
+    .progress { color: var(--u-ink); }
+    .score { color: var(--u-accent-text); }
+    .timer { background: #fff; color: var(--u-accent-text); padding: 6px 14px; }
+    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; }
+    .question { color: var(--u-ink); font-size: 1.6rem; }
+    .option { font-size: 1.25rem; font-weight: 700; }
+    .result-message { border-radius: 16px; }
+    .result-correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .result-wrong { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .rule-hint { margin-top: 6px; font-size: 0.95rem; color: var(--u-title); }
+    .controls { flex-wrap: wrap; gap: 8px; }
+    .x-symbol, .math-symbol { color: var(--u-ink); }
+    .input-field { border-color: var(--u-line-dark); border-radius: 10px; color: var(--u-ink); }
+    .input-field.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); }
+    .input-field.wrong { background: var(--u-ng-soft); border-color: var(--u-ng-line); }
+    .fraction-line { background: var(--u-ink); }
+    .final-result { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
+    .final-score { color: var(--u-title); white-space: nowrap; font-size: min(2rem, 7.5vw); }
+    #finalMessage { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 16px auto 0; }
+    .result-nav button, .result-nav a.next { padding: 12px; margin: 0; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    .result-nav a.next { display: block; color: #fff; text-decoration: none; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 14px 10px; }
+      .question-card { padding: 16px 10px; }
+      .question { font-size: 1.35rem; }
+      .options { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .option { padding: 12px 6px; font-size: 1.1rem; }
+      .input-form { gap: 4px; }
+      .fraction-input { flex-wrap: wrap; justify-content: center; gap: 4px; }
+      .input-field { width: 46px; padding: 6px 2px; }
+      .input-field.coefficient { width: 54px; font-size: 1.3rem; }
+      .input-field.power { width: 38px; }
+      .fraction-line { width: 54px; }
+      .x-symbol, .math-symbol { font-size: 1.6rem; }
+      .controls .btn { padding: 10px 14px; }
+    }
+  
+  </style>
+</head>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">📚 不定積分練習クイズ</h1>
+            <p class="subtitle">3つのモードで不定積分をマスターしよう！</p>
+        </div>
+
+        <div id="modeSelection" class="mode-selection">
+            <button class="mode-card" onclick="startQuiz('random10')">
+                <h3>🎯 ランダム10選モード</h3>
+                <p>やさしい問題から順に、10問に挑戦</p>
+            </button>
+            <button class="mode-card" onclick="startQuiz('random100')">
+                <h3>📖 100問ランダムモード</h3>
+                <p>全<span class="pool-count">100</span>問をランダム順で挑戦</p>
+            </button>
+            <button class="mode-card" onclick="startQuiz('challenge')">
+                <h3>🔥 鬼連チャンモード</h3>
+                <p>間違えたら即終了！何問連続正解できる？</p>
+            </button>
+            <button class="mode-card" onclick="startQuiz('input')">
+                <h3>✏️ 入力練習モード</h3>
+                <p>係数や次数を直接入力して練習</p>
+            </button>
+        </div>
+
+        <div id="quizContainer" class="quiz-container">
+            <div class="quiz-header">
+                <div class="progress" id="progress">問題 1/10</div>
+                <div class="timer" id="timer">00:00</div>
+                <div class="score" id="score">正解: 0問</div>
+            </div>
+
+            <div class="question-card">
+                <div class="question" id="question">∫ x dx = ?</div>
+                <div class="options" id="options"></div>
+                <div id="inputContainer" class="input-form hidden"></div>
+            </div>
+
+            <div id="resultMessage" class="result-message hidden"></div>
+            <div id="enterHint" class="enter-hint hidden">Enterキーで次の問題へ</div>
+
+            <div class="controls">
+                <button id="checkBtn" class="btn btn-primary hidden" onclick="checkAnswer()">答えをチェック</button>
+                <button id="nextBtn" class="btn btn-secondary hidden" onclick="nextQuestion()">次の問題</button>
+                <button id="retryBtn" class="btn btn-retry hidden" onclick="retryQuestion()">もう一度挑戦</button>
+                <button id="showAnswerBtn" class="btn btn-secondary" onclick="showAnswer()">答えを見る</button>
+                <button id="backBtn" class="btn btn-secondary" onclick="backToMenu()">メニューに戻る</button>
+            </div>
+        </div>
+
+        <div id="finalResult" class="final-result hidden">
+            <div class="final-score" id="finalScore">お疲れ様でした！</div>
+            <div id="finalMessage" style="white-space: pre-line;"></div>
+            <!-- 【ブラッシュアップ】同じモード・次の教材・ほかの教材も選べるようにした -->
+            <div class="result-nav">
+                <button class="again" onclick="startQuiz(currentMode)">同じモードでもう一度</button>
+                <button class="plain" onclick="backToMenu()">モードをえらび直す</button>
+                <a class="next" href="teisekibun.html">つぎは「定積分」へ ▶</a>
+                <a href="../remake.html">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 難易度別問題プール
+        const easyQuestions = [
+            {q: "∫ x dx", options: ["x + C", "<div class='fraction'><span>x²</span><span>2</span></div> + C", "x² + C", "2x + C"], correct: 1},
+            {q: "∫ x² dx", options: ["2x + C", "<div class='fraction'><span>x³</span><span>3</span></div> + C", "x³ + C", "3x² + C"], correct: 1},
+            {q: "∫ 1 dx", options: ["1 + C", "x + C", "0", "C"], correct: 1},
+            {q: "∫ 2x dx", options: ["2 + C", "x² + C", "<div class='fraction'><span>x²</span><span>2</span></div> + C", "2x² + C"], correct: 1},
+            {q: "∫ 3x² dx", options: ["6x + C", "x³ + C", "3x³ + C", "9x + C"], correct: 1},
+            {q: "∫ 5 dx", options: ["5 + C", "x + C", "5x + C", "0"], correct: 2},
+            {q: "∫ 6x dx", options: ["6 + C", "6x² + C", "3x² + C", "x² + C"], correct: 2},
+            {q: "∫ 4x³ dx", options: ["12x² + C", "4x⁴ + C", "16x² + C", "x⁴ + C"], correct: 3}
+        ];
+
+        const mediumQuestions = [
+            {q: "∫ (x + 1) dx", options: ["x² + 1 + C", "2x + 1 + C", "<div class='fraction'><span>x²</span><span>2</span></div> + x + C", "x + C"], correct: 2},
+            {q: "∫ (2x + 3) dx", options: ["2x² + 3x + C", "x² + 3x + C", "4x + 3 + C", "2 + C"], correct: 1},
+            {q: "∫ (x² + x) dx", options: ["2x + 1 + C", "x³ + x² + C", "<div class='fraction'><span>x³</span><span>3</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C", "3x² + x + C"], correct: 2},
+            {q: "∫ (3x + 2) dx", options: ["3x² + 2x + C", "6x + 2 + C", "3 + C", "<div class='fraction'><span>3x²</span><span>2</span></div> + 2x + C"], correct: 3},
+            {q: "∫ (x² - x) dx", options: ["2x - 1 + C", "<div class='fraction'><span>x³</span><span>3</span></div> - <div class='fraction'><span>x²</span><span>2</span></div> + C", "x³ - x² + C", "3x² - x + C"], correct: 1},
+            {q: "∫ (4x - 1) dx", options: ["4x² - x + C", "8x - 1 + C", "2x² - x + C", "4 + C"], correct: 2},
+            {q: "∫ (5x + 3) dx", options: ["5x² + 3x + C", "10x + 3 + C", "5 + C", "<div class='fraction'><span>5x²</span><span>2</span></div> + 3x + C"], correct: 3},
+            {q: "∫ (x³ + x) dx", options: ["3x² + 1 + C", "x⁴ + x² + C", "4x³ + x + C", "<div class='fraction'><span>x⁴</span><span>4</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C"], correct: 3}
+        ];
+
+        const hardQuestions = [
+            {q: "∫ (x² + 2x + 1) dx", options: ["2x + 2 + C", "x³ + 2x² + x + C", "<div class='fraction'><span>x³</span><span>3</span></div> + x² + x + C", "3x² + 4x + 1 + C"], correct: 2},
+            {q: "∫ (2x³ + x²) dx", options: ["6x² + 2x + C", "2x⁴ + x³ + C", "8x² + 3x + C", "<div class='fraction'><span>x⁴</span><span>2</span></div> + <div class='fraction'><span>x³</span><span>3</span></div> + C"], correct: 3},
+            {q: "∫ (x⁴ + x²) dx", options: ["4x³ + 2x + C", "<div class='fraction'><span>x⁵</span><span>5</span></div> + <div class='fraction'><span>x³</span><span>3</span></div> + C", "x⁵ + x³ + C", "5x⁴ + 3x² + C"], correct: 1},
+            {q: "∫ (3x² + 2x - 1) dx", options: ["6x + 2 + C", "3x³ + 2x² - x + C", "x³ + x² - x + C", "9x² + 2x - 1 + C"], correct: 2},
+            {q: "∫ (x³ - 2x² + x) dx", options: ["3x² - 4x + 1 + C", "x⁴ - 2x³ + x² + C", "4x³ - 6x² + x + C", "<div class='fraction'><span>x⁴</span><span>4</span></div> - <div class='fraction'><span>2x³</span><span>3</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C"], correct: 3},
+            {q: "∫ (2x⁴ + 3x³) dx", options: ["8x³ + 9x² + C", "2x⁵ + 3x⁴ + C", "<div class='fraction'><span>2x⁵</span><span>5</span></div> + <div class='fraction'><span>3x⁴</span><span>4</span></div> + C", "10x⁴ + 12x³ + C"], correct: 2},
+            {q: "∫ (x⁵ - x³ + x) dx", options: ["5x⁴ - 3x² + 1 + C", "x⁶ - x⁴ + x² + C", "6x⁵ - 4x³ + x + C", "<div class='fraction'><span>x⁶</span><span>6</span></div> - <div class='fraction'><span>x⁴</span><span>4</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C"], correct: 3},
+            {q: "∫ (4x³ - 3x² + 2x - 1) dx", options: ["12x² - 6x + 2 + C", "4x⁴ - 3x³ + 2x² - x + C", "16x² - 9x + 2 + C", "x⁴ - x³ + x² - x + C"], correct: 3}
+        ];
+
+        // 入力モード用問題プール
+        const inputQuestions = [
+            {q: "∫ x dx", answer: {type: "fraction", numerator: "x^2", denominator: "2"}},
+            {q: "∫ x² dx", answer: {type: "fraction", numerator: "x^3", denominator: "3"}},
+            {q: "∫ 2x dx", answer: {type: "simple", coefficient: "1", power: "2"}},
+            {q: "∫ 3x² dx", answer: {type: "simple", coefficient: "1", power: "3"}},
+            {q: "∫ 5 dx", answer: {type: "simple", coefficient: "5", power: "1"}},
+            {q: "∫ 6x dx", answer: {type: "simple", coefficient: "3", power: "2"}},
+            {q: "∫ 4x³ dx", answer: {type: "simple", coefficient: "1", power: "4"}},
+            {q: "∫ (2x + 3) dx", answer: {type: "polynomial", term1: {numerator: "x^2", denominator: "1"}, term2: {coefficient: "3"}}},
+            {q: "∫ (x² + 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "1", power: "2"}}},   // 【ブラッシュアップ】2 つ目の項は x²
+            {q: "∫ (3x + 2) dx", answer: {type: "polynomial", term1: {numerator: "3x^2", denominator: "2"}, term2: {coefficient: "2"}}},
+            {q: "∫ (x² - 2x) dx", answer: {type: "polynomial", term1: {numerator: "x^3", denominator: "3"}, term2: {coefficient: "-1", power: "2"}}},   // 【ブラッシュアップ】2 つ目の項は x²
+            {q: "∫ (4x - 2) dx", answer: {type: "polynomial", term1: {numerator: "2x^2", denominator: "1"}, term2: {coefficient: "-2"}}},
+            {q: "∫ x⁴ dx", answer: {type: "fraction", numerator: "x^5", denominator: "5"}},
+            {q: "∫ x⁵ dx", answer: {type: "fraction", numerator: "x^6", denominator: "6"}},
+            {q: "∫ 7x² dx", answer: {type: "fraction", numerator: "7x^3", denominator: "3"}},
+            {q: "∫ 8x³ dx", answer: {type: "simple", coefficient: "2", power: "4"}},
+            {q: "∫ (5x + 3) dx", answer: {type: "polynomial", term1: {numerator: "5x^2", denominator: "2"}, term2: {coefficient: "3"}}},
+            {q: "∫ (6x - 2) dx", answer: {type: "polynomial", term1: {numerator: "3x^2", denominator: "1"}, term2: {coefficient: "-2"}}},
+            {q: "∫ 9x² dx", answer: {type: "simple", coefficient: "3", power: "3"}},
+            {q: "∫ 10x dx", answer: {type: "simple", coefficient: "5", power: "2"}}
+        ];
+
+        // 全問題プール（他のモード用）
+        const questionPool = [
+            {q: "∫ 1 dx", options: ["x + C", "1 + C", "0", "C"], correct: 0},
+            {q: "∫ 2x dx", options: ["x² + C", "2 + C", "<div class='fraction'><span>x²</span><span>2</span></div> + C", "2x² + C"], correct: 0},
+            {q: "∫ 3x² dx", options: ["x³ + C", "6x + C", "3x³ + C", "9x + C"], correct: 0},
+            {q: "∫ 4x³ dx", options: ["x⁴ + C", "12x² + C", "4x⁴ + C", "16x² + C"], correct: 0},
+            {q: "∫ 5 dx", options: ["5x + C", "5 + C", "x + C", "0"], correct: 0},
+            {q: "∫ (x + 1) dx", options: ["<div class='fraction'><span>x²</span><span>2</span></div> + x + C", "x² + 1 + C", "2x + 1 + C", "x + C"], correct: 0},
+            {q: "∫ (2x + 3) dx", options: ["x² + 3x + C", "2x² + 3x + C", "4x + 3 + C", "2 + C"], correct: 0},
+            {q: "∫ (x² + x) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C", "2x + 1 + C", "x³ + x² + C", "3x² + x + C"], correct: 0},
+            {q: "∫ (x² - x) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - <div class='fraction'><span>x²</span><span>2</span></div> + C", "2x - 1 + C", "x³ - x² + C", "3x² - x + C"], correct: 0},
+            {q: "∫ x⁴ dx", options: ["<div class='fraction'><span>x⁵</span><span>5</span></div> + C", "4x³ + C", "x⁵ + C", "5x⁴ + C"], correct: 0},
+            {q: "∫ x⁵ dx", options: ["<div class='fraction'><span>x⁶</span><span>6</span></div> + C", "5x⁴ + C", "x⁶ + C", "6x⁵ + C"], correct: 0},
+            {q: "∫ 6x dx", options: ["3x² + C", "6 + C", "6x² + C", "x² + C"], correct: 0},
+            {q: "∫ 7x² dx", options: ["<div class='fraction'><span>7x³</span><span>3</span></div> + C", "14x + C", "7x³ + C", "21x + C"], correct: 0},
+            {q: "∫ 8x³ dx", options: ["2x⁴ + C", "24x² + C", "8x⁴ + C", "32x² + C"], correct: 0},
+            {q: "∫ (3x + 2) dx", options: ["<div class='fraction'><span>3x²</span><span>2</span></div> + 2x + C", "3x² + 2x + C", "6x + 2 + C", "3 + C"], correct: 0},
+            {q: "∫ (4x - 1) dx", options: ["2x² - x + C", "4x² - x + C", "8x - 1 + C", "4 + C"], correct: 0},
+            {q: "∫ (x² + 2x + 1) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + x² + x + C", "2x + 2 + C", "x³ + 2x² + x + C", "3x² + 4x + 1 + C"], correct: 0},
+            {q: "∫ (x² - 2x + 1) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - x² + x + C", "2x - 2 + C", "x³ - 2x² + x + C", "3x² - 4x + 1 + C"], correct: 0},
+            {q: "∫ (2x² + x) dx", options: ["<div class='fraction'><span>2x³</span><span>3</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C", "4x + 1 + C", "2x³ + x² + C", "6x² + x + C"], correct: 0},
+            {q: "∫ (3x² - x) dx", options: ["x³ - <div class='fraction'><span>x²</span><span>2</span></div> + C", "6x - 1 + C", "3x³ - x² + C", "9x² - x + C"], correct: 0},
+            {q: "∫ x⁶ dx", options: ["<div class='fraction'><span>x⁷</span><span>7</span></div> + C", "6x⁵ + C", "x⁷ + C", "7x⁶ + C"], correct: 0},
+            {q: "∫ 9x dx", options: ["<div class='fraction'><span>9x²</span><span>2</span></div> + C", "9 + C", "9x² + C", "18x + C"], correct: 0},
+            {q: "∫ 10x² dx", options: ["<div class='fraction'><span>10x³</span><span>3</span></div> + C", "20x + C", "10x³ + C", "30x + C"], correct: 0},
+            {q: "∫ (5x + 3) dx", options: ["<div class='fraction'><span>5x²</span><span>2</span></div> + 3x + C", "5x² + 3x + C", "10x + 3 + C", "5 + C"], correct: 0},
+            {q: "∫ (6x - 2) dx", options: ["3x² - 2x + C", "6x² - 2x + C", "12x - 2 + C", "6 + C"], correct: 0},
+            {q: "∫ (x³ + x) dx", options: ["<div class='fraction'><span>x⁴</span><span>4</span></div> + <div class='fraction'><span>x²</span><span>2</span></div> + C", "3x² + 1 + C", "x⁴ + x² + C", "4x³ + x + C"], correct: 0},
+            {q: "∫ (x³ - x) dx", options: ["<div class='fraction'><span>x⁴</span><span>4</span></div> - <div class='fraction'><span>x²</span><span>2</span></div> + C", "3x² - 1 + C", "x⁴ - x² + C", "4x³ - x + C"], correct: 0},
+            {q: "∫ (2x³ + x²) dx", options: ["<div class='fraction'><span>x⁴</span><span>2</span></div> + <div class='fraction'><span>x³</span><span>3</span></div> + C", "6x² + 2x + C", "2x⁴ + x³ + C", "8x² + 3x + C"], correct: 0},
+            {q: "∫ (x⁴ + x²) dx", options: ["<div class='fraction'><span>x⁵</span><span>5</span></div> + <div class='fraction'><span>x³</span><span>3</span></div> + C", "4x³ + 2x + C", "x⁵ + x³ + C", "5x⁴ + 3x² + C"], correct: 0},
+            {q: "∫ 12x dx", options: ["6x² + C", "12 + C", "12x² + C", "24x + C"], correct: 0},
+            {q: "∫ 15x² dx", options: ["5x³ + C", "30x + C", "15x³ + C", "45x + C"], correct: 0},
+            {q: "∫ (7x + 4) dx", options: ["<div class='fraction'><span>7x²</span><span>2</span></div> + 4x + C", "7x² + 4x + C", "14x + 4 + C", "7 + C"], correct: 0},
+            {q: "∫ (8x - 3) dx", options: ["4x² - 3x + C", "8x² - 3x + C", "16x - 3 + C", "8 + C"], correct: 0},
+            {q: "∫ (x² + 3x + 2) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + <div class='fraction'><span>3x²</span><span>2</span></div> + 2x + C", "2x + 3 + C", "x³ + 3x² + 2x + C", "3x² + 6x + 2 + C"], correct: 0},
+            {q: "∫ (x² - 3x + 2) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - <div class='fraction'><span>3x²</span><span>2</span></div> + 2x + C", "2x - 3 + C", "x³ - 3x² + 2x + C", "3x² - 6x + 2 + C"], correct: 0},
+            {q: "∫ (3x² + 2x) dx", options: ["x³ + x² + C", "6x + 2 + C", "3x³ + 2x² + C", "9x² + 2x + C"], correct: 0},
+            {q: "∫ (4x² - 2x) dx", options: ["<div class='fraction'><span>4x³</span><span>3</span></div> - x² + C", "8x - 2 + C", "4x³ - 2x² + C", "12x² - 2x + C"], correct: 0},
+            {q: "∫ x⁷ dx", options: ["<div class='fraction'><span>x⁸</span><span>8</span></div> + C", "7x⁶ + C", "x⁸ + C", "8x⁷ + C"], correct: 0},
+            {q: "∫ 18x dx", options: ["9x² + C", "18 + C", "18x² + C", "36x + C"], correct: 0},
+            {q: "∫ 20x² dx", options: ["<div class='fraction'><span>20x³</span><span>3</span></div> + C", "40x + C", "20x³ + C", "60x + C"], correct: 0},
+            {q: "∫ (9x + 5) dx", options: ["<div class='fraction'><span>9x²</span><span>2</span></div> + 5x + C", "9x² + 5x + C", "18x + 5 + C", "9 + C"], correct: 0},
+            {q: "∫ (10x - 4) dx", options: ["5x² - 4x + C", "10x² - 4x + C", "20x - 4 + C", "10 + C"], correct: 0},
+            {q: "∫ (x³ + 2x²) dx", options: ["<div class='fraction'><span>x⁴</span><span>4</span></div> + <div class='fraction'><span>2x³</span><span>3</span></div> + C", "3x² + 4x + C", "x⁴ + 2x³ + C", "4x³ + 6x² + C"], correct: 0},
+            {q: "∫ (x³ - 2x²) dx", options: ["<div class='fraction'><span>x⁴</span><span>4</span></div> - <div class='fraction'><span>2x³</span><span>3</span></div> + C", "3x² - 4x + C", "x⁴ - 2x³ + C", "4x³ - 6x² + C"], correct: 0},
+            {q: "∫ (5x² + 3x) dx", options: ["<div class='fraction'><span>5x³</span><span>3</span></div> + <div class='fraction'><span>3x²</span><span>2</span></div> + C", "10x + 3 + C", "5x³ + 3x² + C", "15x² + 3x + C"], correct: 0},
+            {q: "∫ (6x² - 3x) dx", options: ["2x³ - <div class='fraction'><span>3x²</span><span>2</span></div> + C", "12x - 3 + C", "6x³ - 3x² + C", "18x² - 3x + C"], correct: 0},
+            {q: "∫ x⁸ dx", options: ["<div class='fraction'><span>x⁹</span><span>9</span></div> + C", "8x⁷ + C", "x⁹ + C", "9x⁸ + C"], correct: 0},
+            {q: "∫ 24x dx", options: ["12x² + C", "24 + C", "24x² + C", "48x + C"], correct: 0},
+            {q: "∫ 25x² dx", options: ["<div class='fraction'><span>25x³</span><span>3</span></div> + C", "50x + C", "25x³ + C", "75x + C"], correct: 0},
+            {q: "∫ (11x + 6) dx", options: ["<div class='fraction'><span>11x²</span><span>2</span></div> + 6x + C", "11x² + 6x + C", "22x + 6 + C", "11 + C"], correct: 0},
+            {q: "∫ (12x - 5) dx", options: ["6x² - 5x + C", "12x² - 5x + C", "24x - 5 + C", "12 + C"], correct: 0},
+            {q: "∫ (x⁴ + x³) dx", options: ["<div class='fraction'><span>x⁵</span><span>5</span></div> + <div class='fraction'><span>x⁴</span><span>4</span></div> + C", "4x³ + 3x² + C", "x⁵ + x⁴ + C", "5x⁴ + 4x³ + C"], correct: 0},
+            {q: "∫ (x⁴ - x³) dx", options: ["<div class='fraction'><span>x⁵</span><span>5</span></div> - <div class='fraction'><span>x⁴</span><span>4</span></div> + C", "4x³ - 3x² + C", "x⁵ - x⁴ + C", "5x⁴ - 4x³ + C"], correct: 0},
+            {q: "∫ (7x² + 4x) dx", options: ["<div class='fraction'><span>7x³</span><span>3</span></div> + 2x² + C", "14x + 4 + C", "7x³ + 4x² + C", "21x² + 4x + C"], correct: 0},
+            {q: "∫ (8x² - 4x) dx", options: ["<div class='fraction'><span>8x³</span><span>3</span></div> - 2x² + C", "16x - 4 + C", "8x³ - 4x² + C", "24x² - 4x + C"], correct: 0},
+            {q: "∫ x⁹ dx", options: ["<div class='fraction'><span>x¹⁰</span><span>10</span></div> + C", "9x⁸ + C", "x¹⁰ + C", "10x⁹ + C"], correct: 0},
+            {q: "∫ 30x dx", options: ["15x² + C", "30 + C", "30x² + C", "60x + C"], correct: 0},
+            {q: "∫ 36x² dx", options: ["12x³ + C", "72x + C", "36x³ + C", "108x + C"], correct: 0},
+            {q: "∫ (13x + 7) dx", options: ["<div class='fraction'><span>13x²</span><span>2</span></div> + 7x + C", "13x² + 7x + C", "26x + 7 + C", "13 + C"], correct: 0},
+            {q: "∫ (14x - 6) dx", options: ["7x² - 6x + C", "14x² - 6x + C", "28x - 6 + C", "14 + C"], correct: 0},
+            {q: "∫ (x⁵ + x²) dx", options: ["<div class='fraction'><span>x⁶</span><span>6</span></div> + <div class='fraction'><span>x³</span><span>3</span></div> + C", "5x⁴ + 2x + C", "x⁶ + x³ + C", "6x⁵ + 3x² + C"], correct: 0},
+            {q: "∫ (x⁵ - x²) dx", options: ["<div class='fraction'><span>x⁶</span><span>6</span></div> - <div class='fraction'><span>x³</span><span>3</span></div> + C", "5x⁴ - 2x + C", "x⁶ - x³ + C", "6x⁵ - 3x² + C"], correct: 0},
+            {q: "∫ (9x² + 5x) dx", options: ["3x³ + <div class='fraction'><span>5x²</span><span>2</span></div> + C", "18x + 5 + C", "9x³ + 5x² + C", "27x² + 5x + C"], correct: 0},
+            {q: "∫ (10x² - 5x) dx", options: ["<div class='fraction'><span>10x³</span><span>3</span></div> - <div class='fraction'><span>5x²</span><span>2</span></div> + C", "20x - 5 + C", "10x³ - 5x² + C", "30x² - 5x + C"], correct: 0},
+            {q: "∫ (x² + 4x + 3) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + 2x² + 3x + C", "2x + 4 + C", "x³ + 4x² + 3x + C", "3x² + 8x + 3 + C"], correct: 0},
+            {q: "∫ (x² - 4x + 3) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - 2x² + 3x + C", "2x - 4 + C", "x³ - 4x² + 3x + C", "3x² - 8x + 3 + C"], correct: 0},
+            {q: "∫ (2x³ + 3x²) dx", options: ["<div class='fraction'><span>x⁴</span><span>2</span></div> + x³ + C", "6x² + 6x + C", "2x⁴ + 3x³ + C", "8x² + 9x + C"], correct: 0},
+            {q: "∫ (3x³ - 2x²) dx", options: ["<div class='fraction'><span>3x⁴</span><span>4</span></div> - <div class='fraction'><span>2x³</span><span>3</span></div> + C", "9x² - 4x + C", "3x⁴ - 2x³ + C", "12x² - 6x + C"], correct: 0},
+            {q: "∫ 42x dx", options: ["21x² + C", "42 + C", "42x² + C", "84x + C"], correct: 0},
+            {q: "∫ 48x² dx", options: ["16x³ + C", "96x + C", "48x³ + C", "144x + C"], correct: 0},
+            {q: "∫ (15x + 8) dx", options: ["<div class='fraction'><span>15x²</span><span>2</span></div> + 8x + C", "15x² + 8x + C", "30x + 8 + C", "15 + C"], correct: 0},
+            {q: "∫ (16x - 7) dx", options: ["8x² - 7x + C", "16x² - 7x + C", "32x - 7 + C", "16 + C"], correct: 0},
+            {q: "∫ (x⁶ + x³) dx", options: ["<div class='fraction'><span>x⁷</span><span>7</span></div> + <div class='fraction'><span>x⁴</span><span>4</span></div> + C", "6x⁵ + 3x² + C", "x⁷ + x⁴ + C", "7x⁶ + 4x³ + C"], correct: 0},
+            {q: "∫ (x⁶ - x³) dx", options: ["<div class='fraction'><span>x⁷</span><span>7</span></div> - <div class='fraction'><span>x⁴</span><span>4</span></div> + C", "6x⁵ - 3x² + C", "x⁷ - x⁴ + C", "7x⁶ - 4x³ + C"], correct: 0},
+            {q: "∫ (11x² + 6x) dx", options: ["<div class='fraction'><span>11x³</span><span>3</span></div> + 3x² + C", "22x + 6 + C", "11x³ + 6x² + C", "33x² + 6x + C"], correct: 0},
+            {q: "∫ (12x² - 6x) dx", options: ["4x³ - 3x² + C", "24x - 6 + C", "12x³ - 6x² + C", "36x² - 6x + C"], correct: 0},
+            {q: "∫ (x² + 5x + 4) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + <div class='fraction'><span>5x²</span><span>2</span></div> + 4x + C", "2x + 5 + C", "x³ + 5x² + 4x + C", "3x² + 10x + 4 + C"], correct: 0},
+            {q: "∫ (x² - 5x + 4) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - <div class='fraction'><span>5x²</span><span>2</span></div> + 4x + C", "2x - 5 + C", "x³ - 5x² + 4x + C", "3x² - 10x + 4 + C"], correct: 0},
+            {q: "∫ (4x³ + 2x²) dx", options: ["x⁴ + <div class='fraction'><span>2x³</span><span>3</span></div> + C", "12x² + 4x + C", "4x⁴ + 2x³ + C", "16x² + 6x + C"], correct: 0},
+            {q: "∫ (5x³ - 3x²) dx", options: ["<div class='fraction'><span>5x⁴</span><span>4</span></div> - x³ + C", "15x² - 6x + C", "5x⁴ - 3x³ + C", "20x² - 9x + C"], correct: 0},
+            {q: "∫ 54x dx", options: ["27x² + C", "54 + C", "54x² + C", "108x + C"], correct: 0},
+            {q: "∫ 60x² dx", options: ["20x³ + C", "120x + C", "60x³ + C", "180x + C"], correct: 0},
+            {q: "∫ (17x + 9) dx", options: ["<div class='fraction'><span>17x²</span><span>2</span></div> + 9x + C", "17x² + 9x + C", "34x + 9 + C", "17 + C"], correct: 0},
+            {q: "∫ (18x - 8) dx", options: ["9x² - 8x + C", "18x² - 8x + C", "36x - 8 + C", "18 + C"], correct: 0},
+            {q: "∫ (x⁷ + x⁴) dx", options: ["<div class='fraction'><span>x⁸</span><span>8</span></div> + <div class='fraction'><span>x⁵</span><span>5</span></div> + C", "7x⁶ + 4x³ + C", "x⁸ + x⁵ + C", "8x⁷ + 5x⁴ + C"], correct: 0},
+            {q: "∫ (x⁷ - x⁴) dx", options: ["<div class='fraction'><span>x⁸</span><span>8</span></div> - <div class='fraction'><span>x⁵</span><span>5</span></div> + C", "7x⁶ - 4x³ + C", "x⁸ - x⁵ + C", "8x⁷ - 5x⁴ + C"], correct: 0},
+            {q: "∫ (13x² + 7x) dx", options: ["<div class='fraction'><span>13x³</span><span>3</span></div> + <div class='fraction'><span>7x²</span><span>2</span></div> + C", "26x + 7 + C", "13x³ + 7x² + C", "39x² + 7x + C"], correct: 0},
+            {q: "∫ (14x² - 7x) dx", options: ["<div class='fraction'><span>14x³</span><span>3</span></div> - <div class='fraction'><span>7x²</span><span>2</span></div> + C", "28x - 7 + C", "14x³ - 7x² + C", "42x² - 7x + C"], correct: 0},
+            {q: "∫ (x² + 6x + 5) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + 3x² + 5x + C", "2x + 6 + C", "x³ + 6x² + 5x + C", "3x² + 12x + 5 + C"], correct: 0},
+            {q: "∫ (x² - 6x + 5) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - 3x² + 5x + C", "2x - 6 + C", "x³ - 6x² + 5x + C", "3x² - 12x + 5 + C"], correct: 0},
+            {q: "∫ (6x³ + 4x²) dx", options: ["<div class='fraction'><span>3x⁴</span><span>2</span></div> + <div class='fraction'><span>4x³</span><span>3</span></div> + C", "18x² + 8x + C", "6x⁴ + 4x³ + C", "24x² + 12x + C"], correct: 0},
+            {q: "∫ (7x³ - 4x²) dx", options: ["<div class='fraction'><span>7x⁴</span><span>4</span></div> - <div class='fraction'><span>4x³</span><span>3</span></div> + C", "21x² - 8x + C", "7x⁴ - 4x³ + C", "28x² - 12x + C"], correct: 0},
+            {q: "∫ 66x dx", options: ["33x² + C", "66 + C", "66x² + C", "132x + C"], correct: 0},
+            {q: "∫ 72x² dx", options: ["24x³ + C", "144x + C", "72x³ + C", "216x + C"], correct: 0},
+            {q: "∫ (19x + 10) dx", options: ["<div class='fraction'><span>19x²</span><span>2</span></div> + 10x + C", "19x² + 10x + C", "38x + 10 + C", "19 + C"], correct: 0},
+            {q: "∫ (20x - 9) dx", options: ["10x² - 9x + C", "20x² - 9x + C", "40x - 9 + C", "20 + C"], correct: 0},
+            {q: "∫ (x⁸ + x⁵) dx", options: ["<div class='fraction'><span>x⁹</span><span>9</span></div> + <div class='fraction'><span>x⁶</span><span>6</span></div> + C", "8x⁷ + 5x⁴ + C", "x⁹ + x⁶ + C", "9x⁸ + 6x⁵ + C"], correct: 0},
+            {q: "∫ (x⁸ - x⁵) dx", options: ["<div class='fraction'><span>x⁹</span><span>9</span></div> - <div class='fraction'><span>x⁶</span><span>6</span></div> + C", "8x⁷ - 5x⁴ + C", "x⁹ - x⁶ + C", "9x⁸ - 6x⁵ + C"], correct: 0},
+            {q: "∫ (15x² + 8x) dx", options: ["5x³ + 4x² + C", "30x + 8 + C", "15x³ + 8x² + C", "45x² + 8x + C"], correct: 0},
+            {q: "∫ (16x² - 8x) dx", options: ["<div class='fraction'><span>16x³</span><span>3</span></div> - 4x² + C", "32x - 8 + C", "16x³ - 8x² + C", "48x² - 8x + C"], correct: 0},
+            {q: "∫ (x² + 7x + 6) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> + <div class='fraction'><span>7x²</span><span>2</span></div> + 6x + C", "2x + 7 + C", "x³ + 7x² + 6x + C", "3x² + 14x + 6 + C"], correct: 0},
+            {q: "∫ (x² - 7x + 6) dx", options: ["<div class='fraction'><span>x³</span><span>3</span></div> - <div class='fraction'><span>7x²</span><span>2</span></div> + 6x + C", "2x - 7 + C", "x³ - 7x² + 6x + C", "3x² - 14x + 6 + C"], correct: 0}
+        ];
+
+        let currentMode = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = -1;
+        let hasAnswered = false;
+        let startTime = 0;
+        let timerInterval = null;
+        // 【ブラッシュアップ】この問題でまちがえた・答えを見たか／遊びの回（古いタイマーの取り消し用）
+        let missedThis = false;
+        let runId = 0;
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            currentQuestionIndex = 0;
+            score = 0;
+            runId++;   // 【ブラッシュアップ】
+            window.scrollTo(0, 0);
+            selectedOption = -1;
+            hasAnswered = false;
+            startTime = Date.now();
+
+            // 問題を準備
+            if (mode === 'random10') {
+                currentQuestions = getProgressiveQuestions();
+            } else if (mode === 'random100') {
+                currentQuestions = shuffleArray([...questionPool]);
+            } else if (mode === 'challenge') {
+                currentQuestions = shuffleArray([...questionPool]);
+            } else if (mode === 'input') {
+                currentQuestions = shuffleArray([...inputQuestions]).slice(0, 10);
+            }
+
+            document.getElementById('modeSelection').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('finalResult').classList.add('hidden');
+
+            startTimer();
+            showQuestion();
+        }
+
+        function getProgressiveQuestions() {
+            // 段階的に難しくなる10問を選択
+            const progressive = [];
+
+            // 簡単な問題から3-4問
+            const shuffledEasy = shuffleArray([...easyQuestions]);
+            progressive.push(...shuffledEasy.slice(0, 4));
+
+            // 中程度の問題から3-4問
+            const shuffledMedium = shuffleArray([...mediumQuestions]);
+            progressive.push(...shuffledMedium.slice(0, 3));
+
+            // 難しい問題から3問
+            const shuffledHard = shuffleArray([...hardQuestions]);
+            progressive.push(...shuffledHard.slice(0, 3));
+
+            return progressive;
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent =
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function getRandomQuestions(count) {
+            const shuffled = shuffleArray([...questionPool]);
+            return shuffled.slice(0, count);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+
+            // プログレス更新
+            let totalQuestions = currentQuestions.length;
+            if (currentMode === 'challenge') {
+                totalQuestions = '∞';
+            }
+            document.getElementById('progress').textContent = `問題 ${currentQuestionIndex + 1}/${totalQuestions}`;
+            document.getElementById('score').textContent = currentMode === 'challenge' ? `連続正解: ${score}問` : `一発正解: ${score}問`;   // 【ブラッシュアップ】
+
+            // 問題表示
+            document.getElementById('question').textContent = question.q + ' = ?';
+
+            if (currentMode === 'input') {
+                // 入力モード
+                document.getElementById('options').classList.add('hidden');
+                document.getElementById('inputContainer').classList.remove('hidden');
+                showInputForm(question);
+            } else {
+                // 選択肢モード
+                document.getElementById('options').classList.remove('hidden');
+                document.getElementById('inputContainer').classList.add('hidden');
+                document.getElementById('inputContainer').innerHTML = '';
+
+                // 選択肢をシャッフル
+                const shuffledOptions = [];
+                const originalCorrect = question.correct;
+                let newCorrectIndex = -1;
+
+                // インデックスの配列を作成してシャッフル
+                const indices = [0, 1, 2, 3];
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+
+                // シャッフルされた順序で選択肢を配置
+                indices.forEach((originalIndex, newIndex) => {
+                    shuffledOptions.push(question.options[originalIndex]);
+                    if (originalIndex === originalCorrect) {
+                        newCorrectIndex = newIndex;
+                    }
+                });
+
+                // 現在の問題の正解インデックスを更新
+                currentQuestions[currentQuestionIndex].shuffledCorrect = newCorrectIndex;
+
+                // 選択肢表示
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+
+                shuffledOptions.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.innerHTML = option;
+                    optionDiv.onclick = () => selectOption(index);
+                    optionsContainer.appendChild(optionDiv);
+                });
+            }
+
+            // ボタン状態リセット
+            selectedOption = -1;
+            hasAnswered = false;
+            missedThis = false;   // 【ブラッシュアップ】
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+            document.getElementById('resultMessage').classList.add('hidden');
+            document.getElementById('enterHint').classList.add('hidden');
+            document.getElementById('showAnswerBtn').classList.remove('hidden');
+
+            if (currentMode === 'input') {
+                document.getElementById('checkBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('checkBtn').classList.add('hidden');
+            }
+        }
+
+        function showInputForm(question) {
+            const container = document.getElementById('inputContainer');
+            container.innerHTML = '';
+
+            const answer = question.answer;
+
+            if (answer.type === 'simple') {
+                // 係数 x^次数 + C の形式
+                // 係数が1の場合は入力フィールドを表示しない
+                if (answer.coefficient === '1') {
+                    if (answer.power === '1') {
+                        container.innerHTML = `
+                            <span class="x-symbol">x</span>
+                            <span class="math-symbol">+ C</span>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <span class="x-symbol">x</span>
+                            <input type="number" class="input-field power" id="power" placeholder="次数">
+                            <span class="math-symbol">+ C</span>
+                        `;
+                    }
+                } else {
+                    if (answer.power === '1') {
+                        container.innerHTML = `
+                            <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
+                            <span class="x-symbol">x</span>
+                            <span class="math-symbol">+ C</span>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
+                            <span class="x-symbol">x</span>
+                            <input type="number" class="input-field power" id="power" placeholder="次数">
+                            <span class="math-symbol">+ C</span>
+                        `;
+                    }
+                }
+            } else if (answer.type === 'fraction') {
+                // 分数の形式 - 既約分数に変換して表示
+                const numeratorParts = parseNumerator(answer.numerator);
+                const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
+
+                // 分母が1の場合は整数として表示（係数1は表示しない）
+                if (simplified.denominator === 1) {
+                    if (simplified.numerator === 1) {
+                        if (numeratorParts.power === 1) {
+                            container.innerHTML = `
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="power" placeholder="次数">
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        }
+                    } else {
+                        if (numeratorParts.power === 1) {
+                            container.innerHTML = `
+                                <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <input type="number" class="input-field coefficient" id="coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="power" placeholder="次数">
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        }
+                    }
+                } else {
+                    // 分数の場合は係数1も明示的に入力
+                    if (numeratorParts.power === 1) {
+                        container.innerHTML = `
+                            <div class="fraction-input">
+                                <div class="fraction-part">
+                                    <input type="number" class="input-field coefficient" id="numerator-coeff" placeholder="係数">
+                                    <div class="fraction-line"></div>
+                                    <input type="number" class="input-field" id="denominator" placeholder="分母">
+                                </div>
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="fraction-input">
+                                <div class="fraction-part">
+                                    <input type="number" class="input-field coefficient" id="numerator-coeff" placeholder="係数">
+                                    <div class="fraction-line"></div>
+                                    <input type="number" class="input-field" id="denominator" placeholder="分母">
+                                </div>
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="numerator-power" placeholder="次数">
+                                <span class="math-symbol">+ C</span>
+                            </div>
+                        `;
+                    }
+                }
+            } else if (answer.type === 'polynomial') {
+                // 多項式の形式（簡略化）
+                const term1Parts = parseNumerator(answer.term1.numerator);
+                const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
+
+                // 分母が1の場合は整数として表示（係数1は表示しない）
+                if (simplified.denominator === 1) {
+                    if (simplified.numerator === 1) {
+                        if (term1Parts.power === 1) {
+                            container.innerHTML = `
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        }
+                    } else {
+                        if (term1Parts.power === 1) {
+                            container.innerHTML = `
+                                <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            `;
+                        }
+                    }
+                } else {
+                    // 分数の場合は係数1も明示的に入力
+                    if (term1Parts.power === 1) {
+                        container.innerHTML = `
+                            <div class="fraction-input">
+                                <div class="fraction-part">
+                                    <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
+                                    <div class="fraction-line"></div>
+                                    <input type="number" class="input-field" id="term1-den" placeholder="分母">
+                                </div>
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="fraction-input">
+                                <div class="fraction-part">
+                                    <input type="number" class="input-field coefficient" id="term1-coeff" placeholder="係数">
+                                    <div class="fraction-line"></div>
+                                    <input type="number" class="input-field" id="term1-den" placeholder="分母">
+                                </div>
+                                <span class="x-symbol">x</span>
+                                <input type="number" class="input-field power" id="term1-power" placeholder="次数">
+                                <span class="math-symbol">+</span>
+                                <input type="number" class="input-field coefficient" id="term2-coeff" placeholder="係数">
+                                <span class="x-symbol">x</span>
+                                <span class="math-symbol">+ C</span>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            // 【ブラッシュアップ】2 つ目の項が x² の問題は、x² と書いておく
+            if (answer.type === 'polynomial' && answer.term2.power) {
+                const xs = container.querySelectorAll('.x-symbol');
+                xs[xs.length - 1].innerHTML = 'x<sup>' + answer.term2.power + '</sup>';
+            }
+
+            // 【ブラッシュアップ】元は問題が出るたびに同じ動きが重ねて登録されていた。一度だけ登録する
+            if (!container.dataset.bound) {
+                container.dataset.bound = '1';
+                // 入力時に即座にチェック
+                container.addEventListener('input', () => {
+                    setTimeout(checkInputAnswer, 100);
+                });
+
+                // Enterキーでチェック（同じ Enter で次の問題に進まないようにする）
+                container.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.stopPropagation();
+                        checkInputAnswer();
+                    }
+                });
+            }
+
+            // 最初の入力フィールドにフォーカス
+            setTimeout(() => {
+                const firstInput = container.querySelector('.input-field');
+                if (firstInput && !(window.matchMedia && matchMedia('(pointer: coarse)').matches)) firstInput.focus();   // 【ブラッシュアップ】スマホではキーボードをいきなり出さない
+            }, 100);
+        }
+
+        // 分子部分を解析する関数（係数とxの次数を分離）
+        function parseNumerator(numerator) {
+            if (numerator.includes('x^')) {
+                const parts = numerator.split('x^');
+                const coefficient = parts[0] === '' ? 1 : parseInt(parts[0]);
+                const power = parseInt(parts[1]);
+                return { coefficient, power };
+            } else if (numerator === 'x') {
+                return { coefficient: 1, power: 1 };
+            } else if (numerator.includes('x')) {
+                const coefficient = parseInt(numerator.replace('x', ''));
+                return { coefficient, power: 1 };
+            } else {
+                return { coefficient: parseInt(numerator), power: 0 };
+            }
+        }
+
+        // 分数を既約分数に変換する関数
+        function simplifyFraction(numerator, denominator) {
+            function gcd(a, b) {
+                return b === 0 ? a : gcd(b, a % b);
+            }
+
+            const g = gcd(Math.abs(numerator), Math.abs(denominator));
+            return {
+                numerator: numerator / g,
+                denominator: denominator / g
+            };
+        }
+
+        // 分数文字列を解析する関数
+        function parseFraction(str) {
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                return {
+                    numerator: parseInt(parts[0]),
+                    denominator: parseInt(parts[1])
+                };
+            } else {
+                return {
+                    numerator: parseInt(str),
+                    denominator: 1
+                };
+            }
+        }
+
+        function checkInputAnswer() {
+            const question = currentQuestions[currentQuestionIndex];
+            const answer = question.answer;
+            let allFieldsCorrect = true;
+
+            if (answer.type === 'simple') {
+                let powerCorrect = true;
+                let coeffCorrect = true;
+
+                // 次数のチェック（次数が1でない場合のみ）
+                if (answer.power !== '1') {
+                    const power = document.getElementById('power').value.trim();
+                    powerCorrect = power === answer.power;
+                    document.getElementById('power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
+                }
+
+                // 係数のチェック（係数が1でない場合のみ）
+                if (answer.coefficient !== '1') {
+                    const coeff = document.getElementById('coeff').value.trim();
+                    coeffCorrect = coeff === answer.coefficient;
+                    document.getElementById('coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
+                }
+
+                allFieldsCorrect = coeffCorrect && powerCorrect;
+
+            } else if (answer.type === 'fraction') {
+                const numeratorParts = parseNumerator(answer.numerator);
+                const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
+
+                let numeratorCorrect = true;
+
+                // 分母が1の場合は整数として扱う
+                if (simplified.denominator === 1) {
+                    // 係数のチェック（係数が1でない場合のみ）
+                    if (simplified.numerator !== 1) {
+                        const coeff = document.getElementById('coeff').value.trim();
+                        const coeffCorrect = coeff === simplified.numerator.toString();
+                        document.getElementById('coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
+                        numeratorCorrect = numeratorCorrect && coeffCorrect;
+                    }
+
+                    // 次数のチェック（次数が1でない場合のみ）
+                    if (numeratorParts.power !== 1) {
+                        const power = document.getElementById('power').value.trim();
+                        const powerCorrect = power === numeratorParts.power.toString();
+                        document.getElementById('power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
+                        numeratorCorrect = numeratorCorrect && powerCorrect;
+                    }
+
+                    allFieldsCorrect = numeratorCorrect;
+                } else {
+                    // 分数として扱う（係数1も明示的に入力が必要）
+                    const numeratorCoeff = document.getElementById('numerator-coeff').value.trim();
+                    const coeffCorrect = numeratorCoeff === simplified.numerator.toString();
+                    document.getElementById('numerator-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
+                    numeratorCorrect = numeratorCorrect && coeffCorrect;
+
+                    // 次数のチェック（次数が1でない場合のみ）
+                    if (numeratorParts.power !== 1) {
+                        const numeratorPower = document.getElementById('numerator-power').value.trim();
+                        const powerCorrect = numeratorPower === numeratorParts.power.toString();
+                        document.getElementById('numerator-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
+                        numeratorCorrect = numeratorCorrect && powerCorrect;
+                    }
+
+                    // 分母のチェック
+                    const denominator = document.getElementById('denominator').value.trim();
+                    const denCorrect = denominator === simplified.denominator.toString();
+                    document.getElementById('denominator').className = `input-field ${denCorrect ? 'correct' : 'wrong'}`;
+
+                    allFieldsCorrect = numeratorCorrect && denCorrect;
+                }
+
+            } else if (answer.type === 'polynomial') {
+                const term1Parts = parseNumerator(answer.term1.numerator);
+                const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
+
+                let term1Correct = true;
+
+                // 分母が1の場合は整数として扱う
+                if (simplified.denominator === 1) {
+                    // 第1項の係数のチェック（係数が1でない場合のみ）
+                    if (simplified.numerator !== 1) {
+                        const term1Coeff = document.getElementById('term1-coeff').value.trim();
+                        const coeffCorrect = term1Coeff === simplified.numerator.toString();
+                        document.getElementById('term1-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
+                        term1Correct = term1Correct && coeffCorrect;
+                    }
+
+                    // 第1項の次数のチェック（次数が1でない場合のみ）
+                    if (term1Parts.power !== 1) {
+                        const term1Power = document.getElementById('term1-power').value.trim();
+                        const powerCorrect = term1Power === term1Parts.power.toString();
+                        document.getElementById('term1-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
+                        term1Correct = term1Correct && powerCorrect;
+                    }
+                } else {
+                    // 分数として扱う（係数1も明示的に入力が必要）
+                    const term1Coeff = document.getElementById('term1-coeff').value.trim();
+                    const coeffCorrect = term1Coeff === simplified.numerator.toString();
+                    document.getElementById('term1-coeff').className = `input-field coefficient ${coeffCorrect ? 'correct' : 'wrong'}`;
+                    term1Correct = term1Correct && coeffCorrect;
+
+                    // 第1項の次数のチェック（次数が1でない場合のみ）
+                    if (term1Parts.power !== 1) {
+                        const term1Power = document.getElementById('term1-power').value.trim();
+                        const powerCorrect = term1Power === term1Parts.power.toString();
+                        document.getElementById('term1-power').className = `input-field power ${powerCorrect ? 'correct' : 'wrong'}`;
+                        term1Correct = term1Correct && powerCorrect;
+                    }
+
+                    // 第1項の分母のチェック
+                    const term1Den = document.getElementById('term1-den').value.trim();
+                    const denCorrect = term1Den === simplified.denominator.toString();
+                    document.getElementById('term1-den').className = `input-field ${denCorrect ? 'correct' : 'wrong'}`;
+                    term1Correct = term1Correct && denCorrect;
+                }
+
+                // 第2項の係数のチェック
+                const term2Coeff = document.getElementById('term2-coeff').value.trim();
+                const term2Correct = term2Coeff === answer.term2.coefficient;
+                document.getElementById('term2-coeff').className = `input-field coefficient ${term2Correct ? 'correct' : 'wrong'}`;
+
+                allFieldsCorrect = term1Correct && term2Correct;
+            }
+
+            // 全て正解の場合のみ次の問題へ
+            if (allFieldsCorrect && !hasAnswered) {
+                hasAnswered = true;
+                if (!missedThis) score++;   // 【ブラッシュアップ】答えを見た問題は数えない
+
+                const resultMessage = document.getElementById('resultMessage');
+                resultMessage.textContent = '正解です！';
+                resultMessage.className = 'result-message result-correct';
+                resultMessage.classList.remove('hidden');
+
+                document.getElementById('checkBtn').classList.add('hidden');
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('enterHint').classList.remove('hidden');
+                document.getElementById('showAnswerBtn').classList.add('hidden');
+
+                // エンターキーで次の問題へ
+                document.addEventListener('keydown', handleEnterKey);
+            } else if (!allFieldsCorrect && hasAnswered) {
+                // 間違いがある場合、0.5秒後に入力可能にする
+                setTimeout(() => {
+                    document.querySelectorAll('.input-field').forEach(field => {
+                        if (field.classList.contains('wrong')) {
+                            field.className = field.classList.contains('coefficient') ? 'input-field coefficient' :
+                                            field.classList.contains('power') ? 'input-field power' : 'input-field';
+                            field.value = '';
+                        }
+                    });
+                    hasAnswered = false;
+
+                    // 最初の間違ったフィールドにフォーカス
+                    const firstWrongField = document.querySelector('.input-field:not(.correct)');
+                    if (firstWrongField) firstWrongField.focus();
+                }, 500);
+            }
+        }
+
+        function selectOption(index) {
+            if (hasAnswered) return;
+
+            // 前の選択をクリア
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // 新しい選択をマーク
+            document.querySelectorAll('.option')[index].classList.add('selected');
+            selectedOption = index;
+
+            // 自動で正誤判定（即座に）
+            checkAnswer();
+        }
+
+        function checkAnswer() {
+            if (currentMode === 'input') {
+                checkInputAnswer();
+                return;
+            }
+
+            if (selectedOption === -1 || hasAnswered) return;
+
+            hasAnswered = true;
+            const question = currentQuestions[currentQuestionIndex];
+            const isCorrect = selectedOption === question.shuffledCorrect;
+
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (isCorrect) {
+                if (!missedThis) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入った
+                resultMessage.textContent = '正解です！';
+                resultMessage.className = 'result-message result-correct';
+                resultMessage.classList.remove('hidden');
+
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('enterHint').classList.remove('hidden');
+                document.getElementById('showAnswerBtn').classList.add('hidden');
+
+                // エンターキーで次の問題へ
+                document.addEventListener('keydown', handleEnterKey);
+            } else {
+                // 間違った選択肢を赤くマーク
+                document.querySelectorAll('.option')[selectedOption].classList.add('wrong');
+
+                missedThis = true;   // 【ブラッシュアップ】
+                resultMessage.innerHTML = '不正解です。' + (currentMode === 'challenge' ? '' : '<div class="rule-hint">💡 xⁿ の不定積分は <b>xⁿ⁺¹ / (n+1)</b>（次数を 1 ふやして、その数でわる）。微分してもとの式にもどるか、たしかめよう。</div>');
+                resultMessage.className = 'result-message result-wrong';
+                resultMessage.classList.remove('hidden');
+
+                if (currentMode === 'challenge') {
+                    // 鬼連チャンモードでは即終了（【ブラッシュアップ】正しい答えを見せる。メニューに戻っていたら結果を出さない）
+                    const right = document.querySelectorAll('.option')[question.shuffledCorrect];
+                    if (right) right.classList.add('selected');
+                    const myRun = runId;
+                    setTimeout(() => {
+                        if (myRun === runId) showFinalResult();
+                    }, 2000);
+                } else {
+                    // 他のモードではもう一度挑戦可能
+                    document.getElementById('retryBtn').classList.remove('hidden');
+                    // 【ブラッシュアップ】まちがえたままでは次へ進めない（もう一度挑戦 か 答えを見る）
+                }
+            }
+        }
+
+        function handleEnterKey(event) {
+            if (event.key === 'Enter' && hasAnswered) {
+                document.removeEventListener('keydown', handleEnterKey);
+                nextQuestion();
+            }
+        }
+
+        function retryQuestion() {
+            if (currentMode === 'input') {
+                // 入力フィールドをリセット
+                document.querySelectorAll('.input-field').forEach(field => {
+                    field.value = '';
+                    field.className = 'input-field';
+                });
+
+                // 最初の入力フィールドにフォーカス
+                const firstInput = document.querySelector('.input-field');
+                if (firstInput) firstInput.focus();
+            } else {
+                // 選択状態をリセット
+                document.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('selected', 'wrong');
+                });
+            }
+
+            selectedOption = -1;
+            hasAnswered = false;
+
+            document.getElementById('retryBtn').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('resultMessage').classList.add('hidden');
+            document.getElementById('enterHint').classList.add('hidden');
+            document.getElementById('showAnswerBtn').classList.remove('hidden');
+
+            if (currentMode === 'input') {
+                document.getElementById('checkBtn').classList.remove('hidden');
+            }
+
+            // エンターキーイベントリスナーを削除
+            document.removeEventListener('keydown', handleEnterKey);
+        }
+
+        function nextQuestion() {
+            // エンターキーイベントリスナーを削除
+            document.removeEventListener('keydown', handleEnterKey);
+
+            currentQuestionIndex++;
+
+            // 終了条件チェック
+            if ((currentMode === 'random10' || currentMode === 'input') && currentQuestionIndex >= 10) {
+                showFinalResult();
+            } else if (currentMode === 'random100' && currentQuestionIndex >= currentQuestions.length) {   // 【ブラッシュアップ】
+                showFinalResult();
+            } else if (currentMode === 'challenge' && currentQuestionIndex >= currentQuestions.length) {
+                // 全問題を使い切った場合、新しい問題セットを生成
+                currentQuestions = shuffleArray([...questionPool]);
+                currentQuestionIndex = 0;
+                showQuestion();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function showFinalResult() {
+            stopTimer();
+
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('finalResult').classList.remove('hidden');
+
+            const finalScore = document.getElementById('finalScore');
+            const finalMessage = document.getElementById('finalMessage');
+
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            const timeText = `${minutes}分${seconds}秒`;
+
+            if (currentMode === 'random10' || currentMode === 'input') {
+                finalScore.textContent = `${score}/10問 一発正解！`;
+                if (score === 10) {
+                    finalMessage.textContent = `完璧です！素晴らしい！🎉\n所要時間: ${timeText}`;
+                } else if (score >= 8) {
+                    finalMessage.textContent = `とても良くできました！👏\n所要時間: ${timeText}`;
+                } else if (score >= 6) {
+                    finalMessage.textContent = `まずまずの成績です！📚\n所要時間: ${timeText}`;
+                } else {
+                    finalMessage.textContent = `もう少し練習してみましょう！💪\n所要時間: ${timeText}`;
+                }
+            } else if (currentMode === 'random100') {
+                finalScore.textContent = `${score}/${currentQuestions.length}問 一発正解！`;
+                const percentage = Math.round((score / currentQuestions.length) * 100);
+                finalMessage.textContent = `正解率: ${percentage}%\n所要時間: ${timeText}`;
+            } else if (currentMode === 'challenge') {
+                finalScore.textContent = `${score}問連続正解！`;
+                if (score >= 50) {
+                    finalMessage.textContent = `驚異的な記録です！🏆\n所要時間: ${timeText}`;
+                } else if (score >= 30) {
+                    finalMessage.textContent = `素晴らしい集中力でした！🔥\n所要時間: ${timeText}`;
+                } else if (score >= 15) {
+                    finalMessage.textContent = `よく頑張りました！👍\n所要時間: ${timeText}`;
+                } else {
+                    finalMessage.textContent = `次回はもっと頑張りましょう！💪\n所要時間: ${timeText}`;
+                }
+            }
+        }
+
+        function showAnswer() {
+            const question = currentQuestions[currentQuestionIndex];
+
+            if (currentMode === 'input') {
+                const answer = question.answer;
+                missedThis = true;   // 【ブラッシュアップ】
+
+                if (answer.type === 'simple') {
+                    if (answer.coefficient !== '1') {
+                        const coeffField = document.getElementById('coeff');
+                        if (coeffField) {
+                            coeffField.value = answer.coefficient;
+                            coeffField.className = 'input-field coefficient correct';
+                        }
+                    }
+                    if (answer.power !== '1') {
+                        const powerField = document.getElementById('power');
+                        if (powerField) {
+                            powerField.value = answer.power;
+                            powerField.className = 'input-field power correct';
+                        }
+                    }
+                } else if (answer.type === 'fraction') {
+                    const numeratorParts = parseNumerator(answer.numerator);
+                    const simplified = simplifyFraction(numeratorParts.coefficient, parseInt(answer.denominator));
+
+                    // 分母が1の場合は整数として表示
+                    if (simplified.denominator === 1) {
+                        if (simplified.numerator !== 1) {
+                            const coeffField = document.getElementById('coeff');
+                            if (coeffField) {
+                                coeffField.value = simplified.numerator;
+                                coeffField.className = 'input-field coefficient correct';
+                            }
+                        }
+
+                        if (numeratorParts.power !== 1) {
+                            const powerField = document.getElementById('power');
+                            if (powerField) {
+                                powerField.value = numeratorParts.power;
+                                powerField.className = 'input-field power correct';
+                            }
+                        }
+                    } else {
+                        // 分数として表示（係数1も明示的に表示）
+                        const coeffField = document.getElementById('numerator-coeff');
+                        if (coeffField) {
+                            coeffField.value = simplified.numerator;
+                            coeffField.className = 'input-field coefficient correct';
+                        }
+
+                        if (numeratorParts.power !== 1) {
+                            const powerField = document.getElementById('numerator-power');
+                            if (powerField) {
+                                powerField.value = numeratorParts.power;
+                                powerField.className = 'input-field power correct';
+                            }
+                        }
+
+                        const denField = document.getElementById('denominator');
+                        if (denField) {
+                            denField.value = simplified.denominator;
+                            denField.className = 'input-field correct';
+                        }
+                    }
+                } else if (answer.type === 'polynomial') {
+                    const term1Parts = parseNumerator(answer.term1.numerator);
+                    const simplified = simplifyFraction(term1Parts.coefficient, parseInt(answer.term1.denominator));
+
+                    // 分母が1の場合は整数として表示
+                    if (simplified.denominator === 1) {
+                        if (simplified.numerator !== 1) {
+                            const term1CoeffField = document.getElementById('term1-coeff');
+                            if (term1CoeffField) {
+                                term1CoeffField.value = simplified.numerator;
+                                term1CoeffField.className = 'input-field coefficient correct';
+                            }
+                        }
+
+                        if (term1Parts.power !== 1) {
+                            const term1PowerField = document.getElementById('term1-power');
+                            if (term1PowerField) {
+                                term1PowerField.value = term1Parts.power;
+                                term1PowerField.className = 'input-field power correct';
+                            }
+                        }
+                    } else {
+                        // 分数として表示（係数1も明示的に表示）
+                        const term1CoeffField = document.getElementById('term1-coeff');
+                        if (term1CoeffField) {
+                            term1CoeffField.value = simplified.numerator;
+                            term1CoeffField.className = 'input-field coefficient correct';
+                        }
+
+                        if (term1Parts.power !== 1) {
+                            const term1PowerField = document.getElementById('term1-power');
+                            if (term1PowerField) {
+                                term1PowerField.value = term1Parts.power;
+                                term1PowerField.className = 'input-field power correct';
+                            }
+                        }
+
+                        const term1DenField = document.getElementById('term1-den');
+                        if (term1DenField) {
+                            term1DenField.value = simplified.denominator;
+                            term1DenField.className = 'input-field correct';
+                        }
+                    }
+
+                    const term2CoeffField = document.getElementById('term2-coeff');
+                    if (term2CoeffField) {
+                        term2CoeffField.value = answer.term2.coefficient;
+                        term2CoeffField.className = 'input-field coefficient correct';
+                    }
+                }
+
+                hasAnswered = true;
+                document.getElementById('checkBtn').classList.add('hidden');
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('enterHint').classList.remove('hidden');
+                document.getElementById('showAnswerBtn').classList.add('hidden');
+
+                const resultMessage = document.getElementById('resultMessage');
+                resultMessage.textContent = '答えを表示しました';
+                resultMessage.className = 'result-message result-correct';
+                resultMessage.classList.remove('hidden');
+
+                // エンターキーで次の問題へ
+                document.addEventListener('keydown', handleEnterKey);
+            } else {
+                // 選択肢モードでは正解の選択肢をハイライト
+                const question = currentQuestions[currentQuestionIndex];
+                missedThis = true;   // 【ブラッシュアップ】
+                document.getElementById('retryBtn').classList.add('hidden');
+                const correctIndex = question.shuffledCorrect;
+
+                document.querySelectorAll('.option').forEach((opt, index) => {
+                    if (index === correctIndex) {
+                        opt.classList.add('selected');
+                        opt.style.background = '#38a169';
+                        opt.style.color = 'white';
+                        opt.style.borderColor = '#38a169';
+                    }
+                });
+
+                hasAnswered = true;
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('enterHint').classList.remove('hidden');
+                document.getElementById('showAnswerBtn').classList.add('hidden');
+
+                const resultMessage = document.getElementById('resultMessage');
+                resultMessage.textContent = '答えを表示しました';
+                resultMessage.className = 'result-message result-correct';
+                resultMessage.classList.remove('hidden');
+
+                // エンターキーで次の問題へ
+                document.addEventListener('keydown', handleEnterKey);
+            }
+        }
+
+        function backToMenu() {
+            runId++;   // 【ブラッシュアップ】
+            window.scrollTo(0, 0);
+            stopTimer();
+            document.removeEventListener('keydown', handleEnterKey);
+            document.getElementById('modeSelection').style.display = 'grid';
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('finalResult').classList.add('hidden');
+        }
+
+        document.querySelectorAll('.pool-count').forEach(e => e.textContent = questionPool.length);   // 【ブラッシュアップ】
+    </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".title": "u-title",
+    ".mode-card": "u-choice",
+    ".option": "u-choice",
+    ".option.selected:not(.wrong)": "u-ok",
+    ".option.wrong": "u-ng",
+    "#checkBtn": "u-btn",
+    "#nextBtn": "u-btn u-btn-blue",
+    "#retryBtn": "u-btn",
+    "#showAnswerBtn": "u-btn u-btn-plain",
+    "#backBtn": "u-btn u-btn-plain",
+    ".result-nav .again": "u-btn",
+    ".result-nav .next": "u-btn u-btn-blue",
+    ".result-nav .plain": "u-btn u-btn-plain"
+  });
+</script>
+</body>
+</html>
