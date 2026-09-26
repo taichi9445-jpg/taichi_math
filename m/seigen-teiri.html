@@ -1,42 +1,1925 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>正弦定理 穴埋め問題</title>
-<link rel="stylesheet" href="../assets/base.css">
+ <head>
+  <meta charset="UTF-8">
+  <!--
+    29. 正弦定理（正弦定理 練習問題）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>正弦定理 穴埋め問題</title>
+  
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+    }
+
+    .header {
+      background: white;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      color: #2d3748;
+      font-size: 32px;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .nav-button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .nav-button.active {
+      background: #48bb78;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 32px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .problem-page {
+      display: none;
+    }
+
+    .problem-page.active {
+      display: block;
+    }
+
+    .problem-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding: 24px;
+      background: #f7fafc;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .problem-text {
+      width: 100%;
+      text-align: center;
+    }
+
+    .problem-text h2 {
+      margin: 0 0 12px 0;
+      color: #2d3748;
+      font-size: 22px;
+    }
+
+    .problem-text p {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.6;
+      color: #4a5568;
+    }
+
+    .triangle-diagram {
+      display: flex;
+      justify-content: center;
+    }
+
+    .choices-area {
+      background: #f7fafc;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .choices-area h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: #2d3748;
+      text-align: center;
+    }
+
+    .choices-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .choice-item {
+      background: white;
+      border: 2px solid #667eea;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 15px;
+      color: #2d3748;
+      user-select: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .choice-item:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .choice-item.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .choice-item.fully-used {
+      background: #e2e8f0;
+      color: #a0aec0;
+      cursor: not-allowed;
+      border-color: #cbd5e0;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .choice-item.selected {
+      background: #667eea;
+      color: white;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+
+    .work-area {
+      background: #fefefe;
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 60px;
+    }
+
+    .column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .equation-line {
+      padding: 16px;
+      padding-left: 50px;
+      background: white;
+      border-radius: 8px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 18px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+
+    .equation-line.no-wrap {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+    }
+
+    .equation-line.final-answer {
+      background: #fffef0;
+      border: 2px solid #f6ad55;
+      padding: 20px;
+      padding-left: 50px;
+    }
+
+    .equation-line::before {
+      content: attr(data-step);
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: #667eea;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .equation-line.hint::before {
+      background: #ed8936;
+    }
+
+    .equation-line.final-answer::before {
+      background: #f6ad55;
+      content: '★';
+      font-size: 16px;
+    }
+
+    .final-choices {
+      display: flex;
+      gap: 10px;
+      margin-left: 12px;
+      flex-wrap: wrap;
+    }
+
+    .final-choice-item {
+      background: white;
+      border: 2px solid #f6ad55;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 18px;
+      color: #2d3748;
+      user-select: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .final-choice-item:hover {
+      background: #f6ad55;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(246, 173, 85, 0.3);
+    }
+
+    .final-choice-item.selected {
+      background: #f6ad55;
+      color: white;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px rgba(246, 173, 85, 0.3);
+    }
+
+    .drop-zone {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 90px;
+      min-height: 48px;
+      border: 2px dashed #a0aec0;
+      border-radius: 6px;
+      background: #edf2f7;
+      padding: 8px 16px;
+      transition: all 0.2s;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .drop-zone.drag-over {
+      background: #bee3f8;
+      border-color: #4299e1;
+      transform: scale(1.05);
+    }
+
+    .drop-zone.filled {
+      background: #c6f6d5;
+      border: 2px solid #48bb78;
+    }
+
+    .drop-zone.waiting-input {
+      background: #bee3f8;
+      border-color: #4299e1;
+      border-style: solid;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+
+    .fraction-numerator {
+      padding-bottom: 2px;
+      border-bottom: 2px solid #2d3748;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .fraction-denominator {
+      padding-top: 2px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .math {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    button {
+      padding: 14px 36px;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .check-button {
+      background: #48bb78;
+      color: white;
+    }
+
+    .check-button:hover {
+      background: #38a169;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+    }
+
+    .reset-button {
+      background: #718096;
+      color: white;
+    }
+
+    .reset-button:hover {
+      background: #4a5568;
+      transform: translateY(-2px);
+    }
+
+    .show-answer-button {
+      background: #ed8936;
+      color: white;
+    }
+
+    .show-answer-button:hover {
+      background: #dd6b20;
+      transform: translateY(-2px);
+    }
+
+    .next-problem-button {
+      background: #48bb78;
+      color: white;
+      font-size: 18px;
+      padding: 16px 40px;
+      margin-top: 12px;
+      animation: bounceIn 0.5s ease-out;
+    }
+
+    .next-problem-button:hover {
+      background: #38a169;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .result-message {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .result-message.correct {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 2px solid #48bb78;
+      display: block;
+    }
+
+    .result-message.incorrect {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 2px solid #f56565;
+      display: block;
+    }
+
+    .version {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #667eea;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; min-height: 100vh; box-sizing: border-box; }
+    .version { display: none; }
+    .header { background: none; box-shadow: none; padding: 8px 0 0; max-width: 1100px; margin: 0 auto; }
+    .header h1 { font-size: min(2rem, 7vw) !important; white-space: nowrap; }
+    .navigation { gap: 8px; }
+    .nav-button { padding: 8px 14px; font-size: 15px !important; }
+    .container { margin: 16px auto; padding: 24px 20px; box-sizing: border-box; }
+    .problem-header { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; border-left: 4px dashed #fde68a !important; border-radius: 20px; }
+    .problem-text h2 { color: var(--u-soft-yellow-text) !important; }
+    .problem-text p { color: var(--u-ink); font-weight: 700; }
+    .triangle-diagram svg { max-width: 100%; height: auto; }
+    .choices-area { position: sticky; top: 0; z-index: 5; background: #fff; border: 3px solid var(--u-line); border-radius: 16px; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06); }
+    .choices-area h3 { color: var(--u-sub); font-size: 14px; }
+    .choice-item { background: var(--u-blue) !important; color: #fff; border: none !important; border-bottom: 4px solid var(--u-blue-dark) !important; border-radius: 12px; font-weight: 700; }
+    .choice-item:hover { background: var(--u-blue-dark) !important; color: #fff; }
+    .choice-item.selected { background: var(--u-accent) !important; border-bottom-color: var(--u-accent-dark) !important; }
+    .choice-item.fully-used { background: #94a3b8 !important; border-bottom-color: #64748b !important; color: #fff; opacity: 0.35; }
+    .work-area { border: 3px dashed var(--u-line); border-radius: 20px; background: #f8fafc; gap: 24px; }
+    .equation-line { color: var(--u-ink); font-weight: 700; border: 2px solid var(--u-line); border-radius: 14px; }
+    .equation-line::before { background: var(--u-blue); }
+    .equation-line.hint { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); color: var(--u-title); }
+    .equation-line.hint::before { background: #fbbf24; }
+    .equation-line.final-answer { background: var(--u-soft-yellow); border-color: #fbbf24; }
+    .final-choice-item { border-color: #fbbf24; border-radius: 12px; font-weight: 700; }
+    .drop-zone { border-radius: 10px; background: #fff; }
+    .fraction-numerator { border-bottom-color: currentColor; }
+    .result-message { border-radius: 16px; }
+    .result-message.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .result-message button { margin: 10px 4px 0; }
+    .result-overlay { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 9999; padding: 16px; overflow-y: auto; box-sizing: border-box; }
+    .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
+    .result-emoji { font-size: 2.6em; }
+    .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 4px 0 8px; }
+    .result-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); white-space: nowrap; margin-bottom: 8px; }
+    .result-box p { color: var(--u-ink); font-weight: 700; line-height: 1.7; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .result-nav button { padding: 12px; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 760px) {
+      body { padding: 8px; }
+      .container { padding: 14px 8px; margin: 10px auto; }
+      .problem-header { padding: 14px 10px; }
+      .work-area { flex-direction: column; padding: 10px 6px; gap: 12px; }
+      .column { gap: 12px; }
+      .equation-line { padding: 10px 8px 10px 40px; font-size: 16px !important; min-height: 0; }
+      .equation-line.final-answer { padding: 12px 8px 12px 40px; }
+      .equation-line::before { left: 8px; width: 24px; height: 24px; }
+      .equation-line.no-wrap { flex-wrap: wrap; }
+      .drop-zone { min-width: 50px; min-height: 40px; padding: 4px 8px; }
+      .choices-area { padding: 8px; max-height: 34vh; overflow-y: auto; }
+      .choices-area h3 { font-size: 12px; margin-bottom: 6px; }
+      .choices-container { gap: 6px; }
+      .choice-item { padding: 6px 10px; font-size: 15px !important; }
+      .button-group button { padding: 12px 18px; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+ <body class="u-theme">
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+  <header class="header">
+   <h1 id="main-title">正弦定理 練習問題</h1>
+   <nav class="navigation" id="navigation"></nav>
+  </header>
+  <main id="problems-container"></main>
+  <div class="version">
+   v66
+  </div>
+  <script>
+    const defaultConfig = {
+      main_title: "正弦定理 練習問題",
+      primary_color: "#667eea",
+      secondary_color: "#48bb78",
+      text_color: "#2d3748",
+      background_color: "#f7fafc",
+      accent_color: "#764ba2",
+      font_family: "Hiragino Sans",
+      font_size: 16
+    };
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/steps.js"></script>
-<script src="../data/seigen-teiri.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   29. 正弦定理（穴埋め問題）
-   5問ぶんの解答手順は元教材からそのまま引き継いでいる。
+    function frac(num, denom) {
+      return { type: 'fraction', numerator: num, denominator: denom };
+    }
 
-   元教材から直した点：
-     ・途中式を 2 列に並べる作りだったため、スマホでは右の列が画面外に出て
-       読めず、そこにある空欄も押せなかった。
-       → 1 列にして、長い式は自然に折り返すようにした。
-     ・分数の中の空欄がドラッグ＆ドロップでしか埋められず、
-       指では分母と分子を取りちがえやすかった。
-       → 空欄をタップしてから候補をタップする方式にした。
-     ・候補が正答だけで構成されていて、考えなくても埋まってしまった。
-       → 元データにあった余分な候補を、ひっかけとして残している。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+    const problems = [
+      {
+        id: 1,
+        title: "問題1",
+        description: "三角形ABCにおいて、角A = 45度、角B = 60度、b = 6 のとき、辺 a の長さを求めよ。",
+        triangle: { A: 45, B: 60, C: 75, a: "a", b: 6, c: "" },
+        lines: [
+          { template: [frac("a", "sin45°"), " = ", frac({ id: "1-0a", answer: "6" }, { id: "1-0b", answer: "sin60°" })] },
+          { template: ["a = ", frac("6", "sin60°"), " × sin45°"] },
+          { template: ["a = 6 ÷ sin60° × sin45°"], noWrap: true },
+          { template: ["sin45° = ", frac("1", "√2"), "、sin60° = ", frac("√3", "2"), "<br>", "を使うと"], isHint: true },
+          { template: ["a = 6 ÷ ", frac({ id: "1-1", answer: "√3" }, { id: "1-2", answer: "2" }), " × ", frac({ id: "1-3", answer: "1" }, { id: "1-4", answer: "√2" })] },
+          { template: ["a = 6 × ", frac({ id: "1-5", answer: "2" }, { id: "1-6", answer: "√3" }), " × ", frac({ id: "1-7", answer: "1" }, { id: "1-8", answer: "√2" })], columnBreak: true },
+          { template: ["a = ", frac({ id: "1-9", answer: "12" }, { id: "1-10", answer: "√6" })] },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["a = ", frac("12", "√6"), " × ", frac({ id: "1-11", answer: "√6" }, { id: "1-12", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
+          { template: ["a = ", frac({ id: "1-13", answer: "12√6" }, { id: "1-14", answer: "6" })] },
+          { template: ["a = "], isFinal: true, finalId: "1-15", finalAnswer: "2√6" }
+        ],
+        finalChoices: ["2√6", "√6", "3√6", "4√6"],
+        choices: ["2", "√3", "1", "√2", "√6", "12", "12√6", "6", "sin60°"]
+      },
+      {
+        id: 2,
+        title: "問題2",
+        description: "三角形ABCにおいて、角A = 30度、角C = 45度、c = 4 のとき、辺 a の長さを求めよ。",
+        triangle: { A: 30, B: 105, C: 45, a: "a", b: "", c: 4 },
+        lines: [
+          { template: [frac("a", { id: "2-1", answer: "sin30°" }), " = ", frac({ id: "2-2", answer: "4" }, { id: "2-3", answer: "sin45°" })] },
+          { template: ["a = ", frac({ id: "2-4", answer: "4" }, { id: "2-5", answer: "sin45°" }), " × ", { id: "2-6", answer: "sin30°" }] },
+          { template: ["a = ", { id: "2-7", answer: "4" }, " ÷ ", { id: "2-8", answer: "sin45°" }, " × ", { id: "2-9", answer: "sin30°" }], noWrap: true },
+          { template: ["sin30° = ", frac({ id: "2-14", answer: "1" }, { id: "2-15", answer: "2" }), "、sin45° = ", frac({ id: "2-16", answer: "1" }, { id: "2-17", answer: "√2" }), "<br>", "を使うと"], isHint: true },
+          { template: ["a = 4 ÷ ", frac("1", "√2"), " × ", frac("1", "2")], columnBreak: true },
+          { template: ["a = 4 × ", frac({ id: "2-18", answer: "√2" }, { id: "2-19", answer: "1" }), " × ", frac({ id: "2-20", answer: "1" }, { id: "2-21", answer: "2" })] },
+          { template: ["a = ", frac({ id: "2-10", answer: "4√2" }, { id: "2-11", answer: "2" })] },
+          { template: ["a = "], isFinal: true, finalId: "2-13", finalAnswer: "2√2" }
+        ],
+        finalChoices: ["2√2", "√2", "4√2", "3√2"],
+        choices: ["sin30°", "4", "sin45°", "4√2", "2", "2√2", "1", "√2"]
+      },
+      {
+        id: 3,
+        title: "問題3",
+        description: "三角形ABCにおいて、角A = 60度、角B = 45度、a = 8 のとき、辺 b の長さを求めよ。",
+        triangle: { A: 60, B: 45, C: 75, a: 8, b: "b", c: "" },
+        lines: [
+          { template: [frac("b", { id: "3-1", answer: "sin45°" }), " = ", frac({ id: "3-2", answer: "8" }, { id: "3-3", answer: "sin60°" })] },
+          { template: ["b = ", frac({ id: "3-4", answer: "8" }, { id: "3-5", answer: "sin60°" }), " × ", { id: "3-6", answer: "sin45°" }] },
+          { template: ["b = ", { id: "3-7", answer: "8" }, " ÷ ", { id: "3-8", answer: "sin60°" }, " × ", { id: "3-9", answer: "sin45°" }], noWrap: true },
+          { template: ["sin60° = ", frac({ id: "3-17", answer: "√3" }, { id: "3-18", answer: "2" }), "、sin45° = ", frac({ id: "3-19", answer: "1" }, { id: "3-20", answer: "√2" }), "<br>", "を使うと"], isHint: true },
+          { template: ["b = 8 ÷ ", frac("√3", "2"), " × ", frac("1", "√2")] },
+          { template: ["b = 8 × ", frac({ id: "3-21", answer: "2" }, { id: "3-22", answer: "√3" }), " × ", frac("1", "√2")], columnBreak: true },
+          { template: ["b = ", frac({ id: "3-10", answer: "16" }, { id: "3-11", answer: "√6" })] },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["b = ", frac("16", "√6"), " × ", frac({ id: "3-12", answer: "√6" }, { id: "3-13", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
+          { template: ["b = ", frac({ id: "3-14", answer: "16√6" }, { id: "3-15", answer: "6" })] },
+          { template: ["b = "], isFinal: true, finalId: "3-16", finalAnswer: "8√6/3" }
+        ],
+        finalChoices: [
+          { type: 'fraction', numerator: "8√6", denominator: "3" },
+          { type: 'fraction', numerator: "4√6", denominator: "3" },
+          { type: 'fraction', numerator: "16√6", denominator: "3" },
+          { type: 'fraction', numerator: "2√6", denominator: "3" }
+        ],
+        choices: ["sin45°", "8", "sin60°", "√6", "16", "16√6", "6", "√3", "2", "1", "√2"]
+      },
+      {
+        id: 4,
+        title: "問題4",
+        description: "三角形ABCにおいて、角A = 30度、角B = 60度、b = 6 のとき、辺 a の長さを求めよ。",
+        triangle: { A: 30, B: 60, C: 90, a: "a", b: 6, c: "" },
+        lines: [
+          { template: [frac("a", { id: "4-1", answer: "sin30°" }), " = ", frac({ id: "4-2", answer: "6" }, { id: "4-3", answer: "sin60°" })] },
+          { template: ["a = ", frac({ id: "4-4", answer: "6" }, { id: "4-5", answer: "sin60°" }), " × ", { id: "4-6", answer: "sin30°" }] },
+          { template: ["a = ", { id: "4-7", answer: "6" }, " ÷ ", { id: "4-8", answer: "sin60°" }, " × ", { id: "4-9", answer: "sin30°" }], noWrap: true },
+          { template: ["sin30° = ", frac({ id: "4-14", answer: "1" }, { id: "4-15", answer: "2" }), "、sin60° = ", frac({ id: "4-16", answer: "√3" }, { id: "4-17", answer: "2" }), "<br>", "を使うと"], isHint: true },
+          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "2")] },
+          { template: ["a = 6 × ", frac({ id: "4-18", answer: "2" }, { id: "4-19", answer: "√3" }), " × ", frac({ id: "4-20", answer: "1" }, { id: "4-21", answer: "2" })], columnBreak: true },
+          { template: ["a = ", frac("6", "√3")] },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["a = ", frac("6", "√3"), " × ", frac({ id: "4-10", answer: "√3" }, { id: "4-11", answer: "√3" }), "　（同じルートを分母と分子にかける）"] },
+          { template: ["a = ", frac({ id: "4-12", answer: "6√3" }, "3")] },
+          { template: ["a = "], isFinal: true, finalId: "4-13", finalAnswer: "2√3" }
+        ],
+        finalChoices: ["2√3", "√3", "3√3", "6√3"],
+        choices: ["sin30°", "6", "sin60°", "√3", "6√3", "1", "2"]
+      },
+      {
+        id: 5,
+        title: "問題5",
+        description: "三角形ABCにおいて、角B = 60度、角C = 45度、b = 12 のとき、辺 c の長さを求めよ。",
+        triangle: { A: 75, B: 60, C: 45, a: "", b: 12, c: "c" },
+        lines: [
+          { template: [frac("c", { id: "5-1", answer: "sin45°" }), " = ", frac({ id: "5-2", answer: "12" }, { id: "5-3", answer: "sin60°" })] },
+          { template: ["c = ", frac({ id: "5-4", answer: "12" }, { id: "5-5", answer: "sin60°" }), " × ", { id: "5-6", answer: "sin45°" }] },
+          { template: ["c = ", { id: "5-7", answer: "12" }, " ÷ ", { id: "5-8", answer: "sin60°" }, " × ", { id: "5-9", answer: "sin45°" }], noWrap: true },
+          { template: ["c = ", { id: "5-14", answer: "12" }, " ÷ ", frac({ id: "5-15", answer: "√3" }, { id: "5-16", answer: "2" }), " × ", frac({ id: "5-17", answer: "1" }, { id: "5-18", answer: "√2" })] },
+          { template: ["c = 12 × ", frac({ id: "5-19", answer: "2" }, { id: "5-20", answer: "√3" }), " × ", frac({ id: "5-21", answer: "1" }, { id: "5-22", answer: "√2" })] },
+          { template: ["c = ", frac({ id: "5-23", answer: "24" }, { id: "5-24", answer: "√6" })], columnBreak: true },
+          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
+          { template: ["c = ", frac("24", "√6"), " × ", frac({ id: "5-25", answer: "√6" }, { id: "5-26", answer: "√6" }), "　（同じルートを分母と分子にかける）"] },
+          { template: ["c = ", frac({ id: "5-27", answer: "24√6" }, { id: "5-28", answer: "6" })] },
+          { template: ["c = "], isFinal: true, finalId: "5-29", finalAnswer: "4√6" }
+        ],
+        finalChoices: ["6√6", "4√6", "2√6", "8√6"],
+        choices: ["sin45°", "12", "sin60°", "1", "2", "√2", "√3", "√6", "24", "24√6", "6"]
+      }
+    ];
 
-  // 三角形の図をそえる（元教材の triangle データは角度と辺の情報だけだった）
-  Steps.start({
-    title: '正弦定理 穴埋め問題',
-    subtitle: 'a / sin A = b / sin B = c / sin C。手順どおりに埋めていこう。',
-    problems: window.DATA_SEIGEN
+    let currentProblem = 1;
+    let draggedElement = null;
+    let problemAnswers = {};
+    let selectedChoice = null;
+    let selectedFinalChoice = null;
+    let waitingDropZone = null;
+    // 【ブラッシュアップ】正解した問題・答えを見た問題・変えられないようにした問題
+    let solvedMap = {};
+    let shownMap = {};
+    let lockedMap = {};
+
+    function createFractionHTML(item) {
+      if (typeof item === 'string') {
+        return item;
+      }
+      if (item && item.type === 'fraction') {
+        const numHTML = typeof item.numerator === 'object' && item.numerator.id
+          ? `<div class="drop-zone" data-blank-id="${item.numerator.id}" data-answer="${item.numerator.answer}"></div>`
+          : (item.numerator || '');
+        const denomHTML = typeof item.denominator === 'object' && item.denominator.id
+          ? `<div class="drop-zone" data-blank-id="${item.denominator.id}" data-answer="${item.denominator.answer}"></div>`
+          : (item.denominator || '');
+        return `<span class="fraction"><span class="fraction-numerator">${numHTML}</span><span class="fraction-denominator">${denomHTML}</span></span>`;
+      }
+      if (item && item.id) {
+        return `<div class="drop-zone" data-blank-id="${item.id}" data-answer="${item.answer}"></div>`;
+      }
+      return '';
+    }
+
+    function getChoiceValue(choice) {
+      if (typeof choice === 'string') return choice;
+      if (choice && choice.type === 'fraction') return `${choice.numerator}/${choice.denominator}`;
+      return String(choice);
+    }
+
+    function drawTriangle(triangle, problem) {
+      const { A, B, C, a, b, c } = triangle;
+
+      const toRad = (deg) => deg * Math.PI / 180;
+
+      const baseLength = 180;
+
+      const Cx = 60;
+      const Cy = 200;
+
+      const Bx = Cx + baseLength;
+      const By = Cy;
+
+      const caLength = 140;
+      const Ax = Cx + caLength * Math.cos(toRad(C));
+      const Ay = Cy - caLength * Math.sin(toRad(C));
+
+      const description = problem.description;
+      const usedAngles = new Set();
+      const usedSides = new Set();
+
+      const angleMatches = description.matchAll(/角([ABC])\s*=\s*(\d+)/g);
+      for (const match of angleMatches) {
+        usedAngles.add(match[1]);
+      }
+
+      const sideMatches = description.matchAll(/([abc])\s*=\s*(\d+)/g);
+      for (const match of sideMatches) {
+        usedSides.add(match[1]);
+      }
+
+      const findSideMatch = description.match(/辺\s*([abc])\s*の/);
+      if (findSideMatch) {
+        usedSides.add(findSideMatch[1]);
+      }
+
+      const showA = usedAngles.has('A');
+      const showB = usedAngles.has('B');
+      const showC = usedAngles.has('C');
+      const showSideA = usedSides.has('a');
+      const showSideB = usedSides.has('b');
+      const showSideC = usedSides.has('c');
+
+      let angleAX, angleAY, angleBX, angleBY, angleCX, angleCY;
+
+      if (problem.id === 1) {
+        angleAX = 105; angleAY = 100;
+        angleBX = 200; angleBY = 190;
+        angleCX = Cx + 20; angleCY = Cy - 10;
+      } else if (problem.id === 2) {
+        angleAX = 160; angleAY = 135;
+        angleBX = Bx - 20; angleBY = By - 10;
+        angleCX = 95; angleCY = 190;
+      } else if (problem.id === 3) {
+        angleAX = 105; angleAY = 100;
+        angleBX = 200; angleBY = 190;
+        angleCX = Cx + 20; angleCY = Cy - 10;
+      } else if (problem.id === 4) {
+        angleAX = 80; angleAY = 100;
+        angleBX = 195; angleBY = 190;
+        angleCX = Cx + 20; angleCY = Cy - 10;
+      } else if (problem.id === 5) {
+        angleAX = Ax; angleAY = Ay + 20;
+        angleBX = 205; angleBY = 190;
+        angleCX = 95; angleCY = 190;
+      } else {
+        angleAX = Ax; angleAY = Ay + 20;
+        angleBX = Bx - 20; angleBY = By - 10;
+        angleCX = Cx + 20; angleCY = Cy - 10;
+      }
+
+      return `
+        <svg width="320" height="260" viewBox="0 0 320 260" style="background: white; border-radius: 8px; padding: 10px;">
+          <line x1="${Ax}" y1="${Ay}" x2="${Bx}" y2="${By}" stroke="#2d3748" stroke-width="2.5"/>
+          <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" stroke="#2d3748" stroke-width="2.5"/>
+          <line x1="${Cx}" y1="${Cy}" x2="${Ax}" y2="${Ay}" stroke="#2d3748" stroke-width="2.5"/>
+
+          <text x="${Ax}" y="${Ay - 10}" text-anchor="middle" font-size="20" font-weight="bold" fill="#2d3748">A</text>
+          <text x="${Bx + 15}" y="${By + 5}" text-anchor="start" font-size="20" font-weight="bold" fill="#2d3748">B</text>
+          <text x="${Cx - 15}" y="${Cy + 5}" text-anchor="end" font-size="20" font-weight="bold" fill="#2d3748">C</text>
+
+          ${showA ? `<text x="${angleAX}" y="${angleAY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${A}°</text>` : ''}
+          ${showB ? `<text x="${angleBX}" y="${angleBY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${B}°</text>` : ''}
+          ${showC ? `<text x="${angleCX}" y="${angleCY}" text-anchor="middle" font-size="16" fill="#667eea" font-weight="600">${C}°</text>` : ''}
+
+          ${showSideA ? `<text x="${(Bx + Cx) / 2}" y="${(By + Cy) / 2 + 20}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${a || 'a'}</text>` : ''}
+          ${showSideB ? `<text x="${(Ax + Cx) / 2 - 20}" y="${(Ay + Cy) / 2}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${b || 'b'}</text>` : ''}
+          ${showSideC ? `<text x="${(Ax + Bx) / 2 + 20}" y="${(Ay + By) / 2}" text-anchor="middle" font-size="18" fill="#e53e3e" font-weight="bold" font-style="italic">${c || 'c'}</text>` : ''}
+        </svg>
+      `;
+    }
+
+    function initializeProblems() {
+      const nav = document.getElementById('navigation');
+      const container = document.getElementById('problems-container');
+
+      problems.forEach(problem => {
+        const navBtn = document.createElement('button');
+        navBtn.className = 'nav-button';
+        navBtn.textContent = problem.title;
+        if (problem.id === 1) navBtn.classList.add('active');
+        navBtn.onclick = () => showProblem(problem.id);
+        nav.appendChild(navBtn);
+
+        const page = document.createElement('div');
+        page.className = 'problem-page container';
+        page.id = `problem-${problem.id}`;
+        if (problem.id === 1) page.classList.add('active');
+
+        page.innerHTML = `
+          <div class="problem-header">
+            <div class="problem-text">
+              <h2>${problem.title}</h2>
+              <p>${problem.description}</p>
+            </div>
+            <div class="triangle-diagram">
+              ${drawTriangle(problem.triangle, problem)}
+            </div>
+          </div>
+
+          <div class="choices-area">
+            <h3>選択肢（ドラッグまたはタップして空欄に入れてください）</h3>
+            <div class="choices-container" id="choices-${problem.id}"></div>
+          </div>
+
+          <div class="work-area" id="work-${problem.id}"></div>
+
+          <div class="button-group">
+            <button class="reset-button" onclick="resetProblem(${problem.id})">リセット</button>
+            <button class="show-answer-button" onclick="showAnswer(${problem.id})">答えを見る</button>
+          </div>
+
+          <div class="result-message" id="result-${problem.id}"></div>
+        `;
+
+        container.appendChild(page);
+
+        renderChoices(problem);
+        renderEquations(problem);
+      });
+    }
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function renderChoices(problem) {
+      const container = document.getElementById(`choices-${problem.id}`);
+      container.innerHTML = '';
+
+      const shuffledChoices = shuffleArray(problem.choices);
+
+      shuffledChoices.forEach((choice, index) => {
+        const choiceDiv = document.createElement('div');
+        choiceDiv.className = 'choice-item';
+        choiceDiv.draggable = true;
+
+        if (typeof choice === 'string') {
+          if (choice.includes('/')) {
+            const parts = choice.split('/');
+            const fracSpan = document.createElement('span');
+            fracSpan.className = 'fraction';
+            fracSpan.innerHTML = `
+              <span class="fraction-numerator">${parts[0]}</span>
+              <span class="fraction-denominator">${parts[1]}</span>
+            `;
+            choiceDiv.appendChild(fracSpan);
+          } else {
+            choiceDiv.textContent = choice;
+          }
+        } else if (choice && choice.type === 'fraction') {
+          const fracSpan = document.createElement('span');
+          fracSpan.className = 'fraction';
+          fracSpan.innerHTML = `
+            <span class="fraction-numerator">${choice.numerator}</span>
+            <span class="fraction-denominator">${choice.denominator}</span>
+          `;
+          choiceDiv.appendChild(fracSpan);
+        }
+
+        choiceDiv.dataset.value = getChoiceValue(choice);
+        choiceDiv.dataset.problemId = problem.id;
+        choiceDiv.dataset.index = index;
+
+        choiceDiv.addEventListener('dragstart', handleDragStart);
+        choiceDiv.addEventListener('dragend', handleDragEnd);
+        choiceDiv.addEventListener('click', handleChoiceClick);
+
+        container.appendChild(choiceDiv);
+      });
+    }
+
+    function renderEquations(problem) {
+      const workArea = document.getElementById(`work-${problem.id}`);
+
+      const column1 = document.createElement('div');
+      column1.className = 'column';
+      const column2 = document.createElement('div');
+      column2.className = 'column';
+
+      let currentColumn = column1;
+      let stepNumber = 1;
+
+      problem.lines.forEach((line, lineIndex) => {
+        if (line.columnBreak) {
+          currentColumn = column2;
+        }
+
+        if (line.isHint) {
+          const hintDiv = document.createElement('div');
+          hintDiv.className = 'equation-line hint';
+          hintDiv.dataset.step = '💡';
+
+          line.template.forEach(item => {
+            if (typeof item === 'string') {
+              if (item === '<br>') {
+                hintDiv.appendChild(document.createElement('br'));
+              } else {
+                const span = document.createElement('span');
+                span.textContent = item;
+                hintDiv.appendChild(span);
+              }
+            } else if (item && item.type === 'fraction') {
+              const fracContainer = document.createElement('span');
+              fracContainer.className = 'fraction';
+
+              const numSpan = document.createElement('span');
+              numSpan.className = 'fraction-numerator';
+              if (typeof item.numerator === 'object' && item.numerator.id) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.dataset.blankId = item.numerator.id;
+                dropZone.dataset.answer = item.numerator.answer;
+                dropZone.dataset.problemId = problem.id;
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('click', handleDropZoneClick);
+                numSpan.appendChild(dropZone);
+              } else {
+                numSpan.textContent = item.numerator || '';
+              }
+
+              const denomSpan = document.createElement('span');
+              denomSpan.className = 'fraction-denominator';
+              if (typeof item.denominator === 'object' && item.denominator.id) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.dataset.blankId = item.denominator.id;
+                dropZone.dataset.answer = item.denominator.answer;
+                dropZone.dataset.problemId = problem.id;
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('click', handleDropZoneClick);
+                denomSpan.appendChild(dropZone);
+              } else {
+                denomSpan.textContent = item.denominator || '';
+              }
+
+              fracContainer.appendChild(numSpan);
+              fracContainer.appendChild(denomSpan);
+              hintDiv.appendChild(fracContainer);
+            }
+          });
+
+          currentColumn.appendChild(hintDiv);
+        } else {
+          const lineDiv = document.createElement('div');
+          lineDiv.className = 'equation-line';
+          if (line.isFinal) {
+            lineDiv.classList.add('final-answer');
+          }
+          if (line.noWrap) {
+            lineDiv.classList.add('no-wrap');
+          }
+          lineDiv.dataset.step = stepNumber;
+          stepNumber++;
+
+          line.template.forEach(item => {
+            if (typeof item === 'string') {
+              const span = document.createElement('span');
+              span.textContent = item;
+              lineDiv.appendChild(span);
+            } else if (item && item.type === 'fraction') {
+              const fracContainer = document.createElement('span');
+              fracContainer.className = 'fraction';
+
+              const numSpan = document.createElement('span');
+              numSpan.className = 'fraction-numerator';
+              if (typeof item.numerator === 'object' && item.numerator.id) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.dataset.blankId = item.numerator.id;
+                dropZone.dataset.answer = item.numerator.answer;
+                dropZone.dataset.problemId = problem.id;
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('click', handleDropZoneClick);
+                numSpan.appendChild(dropZone);
+              } else {
+                numSpan.textContent = item.numerator || '';
+              }
+
+              const denomSpan = document.createElement('span');
+              denomSpan.className = 'fraction-denominator';
+              if (typeof item.denominator === 'object' && item.denominator.id) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone';
+                dropZone.dataset.blankId = item.denominator.id;
+                dropZone.dataset.answer = item.denominator.answer;
+                dropZone.dataset.problemId = problem.id;
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('click', handleDropZoneClick);
+                denomSpan.appendChild(dropZone);
+              } else {
+                denomSpan.textContent = item.denominator || '';
+              }
+
+              fracContainer.appendChild(numSpan);
+              fracContainer.appendChild(denomSpan);
+              lineDiv.appendChild(fracContainer);
+            } else if (item && item.id) {
+              const dropZone = document.createElement('div');
+              dropZone.className = 'drop-zone';
+              dropZone.dataset.blankId = item.id;
+              dropZone.dataset.answer = item.answer;
+              dropZone.dataset.problemId = problem.id;
+
+              dropZone.addEventListener('dragover', handleDragOver);
+              dropZone.addEventListener('dragleave', handleDragLeave);
+              dropZone.addEventListener('drop', handleDrop);
+              dropZone.addEventListener('click', handleDropZoneClick);
+
+              lineDiv.appendChild(dropZone);
+            }
+          });
+
+          if (line.isFinal) {
+            const finalChoicesWrapper = document.createElement('div');
+            finalChoicesWrapper.style.display = 'flex';
+            finalChoicesWrapper.style.alignItems = 'center';
+            finalChoicesWrapper.style.gap = '12px';
+            finalChoicesWrapper.style.flexWrap = 'wrap';
+
+            const finalChoicesDiv = document.createElement('div');
+            finalChoicesDiv.className = 'final-choices';
+            finalChoicesDiv.style.margin = '0';
+
+            const shuffledFinalChoices = shuffleArray(problem.finalChoices);
+
+            shuffledFinalChoices.forEach(choice => {
+              const finalChoiceDiv = document.createElement('div');
+              finalChoiceDiv.className = 'final-choice-item';
+
+              if (typeof choice === 'string') {
+                finalChoiceDiv.textContent = choice;
+                finalChoiceDiv.dataset.value = choice;
+              } else if (choice && choice.type === 'fraction') {
+                const fracSpan = document.createElement('span');
+                fracSpan.className = 'fraction';
+                fracSpan.innerHTML = `
+                  <span class="fraction-numerator">${choice.numerator}</span>
+                  <span class="fraction-denominator">${choice.denominator}</span>
+                `;
+                finalChoiceDiv.appendChild(fracSpan);
+                finalChoiceDiv.dataset.value = `${choice.numerator}/${choice.denominator}`;
+              }
+
+              finalChoiceDiv.dataset.problemId = problem.id;
+              finalChoiceDiv.dataset.finalId = line.finalId;
+              finalChoiceDiv.dataset.answer = line.finalAnswer;
+
+              finalChoiceDiv.addEventListener('click', handleFinalChoiceClick);
+              finalChoicesDiv.appendChild(finalChoiceDiv);
+            });
+
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = '（答えはここから選ぶ）';
+            labelSpan.style.fontSize = '14px';
+            labelSpan.style.color = '#744210';
+            labelSpan.style.fontWeight = '600';
+            labelSpan.style.whiteSpace = 'nowrap';
+
+            finalChoicesWrapper.appendChild(finalChoicesDiv);
+            finalChoicesWrapper.appendChild(labelSpan);
+            lineDiv.appendChild(finalChoicesWrapper);
+          }
+
+          currentColumn.appendChild(lineDiv);
+        }
+      });
+
+      workArea.appendChild(column1);
+      workArea.appendChild(column2);
+    }
+
+    function showProblem(id) {
+      currentProblem = id;
+
+      document.querySelectorAll('.problem-page').forEach(page => {
+        page.classList.remove('active');
+      });
+      const problemPage = document.getElementById(`problem-${id}`);
+      if (problemPage) {
+        problemPage.classList.add('active');
+      }
+
+      document.querySelectorAll('.nav-button').forEach((btn, index) => {
+        btn.classList.remove('active');
+        if (index + 1 === id) {
+          btn.classList.add('active');
+        }
+      });
+
+      updateNavigationColors();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateNavigationColors() {
+      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      document.querySelectorAll('.nav-button').forEach((btn, index) => {
+        if (index + 1 === currentProblem) {
+          btn.style.background = config.secondary_color || defaultConfig.secondary_color;
+        } else {
+          btn.style.background = config.primary_color || defaultConfig.primary_color;
+        }
+      });
+    }
+
+    function handleFinalChoiceClick(e) {
+      const choice = e.currentTarget;
+      const problemId = choice.dataset.problemId;
+      const finalId = choice.dataset.finalId;
+      const answer = choice.dataset.answer;
+      const value = choice.dataset.value;
+      if (lockedMap[problemId]) return;   // 【ブラッシュアップ】
+
+      document.querySelectorAll(`.final-choice-item[data-problem-id="${problemId}"]`).forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      choice.classList.add('selected');
+
+      if (!problemAnswers[problemId]) {
+        problemAnswers[problemId] = {};
+      }
+      problemAnswers[problemId][finalId] = value;
+
+      if (value === answer) {
+        choice.style.borderColor = '#48bb78';
+        choice.style.background = '#c6f6d5';
+        choice.style.color = '#22543d';
+
+        checkProblemComplete(problemId);
+      } else {
+        choice.style.borderColor = '#f56565';
+        choice.style.background = '#fed7d7';
+        choice.style.color = '#742a2a';
+
+        setTimeout(() => {
+          choice.classList.remove('selected');
+          choice.style.borderColor = '';
+          choice.style.background = '';
+          choice.style.color = '';
+          if (problemAnswers[problemId][finalId] === value) delete problemAnswers[problemId][finalId];   // 【ブラッシュアップ】
+        }, 500);
+      }
+    }
+
+    function handleChoiceClick(e) {
+      const choice = e.currentTarget;
+      if (choice.classList.contains('fully-used') || lockedMap[choice.dataset.problemId]) return;   // 【ブラッシュアップ】
+
+      if (waitingDropZone) {
+        fillDropZone(waitingDropZone, choice.dataset.value, choice.dataset.problemId, choice);
+        waitingDropZone.classList.remove('waiting-input');
+        waitingDropZone = null;
+        return;
+      }
+
+      if (selectedChoice) {
+        selectedChoice.classList.remove('selected');
+      }
+
+      if (selectedChoice === choice) {
+        selectedChoice = null;
+      } else {
+        selectedChoice = choice;
+        choice.classList.add('selected');
+      }
+    }
+
+    function handleDropZoneClick(e) {
+      const dropZone = e.currentTarget;
+      if (lockedMap[dropZone.dataset.problemId]) return;   // 【ブラッシュアップ】
+
+      if (waitingDropZone) {
+        waitingDropZone.classList.remove('waiting-input');
+      }
+
+      if (selectedChoice) {
+        fillDropZone(dropZone, selectedChoice.dataset.value, selectedChoice.dataset.problemId, selectedChoice);
+        selectedChoice.classList.remove('selected');
+        selectedChoice = null;
+        waitingDropZone = null;
+      } else {
+        if (waitingDropZone === dropZone) {
+          waitingDropZone = null;
+          dropZone.classList.remove('waiting-input');
+        } else {
+          waitingDropZone = dropZone;
+          dropZone.classList.add('waiting-input');
+        }
+      }
+    }
+
+    function handleDragStart(e) {
+      draggedElement = e.target;
+      e.target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', e.target.dataset.value);
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      draggedElement = null;
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+
+      const dropZone = e.currentTarget;
+      const value = e.dataTransfer.getData('text/plain');
+      const problemId = dropZone.dataset.problemId;
+      // 【ブラッシュアップ】固定した問題・使い切った選択肢は入れられない
+      if (lockedMap[problemId] || (draggedElement && draggedElement.classList.contains('fully-used'))) return;
+
+      fillDropZone(dropZone, value, problemId, draggedElement);
+    }
+
+    function fillDropZone(dropZone, value, problemId, sourceElement) {
+      const blankId = dropZone.dataset.blankId;
+      dropZone._token = (dropZone._token || 0) + 1;   // 【ブラッシュアップ】
+
+      if (dropZone.dataset.currentValue) {
+        const oldChoice = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${dropZone.dataset.currentValue}"]`);
+        if (oldChoice) {
+          oldChoice.classList.remove('used');
+          updateChoiceUsageCount(problemId);
+        }
+      }
+
+      const problem = problems.find(p => p.id == problemId);
+      const originalChoice = problem.choices.find(c => getChoiceValue(c) === value);
+
+      if (typeof originalChoice === 'string') {
+        if (originalChoice.includes('/')) {
+          const parts = originalChoice.split('/');
+          dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${parts[0]}</span><span class="fraction-denominator">${parts[1]}</span></span>`;
+        } else {
+          dropZone.textContent = originalChoice;
+        }
+      } else if (originalChoice && originalChoice.type === 'fraction') {
+        dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${originalChoice.numerator}</span><span class="fraction-denominator">${originalChoice.denominator}</span></span>`;
+      }
+
+      dropZone.classList.add('filled');
+      dropZone.dataset.currentValue = value;
+
+      if (!problemAnswers[problemId]) {
+        problemAnswers[problemId] = {};
+      }
+      problemAnswers[problemId][blankId] = value;
+
+      if (sourceElement) {
+        sourceElement.classList.add('used');
+      }
+
+      updateChoiceUsageCount(problemId);
+      checkSingleAnswer(dropZone, problemId);
+    }
+
+    function updateChoiceUsageCount(problemId) {
+      const problem = problems.find(p => p.id == problemId);
+
+      problem.choices.forEach(choice => {
+        const choiceValue = getChoiceValue(choice);
+        const totalNeeded = countChoiceNeeded(problemId, choiceValue);
+        const currentUsed = countChoiceUsed(problemId, choiceValue);
+
+        const choiceElement = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${choiceValue}"]`);
+        if (choiceElement) {
+          if (currentUsed >= totalNeeded) {
+            choiceElement.classList.add('fully-used');
+          } else {
+            choiceElement.classList.remove('fully-used');
+          }
+        }
+      });
+    }
+
+    function countChoiceNeeded(problemId, value) {
+      const problem = problems.find(p => p.id == problemId);
+      let count = 0;
+
+      problem.lines.forEach(line => {
+        if (!line.isFinal) {
+          line.template.forEach(item => {
+            if (item && item.id && item.answer === value) {
+              count++;
+            } else if (item && item.type === 'fraction') {
+              if (typeof item.numerator === 'object' && item.numerator.answer === value) count++;
+              if (typeof item.denominator === 'object' && item.denominator.answer === value) count++;
+            }
+          });
+        }
+      });
+
+      return count;
+    }
+
+    function countChoiceUsed(problemId, value) {
+      let count = 0;
+      const answers = problemAnswers[problemId] || {};
+
+      for (const blankId in answers) {
+        if (answers[blankId] === value) {
+          count++;
+        }
+      }
+
+      return count;
+    }
+
+    function checkSingleAnswer(dropZone, problemId) {
+      const blankId = dropZone.dataset.blankId;
+      const correctAnswer = dropZone.dataset.answer;
+      const userAnswer = problemAnswers[problemId]?.[blankId] || '';
+
+      const isCorrect = userAnswer === correctAnswer;
+
+      if (isCorrect) {
+        dropZone.style.borderColor = '#48bb78';
+        dropZone.style.background = '#c6f6d5';
+
+        checkProblemComplete(problemId);
+      } else {
+        dropZone.style.borderColor = '#f56565';
+        dropZone.style.background = '#fed7d7';
+
+        const token = dropZone._token;
+        setTimeout(() => {
+          if (dropZone._token !== token) return;   // 【ブラッシュアップ】入れ直していたら消さない
+          const value = dropZone.dataset.currentValue;
+          const choice = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${value}"]`);
+          if (choice) {
+            choice.classList.remove('used');
+          }
+
+          dropZone.textContent = '';
+          dropZone.innerHTML = '';
+          dropZone.classList.remove('filled');
+          dropZone.style.borderColor = '';
+          dropZone.style.background = '';
+          delete dropZone.dataset.currentValue;
+          delete problemAnswers[problemId][blankId];
+
+          updateChoiceUsageCount(problemId);
+        }, 500);
+      }
+    }
+
+    function checkProblemComplete(problemId) {
+      problemId = Number(problemId);   // 【ブラッシュアップ】数として扱う
+      setTimeout(() => {
+        const problem = problems.find(p => p.id == problemId);
+        const answers = problemAnswers[problemId] || {};
+
+        let totalBlanks = 0;
+        let correctBlanks = 0;
+
+        problem.lines.forEach(line => {
+          if (line.isFinal) {
+            totalBlanks++;
+            if (answers[line.finalId] === line.finalAnswer) correctBlanks++;
+          } else {
+            line.template.forEach(item => {
+              if (item && item.id) {
+                totalBlanks++;
+                if (answers[item.id] === item.answer) correctBlanks++;
+              } else if (item && item.type === 'fraction') {
+                if (typeof item.numerator === 'object' && item.numerator.id) {
+                  totalBlanks++;
+                  if (answers[item.numerator.id] === item.numerator.answer) correctBlanks++;
+                }
+                if (typeof item.denominator === 'object' && item.denominator.id) {
+                  totalBlanks++;
+                  if (answers[item.denominator.id] === item.denominator.answer) correctBlanks++;
+                }
+              }
+            });
+          }
+        });
+
+        if (correctBlanks === totalBlanks && totalBlanks > 0) {
+          // 【ブラッシュアップ】一度だけ。正解したら固定する
+          if (lockedMap[problemId]) return;
+          solvedMap[problemId] = true;
+          lockedMap[problemId] = true;
+          markNav(problemId);
+          const result = document.getElementById(`result-${problemId}`);
+          const messages = [
+            '🎉 完璧です！すべて正解です！素晴らしい！',
+            '✨ 大正解！完璧に解けましたね！',
+            '🌟 パーフェクト！全問正解です！',
+            '🎊 すごい！全部正解です！最高です！',
+            '👏 お見事！完璧な答えです！'
+          ];
+          const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+          result.innerHTML = randomMessage;
+          result.className = 'result-message correct';
+          result.style.display = 'block';
+
+          if (problemId < problems.length) {
+            const existingButton = result.querySelector('.next-problem-button');
+            if (!existingButton) {
+              const nextButton = document.createElement('button');
+              nextButton.className = 'next-problem-button';
+              nextButton.textContent = '次の問題へ →';
+              nextButton.addEventListener('click', () => {
+                showProblem(problemId + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              });
+              result.appendChild(document.createElement('br'));
+              result.appendChild(nextButton);
+            }
+          }
+
+          // 【ブラッシュアップ】最後の問題なら「結果を見る」。全部おわったら結果の画面
+          if (problemId === problems.length) addFinishButton(result);
+          if (allDone()) setTimeout(showResult, 900);
+        }
+      }, 100);
+    }
+
+    function checkAllProblemsComplete() {
+      const allComplete = problems.every(problem => {
+        const answers = problemAnswers[problem.id] || {};
+        let totalBlanks = 0;
+        let correctBlanks = 0;
+
+        problem.lines.forEach(line => {
+          if (line.isFinal) {
+            totalBlanks++;
+            if (answers[line.finalId] === line.finalAnswer) correctBlanks++;
+          } else {
+            line.template.forEach(item => {
+              if (item && item.id) {
+                totalBlanks++;
+                if (answers[item.id] === item.answer) correctBlanks++;
+              } else if (item && item.type === 'fraction') {
+                if (typeof item.numerator === 'object' && item.numerator.id) {
+                  totalBlanks++;
+                  if (answers[item.numerator.id] === item.numerator.answer) correctBlanks++;
+                }
+                if (typeof item.denominator === 'object' && item.denominator.id) {
+                  totalBlanks++;
+                  if (answers[item.denominator.id] === item.denominator.answer) correctBlanks++;
+                }
+              }
+            });
+          }
+        });
+
+        return correctBlanks === totalBlanks && totalBlanks > 0;
+      });
+
+      if (allComplete) {
+        setTimeout(() => {
+          const overlay = document.createElement('div');
+          overlay.style.position = 'fixed';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100%';
+          overlay.style.height = '100%';
+          overlay.style.background = 'rgba(0, 0, 0, 0.8)';
+          overlay.style.display = 'flex';
+          overlay.style.alignItems = 'center';
+          overlay.style.justifyContent = 'center';
+          overlay.style.zIndex = '9999';
+          overlay.style.animation = 'fadeIn 0.3s ease-in';
+
+          const message = document.createElement('div');
+          message.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          message.style.color = 'white';
+          message.style.padding = '40px 60px';
+          message.style.borderRadius = '20px';
+          message.style.fontSize = '28px';
+          message.style.fontWeight = 'bold';
+          message.style.textAlign = 'center';
+          message.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.4)';
+          message.style.animation = 'scaleIn 0.5s ease-out';
+          message.innerHTML = '🎊🎉 全問正解！🎉🎊<br><br>本当に素晴らしいです！<br>完璧にマスターしましたね！';
+
+          overlay.appendChild(message);
+          document.body.appendChild(overlay);
+
+          const style = document.createElement('style');
+          style.textContent = `
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+              from { transform: scale(0.5); opacity: 0; }
+              to { transform: scale(1); opacity: 1; }
+            }
+          `;
+          document.head.appendChild(style);
+
+          overlay.onclick = () => {
+            overlay.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => overlay.remove(), 300);
+          };
+
+          const fadeOutStyle = document.createElement('style');
+          fadeOutStyle.textContent = `
+            @keyframes fadeOut {
+              from { opacity: 1; }
+              to { opacity: 0; }
+            }
+          `;
+          document.head.appendChild(fadeOutStyle);
+        }, 500);
+      }
+    }
+
+    // 【ブラッシュアップ】結果の画面など
+    function markNav(id) {
+      const btn = document.querySelectorAll('.nav-button')[id - 1];
+      if (btn) btn.textContent = problems[id - 1].title + (solvedMap[id] ? ' ✓' : '');
+    }
+
+    function allDone() {
+      return problems.every(p => lockedMap[p.id]);
+    }
+
+    function addFinishButton(result) {
+      if (result.querySelector('.finish-button')) return;
+      const btn = document.createElement('button');
+      btn.className = 'finish-button';
+      btn.textContent = '結果を見る';
+      btn.addEventListener('click', showResult);
+      result.appendChild(document.createElement('br'));
+      result.appendChild(btn);
+    }
+
+    function showResult() {
+      if (document.getElementById('resultOverlay')) return;
+      const ids = problems.map(p => p.id);
+      const self = ids.filter(id => solvedMap[id] && !shownMap[id]).length;
+      const rest = ids.filter(id => !lockedMap[id]);
+      const shown = ids.filter(id => shownMap[id]);
+      const perfect = self === ids.length;
+      let message;
+      if (perfect) message = '全問正解！本当に素晴らしいです！<br>正弦定理を完璧にマスターしましたね！';
+      else if (rest.length) message = 'まだ解いていない問題があります：問題' + rest.join('、');
+      else message = '答えを見た問題（問題' + shown.join('、') + '）は、「リセット」してもう一度自分で解いてみよう！';
+      const overlay = document.createElement('div');
+      overlay.className = 'result-overlay';
+      overlay.id = 'resultOverlay';
+      overlay.innerHTML = `
+        <div class="result-box">
+          <div class="result-emoji">${perfect ? '🎊🎉🎊' : (rest.length ? '📝' : '👍')}</div>
+          <h2>${perfect ? '全問正解！' : (rest.length ? 'とちゅうの記録' : 'おつかれさま！')}</h2>
+          <div class="result-score">自力で正解 ${self} / ${ids.length} 問</div>
+          <p>${message}</p>
+          <div class="result-nav">
+            ${rest.length ? `<button class="next" onclick="closeResult(); showProblem(${rest[0]});">問題${rest[0]} を解く ▶</button>` : ''}
+            <button class="again" onclick="closeResult(); restartAll();">最初からもう一度</button>
+            <button class="plain" onclick="closeResult()">閉じる</button>
+            <a href="../remake.html">ほかの教材をえらぶ</a>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    function closeResult() {
+      const overlay = document.getElementById('resultOverlay');
+      if (overlay) overlay.remove();
+    }
+
+    function restartAll() {
+      problems.forEach(p => {
+        resetProblem(p.id);
+        document.getElementById(`result-${p.id}`).innerHTML = '';
+      });
+      solvedMap = {};
+      shownMap = {};
+      lockedMap = {};
+      problems.forEach(p => markNav(p.id));
+      showProblem(1);
+    }
+
+    function showAnswer(problemId) {
+      // 【ブラッシュアップ】正解する前に答えを見たら記録して、空欄を固定する
+      if (!lockedMap[problemId]) shownMap[problemId] = true;
+      lockedMap[problemId] = true;
+      const problem = problems.find(p => p.id == problemId);
+
+      problem.lines.forEach(line => {
+        if (line.isFinal) {
+          const finalChoice = document.querySelector(`[data-problem-id="${problemId}"][data-final-id="${line.finalId}"][data-value="${line.finalAnswer}"]`);
+          if (finalChoice) {
+            document.querySelectorAll(`.final-choice-item[data-problem-id="${problemId}"]`).forEach(item => {
+              item.classList.remove('selected');
+              item.style.borderColor = '';
+              item.style.background = '';
+              item.style.color = '';
+            });
+
+            finalChoice.classList.add('selected');
+            finalChoice.style.borderColor = '#48bb78';
+            finalChoice.style.background = '#c6f6d5';
+            finalChoice.style.color = '#22543d';
+
+            if (!problemAnswers[problemId]) {
+              problemAnswers[problemId] = {};
+            }
+            problemAnswers[problemId][line.finalId] = line.finalAnswer;
+          }
+        } else {
+          line.template.forEach(item => {
+            if (item && item.id) {
+              const dropZone = document.querySelector(`[data-blank-id="${item.id}"]`);
+              if (dropZone && !dropZone.classList.contains('filled')) {
+                fillDropZoneWithAnswer(dropZone, item.answer, problemId);
+              }
+            } else if (item && item.type === 'fraction') {
+              if (typeof item.numerator === 'object' && item.numerator.id) {
+                const dropZone = document.querySelector(`[data-blank-id="${item.numerator.id}"]`);
+                if (dropZone && !dropZone.classList.contains('filled')) {
+                  fillDropZoneWithAnswer(dropZone, item.numerator.answer, problemId);
+                }
+              }
+              if (typeof item.denominator === 'object' && item.denominator.id) {
+                const dropZone = document.querySelector(`[data-blank-id="${item.denominator.id}"]`);
+                if (dropZone && !dropZone.classList.contains('filled')) {
+                  fillDropZoneWithAnswer(dropZone, item.denominator.answer, problemId);
+                }
+              }
+            }
+          });
+        }
+      });
+
+      updateChoiceUsageCount(problemId);
+
+      setTimeout(() => {
+        const result = document.getElementById(`result-${problemId}`);
+        result.innerHTML = '💡 答えを表示しました！復習に役立ててください！';
+        result.className = 'result-message';
+        result.style.display = 'block';
+        result.style.background = '#fef5e7';
+        result.style.color = '#8b4513';
+        result.style.border = '2px solid #f39c12';
+
+        if (problemId < problems.length) {
+          const existingButton = result.querySelector('.next-problem-button');
+          if (!existingButton) {
+            const nextButton = document.createElement('button');
+            nextButton.className = 'next-problem-button';
+            nextButton.textContent = '次の問題へ →';
+            nextButton.addEventListener('click', () => {
+              showProblem(problemId + 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            result.appendChild(document.createElement('br'));
+            result.appendChild(nextButton);
+          }
+        }
+        // 【ブラッシュアップ】最後の問題なら「結果を見る」。全部おわったら結果の画面
+        if (problemId == problems.length) addFinishButton(result);
+        if (allDone()) setTimeout(showResult, 900);
+      }, 100);
+    }
+
+    function fillDropZoneWithAnswer(dropZone, value, problemId) {
+      const blankId = dropZone.dataset.blankId;
+      const problem = problems.find(p => p.id == problemId);
+      const originalChoice = problem.choices.find(c => getChoiceValue(c) === value);
+
+      if (typeof originalChoice === 'string') {
+        if (originalChoice.includes('/')) {
+          const parts = originalChoice.split('/');
+          dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${parts[0]}</span><span class="fraction-denominator">${parts[1]}</span></span>`;
+        } else {
+          dropZone.textContent = originalChoice;
+        }
+      } else if (originalChoice && originalChoice.type === 'fraction') {
+        dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${originalChoice.numerator}</span><span class="fraction-denominator">${originalChoice.denominator}</span></span>`;
+      }
+
+      dropZone.classList.add('filled');
+      dropZone.dataset.currentValue = value;
+      dropZone.style.borderColor = '#48bb78';
+      dropZone.style.background = '#c6f6d5';
+
+      if (!problemAnswers[problemId]) {
+        problemAnswers[problemId] = {};
+      }
+      problemAnswers[problemId][blankId] = value;
+
+      const choiceElement = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${value}"]`);
+      if (choiceElement) {
+        choiceElement.classList.add('used');
+      }
+    }
+
+    function resetProblem(problemId) {
+      solvedMap[problemId] = false;   // 【ブラッシュアップ】
+      lockedMap[problemId] = false;
+      markNav(Number(problemId));
+      if (problemAnswers[problemId]) {
+        problemAnswers[problemId] = {};
+      }
+
+      document.querySelectorAll(`[data-problem-id="${problemId}"].drop-zone`).forEach(zone => {
+        zone.textContent = '';
+        zone.innerHTML = '';
+        zone.classList.remove('filled');
+        zone.style.borderColor = '';
+        zone.style.background = '';
+        delete zone.dataset.currentValue;
+      });
+
+      document.querySelectorAll(`[data-problem-id="${problemId}"].choice-item`).forEach(item => {
+        item.classList.remove('used', 'fully-used');
+      });
+
+      document.querySelectorAll(`[data-problem-id="${problemId}"].final-choice-item`).forEach(item => {
+        item.classList.remove('selected');
+        item.style.borderColor = '';
+        item.style.background = '';
+        item.style.color = '';
+      });
+
+      const result = document.getElementById(`result-${problemId}`);
+      result.className = 'result-message';
+      result.style.display = 'none';
+      result.style.background = '';
+      result.style.color = '';
+      result.style.border = '';
+    }
+
+    async function onConfigChange(config) {
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+      const baseFontStack = 'Hiragino Kaku Gothic ProN, Noto Sans JP, sans-serif';
+
+      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      document.body.style.background = `linear-gradient(135deg, ${config.primary_color || defaultConfig.primary_color} 0%, ${config.accent_color || defaultConfig.accent_color} 100%)`;
+
+      const title = document.getElementById('main-title');
+      title.textContent = config.main_title || defaultConfig.main_title;
+      title.style.fontSize = `${baseSize * 2}px`;
+      title.style.color = config.text_color || defaultConfig.text_color;
+
+      document.querySelectorAll('.nav-button').forEach(btn => {
+        btn.style.fontSize = `${baseSize}px`;
+        btn.style.background = config.primary_color || defaultConfig.primary_color;
+      });
+
+      document.querySelectorAll('.nav-button').forEach((btn, index) => {
+        if (index + 1 === currentProblem) {
+          btn.style.background = config.secondary_color || defaultConfig.secondary_color;
+        } else {
+          btn.style.background = config.primary_color || defaultConfig.primary_color;
+        }
+      });
+
+      document.querySelectorAll('.problem-text h2').forEach(h2 => {
+        h2.style.fontSize = `${baseSize * 1.375}px`;
+        h2.style.color = config.text_color || defaultConfig.text_color;
+      });
+
+      document.querySelectorAll('.problem-text p').forEach(p => {
+        p.style.fontSize = `${baseSize * 1.0625}px`;
+      });
+
+      document.querySelectorAll('.equation-line').forEach(line => {
+        line.style.fontSize = `${baseSize * 1.125}px`;
+      });
+
+      document.querySelectorAll('.choice-item').forEach(item => {
+        item.style.fontSize = `${baseSize * 0.9375}px`;
+        item.style.borderColor = config.primary_color || defaultConfig.primary_color;
+      });
+
+      document.querySelectorAll('.check-button').forEach(btn => {
+        btn.style.background = config.secondary_color || defaultConfig.secondary_color;
+        btn.style.fontSize = `${baseSize * 1.0625}px`;
+      });
+
+      document.querySelectorAll('.problem-header').forEach(header => {
+        header.style.background = config.background_color || defaultConfig.background_color;
+        header.style.borderLeftColor = config.primary_color || defaultConfig.primary_color;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => {
+                config.accent_color = value;
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["main_title", config.main_title || defaultConfig.main_title]
+        ])
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeProblems);
+  </script>
+ <script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".header h1": "u-title",
+    ".nav-button:not(.active)": "u-btn u-btn-plain",
+    ".nav-button.active": "u-btn",
+    ".reset-button": "u-btn u-btn-plain",
+    ".show-answer-button": "u-btn u-btn-plain",
+    ".next-problem-button": "u-btn u-btn-blue",
+    ".finish-button": "u-btn",
+    ".result-nav .next": "u-btn u-btn-blue",
+    ".result-nav .again": "u-btn",
+    ".result-nav .plain": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
