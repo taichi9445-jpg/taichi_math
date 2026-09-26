@@ -1,160 +1,338 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>共通因数の練習</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <base target="_top">
+  <meta charset="UTF-8">
+
+    <!--
+      13. 共通因数の練習（共通因数パズル）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定とタイトルを、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>共通因数パズル</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #1E88E5; --bg: #F8F9FA; --text: #37474F; --correct: #28a745; --error: #E53935; }
+    body { font-family: 'Kosugi Maru', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+    .container { width: 95vw; max-width: 800px; min-height: 95vh; margin: 10px auto; background: white; padding: 25px; border-radius: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 8px solid #FFD54F; box-sizing: border-box; display: flex; flex-direction: column; }
+    
+    .menu-header { text-align: center; padding: 20px; background: #FFF9C4; border-radius: 30px; margin-bottom: 30px; border: 3px solid #FFB300; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .nav-card { padding: 30px 15px; border-radius: 25px; border: none; color: white; cursor: pointer; font-size: 1.6rem; font-weight: bold; box-shadow: 0 8px 0 rgba(0,0,0,0.1); }
+    .nav-card:active { transform: translateY(4px); box-shadow: none; }
+    .lv1-blue { background: #42A5F5; border-bottom: 8px solid #1976D2; }
+    .lv2-red { background: #EF5350; border-bottom: 8px solid #C62828; }
+    .build1-green { background: #66BB6A; border-bottom: 8px solid #388E3C; }
+    .build2-purple { background: #AB47BC; border-bottom: 8px solid #7B1FA2; }
+
+    .problem-box { font-size: 3.5rem; font-weight: bold; margin: 15px 0; padding: 25px; background: #FFFDE7; border-radius: 20px; border: 5px solid #FFB300; display: flex; align-items: center; justify-content: center; }
+    sup { font-size: 0.6em; vertical-align: 0.8em; pointer-events: none; }
+
+    .input-box { min-height: 85px; border: 5px solid #81D4FA; border-radius: 20px; margin-bottom: 15px; font-size: 3rem; display: flex; justify-content: center; align-items: center; background: #FAFAFA; cursor: text; position: relative; padding: 0 10px; }
+    .char-span { position: relative; display: inline-block; min-width: 10px; }
+    .cursor { width: 3px; height: 1.2em; background: #0288D1; display: inline-block; animation: blink 1s infinite; vertical-align: middle; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .key-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 20px; }
+    .key { min-width: 65px; height: 65px; font-size: 2.2rem; background: #E1F5FE; border: none; border-bottom: 6px solid #B3E5FC; border-radius: 15px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .key.exp { background: #FFF9C4; border-bottom-color: #FBC02D; font-size: 1.5rem; align-items: flex-start; padding-top: 10px; }
+
+    .big-btn { width: 100%; padding: 20px; font-size: 2.2rem; border-radius: 20px; border: none; cursor: pointer; color: white; font-weight: bold; margin-bottom: 10px; }
+    .submit { background: var(--correct); box-shadow: 0 8px #1e7e34; }
+    .hint { background: #EF5350; box-shadow: 0 8px #b91d1d; font-size: 1.5rem; }
+
+    #choice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    #message { font-size: 1.6rem; font-weight: bold; text-align: center; margin: 10px 0; min-height: 1.5em; }
+    .hidden { display: none; }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { max-width: 800px; width: 95vw; margin-top: 8px; }
+    #choice-list .nav-card:disabled { opacity: .35; }
+    .locked #choice-list .nav-card, .locked .submit, .locked .key { pointer-events: none; }
+    #answer-note { text-align: center; font-size: 1.8rem; font-weight: bold; color: #E53935; min-height: 1.2em; }
+    #done { text-align: center; padding: 30px 0; }
+    #done .nav { display: flex; flex-direction: column; gap: 12px; max-width: 26rem; margin: 0 auto; }
+    #done .nav a { color: #90A4AE; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      .container { width: calc(100vw - 12px); min-height: 0; margin: 4px auto 10px; padding: 14px 10px; border-width: 5px; border-radius: 26px; }
+      .menu-header { padding: 14px; margin-bottom: 18px; }
+      .menu-header h1 { font-size: min(1.9rem, 8vw); white-space: nowrap; }
+      .btn-grid { gap: 12px; }
+      .nav-card { font-size: 1.35rem; padding: 22px 8px; }
+      /* 問題の式：元の 3.5rem ではスマホの枠からはみ出していた */
+      .problem-box { font-size: min(2.3rem, 8.4vw); padding: 16px 6px; margin: 10px 0; }
+      .input-box { font-size: 2.2rem; min-height: 70px; }
+      .key-grid { gap: 8px; }
+      .key { min-width: 54px; height: 56px; font-size: 1.9rem; }
+      .big-btn { font-size: 1.8rem; padding: 16px; }
+      .hint { font-size: 1.3rem; }
+      #choice-list { gap: 10px; }
+      #choice-list .nav-card { font-size: min(1.5rem, 6vw); padding: 18px 4px !important; }
+      #message { font-size: 1.3rem; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
+<a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+<div class="container">
+  <div id="menu">
+    <div class="menu-header">
+      <h1 style="margin:0; color:#E64A19;">因数分解マスター</h1>
+      <p style="margin:5px 0;">共通因数を見つけて括りだそう！</p>
+    </div>
+    <div class="btn-grid">
+      <button class="nav-card lv1-blue" onclick="start(1, 'choice')">4たく<br>レベル 1</button>
+      <button class="nav-card lv2-red" onclick="start(2, 'choice')">4たく<br>レベル 2</button>
+      <button class="nav-card build1-green" onclick="start(1, 'build')">つなげる<br>レベル 1</button>
+      <button class="nav-card build2-purple" onclick="start(2, 'build')">つなげる<br>レベル 2</button>
+    </div>
+  </div>
+
+  <div id="game" class="hidden">
+    <div id="q-info" style="text-align:center; color:#546E7A; font-weight:bold;">Question 1 / 5</div>
+    <div class="problem-box" id="problem"></div>
+
+    <div id="choice-mode" class="hidden">
+      <div id="choice-list"></div>
+    </div>
+
+    <div id="build-mode" class="hidden">
+      <div class="input-box" id="editor" onclick="handleEditorClick(event)"></div>
+      <div class="key-grid" id="keyboard"></div>
+      <button class="big-btn submit" onclick="check()">できた！</button>
+    </div>
+
+    <div id="message"></div>
+    <div id="answer-note"></div>
+    <button class="big-btn hint" onclick="showHint()">答えをチラ見する</button>
+    <button onclick="goBackToMenu()" style="background:none; border:none; color:#90A4AE; cursor:pointer; width:100%; text-decoration:underline; margin-top:10px;">メニューに戻る</button>
+  </div>
+
+  <!-- 【ブラッシュアップ】全問クリアの画面。元は alert() を出してメニューに戻っていた -->
+  <div id="done" class="hidden">
+    <div style="font-size:4rem;">🎉</div>
+    <h2 style="color:#E64A19; font-size:2.2rem; margin:8px 0 20px;">全問クリア！</h2>
+    <div class="nav">
+      <button class="big-btn submit" onclick="start(lv, mode)">同じレベルでもう一度</button>
+      <button class="big-btn" style="background:#90A4AE; font-size:1.6rem;" onclick="goBackToMenu()">メニューにもどる</button>
+      <a href="../remake.html">ほかの教材をえらぶ</a>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ---------------------------------------------------------------------------
-   13. 共通因数の練習
-     4たく レベル1／レベル2、つなげる レベル1／レベル2
-     レベル1：数の共通因数だけ　　レベル2：文字もふくむ共通因数
+let mode='', lv=1, qIdx=0, probs=[], input=[], cursor=0;
+let solved = false;   // 【ブラッシュアップ】正解のあとの連打よけ
+const chars = ['a', 'b', 'x', 'y'];
 
-   元教材から直した点：
-     ・「くくり出しが足りない答え」（例：6x+9 を 3(2x+3) ではなく 1(6x+9)）が
-       正解になってしまうことがあった。
-       → 共通因数を最大まで取り出したものだけを正解にする。
-     ・つなげるモードで、置いた候補が消えて操作できなくなることがあった。
-       → タップ方式にして、いつでも置き直せるようにした。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+function getGCD(a, b) { return b === 0 ? a : getGCD(b, a % b); }
 
-  var A = Algebra, F = Quiz.fmt, M = MathCore;
+function goBackToMenu() {
+  document.getElementById('done').classList.add('hidden');
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('menu').classList.remove('hidden');
+  document.getElementById('message').innerText = '';
+  input = []; cursor = 0;
+}
 
-  /**
-   * 共通因数の問題を1つ作る。
-   * level 1 … k(px + q)          数の共通因数のみ
-   * level 2 … kx(px + q) など    文字もふくむ
-   */
-  function makeItem(level) {
-    var k = A.randInt(2, level === 1 ? 8 : 9);
-    var useVar = level >= 2;
-    var p = A.randInt(1, 6);
-    var q = A.nz(-9, 9);
+function start(l, m) {
+  lv=l; mode=m; qIdx=0;
+  generate();
+  document.getElementById('done').classList.add('hidden');
+  document.getElementById('menu').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  show();
+}
 
-    // p と q が互いに素になるようにして、くくり残しが出ないようにする
-    var g = A.gcd(p, Math.abs(q));
-    if (g > 1) { p = p / g; q = q / g; }
-    if (p === 0) p = 1;
+function generate() {
+  probs = [];
+  // レベルに応じて数字の上限を切り替え
+  const maxNum = (lv === 1) ? 20 : 40;
+  const goodNumbers = (lv === 1) ? [6, 8, 10, 12, 14, 16, 18, 20] : [12, 16, 18, 20, 24, 28, 30, 32, 36, 40];
+  
+  for(let i=0; i<5; i++) {
+    let g, base1, base2;
+    while(true) {
+      base1 = Math.random() > 0.5 ? goodNumbers[Math.floor(Math.random()*goodNumbers.length)] : Math.floor(Math.random()*(maxNum-4))+4;
+      base2 = Math.random() > 0.5 ? goodNumbers[Math.floor(Math.random()*goodNumbers.length)] : Math.floor(Math.random()*(maxNum-4))+4;
+      
+      if(base1 > maxNum) base1 = maxNum;
+      if(base2 > maxNum) base2 = maxNum;
 
-    var common = (k === 1 ? '' : String(k)) + (useVar ? 'x' : '');
-    var inner = A.linear(p, q);
-    var factored = common + '(' + inner + ')';
+      g = getGCD(base1, base2);
+      if(g >= 2 && base1 !== base2) break; 
+    }
 
-    var expanded = useVar
-      ? F.poly([[k * p, F.pow('x', 2)], [k * q, 'x']])
-      : F.poly([[k * p, 'x'], [k * q, '']]);
+    let inC1 = base1 / g;
+    let inC2 = base2 / g;
+    let v1=chars[i%4], v2=chars[(i+1)%4], v3=chars[(i+2)%4], v4=chars[(i+3)%4];
+    let gVarHTML = "", gVarRaw = "";
 
-    return {
-      k: k, p: p, q: q, useVar: useVar,
-      common: common, inner: inner,
-      factored: factored,
-      expanded: expanded
-    };
-  }
+    if(lv==2) {
+      let pG = (i>=2) ? 2 : 1;
+      gVarHTML = pG==2 ? v1+"<sup>2</sup>" : v1;
+      gVarRaw = pG==2 ? v1+"^" : v1;
+      if(i==4) { gVarHTML+=v2; gVarRaw+=v2; }
+    } else if(i>=2) {
+      gVarHTML = v1; gVarRaw = v1;
+    }
 
-  function wrongForms(it, need) {
-    var correctPlain = F.plain(it.expanded);
-    var cands = [];
-    // ありがちなまちがい：くくり残し／符号ミス／文字を忘れる
-    if (it.k > 2) cands.push(String(Math.floor(it.k / 2) || 1) + (it.useVar ? 'x' : '') + '(' + A.linear(it.p * 2, it.q * 2) + ')');
-    cands.push(it.common + '(' + A.linear(it.p, -it.q) + ')');
-    cands.push((it.k === 1 ? '' : String(it.k)) + '(' + A.linear(it.p, it.q) + ')');   // 文字を忘れた形
-    cands.push(it.common + '(' + A.linear(it.p + 1, it.q) + ')');
-    cands.push((it.k + 1) + (it.useVar ? 'x' : '') + '(' + A.linear(it.p, it.q) + ')');
-
-    var out = [];
-    Quiz.shuffle(cands).forEach(function (c) {
-      if (out.length >= need) return;
-      if (c === it.factored) return;
-      if (M.isEqual(F.plain(c), correctPlain)) return;
-      if (out.indexOf(c) >= 0) return;
-      out.push(c);
+    let q = base1 + gVarHTML + v3 + " + " + base2 + gVarHTML + v4;
+    let termA = (inC1==1 ? v3 : inC1+v3);
+    let termB = (inC2==1 ? v4 : inC2+v4);
+    let aHead = g + gVarRaw;
+    
+    probs.push({
+      q: q,
+      aHead: aHead,
+      aInside: [termA, termB],
+      hint: aHead + "(" + termA + "+" + termB + ")",
+      rawB: base2 + v4,   // 【ブラッシュアップ】「割り忘れ」の誤答を作るために、割る前の項を覚えておく
+      parts: [...new Set([...g.toString(), v1, v2, v3, v4, "(", ")", "+", ...inC1.toString(), ...inC2.toString(), "^"])]
     });
-    var guard = 0;
-    while (out.length < need && guard++ < 40) {
-      var w = A.randInt(2, 9) + (it.useVar ? 'x' : '') + '(' + A.linear(A.randInt(1, 5), A.nz(-9, 9)) + ')';
-      if (!M.isEqual(F.plain(w), correctPlain) && out.indexOf(w) < 0) out.push(w);
-    }
-    return out;
   }
+}
 
-  function choiceQuestion(level) {
-    var it = makeItem(level);
-    return {
-      tag: '4たく',
-      text: '共通因数を見つけて、くくり出しなさい。',
-      math: it.expanded,
-      type: 'choice',
-      choices: [it.factored].concat(wrongForms(it, 3)),
-      correct: 0,
-      hint: level === 1
-        ? '2つの項に共通してかけられている「数」をさがします。'
-        : '数だけでなく、文字も共通していないか見てみましょう。',
-      explain: '共通因数は ' + (it.common || '1') + '。くくり出すと ' + it.factored + ' です。'
-    };
+function show() {
+  input=[]; cursor=0;
+  const p = probs[qIdx];
+  document.getElementById('q-info').innerText = `Question ${qIdx+1} / 5`;
+  document.getElementById('problem').innerHTML = p.q;
+  document.getElementById('message').innerText = '';
+  document.getElementById('answer-note').innerText = '';
+  solved = false;
+  document.getElementById('game').classList.remove('locked');
+  
+  if(mode=='choice') {
+    document.getElementById('choice-mode').classList.remove('hidden');
+    document.getElementById('build-mode').classList.add('hidden');
+    const list = document.getElementById('choice-list');
+    list.innerHTML = '';
+    
+    let correct = p.hint.replace(/\^/g, '<sup>2</sup>');
+    let h_clean = p.aHead.replace(/\^/g, '<sup>2</sup>');
+    
+    let options = [
+      correct, 
+      h_clean + "(" + p.aInside[0] + "-" + p.aInside[1] + ")", 
+      // 【ブラッシュアップ】元は「かっこの中の順番を入れかえた式」を誤答にしていたが、
+      //   共通因数が数だけの問題（レベル1の前半）では正解と同じ式になり、選ぶと不正解にされていた。
+      //   「うしろの項だけ割り忘れた式」という、よくあるまちがいに差し替える。
+      h_clean + "(" + p.aInside[0] + "+" + p.rawB + ")", // 片方だけ割り忘れ
+      "2(" + p.aInside[0] + "+" + p.aInside[1] + ")" // 共通因数不足（ダミー）
+    ];
+    
+    options = [...new Set(options)].sort(()=>Math.random()-0.5);
+    while(options.length < 4) options.push(options[0].replace('+', '+2'));
+
+    options.forEach(opt => {
+      let b = document.createElement('button');
+      b.className = 'nav-card build1-green'; b.style.padding='20px 5px'; b.innerHTML = opt;
+      b.onclick = () => { if (opt==correct) success(); else { b.disabled = true; document.getElementById('message').innerText='最大公約数でくくろう！'; } };
+      list.appendChild(b);
+    });
+  } else {
+    document.getElementById('build-mode').classList.remove('hidden');
+    document.getElementById('choice-mode').classList.add('hidden');
+    renderEdit();
+    const kb = document.getElementById('keyboard');
+    kb.innerHTML = '';
+    const basicKeys = ["1", "(", ")", "+"];
+    let allKeys = [...new Set([...basicKeys, ...p.parts])];
+    allKeys.sort().forEach(k => {
+      if(k === "") return;
+      let b = document.createElement('button');
+      if(k=="^") { b.className='key exp'; b.innerHTML='<sup>2</sup>'; }
+      else { b.className='key'; b.innerText=k; }
+      b.onclick = () => addInput(k);
+      kb.appendChild(b);
+    });
   }
+}
 
-  function pickQuestion(level) {
-    var it = makeItem(level);
+function addInput(k) { input.splice(cursor, 0, k); cursor++; renderEdit(); }
 
-    // 共通因数の候補と、かっこの中の候補
-    var commons = [it.common];
-    [String(it.k), it.k + 'x', 'x', String(it.k * 2), String(Math.max(2, it.k - 1)) + (it.useVar ? 'x' : '')]
-      .forEach(function (c) { if (commons.length < 5 && commons.indexOf(c) < 0) commons.push(c); });
-
-    var inners = [it.inner];
-    [A.linear(it.p, -it.q), A.linear(it.p + 1, it.q), A.linear(it.p, it.q + 1), A.linear(it.p * 2, it.q * 2)]
-      .forEach(function (c) { if (inners.length < 5 && inners.indexOf(c) < 0) inners.push(c); });
-
-    return {
-      tag: 'つなげる',
-      text: '共通因数でくくった形になるように、空欄を選びなさい。',
-      math: it.expanded,
-      type: 'pick',
-      template: '_ ( _ )',
-      choices: Quiz.shuffle(commons.concat(inners)),
-      answers: [it.common, it.inner],
-      // 前の空欄は共通因数、後ろの空欄はかっこの中。どちらも文字列で照合する。
-      checkEach: function (value, index) {
-        var want = index === 0 ? it.common : it.inner;
-        var norm = function (s) { return String(s).replace(/\s|　/g, ''); };
-        return norm(value) === norm(want);
-      },
-      answerLabel: it.factored,
-      hint: 'まず共通因数を決めて、残りをかっこの中に書きます。',
-      explain: '共通因数は ' + (it.common || '1') + '。くくり出すと ' + it.factored + ' です。'
-    };
-  }
-
-  Quiz.start({
-    title: '共通因数の練習',
-    subtitle: '共通因数を見つけて括りだそう。数だけ → 文字もふくむ、の順で。',
-    modes: [
-      { id: 'c1', group: '4たく', name: 'レベル1', desc: '数の共通因数（10問）' },
-      { id: 'c2', group: '4たく', name: 'レベル2', desc: '文字もふくむ（10問）' },
-      { id: 'p1', group: 'つなげる', name: 'レベル1', desc: '数の共通因数（8問）' },
-      { id: 'p2', group: 'つなげる', name: 'レベル2', desc: '文字もふくむ（8問）' }
-    ],
-    build: function (id) {
-      var level = Number(id[1]);
-      var maker = id[0] === 'c' ? choiceQuestion : pickQuestion;
-      var n = id[0] === 'c' ? 10 : 8;
-      var out = [];
-      for (var i = 0; i < n; i++) out.push(maker(level));
-      return out;
-    }
+function renderEdit() {
+  const ed = document.getElementById('editor');
+  ed.innerHTML = '';
+  input.forEach((c, i) => {
+    if(i==cursor) ed.innerHTML += '<div class="cursor"></div>';
+    let span = document.createElement('span');
+    span.className = 'char-span';
+    span.innerHTML = c=='^' ? '<sup>2</sup>' : c;
+    ed.appendChild(span);
   });
-})();
+  if(cursor==input.length) ed.innerHTML += '<div class="cursor"></div>';
+}
+
+function handleEditorClick(e) {
+  const rect = document.getElementById('editor').getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const spans = document.querySelectorAll('.char-span');
+  let newIdx = spans.length;
+  for(let i=0; i<spans.length; i++) {
+    if(x < spans[i].offsetLeft + spans[i].offsetWidth / 2) { newIdx = i; break; }
+  }
+  cursor = newIdx; renderEdit();
+}
+
+window.onkeydown = (e) => {
+  if(document.getElementById('game').classList.contains('hidden') || solved) return;
+  if(e.key >= '0' && e.key <= '9') addInput(e.key);
+  else if(['a','b','x','y','(',')','+','-'].includes(e.key)) addInput(e.key);
+  else if(e.key === '^' || e.key === '2') addInput('^');
+  else if(e.key === 'Backspace') { if(cursor>0) { input.splice(cursor-1, 1); cursor--; renderEdit(); } }
+  else if(e.key === 'ArrowLeft') { cursor = Math.max(0, cursor-1); renderEdit(); }
+  else if(e.key === 'ArrowRight') { cursor = Math.min(input.length, cursor+1); renderEdit(); }
+  else if(e.key === 'Enter') check();
+};
+
+function check() {
+  let str = input.join('');
+  const p = probs[qIdx];
+  try {
+    let match = str.match(/^([^(]+)\(([^)]+)\)$/);
+    if(!match) throw "f";
+    let head = match[1], inside = match[2].split('+');
+    if(inside.some(t => /^[1][a-z]/.test(t))) {
+       document.getElementById('message').innerText = '1a の「1」は省略してね！'; return;
+    }
+    if(head == p.aHead && inside.length==2 && 
+      ((inside[0]==p.aInside[0] && inside[1]==p.aInside[1]) || (inside[0]==p.aInside[1] && inside[1]==p.aInside[0]))) {
+      success();
+    } else { throw "w"; }
+  } catch(e) {
+    document.getElementById('message').innerText = '最大公約数や1の省略をチェック！';
+  }
+}
+
+function success() {
+  if (solved) return;   // 【ブラッシュアップ】元は正解を続けて押すと 1 問とばしていた
+  solved = true;
+  document.getElementById('game').classList.add('locked');
+  document.getElementById('message').innerHTML = '<span style="color:var(--correct)">✨ 正解！すごすぎる！ ✨</span>';
+  setTimeout(() => {
+    qIdx++;
+    if(qIdx<5) show();
+    else {
+      // 【ブラッシュアップ】alert をやめて終了画面を出す
+      document.getElementById('game').classList.add('hidden');
+      document.getElementById('done').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+  }, 1000);
+}
+
+// 【ブラッシュアップ】alert をやめて、画面の中に答えを出す
+function showHint() { document.getElementById('answer-note').innerText = "答え： " + probs[qIdx].hint.replace(/\^/g, '²'); }
 </script>
 </body>
 </html>

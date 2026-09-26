@@ -1,110 +1,788 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>平方根タワー</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <meta charset="UTF-8">
+
+    <!--
+      16. ルートの計算全般（平方根タワー）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+    <!-- 【ブラッシュアップ】GAS ではサーバー側（コード.gs）で問題を作っていた。
+         同じコードをここで動かし、google.script.run の呼び出しは port.js がつなぐ。 -->
+    <script>
+    window.__GAS = (function () {
+function doGet() {
+  return HtmlService.createTemplateFromFile('index')
+      .evaluate()
+      .setTitle('平方根タワー')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getQuizDataFixed() {
+  return {
+    1: {
+      name: "1F：平方根を求める（整数）",
+      questions: {
+        "初級": [
+          { q: "9の平方根を求めなさい。", a: "±3", opts: ["3", "±3", "-3", "±9"], exp: "3の2乗は9、(-3)の2乗も9になるため、プラスとマイナスの両方が答えになります。" },
+          { q: "16の平方根を求めなさい。", a: "±4", opts: ["4", "8", "±5", "±4"], exp: "4×4=16, (-4)×(-4)=16 なので ±4 です。" },
+          { q: "49の平方根を求めなさい。", a: "±7", opts: ["±7", "7", "±14", "9.8"], exp: "7の2乗が49になるため、平方根は ±7 です。" },
+          { q: "25の平方根を求めなさい。", a: "±5", opts: ["5", "±5", "±2.5", "-5"], exp: "5×5=25 なので、平方根は ±5 です。" },
+          { q: "81の平方根を求めなさい。", a: "±9", opts: ["9", "±1", "±9", "±18"], exp: "9×9=81 なので、平方根は ±9 です。" }
+        ],
+        "中級": [
+          { q: "64の平方根を求めなさい。", a: "±8", opts: ["8", "±8", "±16", "32"], exp: "8の2乗が64になるため、平方根は ±8 です。" },
+          { q: "36の平方根を求めなさい。", a: "±6", opts: ["±6", "6", "±18", "12"], exp: "6の2乗が36になるため、平方根は ±6 です。" },
+          { q: "100の平方根を求めなさい。", a: "±10", opts: ["10", "±50", "±10", "±20"], exp: "10の2乗が100になるため、平方根は ±10 です。" },
+          { q: "121の平方根を求めなさい。", a: "±11", opts: ["11", "±11", "±22", "12"], exp: "11×11=121 なので、平方根は ±11 です。" },
+          { q: "169の平方根を求めなさい。", a: "±13", opts: ["±13", "13", "±14", "±23"], exp: "13×13=169 なので、平方根は ±13 です。" }
+        ],
+        "上級": [
+          { q: "144の平方根を求めなさい。", a: "±12", opts: ["12", "±12", "±24", "14"], exp: "12×12=144 なので、平方根は ±12 です。" },
+          { q: "169の平方根を求めなさい。", a: "±13", opts: ["13", "-13", "±23", "±13"], exp: "13の2乗が169になるため、平方根は ±13 です。" },
+          { q: "225の平方根を求めなさい。", a: "±15", opts: ["±15", "15", "±25", "±45"], exp: "15×15=225 なので、平方根は ±15 です。" },
+          { q: "196の平方根を求めなさい。", a: "±14", opts: ["14", "±13", "±14", "±16"], exp: "14×14=196 なので、平方根は ±14 です。" },
+          { q: "121の平方根を求めなさい。", a: "±11", opts: ["±11", "11", "±21", "22"], exp: "11の2乗が121なので、平方根は ±11 です。" }
+        ]
+      }
+    },
+    2: {
+      name: "2F：平方根を求める（ルート使用）",
+      questions: {
+        "初級": [
+          { q: "5の平方根を求めなさい。", a: "±√5", opts: ["√5", "±√5", "2.5", "±5"], exp: "2乗して5になる整数はないため、記号 √ を使って ±√5 と表します。" },
+          { q: "2の平方根を求めなさい。", a: "±√2", opts: ["1", "√2", "±√2", "±4"], exp: "2乗して2になる数は ±√2 です。" },
+          { q: "3の平方根を求めなさい。", a: "±√3", opts: ["±√3", "√3", "1.5", "±9"], exp: "2乗して3になる数は ±√3 です。" },
+          { q: "7の平方根を求めなさい。", a: "±√7", opts: ["√7", "3.5", "±7", "±√7"], exp: "2乗して7になる数は ±√7 です。" },
+          { q: "11の平方根を求めなさい。", a: "±√11", opts: ["±√11", "√11", "5.5", "±22"], exp: "2乗して11になる数は ±√11 です。" }
+        ]
+      }
+    },
+    3: {
+      name: "3F：根号を外す",
+      questions: {
+        "初級": [
+          { q: "\\(\\sqrt{4}\\) の値を求めなさい。", a: "2", opts: ["2", "±2", "4", "16"], exp: "\\(\\sqrt{4}\\) は「4の正の平方根」を意味するので、2になります。" },
+          { q: "\\(\\sqrt{9}\\) の値を求めなさい。", a: "3", opts: ["±3", "3", "4.5", "81"], exp: "3の2乗が9なので、\\(\\sqrt{9}=3\\) です。" },
+          { q: "\\(\\sqrt{36}\\) の値を求めなさい。", a: "6", opts: ["18", "±6", "6", "12"], exp: "6の2乗が36なので、\\(\\sqrt{36}=6\\) です。" },
+          { q: "\\(\\sqrt{16}\\) の値を求めなさい。", a: "4", opts: ["4", "±4", "8", "2"], exp: "4の2乗が16なので、\\(\\sqrt{16}=4\\) です。" },
+          { q: "\\(\\sqrt{25}\\) の値を求めなさい。", a: "5", opts: ["12.5", "±5", "5", "50"], exp: "5の2乗が25なので、\\(\\sqrt{25}=5\\) です。" }
+        ],
+        "中級": [
+          { q: "\\(\\sqrt{49}\\) の値を求めなさい。", a: "7", opts: ["7", "±7", "14", "24.5"], exp: "7の2乗が49なので、\\(\\sqrt{49}=7\\) です。" },
+          { q: "\\(\\sqrt{64}\\) の値を求めなさい。", a: "8", opts: ["32", "±8", "8", "16"], exp: "8の2乗が64なので、\\(\\sqrt{64}=8\\) です。" },
+          { q: "\\(\\sqrt{100}\\) の値を求めなさい。", a: "10", opts: ["50", "10", "±10", "20"], exp: "10の2乗が100なので、\\(\\sqrt{100}=10\\) です。" },
+          { q: "\\(\\sqrt{81}\\) の値を求めなさい。", a: "9", opts: ["±9", "9", "18", "40.5"], exp: "9の2乗が81なので、\\(\\sqrt{81}=9\\) です。" },
+          { q: "\\(\\sqrt{1}\\) の値を求めなさい。", a: "1", opts: ["0", "1", "±1", "2"], exp: "1の2乗は1なので、\\(\\sqrt{1}=1\\) です。" }
+        ],
+        "上級": [
+          { q: "\\(\\sqrt{169}\\) の値を求めなさい。", a: "13", opts: ["13", "±13", "26", "14"], exp: "13×13=169 なので、\\(\\sqrt{169}=13\\) です。" },
+          { q: "\\(\\sqrt{121}\\) の値を求めなさい。", a: "11", opts: ["±11", "11", "22", "12"], exp: "11×11=121 なので、\\(\\sqrt{121}=11\\) です。" },
+          { q: "\\(\\sqrt{144}\\) の値を求めなさい。", a: "12", opts: ["24", "±12", "12", "14"], exp: "12×12=144 なので、\\(\\sqrt{144}=12\\) です。" },
+          { q: "\\(\\sqrt{196}\\) の値を求めなさい。", a: "14", opts: ["14", "±14", "28", "16"], exp: "14×14=196 なので、\\(\\sqrt{196}=14\\) です。" },
+          { q: "\\(-\\sqrt{225}\\) の値を求めなさい。", a: "-15", opts: ["15", "-15", "±15", "-25"], exp: "\\(\\sqrt{225}=15\\) なので、マイナスがつくと -15 になります。" }
+        ]
+      }
+    },
+    4: {
+      name: "4F：値を求める",
+      questions: {
+        "初級": [
+          { q: "\\((\\sqrt{2})^2\\) の値を求めなさい。", a: "2", opts: ["4", "√2", "2", "±2"], exp: "ルートを2乗すると、中身の数字がそのまま出てきます。" },
+          { q: "\\(\\sqrt{3^2}\\) の値を求めなさい。", a: "3", opts: ["3", "±3", "9", "6"], exp: "\\(\\sqrt{9}\\) と同じことなので、答えは 3 です。" },
+          { q: "\\((\\sqrt{5})^2\\) の値を求めなさい。", a: "5", opts: ["25", "5", "±5", "√5"], exp: "2乗して5になる数（\\(\\sqrt{5}\\)）を2乗したので、5になります。" },
+          { q: "\\(\\sqrt{7^2}\\) の値を求めなさい。", a: "7", opts: ["49", "±7", "7", "14"], exp: "\\(\\sqrt{49}=7\\) です。" },
+          { q: "\\((\\sqrt{13})^2\\) の値を求めなさい。", a: "13", opts: ["13", "169", "√13", "±13"], exp: "ルートの外に2乗がある場合も、中身がそのまま答えになります。" }
+        ],
+        "中級": [
+          { q: "\\(\\sqrt{(-3)^2}\\) の値を求めなさい。", a: "3", opts: ["-3", "3", "±3", "-9"], exp: "先に中身を2乗すると \\(\\sqrt{9}\\) になるため、答えは正の 3 になります。" },
+          { q: "\\(-\\sqrt{(-5)^2}\\) の値を求めなさい。", a: "-5", opts: ["5", "-5", "±5", "25"], exp: "まず \\(\\sqrt{(-5)^2}=5\\) です。その外にマイナスがあるので -5 です。" },
+          { q: "\\(\\sqrt{(-2)^2}\\) の値を求めなさい。", a: "2", opts: ["-2", "2", "±2", "4"], exp: "\\(\\sqrt{4}=2\\) です。ルートを外した結果が負になることはありません。" },
+          { q: "\\(-\\sqrt{(-9)^2}\\) の値を求めなさい。", a: "-9", opts: ["9", "-9", "±9", "81"], exp: "\\(\\sqrt{81}=9\\) に外側のマイナスがついて -9 です。" },
+          { q: "\\(\\sqrt{(-12)^2}\\) の値を求めなさい。", a: "12", opts: ["-12", "12", "±12", "144"], exp: "\\(\\sqrt{144}=12\\) です。" }
+        ]
+      }
+    },
+    5: {
+      name: "5F：乗除の基本",
+      questions: {
+        "初級": [
+          { q: "\\(\\sqrt{2} \\times \\sqrt{3}\\) の値を求めなさい。", a: "\\(\\sqrt{6}\\)", opts: ["\\(\\sqrt{5}\\)", "6", "\\(\\sqrt{6}\\)", "2\\(\\sqrt{3}\\)"], exp: "ルートの掛け算は、中身の数字をそのまま掛けます。" },
+          { q: "\\(\\sqrt{5} \\times \\sqrt{2}\\) の値を求めなさい。", a: "\\(\\sqrt{10}\\)", opts: ["\\(\\sqrt{7}\\)", "\\(\\sqrt{10}\\)", "10", "2\\(\\sqrt{5}\\)"], exp: "\\(\\sqrt{5 \\times 2} = \\sqrt{10}\\) です。" },
+          { q: "\\(\\sqrt{7} \\times \\sqrt{3}\\) の値を求めなさい。", a: "\\(\\sqrt{21}\\)", opts: ["\\(\\sqrt{21}\\)", "21", "\\(\\sqrt{10}\\)", "3\\(\\sqrt{7}\\)"], exp: "\\(\\sqrt{7 \\times 3} = \\sqrt{21}\\) です。" },
+          { q: "\\(\\sqrt{15} \\div \\sqrt{3}\\) の値を求めなさい。", a: "\\(\\sqrt{5}\\)", opts: ["5", "\\(\\sqrt{5}\\)", "\\(\\sqrt{12}\\)", "3"], exp: "割り算も中身の数字を割ります。\\(15 \\div 3 = 5\\) です。" },
+          { q: "\\(\\sqrt{21} \\div \\sqrt{7}\\) の値を求めなさい。", a: "\\(\\sqrt{3}\\)", opts: ["3", "\\(\\sqrt{14}\\)", "\\(\\sqrt{3}\\)", "7"], exp: "\\(21 \\div 7 = 3\\) なので \\(\\sqrt{3}\\) です。" }
+        ],
+        "中級": [
+          { q: "\\(\\sqrt{3} \\times 4\\sqrt{3}\\) の値を求めなさい。", a: "12", opts: ["4\\(\\sqrt{3}\\)", "12", "36", "4"], exp: "\\(\\sqrt{3} \\times \\sqrt{3} = 3\\) になるので、\\(4 \\times 3 = 12\\) です。" },
+          { q: "2\\(\\sqrt{5} \\times \\sqrt{5}\\) の値を求めなさい。", a: "10", opts: ["2\\(\\sqrt{5}\\)", "5", "20", "10"], exp: "\\(\\sqrt{5} \\times \\sqrt{5} = 5\\) なので、\\(2 \\times 5 = 10\\) です。" },
+          { q: "3\\(\\sqrt{2} \\times 5\\sqrt{2}\\) の値を求めなさい。", a: "30", opts: ["15", "30", "15\\(\\sqrt{2}\\)", "60"], exp: "\\(3 \\times 5 = 15\\)、\\(\\sqrt{2} \\times \\sqrt{2} = 2\\) なので、\\(15 \\times 2 = 30\\) です。" },
+          { q: "2\\(\\sqrt{7} \\times 3\\sqrt{7}\\) の値を求めなさい。", a: "42", opts: ["6", "6\\(\\sqrt{7}\\)", "42", "84"], exp: "\\(2 \\times 3 = 6\\)、\\(\\sqrt{7} \\times \\sqrt{7} = 7\\) なので、\\(6 \\times 7 = 42\\) です。" },
+          { q: "4\\(\\sqrt{6} \\times \\sqrt{6}\\) の値を求めなさい。", a: "24", opts: ["24", "4\\(\\sqrt{6}\\)", "144", "12"], exp: "\\(4 \\times 6 = 24\\) です。" }
+        ],
+        "上級": [
+          { q: "\\(\\sqrt{6} \\times \\sqrt{2}\\) の値を求めなさい。", a: "2\\(\\sqrt{3}\\)", opts: ["\\(\\sqrt{12}\\)", "2\\(\\sqrt{3}\\)", "3\\(\\sqrt{2}\\)", "4"], exp: "\\(\\sqrt{12}\\) になりますが、\\(\\sqrt{4 \\times 3}\\) なので \\(2\\sqrt{3}\\) と直します。" },
+          { q: "\\(\\sqrt{18} \\times \\sqrt{2}\\) の値を求めなさい。", a: "6", opts: ["\\(\\sqrt{36}\\)", "4", "6", "6\\(\\sqrt{2}\\)"], exp: "\\(\\sqrt{36}\\) は 6 です。" },
+          { q: "\\(\\sqrt{12} \\times \\sqrt{2}\\) の値を求めなさい。", a: "2\\(\\sqrt{6}\\)", opts: ["\\(\\sqrt{24}\\)", "2\\(\\sqrt{6}\\)", "4\\(\\sqrt{3}\\)", "2\\(\\sqrt{3}\\)"], exp: "\\(\\sqrt{24} = \\sqrt{4 \\times 6} = 2\\sqrt{6}\\) です。" },
+          { q: "\\(\\sqrt{20} \\div \\sqrt{2}\\) の値を求めなさい。", a: "\\(\\sqrt{10}\\)", opts: ["10", "\\(\\sqrt{10}\\)", "2\\(\\sqrt{5}\\)", "2"], exp: "\\(20 \\div 2 = 10\\) なので \\(\\sqrt{10}\\) です。" },
+          { q: "\\(\\sqrt{50} \\div \\sqrt{5}\\) の値を求めなさい。", a: "\\(\\sqrt{10}\\)", opts: ["\\(\\sqrt{10}\\)", "10", "5", "5\\(\\sqrt{2}\\)"], exp: "\\(50 \\div 5 = 10\\) なので \\(\\sqrt{10}\\) です。" }
+        ]
+      }
+    },
+    6: {
+      name: "6F：a√b の変形",
+      questions: {
+        "初級": [
+          { q: "\\(\\sqrt{12}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "2\\(\\sqrt{3}\\)", opts: ["3\\(\\sqrt{2}\\)", "2\\(\\sqrt{3}\\)", "4\\(\\sqrt{3}\\)", "2\\(\\sqrt{6}\\)"], exp: "\\(12 = 4 \\times 3\\) なので、\\(2\\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{18}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "3\\(\\sqrt{2}\\)", opts: ["2\\(\\sqrt{3}\\)", "9\\(\\sqrt{2}\\)", "3\\(\\sqrt{2}\\)", "2\\(\\sqrt{9}\\)"], exp: "\\(18 = 9 \\times 2\\) なので、\\(3\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{20}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "2\\(\\sqrt{5}\\)", opts: ["2\\(\\sqrt{5}\\)", "4\\(\\sqrt{5}\\)", "5\\(\\sqrt{2}\\)", "2\\(\\sqrt{10}\\)"], exp: "\\(20 = 4 \\times 5\\) なので、\\(2\\sqrt{5}\\) です。" },
+          { q: "\\(\\sqrt{27}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "3\\(\\sqrt{3}\\)", opts: ["9\\(\\sqrt{3}\\)", "3\\(\\sqrt{3}\\)", "3\\(\\sqrt{9}\\)", "4\\(\\sqrt{3}\\)"], exp: "\\(27 = 9 \\times 3\\) なので、\\(3\\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{8}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "2\\(\\sqrt{2}\\)", opts: ["4\\(\\sqrt{2}\\)", "2\\(\\sqrt{2}\\)", "2\\(\\sqrt{4}\\)", "4"], exp: "\\(8 = 4 \\times 2\\) なので、\\(2\\sqrt{2}\\) です。" }
+        ],
+        "中級": [
+          { q: "\\(\\sqrt{72}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "6\\(\\sqrt{2}\\)", opts: ["3\\(\\sqrt{8}\\)", "2\\(\\sqrt{18}\\)", "6\\(\\sqrt{2}\\)", "4\\(\\sqrt{3}\\)"], exp: "\\(72 = 36 \\times 2\\) なので、\\(6\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{50}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "5\\(\\sqrt{2}\\)", opts: ["2\\(\\sqrt{5}\\)", "5\\(\\sqrt{2}\\)", "2\\(\\sqrt{25}\\)", "5\\(\\sqrt{5}\\)"], exp: "\\(50 = 25 \\times 2\\) なので、\\(5\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{48}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "4\\(\\sqrt{3}\\)", opts: ["4\\(\\sqrt{3}\\)", "3\\(\\sqrt{4}\\)", "2\\(\\sqrt{12}\\)", "4\\(\\sqrt{2}\\)"], exp: "\\(48 = 16 \\times 3\\) なので、\\(4\\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{98}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "7\\(\\sqrt{2}\\)", opts: ["2\\(\\sqrt{7}\\)", "7\\(\\sqrt{2}\\)", "4\\(\\sqrt{6}\\)", "7\\(\\sqrt{3}\\)"], exp: "\\(98 = 49 \\times 2\\) なので、\\(7\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{108}\\) を \\(a\\sqrt{b}\\) の形に変形しなさい。", a: "6\\(\\sqrt{3}\\)", opts: ["3\\(\\sqrt{12}\\)", "6\\(\\sqrt{3}\\)", "2\\(\\sqrt{27}\\)", "6\\(\\sqrt{2}\\)"], exp: "\\(108 = 36 \\times 3\\) なので、\\(6\\sqrt{3}\\) です。" }
+        ],
+        "上級": [
+          { q: "3\\(\\sqrt{3}\\) を \\(\\sqrt{a}\\) の形に変形しなさい。", a: "\\(\\sqrt{27}\\)", opts: ["\\(\\sqrt{9}\\)", "\\(\\sqrt{18}\\)", "\\(\\sqrt{27}\\)", "\\(\\sqrt{6}\\)"], exp: "3をルートの中に入れると \\(3^2=9\\) なので、\\(\\sqrt{9 \times 3} = \\sqrt{27}\\) です。" },
+          { q: "2\\(\\sqrt{5}\\) を \\(\\sqrt{a}\\) の形に変形しなさい。", a: "\\(\\sqrt{20}\\)", opts: ["\\(\\sqrt{10}\\)", "\\(\\sqrt{20}\\)", "\\(\\sqrt{50}\\)", "\\(\\sqrt{45}\\)"], exp: "2をルートの中に入れると \\(2^2=4\\) なので、\\(\\sqrt{4 \times 5} = \\sqrt{20}\\) です。" },
+          { q: "5\\(\\sqrt{2}\\) を \\(\\sqrt{a}\\) の形に変形しなさい。", a: "\\(\\sqrt{50}\\)", opts: ["\\(\\sqrt{50}\\)", "\\(\\sqrt{20}\\)", "\\(\\sqrt{10}\\)", "\\(\\sqrt{25}\\)"], exp: "5をルートの中に入れると \\(5^2=25\\) なので、\\(\\sqrt{25 \times 2} = \\sqrt{50}\\) です。" },
+          { q: "4\\(\\sqrt{2}\\) を \\(\\sqrt{a}\\) の形に変形しなさい。", a: "\\(\\sqrt{32}\\)", opts: ["\\(\\sqrt{16}\\)", "\\(\\sqrt{8}\\)", "\\(\\sqrt{24}\\)", "\\(\\sqrt{32}\\)"], exp: "4をルートの中に入れると \\(4^2=16\\) なので、\\(\\sqrt{16 \times 2} = \\sqrt{32}\\) です。" },
+          { q: "6\\(\\sqrt{2}\\) を \\(\\sqrt{a}\\) の形に変形しなさい。", a: "\\(\\sqrt{72}\\)", opts: ["\\(\\sqrt{12}\\)", "\\(\\sqrt{24}\\)", "\\(\\sqrt{72}\\)", "\\(\\sqrt{36}\\)"], exp: "6をルートの中に入れると \\(6^2=36\\) なので、\\(\\sqrt{36 \times 2} = \\sqrt{72}\\) です。" }
+        ]
+      }
+    },
+    7: {
+      name: "7F：加減の計算",
+      questions: {
+        "初級": [
+          { q: "2\\(\\sqrt{5}\\) + 3\\(\\sqrt{5}\\) の値を求めなさい。", a: "5\\(\\sqrt{5}\\)", opts: ["5\\(\\sqrt{5}\\)", "6\\(\\sqrt{5}\\)", "5\\(\\sqrt{10}\\)", "5"], exp: "同じルートの中身は、文字式の足し算と同じように計算できます。\\((2+3)\\sqrt{5}=5\\sqrt{5}\\) です。" },
+          { q: "4\\(\\sqrt{2}\\) + 2\\(\\sqrt{2}\\) の値を求めなさい。", a: "6\\(\\sqrt{2}\\)", opts: ["6", "6\\(\\sqrt{2}\\)", "8\\(\\sqrt{2}\\)", "6\\(\\sqrt{4}\\)"], exp: "\\(4+2=6\\) なので \\(6\\sqrt{2}\\) です。" },
+          { q: "7\\(\\sqrt{3}\\) - 4\\(\\sqrt{3}\\) の値を求めなさい。", a: "3\\(\\sqrt{3}\\)", opts: ["3\\(\\sqrt{3}\\)", "3", "11\\(\\sqrt{3}\\)", "3\\(\\sqrt{0}\\)"], exp: "\\(7-4=3\\) なので \\(3\\sqrt{3}\\) です。" },
+          { q: "5\\(\\sqrt{7}\\) - \\(\\sqrt{7}\\) の値を求めなさい。", a: "4\\(\\sqrt{7}\\)", opts: ["5", "4\\(\\sqrt{7}\\)", "4", "5\\(\\sqrt{0}\\)"], exp: "\\(\\sqrt{7}\\) は \\(1\\sqrt{7}\\) のことなので、\\(5-1=4\\) です。" },
+          { q: "3\\(\\sqrt{6}\\) + 5\\(\\sqrt{6}\\) の値を求めなさい。", a: "8\\(\\sqrt{6}\\)", opts: ["15\\(\\sqrt{6}\\)", "8\\(\\sqrt{12}\\)", "8\\(\\sqrt{6}\\)", "8"], exp: "\\(3+5=8\\) なので \\(8\\sqrt{6}\\) です。" }
+        ],
+        "中級": [
+          { q: "\\(\\sqrt{2} + \\sqrt{8}\\) の値を求めなさい。", a: "3\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{10}\\)", "3\\(\\sqrt{2}\\)", "2\\(\\sqrt{2}\\)", "4\\(\\sqrt{2}\\)"], exp: "\\(\\sqrt{8}=2\\sqrt{2}\\) なので、\\(\\sqrt{2} + 2\\sqrt{2} = 3\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{12} - \\sqrt{3}\\) の値を求めなさい。", a: "\\(\\sqrt{3}\\)", opts: ["3", "\\(\\sqrt{9}\\)", "\\(\\sqrt{3}\\)", "2\\(\\sqrt{3}\\)"], exp: "\\(\\sqrt{12}=2\\sqrt{3}\\) なので、\\(2\\sqrt{3} - \\sqrt{3} = \\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{5} + \\sqrt{20}\\) の値を求めなさい。", a: "3\\(\\sqrt{5}\\)", opts: ["3\\(\\sqrt{5}\\)", "\\(\\sqrt{25}\\)", "5", "2\\(\\sqrt{5}\\)"], exp: "\\(\\sqrt{20}=2\\sqrt{5}\\) なので、\\(\\sqrt{5} + 2\\sqrt{5} = 3\\sqrt{5}\\) です。" },
+          { q: "\\(\\sqrt{27} - \\sqrt{3}\\) の値を求めなさい。", a: "2\\(\\sqrt{3}\\)", opts: ["\\(\\sqrt{24}\\)", "3\\(\\sqrt{3}\\)", "2\\(\\sqrt{3}\\)", "3"], exp: "\\(\\sqrt{27}=3\\sqrt{3}\\) なので、\\(3\\sqrt{3} - \\sqrt{3} = 2\\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{18} + \\sqrt{2}\\) の値を求めなさい。", a: "4\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{20}\\)", "4\\(\\sqrt{2}\\)", "3\\(\\sqrt{2}\\)", "5\\(\\sqrt{2}\\)"], exp: "\\(\\sqrt{18}=3\\sqrt{2}\\) なので、\\(3\\sqrt{2} + \\sqrt{2} = 4\\sqrt{2}\\) です。" }
+        ],
+        "上級": [
+          { q: "\\(\\sqrt{50} - \\sqrt{18}\\) の値を求めなさい。", a: "2\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{32}\\)", "2\\(\\sqrt{2}\\)", "4\\(\\sqrt{2}\\)", "2"], exp: "\\(5\\sqrt{2} - 3\\sqrt{2} = 2\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{12} + \\sqrt{48} - \\sqrt{27}\\) の値を求めなさい。", a: "3\\(\\sqrt{3}\\)", opts: ["3\\(\\sqrt{3}\\)", "5\\(\\sqrt{3}\\)", "\\(\\sqrt{33}\\)", "4\\(\\sqrt{3}\\)"], exp: "\\(2\\sqrt{3} + 4\\sqrt{3} - 3\\sqrt{3} = 3\\sqrt{3}\\) です。" },
+          { q: "\\(\\sqrt{8} + \\sqrt{32}\\) の値を求めなさい。", a: "6\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{40}\\)", "4\\(\\sqrt{2}\\)", "6\\(\\sqrt{2}\\)", "5\\(\\sqrt{2}\\)"], exp: "\\(2\\sqrt{2} + 4\\sqrt{2} = 6\\sqrt{2}\\) です。" },
+          { q: "\\(\\sqrt{20} + \\sqrt{45}\\) の値を求めなさい。", a: "5\\(\\sqrt{5}\\)", opts: ["\\(\\sqrt{65}\\)", "5\\(\\sqrt{5}\\)", "6\\(\\sqrt{5}\\)", "4\\(\\sqrt{5}\\)"], exp: "\\(2\\sqrt{5} + 3\\sqrt{5} = 5\\sqrt{5}\\) です。" },
+          { q: "\\(\\sqrt{72} - \\sqrt{8} - \\sqrt{18}\\) の値を求めなさい。", a: "\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{46}\\)", "2\\(\\sqrt{2}\\)", "\\(\\sqrt{2}\\)", "0"], exp: "\\(6\\sqrt{2} - 2\\sqrt{2} - 3\\sqrt{2} = \\sqrt{2}\\) です。" }
+        ]
+      }
+    },
+    8: {
+      name: "8F：展開の計算",
+      questions: {
+        "初級": [
+          { q: "\\(\\sqrt{2}(\\sqrt{3} + 2)\\) を展開しなさい。", a: "\\(\\sqrt{6}+2\\sqrt{2}\\)", opts: ["\\(\\sqrt{6}+2\\)", "\\(\\sqrt{6}+2\\sqrt{2}\\)", "\\(\\sqrt{5}+2\\sqrt{2}\\)", "2\\(\\sqrt{3}\\)"], exp: "分配法則でカッコの中のそれぞれに \\(\\sqrt{2}\\) を掛けます。" },
+          { q: "\\(\\sqrt{3}(\\sqrt{5} - \\sqrt{2})\\) を展開しなさい。", a: "\\(\\sqrt{15}-\\sqrt{6}\\)", opts: ["\\(\\sqrt{15}-\\sqrt{6}\\)", "\\(\\sqrt{8}\\)", "\\(\\sqrt{15}-2\\)", "\\(\\sqrt{5}-\\sqrt{6}\\)"], exp: "\\(\\sqrt{3} \\times \\sqrt{5} - \\sqrt{3} \\times \\sqrt{2}\\) を計算します。" },
+          { q: "\\(\\sqrt{5}(2 + \\sqrt{5})\\) を展開しなさい。", a: "2\\(\\sqrt{5}\\)+5", opts: ["2\\(\\sqrt{5}\\)+5", "2\\(\\sqrt{5}\\)+25", "7\\(\\sqrt{5}\\)", "10"], exp: "\\(\\sqrt{5} \\times 2 + \\sqrt{5} \\times \\sqrt{5} = 2\\sqrt{5} + 5\\) です。" },
+          { q: "\\(\\sqrt{6}(\\sqrt{2} + \\sqrt{3})\\) を展開しなさい。", a: "2\\(\\sqrt{3}\\)+3\\(\\sqrt{2}\\)", opts: ["\\(\\sqrt{12}+\\sqrt{18}\\)", "2\\(\\sqrt{3}\\)+3\\(\\sqrt{2}\\)", "5\\(\\sqrt{5}\\)", "12"], exp: "\\(\\sqrt{12}+\\sqrt{18}\\) ですが、整理すると \\(2\\sqrt{3}+3\\sqrt{2}\\) になります。" },
+          { q: "\\((\\sqrt{7} - 3) \\times \\sqrt{2}\\) を展開しなさい。", a: "\\(\\sqrt{14}-3\\sqrt{2}\\)", opts: ["\\(\\sqrt{14}-3\\)", "\\(\\sqrt{14}-3\\sqrt{2}\\)", "\\(\\sqrt{14}-6\\)", "\\(\\sqrt{7}-3\\sqrt{2}\\)"], exp: "\\(\\sqrt{7} \\times \\sqrt{2} - 3 \\times \\sqrt{2}\\) です。" }
+        ],
+        "中級・上級まとめ": [
+          { q: "\\((\\sqrt{5} + 2)(\\sqrt{5} + 3)\\) を展開しなさい。", a: "11+5\\(\\sqrt{5}\\)", opts: ["11+5\\(\\sqrt{5}\\)", "5+5\\(\\sqrt{5}\\)", "11+6\\(\\sqrt{5}\\)", "25"], exp: "公式 \\((x+a)(x+b)\\) を使うと、\\(5 + (2+3)\\sqrt{5} + 6 = 11+5\\sqrt{5}\\) です。" },
+          { q: "\\((\\sqrt{3} + 2)(\\sqrt{3} - 2)\\) を展開しなさい。", a: "-1", opts: ["1", "-1", "5", "3-2\\(\\sqrt{3}\\)"], exp: "和と差の積の公式を使うと、\\(3 - 4 = -1\\) です。" },
+          { q: "\\((\\sqrt{7} + \\sqrt{5})(\\sqrt{7} - \\sqrt{5})\\) を展開しなさい。", a: "2", opts: ["2", "12", "\\(\\sqrt{2}\\)", "2\\(\\sqrt{3}\\)"], exp: "和と差の積の公式を使うと、\\(7 - 5 = 2\\) です。" },
+          { q: "\\((\\sqrt{3} + \\sqrt{2})^2\\) を展開しなさい。", a: "5+2\\(\\sqrt{6}\\)", opts: ["5", "5+\\(\\sqrt{6}\\)", "5+2\\(\\sqrt{6}\\)", "6+2\\(\\sqrt{6}\\)"], exp: "平方の公式を使うと、\\(3 + 2\\sqrt{6} + 2 = 5+2\\sqrt{6}\\) です。" },
+          { q: "\\((3\\sqrt{2} - \\sqrt{3})^2\\) を展開しなさい。", a: "21-6\\(\\sqrt{6}\\)", opts: ["15-6\\(\\sqrt{6}\\)", "21-6\\(\\sqrt{6}\\)", "21-3\\(\\sqrt{6}\\)", "9"], exp: "\\(18 - 2(3\\sqrt{2})(\\sqrt{3}) + 3 = 21-6\\sqrt{6}\\) です。" }
+        ]
+      }
+    },
+    9: {
+      name: "9F：分母の有理化",
+      questions: {
+        "初級": [
+          { q: "\\(\\frac{1}{\\sqrt{3}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{3}}{3}\\)", opts: ["\\(\\sqrt{3}\\)", "\\(\\frac{\\sqrt{3}}{3}\\)", "\\(\\frac{1}{3}\\)", "\\(\\frac{\\sqrt{3}}{9}\\)"], exp: "分母と分子に \\(\\sqrt{3}\\) を掛けます。" },
+          { q: "\\(\\frac{1}{\\sqrt{2}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{2}}{2}\\)", opts: ["\\(\\frac{\\sqrt{2}}{2}\\)", "\\(\\sqrt{2}\\)", "\\(\\frac{1}{2}\\)", "2"], exp: "分母と分子に \\(\\sqrt{2}\\) を掛けます。" },
+          { q: "\\(\\frac{1}{\\sqrt{5}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{5}}{5}\\)", opts: ["\\(\\sqrt{5}\\)", "\\(\\frac{1}{5}\\)", "\\(\\frac{\\sqrt{5}}{5}\\)", "\\(\\frac{\\sqrt{5}}{25}\\)"], exp: "分母と分子に \\(\\sqrt{5}\\) を掛けます。" },
+          { q: "\\(\\frac{2}{\\sqrt{7}}\\) の分母を有理化しなさい。", a: "\\(\\frac{2\\sqrt{7}}{7}\\)", opts: ["\\(\\frac{\\sqrt{7}}{7}\\)", "\\(\\frac{2\\sqrt{7}}{7}\\)", "2\\(\\sqrt{7}\\)", "\\(\\frac{\\sqrt{14}}{7}\\)"], exp: "分母と分子に \\(\\sqrt{7}\\) を掛けます。" },
+          { q: "\\(\\frac{3}{\\sqrt{5}}\\) の分母を有理化しなさい。", a: "\\(\\frac{3\\sqrt{5}}{5}\\)", opts: ["\\(\\frac{3\\sqrt{5}}{5}\\)", "3\\(\\sqrt{5}\\)", "\\(\\frac{\\sqrt{15}}{5}\\)", "\\(\\frac{\\sqrt{5}}{5}\\)"], exp: "分母と分子に \\(\\sqrt{5}\\) を掛けます。" }
+        ],
+        "中級": [
+          { q: "\\(\\frac{4}{\\sqrt{2}}\\) の分母を有理化して簡潔にしなさい。", a: "2\\(\\sqrt{2}\\)", opts: ["4\\(\\sqrt{2}\\)", "2", "2\\(\\sqrt{2}\\)", "8"], exp: "\\(\\frac{4\\sqrt{2}}{2}\\) ですが、約分して \\(2\\sqrt{2}\\) になります。" },
+          { q: "\\(\\frac{6}{\\sqrt{3}}\\) の分母を有理化して簡潔にしなさい。", a: "2\\(\\sqrt{3}\\)", opts: ["2\\(\\sqrt{3}\\)", "3\\(\\sqrt{3}\\)", "6\\(\\sqrt{3}\\)", "2"], exp: "\\(\\frac{6\\sqrt{3}}{3}\\) ですが、約分して \\(2\\sqrt{3}\\) になります。" },
+          { q: "\\(\\frac{\\sqrt{2}}{\\sqrt{3}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{6}}{3}\\)", opts: ["\\(\\frac{\\sqrt{6}}{3}\\)", "\\(\\frac{\\sqrt{6}}{9}\\)", "\\(\\frac{\\sqrt{2}}{3}\\)", "\\(\\sqrt{6}\\)"], exp: "分母と分子に \\(\\sqrt{3}\\) を掛けると、分子は \\(\\sqrt{2} \\times \\sqrt{3} = \\sqrt{6}\\) です。" },
+          { q: "\\(\\frac{\\sqrt{5}}{\\sqrt{2}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{10}}{2}\\)", opts: ["\\(\\frac{\\sqrt{5}}{2}\\)", "\\(\\frac{\\sqrt{10}}{2}\\)", "\\(\\sqrt{10}\\)", "\\(\\frac{\\sqrt{10}}{4}\\)"], exp: "分母と分子に \\(\\sqrt{2}\\) を掛けます。" },
+          { q: "\\(\\frac{10}{\\sqrt{5}}\\) の分母を有理化して簡潔にしなさい。", a: "2\\(\\sqrt{5}\\)", opts: ["5\\(\\sqrt{5}\\)", "2", "2\\(\\sqrt{5}\\)", "10\\(\\sqrt{5}\\)"], exp: "\\(\\frac{10\\sqrt{5}}{5}\\) なので、約分して \\(2\\sqrt{5}\\) です。" }
+        ],
+        "上級": [
+          { q: "\\(\\frac{\\sqrt{3}}{\\sqrt{18}}\\) を有理化して最も簡単な形にしなさい。", a: "\\(\\frac{\\sqrt{6}}{6}\\)", opts: ["\\(\\frac{1}{\\sqrt{6}}\\)", "\\(\\frac{\\sqrt{6}}{6}\\)", "\\(\\frac{\\sqrt{3}}{6}\\)", "\\(\\frac{\\sqrt{2}}{4}\\)"], exp: "先に中身を約分して \\(\\frac{1}{\\sqrt{6}}\\) にしてから有理化するとスムーズです。" },
+          { q: "\\(\\frac{\\sqrt{5}}{\\sqrt{20}}\\) を有理化して最も簡単な形にしなさい。", a: "\\(\\frac{1}{2}\\)", opts: ["\\(\\frac{1}{2}\\)", "\\(\\frac{\\sqrt{5}}{2}\\)", "\\(\\frac{1}{4}\\)", "2"], exp: "先に約分すると \\(\\sqrt{1/4} = 1/2\\) です。" },
+          { q: "\\(\\frac{3}{2\\sqrt{3}}\\) の分母を有理化して簡潔にしなさい。", a: "\\(\\frac{\\sqrt{3}}{2}\\)", opts: ["\\(\\frac{\\sqrt{3}}{2}\\)", "\\(\\sqrt{3}\\)", "\\(\\frac{3\\sqrt{3}}{2}\\)", "\\(\\frac{1}{2}\\)"], exp: "分母と分子に \\(\sqrt{3}\\) を掛けると \\(\\frac{3\\sqrt{3}}{6}\\) なので、約分して \\(\\frac{\\sqrt{3}}{2}\\) です。" },
+          { q: "\\(\\frac{1}{\\sqrt{7} + \\sqrt{5}}\\) の分母を有理化しなさい。", a: "\\(\\frac{\\sqrt{7}-\\sqrt{5}}{2}\\)", opts: ["\\(\\sqrt{7}-\\sqrt{5}\\)", "\\(\\frac{\\sqrt{7}-\\sqrt{5}}{2}\\)", "\\(\\frac{\\sqrt{7}+\\sqrt{5}}{2}\\)", "\\(\\frac{\\sqrt{2}}{2}\\)"], exp: "分母分子に \\((\\sqrt{7}-\\sqrt{5})\\) を掛けます。分母は \\(7-5=2\\) です。" },
+          { q: "\\(\\frac{1}{\\sqrt{3} + \\sqrt{2}}\\) の分母を有理化しなさい。", a: "\\(\\sqrt{3}-\\sqrt{2}\\)", opts: ["\\(\\sqrt{3}+\\sqrt{2}\\)", "\\(\\sqrt{3}-\\sqrt{2}\\)", "1", "\\(\\frac{\\sqrt{3}-\\sqrt{2}}{5}\\)"], exp: "分母分子に \\((\\sqrt{3}-\\sqrt{2})\\) を掛けます。分母は \\(3-2=1\\) です。" }
+        ]
+      }
+    }
+  };
+}
+    return { getQuizDataFixed: getQuizDataFixed };
+    })();
+    </script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定を、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>平方根タワー</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'tex2jax_process'
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+  <style>
+    :root {
+      --bg-dark: #221c3d;
+      --panel-bg: rgba(255, 255, 255, 0.06);
+      --text-main: #ffffff;
+      --accent-blue: #00e5ff;
+      --correct-color: #4caf50;
+      --wrong-color: #f44336;
+      --easy-color: #4caf50;
+      --mid-color: #ff9800;
+      --hard-color: #f44336;
+      --random-color: #e056fd;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(30, 25, 55, 0.85);
+      border-radius: 20px;
+      padding: 35px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      position: relative;
+      min-height: 600px;
+    }
+
+    .nav-buttons {
+      position: absolute;
+      top: 25px;
+      left: 25px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--accent-blue);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { background: var(--accent-blue); color: #000; }
+
+    h1.title {
+      text-align: center;
+      font-size: 36px;
+      background: linear-gradient(45deg, #ff6b6b, #ff8e53, #e056fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .subtitle { text-align: center; color: #aaa; font-size: 15px; margin-bottom: 30px; }
+    .section-title { text-align: center; color: var(--accent-blue); font-size: 22px; margin-bottom: 20px; font-weight: 500; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 750px) { .menu-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .menu-grid { grid-template-columns: 1fr; } }
+
+    .floor-card {
+      border-radius: 16px; padding: 25px 15px; text-align: center; cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
+    }
+    .floor-card:hover { transform: translateY(-4px); }
+    .f1 { background: linear-gradient(135deg, #ff5252, #ff7979); }
+    .f2 { background: linear-gradient(135deg, #0288d1, #00b0ff); }
+    .f3 { background: linear-gradient(135deg, #2e7d32, #4caf50); }
+    .f4 { background: linear-gradient(135deg, #f57c00, #ffb74d); }
+    .f5 { background: linear-gradient(135deg, #006064, #00838f); }
+    .f6 { background: linear-gradient(135deg, #78909c, #cfd8dc); color: #222 !important; }
+    .f7 { background: linear-gradient(135deg, #ff5722, #ff8a65); }
+    .f8 { background: linear-gradient(135deg, #4527a0, #673ab7); }
+    .f9 { background: linear-gradient(135deg, #8d6e63, #bcaaa4); }
+    .f10 { background: linear-gradient(135deg, #e056fd, #be2edd); }
+
+    .diff-container { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 30px; }
+    .diff-btn { width: 80%; max-width: 400px; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .diff-btn.easy { background-color: var(--easy-color); }
+    .diff-btn.easy:hover { background-color: #439a46; }
+    .diff-btn.mid { background-color: var(--mid-color); }
+    .diff-btn.mid:hover { background-color: #e68a00; }
+    .diff-btn.hard { background-color: var(--hard-color); }
+    .diff-btn.hard:hover { background-color: #d32f2f; }
+
+    .progress-container { background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; margin: 20px 0; overflow: hidden; }
+    .progress-bar { background: var(--accent-blue); width: 0%; height: 100%; transition: width 0.3s; }
+
+    .q-box { font-size: 22px; text-align: center; margin: 30px 0; min-height: 60px; line-height: 1.6; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+
+    .opt-btn { background: #2575fc; color: white; border: none; padding: 22px; border-radius: 14px; font-size: 20px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; justify-content: center; align-items: center; }
+    .opt-btn:hover { background: #1a65eb; transform: scale(1.01); }
+    .opt-btn.correct { background-color: var(--correct-color) !important; opacity: 1 !important; }
+    .opt-btn.wrong { background-color: var(--wrong-color) !important; opacity: 0.6; }
+    
+    #explanation-area {
+      margin-top: 20px; background: rgba(255,255,255,0.08); padding: 20px; border-radius: 12px;
+      display: none; border-left: 5px solid var(--correct-color); animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .next-zone { margin-top: 25px; text-align: center; display: none; }
+    .action-btn { background: #e056fd; color: white; border: none; padding: 12px 35px; border-radius: 30px; cursor: pointer; font-weight: 700; font-size: 16px; transition: background 0.2s; }
+    .action-btn:hover { background: #be2edd; }
+
+    .res-buttons-flex { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 35px; }
+    .res-btn { width: 75%; max-width: 360px; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .res-btn-next-level { background: linear-gradient(45deg, #00e5ff, #2575fc); color: #000; box-shadow: 0 4px 15px rgba(0,229,255,0.3); }
+    .res-btn-next-level:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,229,255,0.5); }
+    .res-btn-back-diff { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .res-btn-back-diff:hover { background: rgba(255,255,255,0.2); }
+    .res-btn-home { background: transparent; color: var(--accent-blue); border: 2px solid var(--accent-blue); }
+    .res-btn-home:hover { background: var(--accent-blue); color: #000; }
+
+    .loader { text-align: center; padding: 50px 0; font-size: 18px; color: #aaa; }
+
+    /* 【ブラッシュアップ】 */
+    body { flex-direction: column; align-items: center; }
+    .port-back { max-width: 900px; color: #aaa; }
+    .q-box.math-wait, .options-grid.math-wait { visibility: hidden; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 16px 12px 22px; border-radius: 16px; min-height: 0; }
+      /* HOME・戻るボタンがタイトルに重なっていたので、タイトルの上に並べる */
+      .nav-buttons { position: static; margin-bottom: 10px; }
+      h1.title { font-size: min(32px, 9vw); }
+      .subtitle { font-size: 14px; margin-bottom: 18px; }
+      .section-title { font-size: 19px; margin-bottom: 14px; }
+      .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .floor-card { padding: 16px 8px; }
+      .diff-btn { width: 100%; font-size: 20px; padding: 20px; }
+      .q-box { font-size: 21px; margin: 18px 0; }
+      .options-grid { gap: 10px; }
+      .opt-btn { font-size: 22px; padding: 20px 10px; min-height: 70px; }
+      .res-btn { width: 100%; font-size: 17px; padding: 16px; }
+    }</style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../data/root-tower.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   16. ルートの計算全般 ／ 平方根タワー
-   問題データ（全115問）は元教材からそのまま引き継いでいる。
+  <div class="container tex2jax_process">
+    <div class="nav-buttons">
+      <button class="back-btn" id="home-btn" style="display:none;" onclick="showMenuScreen()">
+        <span class="material-icons">home</span>HOME
+      </button>
+      <button class="back-btn" id="back-nav-btn" style="display:none;">
+        <span class="material-icons">arrow_back</span>戻る
+      </button>
+    </div>
 
-   元教材から直した点：
-     ・2F と 4F には中級・上級のデータが無いのに選択肢だけ出ていて、
-       選ぶと問題が 0 問になって画面が止まっていた。
-       → 用意されている難易度だけを出すようにした。
-     ・10F「総合ランダム」に対応するデータが無く、選ぶと止まっていた。
-       → 全フロアから 10 問を抽選する形で実装し直した。
-     ・選択肢の並びが固定で、位置で答えを覚えられてしまっていた。
-       → 毎回シャッフルする（正解の追跡は出題エンジン側が行う）。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+    <h1 class="title">平方根タワー</h1>
+    <div class="subtitle">9つのフロアを登ってマスターを目指そう！ 🗼</div>
 
-  var DATA = window.DATA_ROOT_TOWER;
-  var DIFF_NAME = { beginner: '初級', intermediate: '中級', advanced: '上級' };
-  var DIFF_ORDER = ['beginner', 'intermediate', 'advanced'];
+    <div id="scr-load" class="screen active"><div class="loader">データを展開しています...</div></div>
 
-  // --- モード一覧をデータから組み立てる（データが無い難易度は最初から出さない） ---
-  var modes = [];
-  DATA.stages.forEach(function (stage, i) {
-    var floor = String(i + 1);
-    var pack = DATA.problems[floor] || {};
-    DIFF_ORDER.forEach(function (d) {
-      if (!pack[d] || !pack[d].length) return;
-      modes.push({
-        id: floor + ':' + d,
-        group: stage.floor + '　' + stage.name,
-        name: DIFF_NAME[d],
-        desc: pack[d].length + '問'
-      });
+    <div id="scr-menu" class="screen">
+      <div class="section-title">ステージを選択</div>
+      <div class="menu-grid" id="menu-grid-container"></div>
+    </div>
+
+    <div id="scr-diff" class="screen">
+      <div class="section-title" id="diff-title-floor"></div>
+      <div class="diff-container" id="diff-buttons-container"></div>
+    </div>
+
+    <div id="scr-quiz" class="screen">
+      <div style="display:flex; justify-content:space-between; color:#aaa; font-size:14px;">
+        <span id="quiz-header-title"></span>
+        <span id="quiz-header-counter"></span>
+      </div>
+      <div class="progress-container"><div class="progress-bar" id="p-bar"></div></div>
+      
+      <div class="q-box" id="q-text"></div>
+      <div class="options-grid" id="opts-grid"></div>
+
+      <div id="explanation-area">
+        <div style="color:var(--accent-blue); font-weight:700; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+          <span class="material-icons" style="font-size:18px;">menu_book</span>解説
+        </div>
+        <div id="exp-text"></div>
+      </div>
+
+      <div class="next-zone" id="next-zone">
+        <button class="action-btn" id="next-q-btn">次へ進む</button>
+      </div>
+    </div>
+
+    <div id="scr-res" class="screen">
+      <div style="text-align:center; padding-top:10px;">
+        <div style="font-size:28px; color:var(--accent-blue); font-weight:700; margin-bottom:15px;" id="res-score-text"></div>
+        <div style="margin-bottom:10px; font-size:16px; color:#ccc;" id="res-comment-text"></div>
+        
+        <div class="res-buttons-flex" id="res-actions-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let masterData = {};
+    let activeQuestions = [];
+    let currentIdx = 0;
+    let correctCount = 0;
+    let selectedFloorId = null;
+    let selectedLevel = "";
+    let isCorrected = false;
+    let currentQuestionMistakes = 0; 
+
+    const difficultyOrder = ["初級", "中級", "上級", "中級・上級まとめ"];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      google.script.run.withSuccessHandler(data => {
+        masterData = data;
+        buildFloorMenu();
+        showMenuScreen();
+      }).getQuizDataFixed();
     });
-  });
-  modes.push({
-    id: 'mix',
-    group: '10F　総合ランダム',
-    name: '総合ランダム',
-    desc: '1F〜9F の全問題から10問'
-  });
 
-  // --- 元データ 1 問 → 出題エンジンの問題オブジェクト ---
-  function toQuestion(p) {
-    return {
-      text: p.instruction,
-      math: p.q,
-      type: 'choice',
-      choices: p.choices.slice(),
-      correct: p.choices.indexOf(p.answer),
-      answerLabel: p.answer
-    };
-  }
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
 
-  function allProblems() {
-    var out = [];
-    Object.keys(DATA.problems).forEach(function (floor) {
-      Object.keys(DATA.problems[floor]).forEach(function (d) {
-        DATA.problems[floor][d].forEach(function (p) { out.push(p); });
-      });
-    });
-    return out;
-  }
+    function showMenuScreen() {
+      selectedFloorId = null;
+      selectedLevel = "";
+      document.getElementById('home-btn').style.display = 'none';
+      document.getElementById('back-nav-btn').style.display = 'none';
+      showScreen('scr-menu');
+    }
 
-  Quiz.start({
-    title: '平方根タワー',
-    subtitle: '9つのフロアを登ってマスターを目指そう。最後の10Fは総合ランダム。',
-    modes: modes,
-    build: function (id) {
-      var list;
-      if (id === 'mix') {
-        // 同じ問題が重複しないように、シャッフルしてから先頭10問を取る
-        var seen = {};
-        list = Quiz.shuffle(allProblems()).filter(function (p) {
-          var k = p.instruction + '|' + p.q;
-          if (seen[k]) return false;
-          seen[k] = true;
-          return true;
-        }).slice(0, 10);
-      } else {
-        var parts = id.split(':');
-        list = (DATA.problems[parts[0]] || {})[parts[1]] || [];
-        list = list.slice();
+    function buildFloorMenu() {
+      const container = document.getElementById('menu-grid-container');
+      container.innerHTML = "";
+      
+      for(let i=1; i<=9; i++) {
+        if (!masterData[i]) continue;
+        const div = document.createElement('div');
+        div.className = `floor-card f${i}`;
+        let shortName = masterData[i].name.split('：')[1] || masterData[i].name;
+        div.innerHTML = `<div style="font-size:24px; font-weight:700;">${i}F</div><div style="font-size:14px; opacity:0.9; font-weight:500;">${shortName}</div>`;
+        div.onclick = () => showDiffScreen(i);
+        container.appendChild(div);
       }
 
-      return list.map(toQuestion).filter(function (q) {
-        // 正解が選択肢に無いデータがあれば出題しない（誤採点を根本から防ぐ）
-        return q.correct >= 0;
-      });
+      const div10 = document.createElement('div');
+      div10.className = "floor-card f10";
+      div10.innerHTML = `<div style="font-size:24px; font-weight:700;">10F</div><div style="font-size:14px; opacity:0.9; font-weight:500;">総合ランダム</div>`;
+      div10.onclick = () => showDiffScreen(10);
+      container.appendChild(div10);
     }
-  });
-})();
-</script>
+
+    function showDiffScreen(floorId) {
+      selectedFloorId = floorId;
+      selectedLevel = "";
+      document.getElementById('home-btn').style.display = 'flex';
+      document.getElementById('back-nav-btn').style.display = 'flex';
+      document.getElementById('back-nav-btn').onclick = showMenuScreen;
+      
+      const btnContainer = document.getElementById('diff-buttons-container');
+      btnContainer.innerHTML = "";
+
+      if (floorId === 10) {
+        document.getElementById('diff-title-floor').textContent = "10F：総合ランダム（1F〜9F 各1問・計9問）";
+        ["初級", "中級", "上級"].forEach(level => {
+          const btn = document.createElement('button');
+          btn.className = `diff-btn ${level === '初級' ? 'easy' : level === '中級' ? 'mid' : 'hard'}`;
+          btn.textContent = `${level}のランダム`;
+          btn.onclick = () => startRandomQuiz(level);
+          btnContainer.appendChild(btn);
+        });
+      } else {
+        document.getElementById('diff-title-floor').textContent = masterData[floorId].name;
+        const availableLevels = Object.keys(masterData[floorId].questions);
+        difficultyOrder.forEach(level => {
+          if (!availableLevels.includes(level)) return;
+          const btn = document.createElement('button');
+          let colorClass = 'easy';
+          if (level === '中級') colorClass = 'mid';
+          if (level === '上級' || level === '中級・上級まとめ') colorClass = 'hard';
+          
+          btn.className = `diff-btn ${colorClass}`;
+          btn.textContent = level;
+          btn.onclick = () => startQuiz(floorId, level);
+          btnContainer.appendChild(btn);
+        });
+      }
+      showScreen('scr-diff');
+    }
+
+    function startQuiz(floorId, level) {
+      selectedFloorId = floorId;
+      selectedLevel = level;
+      activeQuestions = JSON.parse(JSON.stringify(masterData[floorId].questions[level])).sort(() => Math.random() - 0.5);
+      currentIdx = 0;
+      correctCount = 0;
+      document.getElementById('back-nav-btn').onclick = () => showDiffScreen(floorId);
+      renderQuestion();
+      showScreen('scr-quiz');
+    }
+
+    function startRandomQuiz(baseLevel) {
+      selectedFloorId = 10;
+      selectedLevel = `${baseLevel}のランダム`;
+      
+      let selectedPool = [];
+
+      for (let f = 1; f <= 9; f++) {
+        if (!masterData[f] || !masterData[f].questions) continue;
+        
+        let floorQuestions = [];
+        let searchLevels = [];
+        if (baseLevel === "上級") {
+          searchLevels = ["上級", "中級・上級まとめ", "中級", "初級"];
+        } else if (baseLevel === "中級") {
+          searchLevels = ["中級", "中級・上級まとめ", "初級", "上級"];
+        } else {
+          searchLevels = ["初級", "中級", "中級・上級まとめ", "上級"];
+        }
+
+        for (let lvl of searchLevels) {
+          if (masterData[f].questions[lvl] && masterData[f].questions[lvl].length > 0) {
+            floorQuestions = masterData[f].questions[lvl];
+            break; 
+          }
+        }
+
+        if (floorQuestions.length > 0) {
+          const randomIdx = Math.floor(Math.random() * floorQuestions.length);
+          selectedPool.push(JSON.parse(JSON.stringify(floorQuestions[randomIdx])));
+        }
+      }
+
+      activeQuestions = selectedPool;
+      currentIdx = 0;
+      correctCount = 0;
+      document.getElementById('back-nav-btn').onclick = () => showDiffScreen(10);
+      renderQuestion();
+      showScreen('scr-quiz');
+    }
+
+    // 【改良機能】LaTex用の数式文字列内に含まれる「\times」や壊れた「imes」を、
+    // 見やすい日本の中学数学標準の全角「×」に強制置換する関数
+    function cleanMathText(text) {
+      if (!text) return "";
+      // もしGAS側から \times や、エスケープ漏れした imes が送られてきてもすべて「×」に統一
+      return text.replace(/\\times/g, "×").replace(/imes/g, "×");
+    }
+
+    // 【ブラッシュアップ】数式の表示。MathJax の準備ができるまで隠し、読み込めないときは
+    //   \frac{a}{b} → (a)/(b)、\sqrt{x} → √x のように、読める形に直して表示する。
+    function texToPlain(s) {
+      let t = s;
+      for (let i = 0; i < 5; i++) {
+        t = t.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
+             .replace(/\\sqrt\{([^{}]*)\}/g, '√$1');
+      }
+      return t.replace(/\\sqrt\s*(\d+)/g, '√$1').replace(/\\\(|\\\)/g, '').replace(/\\left|\\right/g, '').replace(/\\/g, '');
+    }
+    function typesetOrFallback(els) {
+      els.forEach(el => el.classList.add('math-wait'));
+      const reveal = () => els.forEach(el => el.classList.remove('math-wait'));
+      const fallback = () => {
+        els.forEach(el => el.querySelectorAll('*').forEach(n => { if (n.children.length === 0) n.textContent = texToPlain(n.textContent); }));
+        els.forEach(el => { if (el.children.length === 0 || el.id === 'q-text') el.innerHTML = texToPlain(el.innerHTML); });
+        reveal();
+      };
+      let tries = 0;
+      (function wait() {
+        if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(els).then(reveal).catch(fallback);
+        else if (tries++ < 50) setTimeout(wait, 100);
+        else fallback();
+      })();
+    }
+
+    function renderQuestion() {
+      isCorrected = false;
+      currentQuestionMistakes = 0;
+      document.getElementById('explanation-area').style.display = 'none';
+      document.getElementById('next-zone').style.display = 'none';
+      
+      const q = activeQuestions[currentIdx];
+      document.getElementById('quiz-header-title').textContent = selectedFloorId === 10 ? `10F [${selectedLevel}]` : `${selectedFloorId}F [${selectedLevel}]`;
+      document.getElementById('quiz-header-counter').textContent = `${currentIdx + 1} / ${activeQuestions.length}`;
+      
+      const rate = (currentIdx / activeQuestions.length) * 100;
+      document.getElementById('p-bar').style.width = `${rate}%`;
+
+      const qTextEl = document.getElementById('q-text');
+      qTextEl.textContent = `第 ${currentIdx + 1} 問:\n${cleanMathText(q.q)}`;
+      qTextEl.innerHTML = qTextEl.innerHTML.replace(/\n/g, '<br>');
+
+      const grid = document.getElementById('opts-grid');
+      grid.innerHTML = "";
+      
+      const shuffledOpts = [...q.opts].sort(() => Math.random() - 0.5);
+      shuffledOpts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "opt-btn";
+        btn.textContent = cleanMathText(opt); 
+        btn.onclick = () => checkAnswer(btn, opt, q);
+        grid.appendChild(btn);
+      });
+
+      typesetOrFallback([qTextEl, grid]);
+    }
+
+    function checkAnswer(btn, chosen, qObj) {
+      if (isCorrected) return;
+
+      if (chosen === qObj.a) {
+        isCorrected = true;
+        btn.classList.add('correct');
+        
+        if (currentQuestionMistakes === 0) {
+          correctCount++;
+        }
+        
+        document.querySelectorAll('.opt-btn').forEach(b => {
+          b.disabled = true;
+          if(b.textContent !== cleanMathText(qObj.a)) b.style.opacity = "0.4";
+        });
+
+        const expTextEl = document.getElementById('exp-text');
+        
+        // 解説文に含まれる掛け算記号も「×」に置換して代入
+        expTextEl.textContent = cleanMathText(qObj.exp);
+        
+        document.getElementById('explanation-area').style.display = 'block';
+        document.getElementById('next-zone').style.display = 'block';
+        
+        const nextBtn = document.getElementById('next-q-btn');
+        nextBtn.onclick = () => {
+          currentIdx++;
+          if (currentIdx < activeQuestions.length) renderQuestion();
+          else showFinalResult();
+        };
+        nextBtn.textContent = (currentIdx === activeQuestions.length - 1) ? "結果を見る" : "次の問題へ";
+        
+        typesetOrFallback([expTextEl]);
+      } else {
+        btn.classList.add('wrong');
+        btn.disabled = true;
+        currentQuestionMistakes++;
+      }
+    }
+
+    function showFinalResult() {
+      document.getElementById('p-bar').style.width = "100%";
+      showScreen('scr-res');
+      
+      document.getElementById('res-score-text').textContent = `${activeQuestions.length}問中 ${correctCount} 問正解！`;
+      // 【ブラッシュアップ】元は「6問以上」で判定していて、5問のフロアでは合わなかったので、正答率で判定する
+      let comment = (correctCount === activeQuestions.length) ? "完璧です！全フロア完全制覇！" : (correctCount >= activeQuestions.length * 0.7) ? "素晴らしい！タワーを登りきりました！" : "ナイスファイト！もう一度全階制覇に挑みましょう！";
+      document.getElementById('res-comment-text').textContent = comment;
+
+      const actionsContainer = document.getElementById('res-actions-container');
+      actionsContainer.innerHTML = "";
+
+      if (selectedFloorId === 10) {
+        const backDiffBtn = document.createElement('button');
+        backDiffBtn.className = "res-btn res-btn-back-diff";
+        backDiffBtn.innerHTML = "10Fの難易度選択に戻る";
+        backDiffBtn.onclick = () => showDiffScreen(10);
+        actionsContainer.appendChild(backDiffBtn);
+      } else {
+        const availableLevels = Object.keys(masterData[selectedFloorId].questions);
+        const currentPos = difficultyOrder.indexOf(selectedLevel);
+        let nextLevelName = null;
+        
+        for (let i = currentPos + 1; i < difficultyOrder.length; i++) {
+          if (availableLevels.includes(difficultyOrder[i])) {
+            nextLevelName = difficultyOrder[i];
+            break;
+          }
+        }
+
+        if (nextLevelName) {
+          const nextLvlBtn = document.createElement('button');
+          nextLvlBtn.className = "res-btn res-btn-next-level";
+          nextLvlBtn.innerHTML = `<span style="vertical-align:middle;" class="material-icons">trending_up</span> 次のレベル【${nextLevelName}】に挑戦`;
+          nextLvlBtn.onclick = () => startQuiz(selectedFloorId, nextLevelName);
+          actionsContainer.appendChild(nextLvlBtn);
+        }
+
+        const backDiffBtn = document.createElement('button');
+        backDiffBtn.className = "res-btn res-btn-back-diff";
+        backDiffBtn.innerHTML = "この階の難易度選択に戻る";
+        backDiffBtn.onclick = () => showDiffScreen(selectedFloorId);
+        actionsContainer.appendChild(backDiffBtn);
+      }
+
+      const homeBackBtn = document.createElement('button');
+      homeBackBtn.className = "res-btn res-btn-home";
+      homeBackBtn.innerHTML = "別のフロアを選ぶ (HOME)";
+      homeBackBtn.onclick = showMenuScreen;
+      actionsContainer.appendChild(homeBackBtn);
+
+      // 【ブラッシュアップ】ほかの教材へ
+      const otherLink = document.createElement('a');
+      otherLink.href = '../remake.html';
+      otherLink.textContent = 'ほかの教材をえらぶ';
+      otherLink.style.cssText = 'color:#aaa; margin-top:4px;';
+      actionsContainer.appendChild(otherLink);
+    }
+  </script>
 </body>
 </html>
