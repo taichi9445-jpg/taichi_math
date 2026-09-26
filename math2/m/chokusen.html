@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+  <!--
+    数学Ⅱ 06. 直線の方程式（直線の方程式クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../../assets/port.css">
+  <script src="../../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直線の方程式クイズ</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100%;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .quiz-container {
+            padding: 40px;
+        }
+
+        .question-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #4facfe;
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        .question-number {
+            color: #4facfe;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            border-color: #4facfe;
+            background: #e6f3ff;
+        }
+
+        .option.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .submit-btn.show {
+            display: inline-block;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .next-btn.show {
+            display: inline-block;
+        }
+
+        .progress {
+            background: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 20%;
+        }
+
+        .result-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #4facfe;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            margin-left: 15px;
+            display: none;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .retry-btn.show {
+            display: inline-block;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: none;
+            animation: celebration 0.6s ease-out;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @keyframes celebration {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .hint-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #8b4513;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(252, 182, 159, 0.3);
+        }
+
+        .hint-content {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .hint-content.show {
+            display: block;
+        }
+
+        .hint-content h5 {
+            color: #2d5016;
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+        }
+
+        .hint-content p {
+            color: #2d5016;
+            margin: 0;
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+        }
+
+        .explanation h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+        }
+
+        .explanation p {
+            color: #856404;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .wrong-explanation {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .wrong-explanation.show {
+            display: block;
+        }
+
+        .wrong-explanation h4 {
+            color: #721c24;
+            margin: 0 0 10px 0;
+        }
+
+        .wrong-explanation p {
+            color: #721c24;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    html, body { height: auto; }
+    body { padding: 12px; }
+    .container { overflow: visible; padding: 20px 16px; }
+    .header { background: none; color: var(--u-ink); padding: 4px 4px 0; }
+    .header h1 { font-size: min(2.3rem, 7vw); white-space: nowrap; margin: 0 0 6px; }
+    .header p { color: var(--u-sub); font-weight: 700; opacity: 1; }
+    .quiz-container { padding: 12px 4px; }
+    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
+    .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
+    .question-text { color: var(--u-ink); font-weight: 800; }
+    .option { font-size: 1.25rem; font-weight: 700; text-align: center; }
+    .hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    .hint-content { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; }
+    .hint-content h5, .hint-content p { color: var(--u-title); }
+    .success-message { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); border-radius: 16px; }
+    .explanation { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; }
+    .explanation h4, .explanation p { color: var(--u-ink); }
+    .wrong-explanation { background: var(--u-ng-soft); border: 3px solid var(--u-ng-line); border-radius: 16px; }
+    .wrong-explanation h4, .wrong-explanation p { color: var(--u-ng); }
+    .next-btn, .retry-btn { margin-top: 14px; }
+    .result-card { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
+    .result-card h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
+    .score { color: var(--u-title); }
+    .score-label { font-size: 1rem; color: var(--u-sub); }
+    #resultMessage { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 16px auto 0; }
+    .result-nav button, .result-nav a.next { padding: 12px; margin: 0; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    .result-nav a.next { display: block; color: #fff; text-decoration: none; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 14px 10px; }
+      .question-card { padding: 16px 10px; }
+      .question-text { font-size: 1.15rem; }
+      .option { padding: 14px 8px; font-size: 1.15rem; }
+    }
+  
+  </style>
+</head>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <header class="header">
+            <h1>📐 直線の方程式クイズ</h1>
+            <p>点と傾きから直線の方程式を求めよう！</p>
+        </header>
+
+        <main class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <!-- 問題1 -->
+            <div class="question-card active" id="question1">
+                <div class="question-number">問題 1/5</div>
+                <div class="question-text">点（1, 3）を通り、傾きが4の直線の方程式はどれか？</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">y - 3 = 4(x - 1)</div>
+                    <div class="option" data-answer="incorrect">y - 1 = 4(x - 3)</div>
+                    <div class="option" data-answer="incorrect">y - 4 = 3(x - 1)</div>
+                    <div class="option" data-answer="incorrect">y - 3 = 1(x - 4)</div>
+                </div>
+                <div class="hint-buttons">
+                    <button class="hint-btn" onclick="showHint(1, 1)">💡 ヒント1</button>
+                    <button class="hint-btn" onclick="showHint(1, 2)">💡 ヒント2</button>
+                </div>
+                <div class="hint-content" id="hint1-1">
+                    <h5>💡 ヒント1</h5>
+                    <p>直線の方程式の公式を思い出してみましょう！<br>
+                    点（a, b）を通り、傾きがmの直線の方程式は：<br>
+                    <strong>y - b = m(x - a)</strong> です。</p>
+                </div>
+                <div class="hint-content" id="hint1-2">
+                    <h5>💡 ヒント2</h5>
+                    <p>この問題では：<br>
+                    • 通る点：（1, 3） → a = 1, b = 3<br>
+                    • 傾き：4 → m = 4<br>
+                    公式に代入すると：y - b = m(x - a)</p>
+                </div>
+                <div class="success-message">
+                    🎉 素晴らしい！完璧です！さすがですね！✨
+                </div>
+                <button class="next-btn" onclick="nextQuestion(2)">次の問題へ</button>
+                <button class="retry-btn" onclick="retryQuestion(1)">もう一度挑戦</button>
+                <div class="explanation">
+                    <h4>正解！</h4>
+                    <p>点（a, b）を通り傾きがmの直線の方程式は y - b = m(x - a) です。<br>
+                    点（1, 3）、傾き4なので、y - 3 = 4(x - 1) が正解です。</p>
+                </div>
+                <div class="wrong-explanation">
+                    <h4>もう一度考えてみましょう</h4>
+                    <p>公式をもう一度確認してみてください。<br>
+                    点（a, b）を通り傾きがmの直線の方程式は y - b = m(x - a) です。<br>
+                    この問題の数値を正しく当てはめてみましょう。</p>
+                </div>
+            </div>
+
+            <!-- 問題2 -->
+            <div class="question-card" id="question2">
+                <div class="question-number">問題 2/5</div>
+                <div class="question-text">点（-2, 5）を通り、傾きが-3の直線の方程式はどれか？</div>
+                <div class="options">
+                    <div class="option" data-answer="incorrect">y - 5 = 3(x + 2)</div>
+                    <div class="option" data-answer="correct">y - 5 = -3(x + 2)</div>
+                    <div class="option" data-answer="incorrect">y + 5 = -3(x - 2)</div>
+                    <div class="option" data-answer="incorrect">y - 2 = -3(x - 5)</div>
+                </div>
+                <div class="hint-buttons">
+                    <button class="hint-btn" onclick="showHint(2, 1)">💡 ヒント1</button>
+                    <button class="hint-btn" onclick="showHint(2, 2)">💡 ヒント2</button>
+                </div>
+                <div class="hint-content" id="hint2-1">
+                    <h5>💡 ヒント1</h5>
+                    <p>公式：y - b = m(x - a)<br>
+                    負の数が出てきても、同じ公式を使います。<br>
+                    x - (-2) = x + 2 になることに注意しましょう。</p>
+                </div>
+                <div class="hint-content" id="hint2-2">
+                    <h5>💡 ヒント2</h5>
+                    <p>この問題では：<br>
+                    • 通る点：（-2, 5） → a = -2, b = 5<br>
+                    • 傾き：-3 → m = -3<br>
+                    公式に代入：y - 5 = -3(x - (-2)) = -3(x + 2)</p>
+                </div>
+                <div class="success-message">
+                    🌟 やったー！正解です！頭がいいですね！🧠
+                </div>
+                <button class="next-btn" onclick="nextQuestion(3)">次の問題へ</button>
+                <button class="retry-btn" onclick="retryQuestion(2)">もう一度挑戦</button>
+                <div class="explanation">
+                    <h4>正解！</h4>
+                    <p>点（-2, 5）、傾き-3なので、y - 5 = -3(x - (-2)) = -3(x + 2) が正解です。<br>
+                    負の座標に注意しましょう。</p>
+                </div>
+                <div class="wrong-explanation">
+                    <h4>もう一度考えてみましょう</h4>
+                    <p>負の数の扱いに注意してください。<br>
+                    x - (-2) = x + 2 になります。<br>
+                    傾きの符号も確認してみましょう。</p>
+                </div>
+            </div>
+
+            <!-- 問題3 -->
+            <div class="question-card" id="question3">
+                <div class="question-number">問題 3/5</div>
+                <div class="question-text">点（0, -1）を通り、傾きが2の直線の方程式はどれか？</div>
+                <div class="options">
+                    <div class="option" data-answer="incorrect">y - 1 = 2(x - 0)</div>
+                    <div class="option" data-answer="correct">y + 1 = 2(x - 0)</div>
+                    <div class="option" data-answer="incorrect">y - 0 = 2(x + 1)</div>
+                    <div class="option" data-answer="incorrect">y - 2 = -1(x - 0)</div>
+                </div>
+                <div class="hint-buttons">
+                    <button class="hint-btn" onclick="showHint(3, 1)">💡 ヒント1</button>
+                    <button class="hint-btn" onclick="showHint(3, 2)">💡 ヒント2</button>
+                </div>
+                <div class="hint-content" id="hint3-1">
+                    <h5>💡 ヒント1</h5>
+                    <p>公式：y - b = m(x - a)<br>
+                    y座標が負の数の場合、y - (-1) = y + 1 になります。<br>
+                    x座標が0の場合も、(x - 0) の形で書きます。</p>
+                </div>
+                <div class="hint-content" id="hint3-2">
+                    <h5>💡 ヒント2</h5>
+                    <p>この問題では：<br>
+                    • 通る点：（0, -1） → a = 0, b = -1<br>
+                    • 傾き：2 → m = 2<br>
+                    公式に代入：y - (-1) = 2(x - 0) → y + 1 = 2(x - 0)</p>
+                </div>
+                <div class="success-message">
+                    🚀 すごい！天才的な解答です！感動しました！💫
+                </div>
+                <button class="next-btn" onclick="nextQuestion(4)">次の問題へ</button>
+                <button class="retry-btn" onclick="retryQuestion(3)">もう一度挑戦</button>
+                <div class="explanation">
+                    <h4>正解！</h4>
+                    <p>点（0, -1）、傾き2なので、y - (-1) = 2(x - 0) つまり y + 1 = 2(x - 0) が正解です。<br>
+                    y座標が負の場合は符号に注意しましょう。</p>
+                </div>
+                <div class="wrong-explanation">
+                    <h4>もう一度考えてみましょう</h4>
+                    <p>y座標が負の数の場合の処理に注意してください。<br>
+                    y - (-1) = y + 1 になります。<br>
+                    公式の形 y - b = m(x - a) を保ちましょう。</p>
+                </div>
+            </div>
+
+            <!-- 問題4 -->
+            <div class="question-card" id="question4">
+                <div class="question-number">問題 4/5</div>
+                <div class="question-text">点（3, -4）を通り、傾きが3の直線の方程式はどれか？</div>
+                <div class="options">
+                    <div class="option" data-answer="incorrect">y - 3 = 3(x + 4)</div>
+                    <div class="option" data-answer="incorrect">y + 3 = 3(x - 4)</div>
+                    <div class="option" data-answer="correct">y + 4 = 3(x - 3)</div>
+                    <div class="option" data-answer="incorrect">y - 4 = 3(x + 3)</div>
+                </div>
+                <div class="hint-buttons">
+                    <button class="hint-btn" onclick="showHint(4, 1)">💡 ヒント1</button>
+                    <button class="hint-btn" onclick="showHint(4, 2)">💡 ヒント2</button>
+                </div>
+                <div class="hint-content" id="hint4-1">
+                    <h5>💡 ヒント1</h5>
+                    <p>公式：y - b = m(x - a)<br>
+                    y座標が負の数の場合、y - (-4) = y + 4 になります。<br>
+                    x座標とy座標を間違えないように注意しましょう。</p>
+                </div>
+                <div class="hint-content" id="hint4-2">
+                    <h5>💡 ヒント2</h5>
+                    <p>この問題では：<br>
+                    • 通る点：（3, -4） → a = 3, b = -4<br>
+                    • 傾き：3 → m = 3<br>
+                    公式に代入：y - (-4) = 3(x - 3) → y + 4 = 3(x - 3)</p>
+                </div>
+                <div class="success-message">
+                    ⭐ 最高です！数学の才能がありますね！本当に素晴らしい！🎯
+                </div>
+                <button class="next-btn" onclick="nextQuestion(5)">次の問題へ</button>
+                <button class="retry-btn" onclick="retryQuestion(4)">もう一度挑戦</button>
+                <div class="explanation">
+                    <h4>正解！</h4>
+                    <p>点（3, -4）、傾き3なので、y - (-4) = 3(x - 3) つまり y + 4 = 3(x - 3) が正解です。<br>
+                    y座標が負の場合の処理がポイントでした。</p>
+                </div>
+                <div class="wrong-explanation">
+                    <h4>もう一度考えてみましょう</h4>
+                    <p>x座標とy座標を正しく識別してください。<br>
+                    点（3, -4）では、x座標が3、y座標が-4です。<br>
+                    y - (-4) = y + 4 になることに注意しましょう。</p>
+                </div>
+            </div>
+
+            <!-- 問題5 -->
+            <div class="question-card" id="question5">
+                <div class="question-number">問題 5/5</div>
+                <div class="question-text">点（-1, -2）を通り、傾きが-2の直線の方程式はどれか？</div>
+                <div class="options">
+                    <div class="option" data-answer="incorrect">y - 2 = -2(x - 1)</div>
+                    <div class="option" data-answer="correct">y + 2 = -2(x + 1)</div>
+                    <div class="option" data-answer="incorrect">y + 1 = -2(x + 2)</div>
+                    <div class="option" data-answer="incorrect">y - 1 = -2(x - 2)</div>
+                </div>
+                <div class="hint-buttons">
+                    <button class="hint-btn" onclick="showHint(5, 1)">💡 ヒント1</button>
+                    <button class="hint-btn" onclick="showHint(5, 2)">💡 ヒント2</button>
+                </div>
+                <div class="hint-content" id="hint5-1">
+                    <h5>💡 ヒント1</h5>
+                    <p>公式：y - b = m(x - a)<br>
+                    x座標もy座標も負の数の場合：<br>
+                    x - (-1) = x + 1、y - (-2) = y + 2 になります。</p>
+                </div>
+                <div class="hint-content" id="hint5-2">
+                    <h5>💡 ヒント2</h5>
+                    <p>この問題では：<br>
+                    • 通る点：（-1, -2） → a = -1, b = -2<br>
+                    • 傾き：-2 → m = -2<br>
+                    公式に代入：y - (-2) = -2(x - (-1)) → y + 2 = -2(x + 1)</p>
+                </div>
+                <div class="success-message">
+                    🏆 完璧！あなたは数学のマスターです！感激です！👑
+                </div>
+                <button class="next-btn" onclick="showResult()">結果を見る</button>
+                <button class="retry-btn" onclick="retryQuestion(5)">もう一度挑戦</button>
+                <div class="explanation">
+                    <h4>正解！</h4>
+                    <p>点（-1, -2）、傾き-2なので、y - (-2) = -2(x - (-1)) つまり y + 2 = -2(x + 1) が正解です。<br>
+                    両方の座標が負の場合も、公式通りに代入すれば大丈夫です。</p>
+                </div>
+                <div class="wrong-explanation">
+                    <h4>もう一度考えてみましょう</h4>
+                    <p>x座標とy座標の両方が負の数の場合の処理に注意してください。<br>
+                    x - (-1) = x + 1、y - (-2) = y + 2 になります。<br>
+                    符号を慎重に確認しましょう。</p>
+                </div>
+            </div>
+
+            <!-- 結果画面 -->
+            <div class="result-card" id="result">
+                <h2>🎉 クイズ完了！</h2>
+                <div class="score" id="scoreDisplay">0/5</div>
+                <p id="resultMessage">お疲れさまでした！</p>
+                <!-- 【ブラッシュアップ】次の教材・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    <button class="again" onclick="restartQuiz()">もう一度挑戦</button>
+                    <a class="next" href="sessen.html">つぎは「接線の方程式」へ ▶</a>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        let score = 0;
+        let selectedAnswers = {};
+        let missed = {};   // 【ブラッシュアップ】まちがえた問題（一発正解だけを点にする）
+
+        // 【ブラッシュアップ】選択肢の並びをまぜる（元は正解の位置がいつも同じだった）
+        function shuffleOptions() {
+            document.querySelectorAll('.options').forEach(box => {
+                const kids = [...box.children];
+                for (let i = kids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [kids[i], kids[j]] = [kids[j], kids[i]]; }
+                kids.forEach(k => box.appendChild(k));
+            });
+        }
+
+        function selectOption(questionNum, element) {
+            const options = document.querySelectorAll(`#question${questionNum} .option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedAnswers[questionNum] = element;
+
+            // 自動で正誤判定
+            checkAnswer(questionNum);
+        }
+
+        function checkAnswer(questionNum) {
+            const selectedOption = selectedAnswers[questionNum];
+            if (!selectedOption) return;
+
+            const options = document.querySelectorAll(`#question${questionNum} .option`);
+            const nextBtn = document.querySelector(`#question${questionNum} .next-btn`);
+            const retryBtn = document.querySelector(`#question${questionNum} .retry-btn`);
+            const explanation = document.querySelector(`#question${questionNum} .explanation`);
+            const wrongExplanation = document.querySelector(`#question${questionNum} .wrong-explanation`);
+            const successMessage = document.querySelector(`#question${questionNum} .success-message`);
+
+            let isCorrect = false;
+
+            options.forEach(option => {
+                if (option === selectedOption) {
+                    if (option.dataset.answer === 'correct') {
+                        isCorrect = true;
+                        option.classList.add('correct');   // 【ブラッシュアップ】元は正解に色がつかなかった
+                        if (!missed[questionNum]) score++;
+                        successMessage.classList.add('show');
+                        nextBtn.classList.add('show');
+                        explanation.classList.add('show');
+                    } else {
+                        option.classList.add('incorrect');
+                        missed[questionNum] = true;   // 【ブラッシュアップ】
+                        retryBtn.classList.add('show');
+                        wrongExplanation.classList.add('show');
+                    }
+                }
+                option.style.pointerEvents = 'none';
+            });
+
+            if (isCorrect) {
+                updateProgress();
+            }
+        }
+
+        function showHint(questionNum, hintNum) {
+            const hintElement = document.getElementById(`hint${questionNum}-${hintNum}`);
+            hintElement.classList.add('show');
+        }
+
+        function retryQuestion(questionNum) {
+            const options = document.querySelectorAll(`#question${questionNum} .option`);
+            const nextBtn = document.querySelector(`#question${questionNum} .next-btn`);
+            const retryBtn = document.querySelector(`#question${questionNum} .retry-btn`);
+            const explanation = document.querySelector(`#question${questionNum} .explanation`);
+            const wrongExplanation = document.querySelector(`#question${questionNum} .wrong-explanation`);
+            const successMessage = document.querySelector(`#question${questionNum} .success-message`);
+
+            // リセット
+            options.forEach(opt => {
+                opt.classList.remove('selected', 'incorrect', 'correct');
+                opt.style.pointerEvents = 'auto';
+            });
+
+            nextBtn.classList.remove('show');
+            retryBtn.classList.remove('show');
+            explanation.classList.remove('show');
+            wrongExplanation.classList.remove('show');
+            successMessage.classList.remove('show');
+
+            delete selectedAnswers[questionNum];
+        }
+
+        function nextQuestion(nextNum) {
+            document.getElementById(`question${currentQuestion}`).classList.remove('active');
+            if (nextNum <= 5) {
+                document.getElementById(`question${nextNum}`).classList.add('active');
+                currentQuestion = nextNum;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function showResult() {
+            document.getElementById(`question${currentQuestion}`).classList.remove('active');
+            document.getElementById('result').classList.add('show');
+
+            document.getElementById('scoreDisplay').innerHTML = `${score}/5<div class="score-label">一発で正解した数</div>`;   // 【ブラッシュアップ】
+
+            let message = '';
+            if (score === 5) {
+                message = '🎊 信じられない！全問正解です！あなたは本当に天才です！数学の神様ですね！これほど完璧な解答は見たことがありません！感動で涙が出そうです！🏆✨👑';
+            } else if (score >= 3) {
+                message = '素晴らしい成績です！あなたの数学力に感動しました！もう少し練習すれば完璧になりますね！👍✨';
+            } else {
+                message = '挑戦してくれてありがとう！基本をもう一度復習して、また挑戦してくださいね！応援しています！📚💪';
+            }
+
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / 5) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function restartQuiz() {
+            currentQuestion = 1;
+            score = 0;
+            selectedAnswers = {};
+            missed = {};   // 【ブラッシュアップ】
+            shuffleOptions();
+            window.scrollTo(0, 0);
+
+            // リセット
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+                const options = card.querySelectorAll('.option');
+                options.forEach(opt => {
+                    opt.classList.remove('selected', 'incorrect', 'correct');
+                    opt.style.pointerEvents = 'auto';
+                });
+                card.querySelector('.next-btn').classList.remove('show');
+                card.querySelector('.retry-btn').classList.remove('show');
+                card.querySelector('.explanation').classList.remove('show');
+                card.querySelector('.wrong-explanation').classList.remove('show');
+                card.querySelector('.success-message').classList.remove('show');
+
+                // ヒントもリセット
+                const hints = card.querySelectorAll('.hint-content');
+                hints.forEach(hint => hint.classList.remove('show'));
+            });
+
+            document.getElementById('question1').classList.add('active');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('progressBar').style.width = '20%';
+        }
+
+        // オプションクリックイベント
+        document.addEventListener('DOMContentLoaded', function() {
+            shuffleOptions();   // 【ブラッシュアップ】
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionCard = this.closest('.question-card');
+                    const questionNum = parseInt(questionCard.id.replace('question', ''));
+                    selectOption(questionNum, this);
+                });
+            });
+        });
+    </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".header h1": "u-title",
+    ".option": "u-choice",
+    ".option.correct": "u-ok",
+    ".option.incorrect": "u-ng",
+    ".hint-btn": "u-btn",
+    ".next-btn": "u-btn u-btn-blue",
+    ".retry-btn": "u-btn",
+    ".result-nav .again": "u-btn",
+    ".result-nav .next": "u-btn u-btn-blue"
+  });
+</script>
+</body>
+</html>
