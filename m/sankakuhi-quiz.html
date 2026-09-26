@@ -1,242 +1,1456 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>三角比クイズ</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+  <!--
+    25. 三角比の値（三角比クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三角比クイズ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .level-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .level-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .level-btn.active {
+            background: #4299e1;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+        }
+
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #4299e1, #667eea);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .question-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #4299e1;
+        }
+
+        .question-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .triangle-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .option.selected {
+            border-color: #4299e1;
+            background: #4299e1;
+            color: white;
+        }
+
+        .option.correct {
+            border-color: #48bb78;
+            background: #48bb78;
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: #f56565;
+            background: #f56565;
+            color: white;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+
+        .hint-container {
+            background: #fff5cd;
+            border: 2px solid #f6e05e;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .hint-title {
+            font-weight: bold;
+            color: #744210;
+            margin-bottom: 10px;
+        }
+
+        .results {
+            text-align: center;
+            padding: 30px;
+            background: #f0fff4;
+            border-radius: 15px;
+            border: 2px solid #48bb78;
+            display: none;
+        }
+
+        .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #22543d;
+            margin-bottom: 15px;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.1em;
+            line-height: 1;
+        }
+
+        .numerator {
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+
+        .denominator {
+            padding-top: 2px;
+        }
+
+        .level3-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.1em;
+            line-height: 1;
+        }
+
+        .level3-numerator {
+            border-bottom: 2px solid #333;
+            padding-bottom: 3px;
+            margin-bottom: 3px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .level3-denominator {
+            padding-top: 3px;
+            min-width: 40px;
+            text-align: center;
+        }
+    </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; }
+    .container { max-width: 820px; padding: 28px 24px; }
+    .header p { color: var(--u-sub); font-weight: 700; }
+    .title { font-size: min(2.4rem, 8vw); white-space: nowrap; }
+    .level-selector { flex-wrap: wrap; gap: 8px; }
+    .level-btn { padding: 10px 16px; font-size: 1em; }
+    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; box-shadow: none; }
+    .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; font-weight: 700; }
+    .question-text { color: var(--u-ink); font-weight: 800; }
+    .triangle-container svg, .option svg, .hint-container svg { max-width: 100%; height: auto; }
+    .triangle-container h4 { color: var(--u-sub); }
+    .option { display: flex; align-items: center; justify-content: center; min-height: 64px; }
+    .hint-container { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; color: var(--u-title); }
+    .hint-title { color: var(--u-title); }
+    .feedback { border-radius: 16px; }
+    .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .buttons .btn-secondary:first-child { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    .score { color: var(--u-accent-text); }
+    .results p { color: var(--u-ink); font-weight: 700; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 12px auto 0; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    .result-nav button { padding: 12px; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 16px 12px; }
+      .question-card { padding: 16px 10px; }
+      .options { gap: 8px; }
+      .option { padding: 8px; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">📐 三角比クイズ</h1>
+            <p>数学Ⅰの三角比をマスターしよう！</p>
+        </div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
+        <div class="level-selector">
+            <button class="level-btn active" onclick="selectLevel(1)">レベル1: 三角形の回転</button>
+            <button class="level-btn" onclick="selectLevel(2)">レベル2: 三角比の計算</button>
+            <button class="level-btn" onclick="selectLevel(3)">レベル3: 応用問題</button>
+            <button class="level-btn" onclick="selectLevel(4)">レベル4: 応用問題のシャッフル</button>
+        </div>
+
+        <!-- レベル1 -->
+        <div id="level1" class="quiz-container active">
+            <div class="progress">
+                <div class="progress-bar" id="progress1" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum1">問題 1/8</div>
+                <div class="question-text" id="questionText1"></div>
+
+                <div class="triangle-container" id="triangleContainer1"></div>
+
+                <div class="options" id="options1"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(1)">💡 ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn1" onclick="retryQuestion(1)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn1" onclick="nextQuestion(1)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint1">
+                    <div class="hint-title">💡 ヒント</div>
+                    <div id="hintText1"></div>
+                </div>
+
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <div class="results" id="results1">
+                <div class="score" id="score1"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    <button class="next" onclick="goLevel(2)">次のレベル（レベル2）へ ▶</button>
+                    <button class="again" onclick="restartLevel(1)">もう一度挑戦</button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- レベル2 -->
+        <div id="level2" class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progress2" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum2">問題 1/10</div>
+                <div class="question-text" id="questionText2"></div>
+
+                <div class="triangle-container" id="triangleContainer2"></div>
+
+                <div class="options" id="options2"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(2)">💡 ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn2" onclick="retryQuestion(2)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn2" onclick="nextQuestion(2)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint2">
+                    <div class="hint-title">💡 ヒント</div>
+                    <div id="hintText2"></div>
+                </div>
+
+                <div class="feedback" id="feedback2"></div>
+            </div>
+
+            <div class="results" id="results2">
+                <div class="score" id="score2"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    <button class="next" onclick="goLevel(3)">次のレベル（レベル3）へ ▶</button>
+                    <button class="again" onclick="restartLevel(2)">もう一度挑戦</button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- レベル3 -->
+        <div id="level3" class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progress3" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum3">問題 1/10</div>
+                <div class="question-text" id="questionText3"></div>
+
+                <div class="triangle-container" id="triangleContainer3"></div>
+
+                <div class="options" id="options3"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(3)">💡 ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn3" onclick="retryQuestion(3)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn3" onclick="nextQuestion(3)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint3">
+                    <div class="hint-title">💡 ヒント</div>
+                    <div id="hintText3"></div>
+                </div>
+
+                <div class="feedback" id="feedback3"></div>
+            </div>
+
+            <div class="results" id="results3">
+                <div class="score" id="score3"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    <button class="next" onclick="goLevel(4)">次のレベル（レベル4）へ ▶</button>
+                    <button class="again" onclick="restartLevel(3)">もう一度挑戦</button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- レベル4 -->
+        <div id="level4" class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progress4" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum4">問題 1/10</div>
+                <div class="question-text" id="questionText4"></div>
+
+                <div class="triangle-container" id="triangleContainer4"></div>
+
+                <div class="options" id="options4"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(4)">💡 ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn4" onclick="retryQuestion(4)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn4" onclick="nextQuestion(4)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint4">
+                    <div class="hint-title">💡 ヒント</div>
+                    <div id="hintText4"></div>
+                </div>
+
+                <div class="feedback" id="feedback4"></div>
+            </div>
+
+            <div class="results" id="results4">
+                <div class="score" id="score4"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    
+                    <button class="again" onclick="restartLevel(4)">もう一度挑戦</button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let isAnswered = false;
+        let shuffledLevel4Questions = [];
+        let order = [0, 1, 2, 3];   // 【ブラッシュアップ】選択肢の並び（問題ごとにまぜる）
+        let missedThis = false;     // 【ブラッシュアップ】この問題でまちがえたか
+
+        // レベル1の問題データ（三角形の回転と反転）
+        const level1Questions = [
+            {
+                question: "下の直角三角形を、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角A</span>が左下になるように回転させた図はどれですか？",
+                originalTriangle: createRotatedTriangle(45, 'A', 3, 4, 5),
+                options: [
+                    createStandardTriangle('A', 3, 4, 5),
+                    createStandardTriangle('B', 3, 4, 5),
+                    createStandardTriangle('C', 3, 4, 5),
+                    createStandardTriangle('A', 4, 3, 5)
+                ],
+                correct: 0,
+                hint: "直角三角形の直角（90度の角）を右下に、角Aを左下に配置するように回転させてみましょう。"
+            },
+            {
+                question: "下の直角三角形を、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角B</span>が左下になるように回転させた図はどれですか？",
+                originalTriangle: createRotatedTriangle(120, 'B', 5, 12, 13),
+                options: [
+                    createStandardTriangle('A', 5, 12, 13),
+                    createStandardTriangle('B', 5, 12, 13),
+                    createStandardTriangle('C', 5, 12, 13),
+                    createStandardTriangle('B', 12, 5, 13)
+                ],
+                correct: 1,
+                hint: "角Bが左下に来るように、三角形全体を回転させる必要があります。"
+            },
+            {
+                question: "下の直角三角形を左右反転させて、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角C</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createFlippedTriangle('C', 8, 15, 17),
+                options: [
+                    createStandardTriangle('A', 8, 15, 17),
+                    createStandardTriangle('B', 8, 15, 17),
+                    createStandardTriangle('C', 8, 15, 17),
+                    createStandardTriangle('C', 15, 8, 17)
+                ],
+                correct: 2,
+                hint: "三角形を左右に反転させてから、角Cが左下に来るように配置してみましょう。"
+            },
+            {
+                question: "下の直角三角形を上下反転させて、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角A</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createVerticalFlippedTriangle('A', 7, 24, 25),
+                options: [
+                    createStandardTriangle('A', 7, 24, 25),
+                    createStandardTriangle('A', 24, 7, 25),
+                    createStandardTriangle('A', 7, 25, 24),
+                    createStandardTriangle('B', 7, 24, 25)   // 【ブラッシュアップ】元は 1 番目と同じ図だった
+                ],
+                correct: 0,
+                hint: "三角形を上下に反転させてから、角Aが左下の位置に来るように配置しましょう。"
+            },
+            {
+                question: "下の直角三角形を左右反転と上下反転の両方を行って、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角B</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createDoubleFlippedTriangle('B', 9, 12, 15),
+                options: [
+                    createStandardTriangle('B', 9, 12, 15),
+                    createStandardTriangle('B', 12, 9, 15),
+                    createStandardTriangle('B', 15, 9, 12),
+                    createStandardTriangle('B', 9, 15, 12)
+                ],
+                correct: 0,
+                hint: "三角形を左右と上下の両方に反転させると、元の向きから180度回転したような状態になります。"
+            },
+            {
+                question: "下の斜めに配置された直角三角形を、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角C</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createDiagonalTriangle('C', 20, 21, 29),
+                options: [
+                    createStandardTriangle('C', 20, 21, 29),
+                    createStandardTriangle('C', 21, 20, 29),
+                    createStandardTriangle('C', 29, 20, 21),
+                    createStandardTriangle('C', 20, 29, 21)
+                ],
+                correct: 0,
+                hint: "斜めに配置された三角形を、標準的な位置（直角が右下、角Cが左下）に変形させましょう。"
+            },
+            {
+                question: "下の斜めに反転された直角三角形を、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角A</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createDiagonalFlippedTriangle('A', 12, 16, 20),
+                options: [
+                    createStandardTriangle('A', 12, 16, 20),
+                    createStandardTriangle('A', 16, 12, 20),
+                    createStandardTriangle('A', 20, 12, 16),
+                    createStandardTriangle('A', 12, 20, 16)
+                ],
+                correct: 0,
+                hint: "斜めに反転された三角形を、標準的な位置に戻すには、どのような変形が必要でしょうか？"
+            },
+            {
+                question: "下の複雑に変形された直角三角形を、直角が右下、<span style='color: red; font-size: 24px; font-weight: bold;'>角B</span>が左下になるように配置した図はどれですか？",
+                originalTriangle: createComplexTransformedTriangle('B', 15, 20, 25),
+                options: [
+                    createStandardTriangle('B', 15, 20, 25),
+                    createStandardTriangle('B', 20, 15, 25),
+                    createStandardTriangle('B', 25, 15, 20),
+                    createStandardTriangle('B', 15, 25, 20)
+                ],
+                correct: 0,
+                hint: "複雑に変形された三角形でも、辺の長さの比は変わりません。角Bの位置を確認しましょう。"
+            }
+        ];
+
+        // レベル2の問題データ（sin A、cos A、tan Aの計算）
+        const level2Questions = [
+            {
+                question: "右の直角三角形で、sin A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(3, 4, 5, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 1,
+                hint: "sin A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの対辺は4、斜辺は5です。",
+                hintTriangle: createSinHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、cos A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(3, 4, 5, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 0,
+                hint: "cos A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>隣辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの隣辺は3、斜辺は5です。",
+                hintTriangle: createCosHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、tan A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(3, 4, 5, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 3,
+                hint: "tan A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>隣辺</span></div> です。角Aの対辺は4、隣辺は3です。",
+                hintTriangle: createTanHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、cos A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(5, 12, 13, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">5</span><span class="denominator">13</span></div>',
+                    '<div class="fraction"><span class="numerator">12</span><span class="denominator">13</span></div>',
+                    '<div class="fraction"><span class="numerator">5</span><span class="denominator">12</span></div>',
+                    '<div class="fraction"><span class="numerator">12</span><span class="denominator">5</span></div>'
+                ],
+                correct: 0,
+                hint: "cos A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>隣辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの隣辺は5、斜辺は13です。",
+                hintTriangle: createCosHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、tan A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(6, 8, 10, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 3,
+                hint: "tan A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>隣辺</span></div> です。角Aの対辺は8、隣辺は6です。約分すると4/3になります。",
+                hintTriangle: createTanHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、sin A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(7, 24, 25, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">7</span><span class="denominator">25</span></div>',
+                    '<div class="fraction"><span class="numerator">24</span><span class="denominator">25</span></div>',
+                    '<div class="fraction"><span class="numerator">7</span><span class="denominator">24</span></div>',
+                    '<div class="fraction"><span class="numerator">24</span><span class="denominator">7</span></div>'
+                ],
+                correct: 1,
+                hint: "sin A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの対辺は24、斜辺は25です。",
+                hintTriangle: createSinHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、cos A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(9, 12, 15, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 0,
+                hint: "cos A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>隣辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの隣辺は9、斜辺は15です。約分すると3/5になります。",
+                hintTriangle: createCosHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、tan A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(20, 21, 29, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">20</span><span class="denominator">29</span></div>',
+                    '<div class="fraction"><span class="numerator">21</span><span class="denominator">29</span></div>',
+                    '<div class="fraction"><span class="numerator">20</span><span class="denominator">21</span></div>',
+                    '<div class="fraction"><span class="numerator">21</span><span class="denominator">20</span></div>'
+                ],
+                correct: 3,
+                hint: "tan A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>隣辺</span></div> です。角Aの対辺は21、隣辺は20です。",
+                hintTriangle: createTanHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、sin A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(12, 16, 20, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 1,
+                hint: "sin A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの対辺は16、斜辺は20です。約分すると4/5になります。",
+                hintTriangle: createSinHintTriangle()
+            },
+            {
+                question: "右の直角三角形で、cos A の値はいくつですか？",
+                triangle: createFullLabeledTriangle(15, 20, 25, 'A'),
+                options: [
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">5</span></div>',
+                    '<div class="fraction"><span class="numerator">3</span><span class="denominator">4</span></div>',
+                    '<div class="fraction"><span class="numerator">4</span><span class="denominator">3</span></div>'
+                ],
+                correct: 0,
+                hint: "cos A = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>隣辺</span><span class='denominator' style='padding-top: 2px;'>斜辺</span></div> です。角Aの隣辺は15、斜辺は25です。約分すると3/5になります。",
+                hintTriangle: createCosHintTriangle()
+            }
+        ];
+
+        // レベル3の問題データ（特殊角の三角比）
+        const level3Questions = [
+            {
+                question: "sin 30° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 0,
+                hint: "30°-60°-90°の直角三角形を考えてみましょう。",
+                hintTriangle: create30DegreeTriangle()
+            },
+            {
+                question: "cos 30° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 2,
+                hint: "30°-60°-90°の直角三角形で、30°の隣辺と斜辺の比を考えます。",
+                hintTriangle: create30DegreeTriangle()
+            },
+            {
+                question: "tan 30° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span>'
+                ],
+                correct: 0,
+                hint: "tan 30° = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>隣辺</span></div> です。",
+                hintTriangle: create30DegreeTriangle()
+            },
+            {
+                question: "sin 45° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 1,
+                hint: "45°-45°-90°の直角二等辺三角形を考えてみましょう。",
+                hintTriangle: create45DegreeTriangle()
+            },
+            {
+                question: "cos 45° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 1,
+                hint: "45°の直角二等辺三角形では、隣辺と対辺が等しくなります。",
+                hintTriangle: create45DegreeTriangle()
+            },
+            {
+                question: "tan 45° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; position: relative; top: +6px;">3</span></span></div>',
+                    '1',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; position: relative; top: +4px;">2</span></span></div>',
+                    '√<span style="text-decoration: overline; text-decoration-thickness: 1px; position: relative; top: +4px;">3</span>'
+                ],
+                correct: 1,
+                hint: "45°の直角二等辺三角形では、対辺と隣辺が等しいです。",
+                hintTriangle: create45DegreeTriangle()
+            },
+            {
+                question: "sin 60° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 2,
+                hint: "30°-60°-90°の直角三角形で、60°の対辺を考えます。",
+                hintTriangle: create60DegreeTriangle()
+            },
+            {
+                question: "cos 60° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">2</span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '1'
+                ],
+                correct: 0,
+                hint: "60°の隣辺と斜辺の比を考えてみましょう。",
+                hintTriangle: create60DegreeTriangle()
+            },
+            {
+                question: "tan 60° の値はいくつですか？",
+                options: [
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">1</span><span class="level3-denominator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">2</span></span></div>',
+                    '<div class="level3-fraction"><span class="level3-numerator">√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span></span><span class="level3-denominator">2</span></div>',
+                    '√<span style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: black; position: relative; top: +4px;">3</span>'
+                ],
+                correct: 3,
+                hint: "tan 60° = <div class='fraction' style='display: inline-flex; flex-direction: column; align-items: center; font-size: 1.1em; line-height: 1;'><span class='numerator' style='border-bottom: 1px solid #333; padding-bottom: 2px; margin-bottom: 2px;'>対辺</span><span class='denominator' style='padding-top: 2px;'>隣辺</span></div> です。",
+                hintTriangle: create60DegreeTriangle()
+            }
+        ];
+
+        // 配列をシャッフルする関数
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 三角形を描画する関数
+        function createStandardTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <polygon points="50,150 150,150 150,70" fill="lightblue" stroke="black" stroke-width="2"/>
+
+                    <text x="45" y="165" font-size="14" font-weight="bold">${angle}</text>
+                    <text x="155" y="165" font-size="12">${otherVertices[0]}</text>
+                    <text x="155" y="60" font-size="12">${otherVertices[1]}</text>
+
+                    <rect x="140" y="140" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="95" y="165" font-size="24" fill="red" font-weight="bold">${a}</text>
+                    <text x="160" y="115" font-size="24" fill="red" font-weight="bold">${b}</text>
+                    <text x="85" y="105" font-size="24" fill="red" font-weight="bold">${c}</text>
+                </svg>
+            `;
+        }
+
+        function createRotatedTriangle(rotation, angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="240" height="200" viewBox="0 0 240 200">
+                    <g transform="translate(120,100) rotate(${rotation}) translate(-80,-50)">
+                        <polygon points="40,90 140,90 140,10" fill="lightblue" stroke="black" stroke-width="2"/>
+                        <text x="35" y="105" font-size="14" font-weight="bold">${angle}</text>
+                        <text x="145" y="105" font-size="12">${otherVertices[0]}</text>
+                        <text x="145" y="0" font-size="12">${otherVertices[1]}</text>
+                        <rect x="130" y="80" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                        <!-- 辺の長さラベル -->
+                        <text x="85" y="105" font-size="24" fill="red" font-weight="bold">${a}</text>
+                        <text x="150" y="55" font-size="24" fill="red" font-weight="bold">${b}</text>
+                        <text x="75" y="45" font-size="24" fill="red" font-weight="bold">${c}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createFullLabeledTriangle(a, b, c, angle) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <polygon points="50,150 150,150 150,70" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="45" y="165" font-size="14" font-weight="bold" fill="red">${angle}</text>
+                    <text x="155" y="165" font-size="12" font-weight="bold">${otherVertices[0]}</text>
+                    <text x="155" y="60" font-size="12" font-weight="bold">${otherVertices[1]}</text>
+                    <rect x="140" y="140" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 角度マーク -->
+                    <path d="M 60,150 L 65,150 A 10,10 0 0,0 55,145 L 50,150 Z" fill="rgba(255,0,0,0.3)" stroke="red" stroke-width="1"/>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="95" y="165" font-size="24" fill="red" font-weight="bold">${a}</text>
+                    <text x="160" y="115" font-size="24" fill="red" font-weight="bold">${b}</text>
+                    <text x="85" y="105" font-size="24" fill="red" font-weight="bold">${c}</text>
+                </svg>
+            `;
+        }
+
+        function createRotatedFullLabeledTriangle(rotation, a, b, c, angle) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="220" height="170" viewBox="0 0 220 170">
+                    <g transform="translate(110,85) rotate(${rotation}) translate(-70,-40)">
+                        <polygon points="30,80 130,80 130,0" fill="lightblue" stroke="black" stroke-width="2"/>
+                        <text x="25" y="95" font-size="14" font-weight="bold">${angle}</text>
+                        <text x="135" y="95" font-size="12" font-weight="bold">${otherVertices[0]}</text>
+                        <text x="135" y="-10" font-size="12" font-weight="bold">${otherVertices[1]}</text>
+                        <rect x="120" y="70" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                        <!-- 辺の長さラベル -->
+                        <text x="75" y="95" font-size="12" fill="red">${a}</text>
+                        <text x="140" y="45" font-size="12" fill="red">${b}</text>
+                        <text x="65" y="35" font-size="12" fill="red">${c}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createFlippedTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="240" height="200" viewBox="0 0 240 200">
+                    <polygon points="40,90 140,90 140,10" fill="lightblue" stroke="black" stroke-width="2" transform="translate(120,100) scale(-1,1) translate(-120,-100)"/>
+                    <rect x="130" y="80" width="10" height="10" fill="none" stroke="black" stroke-width="1" transform="translate(120,100) scale(-1,1) translate(-120,-100)"/>
+
+                    <!-- 反転後の正しい位置にラベルを配置 -->
+                    <text x="205" y="105" font-size="14" font-weight="bold">${angle}</text>
+                    <text x="95" y="105" font-size="12">${otherVertices[0]}</text>
+                    <text x="95" y="0" font-size="12">${otherVertices[1]}</text>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="155" y="105" font-size="24" fill="red" font-weight="bold">${a}</text>
+                    <text x="90" y="55" font-size="24" fill="red" font-weight="bold">${b}</text>
+                    <text x="165" y="45" font-size="24" fill="red" font-weight="bold">${c}</text>
+                </svg>
+            `;
+        }
+
+        function createVerticalFlippedTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="240" height="200" viewBox="0 0 240 200">
+                    <polygon points="40,90 140,90 140,10" fill="lightblue" stroke="black" stroke-width="2" transform="translate(120,100) scale(1,-1) translate(-120,-100)"/>
+                    <rect x="130" y="80" width="10" height="10" fill="none" stroke="black" stroke-width="1" transform="translate(120,100) scale(1,-1) translate(-120,-100)"/>
+
+                    <!-- 反転後の正しい位置にラベルを配置 -->
+                    <text x="35" y="95" font-size="14" font-weight="bold">${angle}</text>
+                    <text x="145" y="95" font-size="12">${otherVertices[0]}</text>
+                    <text x="145" y="200" font-size="12">${otherVertices[1]}</text>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="85" y="95" font-size="24" fill="red" font-weight="bold">${a}</text>
+                    <text x="150" y="145" font-size="24" fill="red" font-weight="bold">${b}</text>
+                    <text x="75" y="155" font-size="24" fill="red" font-weight="bold">${c}</text>
+                </svg>
+            `;
+        }
+
+        function createDoubleFlippedTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="240" height="200" viewBox="0 0 240 200">
+                    <polygon points="40,90 140,90 140,10" fill="lightblue" stroke="black" stroke-width="2" transform="translate(120,100) scale(-1,-1) translate(-120,-100)"/>
+                    <rect x="130" y="80" width="10" height="10" fill="none" stroke="black" stroke-width="1" transform="translate(120,100) scale(-1,-1) translate(-120,-100)"/>
+
+                    <!-- 反転後の正しい位置にラベルを配置 -->
+                    <text x="205" y="95" font-size="14" font-weight="bold">${angle}</text>
+                    <text x="95" y="95" font-size="12">${otherVertices[0]}</text>
+                    <text x="95" y="200" font-size="12">${otherVertices[1]}</text>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="155" y="95" font-size="24" fill="red" font-weight="bold">${a}</text>
+                    <text x="90" y="145" font-size="24" fill="red" font-weight="bold">${b}</text>
+                    <text x="165" y="155" font-size="24" fill="red" font-weight="bold">${c}</text>
+                </svg>
+            `;
+        }
+
+        function createDiagonalTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="260" height="220" viewBox="0 0 260 220">
+                    <g transform="translate(130,110) rotate(30) translate(-80,-60)">
+                        <polygon points="40,100 140,100 140,20" fill="lightblue" stroke="black" stroke-width="2"/>
+                        <text x="35" y="115" font-size="14" font-weight="bold">${angle}</text>
+                        <text x="145" y="115" font-size="12">${otherVertices[0]}</text>
+                        <text x="145" y="10" font-size="12">${otherVertices[1]}</text>
+                        <rect x="130" y="90" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                        <!-- 辺の長さラベル -->
+                        <text x="85" y="115" font-size="24" fill="red" font-weight="bold">${a}</text>
+                        <text x="150" y="65" font-size="24" fill="red" font-weight="bold">${b}</text>
+                        <text x="75" y="55" font-size="24" fill="red" font-weight="bold">${c}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createDiagonalFlippedTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <g transform="translate(110,90) rotate(-45) translate(-50,-40)">
+                        <polygon points="30,80 130,80 130,0" fill="lightblue" stroke="black" stroke-width="2" transform="scale(-1,1) translate(-160,0)"/>
+                        <rect x="120" y="70" width="10" height="10" fill="none" stroke="black" stroke-width="1" transform="scale(-1,1) translate(-160,0)"/>
+
+                        <!-- 左右反転後の正しい位置にラベルを配置 -->
+                        <text x="135" y="95" font-size="14" font-weight="bold">${angle}</text>
+                        <text x="25" y="95" font-size="12">${otherVertices[0]}</text>
+                        <text x="25" y="-10" font-size="12">${otherVertices[1]}</text>
+
+                        <!-- 辺の長さラベル -->
+                        <text x="85" y="95" font-size="24" fill="red" font-weight="bold">${a}</text>
+                        <text x="20" y="45" font-size="24" fill="red" font-weight="bold">${b}</text>
+                        <text x="95" y="35" font-size="24" fill="red" font-weight="bold">${c}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createComplexTransformedTriangle(angle, a, b, c) {
+            const vertices = ['A', 'B', 'C'];
+            const otherVertices = vertices.filter(v => v !== angle);
+
+            return `
+                <svg width="300" height="250" viewBox="0 0 300 250">
+                    <g transform="translate(150,125) rotate(45) scale(1.1,1.1) translate(-70,-60)">
+                        <polygon points="40,100 140,100 140,20" fill="lightblue" stroke="black" stroke-width="2"/>
+                        <rect x="130" y="90" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                        <!-- ラベルを読みやすい位置に配置 -->
+                        <text x="25" y="115" font-size="16" font-weight="bold">${angle}</text>
+                        <text x="150" y="115" font-size="14">${otherVertices[0]}</text>
+                        <text x="150" y="5" font-size="14">${otherVertices[1]}</text>
+
+                        <!-- 辺の長さラベルを読みやすく -->
+                        <text x="85" y="120" font-size="18" fill="red" font-weight="bold">${a}</text>
+                        <text x="155" y="65" font-size="18" fill="red" font-weight="bold">${b}</text>
+                        <text x="75" y="55" font-size="18" fill="red" font-weight="bold">${c}</text>
+                    </g>
+                </svg>
+            `;
+        }
+
+        // 三角比のヒント図作成関数
+        function createSinHintTriangle() {
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <polygon points="50,150 150,150 150,70" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="45" y="165" font-size="14" font-weight="bold" fill="red">A</text>
+                    <text x="155" y="165" font-size="12" font-weight="bold">B</text>
+                    <text x="155" y="60" font-size="12" font-weight="bold">C</text>
+                    <rect x="140" y="140" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の名前ラベル -->
+                    <text x="175" y="115" font-size="12" fill="purple">対辺</text>
+                    <text x="85" y="105" font-size="12" fill="blue">斜辺</text>
+                </svg>
+            `;
+        }
+
+        function createCosHintTriangle() {
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <polygon points="50,150 150,150 150,70" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="45" y="165" font-size="14" font-weight="bold" fill="red">A</text>
+                    <text x="155" y="165" font-size="12" font-weight="bold">B</text>
+                    <text x="155" y="60" font-size="12" font-weight="bold">C</text>
+                    <rect x="140" y="140" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の名前ラベル -->
+                    <text x="75" y="185" font-size="12" fill="green">隣辺</text>
+                    <text x="85" y="105" font-size="12" fill="blue">斜辺</text>
+                </svg>
+            `;
+        }
+
+        function createTanHintTriangle() {
+            return `
+                <svg width="220" height="180" viewBox="0 0 220 180">
+                    <polygon points="50,150 150,150 150,70" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="45" y="165" font-size="14" font-weight="bold" fill="red">A</text>
+                    <text x="155" y="165" font-size="12" font-weight="bold">B</text>
+                    <text x="155" y="60" font-size="12" font-weight="bold">C</text>
+                    <rect x="140" y="140" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の名前ラベル -->
+                    <text x="175" y="115" font-size="12" fill="orange">対辺</text>
+                    <text x="95" y="170" font-size="12" fill="green">隣辺</text>
+                </svg>
+            `;
+        }
+
+        // 特殊角の三角形作成関数
+        function create30DegreeTriangle() {
+            return `
+                <svg width="250" height="180" viewBox="0 0 250 180">
+                    <polygon points="40,140 180,140 180,70" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="30" y="155" font-size="14" font-weight="bold" fill="red">30°</text>
+                    <text x="185" y="155" font-size="12" font-weight="bold">B</text>
+                    <text x="185" y="60" font-size="12" font-weight="bold">C</text>
+                    <rect x="170" y="130" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="105" y="155" font-size="12" fill="red">√<tspan style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: red; position: relative; top: +4px;">3</tspan></text>
+                    <text x="190" y="110" font-size="12" fill="red">1</text>
+                    <text x="100" y="95" font-size="12" fill="red">2</text>
+                </svg>
+            `;
+        }
+
+        function create45DegreeTriangle() {
+            return `
+                <svg width="220" height="170" viewBox="0 0 220 170">
+                    <polygon points="40,140 140,140 140,40" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="30" y="155" font-size="14" font-weight="bold" fill="red">45°</text>
+                    <text x="145" y="155" font-size="12" font-weight="bold">B</text>
+                    <text x="145" y="30" font-size="12" font-weight="bold">C</text>
+                    <rect x="130" y="130" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="85" y="155" font-size="12" fill="red">1</text>
+                    <text x="150" y="95" font-size="12" fill="red">1</text>
+                    <text x="75" y="85" font-size="12" fill="red">√<tspan style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: red; position: relative; top: +4px;">2</tspan></text>
+                </svg>
+            `;
+        }
+
+        function create60DegreeTriangle() {
+            return `
+                <svg width="220" height="200" viewBox="0 0 220 200">
+                    <polygon points="40,170 140,170 140,30" fill="lightblue" stroke="black" stroke-width="2"/>
+                    <text x="30" y="185" font-size="14" font-weight="bold" fill="black">60°</text>
+                    <text x="145" y="185" font-size="12" font-weight="bold">B</text>
+                    <text x="145" y="20" font-size="12" font-weight="bold">C</text>
+                    <rect x="130" y="160" width="10" height="10" fill="none" stroke="black" stroke-width="1"/>
+
+                    <!-- 辺の長さラベル -->
+                    <text x="85" y="185" font-size="12" fill="red">1</text>
+                    <text x="150" y="105" font-size="12" fill="red">√<tspan style="text-decoration: overline; text-decoration-thickness: 1px; text-decoration-color: red; position: relative; top: +4px;">3</tspan></text>
+                    <text x="75" y="95" font-size="12" fill="red">2</text>
+                </svg>
+            `;
+        }
+
+        // レベル選択
+        function selectLevel(level) {
+            currentLevel = level;
+
+            // レベルボタンの状態更新
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // クイズコンテナの表示切り替え
+            document.querySelectorAll('.quiz-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(`level${level}`).classList.add('active');
+
+            // レベルをリスタート
+            restartLevel(level);
+        }
+
+        // レベルをリスタート
+        function restartLevel(level) {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            isAnswered = false;
+
+            // レベル4の場合は問題をシャッフル
+            if (level === 4) {
+                shuffledLevel4Questions = shuffleArray(level3Questions);
+            }
+
+            document.getElementById(`results${level}`).style.display = 'none';
+            document.querySelector(`#level${level} .question-card`).style.display = 'block';
+
+            loadQuestion(level);
+        }
+
+        // 問題を読み込み
+        function loadQuestion(level) {
+            const questions = level === 1 ? level1Questions :
+                            level === 2 ? level2Questions :
+                            level === 3 ? level3Questions :
+                            shuffledLevel4Questions;
+            const question = questions[currentQuestion];
+
+            // プログレスバー更新
+            const progress = (currentQuestion / questions.length) * 100;
+            document.getElementById(`progress${level}`).style.width = `${progress}%`;
+
+            // 問題番号と問題文
+            document.getElementById(`questionNum${level}`).textContent = `問題 ${currentQuestion + 1}/${questions.length}`;
+            document.getElementById(`questionText${level}`).innerHTML = question.question;
+
+            // 三角形表示
+            const triangleContainer = document.getElementById(`triangleContainer${level}`);
+            if (level === 1) {
+                triangleContainer.innerHTML = `
+                    <div>
+                        <h4>元の三角形：</h4>
+                        ${question.originalTriangle}
+                    </div>
+                `;
+            } else if (level === 2) {
+                triangleContainer.innerHTML = question.triangle;
+            } else if (level === 3 || level === 4) {
+                triangleContainer.innerHTML = '';
+            }
+
+            // 選択肢表示
+            const optionsContainer = document.getElementById(`options${level}`);
+            optionsContainer.innerHTML = '';
+
+            order = question.options.map((_, i) => i);
+            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+            missedThis = false;
+            order.forEach((orig, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.onclick = () => selectOption(level, index);
+                optionDiv.innerHTML = question.options[orig];
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // ヒント設定
+            document.getElementById(`hintText${level}`).innerHTML = question.hint +
+                (question.hintTriangle ? `<br><br>${question.hintTriangle}` : '');
+
+            // ボタンとフィードバックをリセット
+            document.getElementById(`retryBtn${level}`).style.display = 'none';
+            document.getElementById(`nextBtn${level}`).style.display = 'none';
+            document.getElementById(`feedback${level}`).style.display = 'none';
+            document.getElementById(`hint${level}`).style.display = 'none';
+
+            selectedAnswer = null;
+            isAnswered = false;
+        }
+
+        // 選択肢を選択
+        function selectOption(level, index) {
+            if (isAnswered) return;
+
+            selectedAnswer = index;
+
+            // 選択状態をリセット
+            document.querySelectorAll(`#options${level} .option`).forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // 選択した選択肢をハイライト
+            document.querySelectorAll(`#options${level} .option`)[index].classList.add('selected');
+
+            // 自動で正誤判定
+            setTimeout(() => {
+                submitAnswer(level);
+            }, 500);
+        }
+
+        // 回答を提出
+        function submitAnswer(level) {
+            if (selectedAnswer === null || isAnswered) return;
+
+            const questions = level === 1 ? level1Questions :
+                            level === 2 ? level2Questions :
+                            level === 3 ? level3Questions :
+                            shuffledLevel4Questions;
+            const question = questions[currentQuestion];
+            const isCorrect = order[selectedAnswer] === question.correct;
+
+            isAnswered = true;
+
+            // 選択肢の色を更新
+            const options = document.querySelectorAll(`#options${level} .option`);
+
+            if (isCorrect) {
+                options[selectedAnswer].classList.remove('selected');
+                options[selectedAnswer].classList.add('correct');
+                if (!missedThis) score++;   // 【ブラッシュアップ】元はやり直して正解しても点に入り、いつも満点になった
+
+                // 正解フィードバック
+                const feedback = document.getElementById(`feedback${level}`);
+                feedback.className = 'feedback correct';
+                feedback.textContent = '正解です！🎉';
+                feedback.style.display = 'block';
+
+                // 次の問題ボタンを表示
+                const nextBtn = document.getElementById(`nextBtn${level}`);
+                nextBtn.style.display = 'inline-block';
+
+            } else {
+                options[selectedAnswer].classList.remove('selected');
+                options[selectedAnswer].classList.add('incorrect');
+                missedThis = true;
+
+                // 不正解フィードバック
+                const feedback = document.getElementById(`feedback${level}`);
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '不正解です。もう一度考えてみましょう！';
+                feedback.style.display = 'block';
+
+                // もう一度挑戦ボタンを表示
+                document.getElementById(`retryBtn${level}`).style.display = 'inline-block';
+            }
+
+            // 【ブラッシュアップ】元はここで存在しない「回答ボタン」を操作してエラーになっていた（削除）
+        }
+
+        // 問題をやり直し
+        function retryQuestion(level) {
+            // 選択肢の色をリセット
+            document.querySelectorAll(`#options${level} .option`).forEach(opt => {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+            });
+
+            // 状態をリセット
+            selectedAnswer = null;
+            isAnswered = false;
+
+            // ボタンとフィードバックをリセット
+            document.getElementById(`retryBtn${level}`).style.display = 'none';
+            document.getElementById(`feedback${level}`).style.display = 'none';
+        }
+
+        // 次の問題へ進む
+        function nextQuestion(level) {
+            currentQuestion++;
+            const questions = level === 1 ? level1Questions :
+                            level === 2 ? level2Questions :
+                            level === 3 ? level3Questions :
+                            shuffledLevel4Questions;
+
+            if (currentQuestion < questions.length) {
+                loadQuestion(level);
+            } else {
+                showResults(level);
+            }
+        }
+
+        // ヒントを表示
+        function showHint(level) {
+            const hintContainer = document.getElementById(`hint${level}`);
+            hintContainer.style.display = hintContainer.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 結果を表示
+        function showResults(level) {
+            const questions = level === 1 ? level1Questions :
+                            level === 2 ? level2Questions :
+                            level === 3 ? level3Questions :
+                            shuffledLevel4Questions;
+            const percentage = Math.round((score / questions.length) * 100);
+
+            document.querySelector(`#level${level} .question-card`).style.display = 'none';
+            document.getElementById(`results${level}`).style.display = 'block';
+            document.getElementById(`score${level}`).textContent = `一発正解 ${score}/${questions.length}問 (${percentage}%)`;
+        }
+
+        // 【ブラッシュアップ】結果画面から次のレベルへ
+        function goLevel(level) {
+            currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach((btn, i) => btn.classList.toggle('active', i === level - 1));
+            document.querySelectorAll('.quiz-container').forEach(container => container.classList.remove('active'));
+            document.getElementById(`level${level}`).classList.add('active');
+            restartLevel(level);
+            window.scrollTo(0, 0);
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadQuestion(1);
+        });
+    </script>
 <script>
-/* ---------------------------------------------------------------------------
-   25. 三角比の値（三角比クイズ）
-     レベル1：三角形の回転 … 直角がどこに来るかを見て、正しい図を選ぶ
-     レベル2：三角比の計算 … 3辺の長さから sin・cos・tan を求める
-     レベル3：応用問題 　　 … 辺の長さを三角比から求める
-     レベル4：シャッフル 　 … レベル1〜3をまぜて
-
-   元教材から直した点：
-     ・レベル1の図が固定サイズの画像で、スマホでは 4 つの選択肢が重なって
-       どれを選んでいるのか分からなくなっていた。
-       → 図をその場で描く SVG にして、選択肢の枠内にきちんと収めた。
-     ・レベル2で「1/√2」と「√2/2」のどちらか片方しか正解にならなかった。
-       → 値が同じなら、どちらの書き方でも正解。
-     ・レベル4のシャッフルで同じ問題が続けて出ることがあった。
-       → 重複しないように選び直す。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  /* ------------------------------------------------------------------
-     直角三角形の図を描く。
-     corner … 直角をどこに置くか（'br','bl','tr','tl'）
-     角Aの位置も指定できるようにして、「回転」の問題に使う。
-     ------------------------------------------------------------------ */
-  function rightTriangle(o) {
-    var W = 200, H = 160, pad = 26;
-    var w = W - pad * 2, h = H - pad * 2;
-
-    // 直角の位置ごとに、3頂点の座標を決める
-    var pts = {
-      br: [[pad, H - pad], [W - pad, H - pad], [W - pad, pad]],
-      bl: [[pad, H - pad], [W - pad, H - pad], [pad, pad]],
-      tr: [[W - pad, pad], [pad, pad], [W - pad, H - pad]],
-      tl: [[pad, pad], [W - pad, pad], [pad, H - pad]]
-    }[o.corner];
-
-    // 直角の頂点は pts のうち「直角記号」を置くところ
-    var rightAt = { br: [W - pad, H - pad], bl: [pad, H - pad], tr: [W - pad, pad], tl: [pad, pad] }[o.corner];
-
-    var poly = pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
-
-    // 直角記号（小さな四角）を、三角形の内側に向けて描く
-    var dx = (o.corner === 'br' || o.corner === 'tr') ? -12 : 12;
-    var dy = (o.corner === 'br' || o.corner === 'bl') ? -12 : 12;
-    var mark = 'M ' + (rightAt[0] + dx) + ' ' + rightAt[1] +
-      ' L ' + (rightAt[0] + dx) + ' ' + (rightAt[1] + dy) +
-      ' L ' + rightAt[0] + ' ' + (rightAt[1] + dy);
-
-    var labels = (o.labels || []).map(function (L) {
-      return '<text x="' + L.x + '" y="' + L.y + '" font-size="13" fill="' + (L.color || '#1f2937') +
-        '" font-weight="bold" text-anchor="middle">' + L.t + '</text>';
-    }).join('');
-
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" role="img" aria-label="直角三角形">' +
-      '<polygon points="' + poly + '" fill="#e8f0ff" stroke="#2f6fed" stroke-width="2.5"/>' +
-      '<path d="' + mark + '" fill="none" stroke="#5b6676" stroke-width="2.5"/>' +
-      labels + '</svg>';
-  }
-
-  /** 頂点に A・B・C のラベルをつけた三角形を作る（直角は B に置く） */
-  function labeledTriangle(corner) {
-    var W = 200, H = 160, pad = 26;
-    var coords = {
-      br: { A: [pad, H - pad], B: [W - pad, H - pad], C: [W - pad, pad] },
-      bl: { A: [W - pad, H - pad], B: [pad, H - pad], C: [pad, pad] },
-      tr: { A: [pad, pad], B: [W - pad, pad], C: [W - pad, H - pad] },
-      tl: { A: [W - pad, pad], B: [pad, pad], C: [pad, H - pad] }
-    }[corner];
-
-    var labels = [];
-    Object.keys(coords).forEach(function (k) {
-      var p = coords[k];
-      labels.push({
-        t: k,
-        x: p[0] + (p[0] < W / 2 ? -12 : 12),
-        y: p[1] + (p[1] < H / 2 ? -8 : 18),
-        color: k === 'A' ? '#e0483c' : '#1f2937'
-      });
-    });
-    return rightTriangle({ corner: corner, labels: labels });
-  }
-
-  /* ---------- レベル1：三角形の回転 ---------- */
-  function level1() {
-    // 「直角が右下、角Aが左下」のように条件を出し、合う図を選ばせる
-    var corners = ['br', 'bl', 'tr', 'tl'];
-    var CORNER_JP = { br: '右下', bl: '左下', tr: '右上', tl: '左上' };
-    var target = Quiz.pick(corners);
-    var others = Quiz.shuffle(corners.filter(function (c) { return c !== target; })).slice(0, 3);
-
-    var A_JP = { br: '左下', bl: '右下', tr: '左上', tl: '右上' };
-
-    return {
-      tag: 'レベル1',
-      text: '下の直角三角形を、<b>直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] +
-        '</b>になるように回転させた図はどれですか。',
-      type: 'choice',
-      choices: [labeledTriangle(target)].concat(others.map(function (c) { return labeledTriangle(c); })),
-      correct: 0,
-      // 図そのものは結果一覧に出しても読めないので、ことばで書いた答えを持たせる
-      answerLabel: '直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'の図',
-      reviewText: 'レベル1：直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'になる回転',
-      hint: '直角の印（小さな四角）がどこにあるかを、まず見つけましょう。',
-      explain: '直角が' + CORNER_JP[target] + '、角Aが' + A_JP[target] + 'にある図が正解です。'
-    };
-  }
-
-  /* ---------- レベル2：3辺から三角比を求める ---------- */
-  var TRIPLES = [
-    { a: 3, b: 4, c: 5 }, { a: 5, b: 12, c: 13 }, { a: 8, b: 15, c: 17 },
-    { a: 7, b: 24, c: 25 }, { a: 6, b: 8, c: 10 }, { a: 9, b: 12, c: 15 }
-  ];
-
-  function frac(n, d) {
-    return '<span class="frac"><span class="num">' + n + '</span><span class="den">' + d + '</span></span>';
-  }
-
-  function level2() {
-    var t = Quiz.pick(TRIPLES);
-    var fn = Quiz.pick(['sin', 'cos', 'tan']);
-    // 角 A に対して、対辺 = a、隣辺 = b、斜辺 = c
-    var correct = fn === 'sin' ? frac(t.a, t.c) : fn === 'cos' ? frac(t.b, t.c) : frac(t.a, t.b);
-    var pool = [frac(t.a, t.c), frac(t.b, t.c), frac(t.a, t.b), frac(t.b, t.a), frac(t.c, t.a), frac(t.c, t.b)];
-    var choices = [correct];
-    Quiz.shuffle(pool).forEach(function (p) {
-      if (choices.length < 4 && p !== correct && choices.indexOf(p) < 0) choices.push(p);
-    });
-
-    var W = 220, H = 170, pad = 28;
-    var fig = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="220" role="img" aria-label="直角三角形">' +
-      '<polygon points="' + pad + ',' + (H - pad) + ' ' + (W - pad) + ',' + (H - pad) + ' ' + (W - pad) + ',' + pad +
-      '" fill="#e8f0ff" stroke="#2f6fed" stroke-width="2.5"/>' +
-      '<path d="M ' + (W - pad - 12) + ' ' + (H - pad) + ' L ' + (W - pad - 12) + ' ' + (H - pad - 12) +
-      ' L ' + (W - pad) + ' ' + (H - pad - 12) + '" fill="none" stroke="#5b6676" stroke-width="2.5"/>' +
-      '<text x="' + (pad + 4) + '" y="' + (H - pad - 8) + '" font-size="13" fill="#e0483c" font-weight="bold">A</text>' +
-      '<text x="' + (W / 2) + '" y="' + (H - pad + 16) + '" font-size="13" text-anchor="middle">' + t.b + '</text>' +
-      '<text x="' + (W - pad + 12) + '" y="' + (H / 2) + '" font-size="13" text-anchor="middle">' + t.a + '</text>' +
-      '<text x="' + (W / 2 - 14) + '" y="' + (H / 2 - 10) + '" font-size="13" text-anchor="middle">' + t.c + '</text>' +
-      '</svg>';
-
-    return {
-      tag: 'レベル2',
-      text: 'この直角三角形について、<b>' + fn + ' A</b> の値を求めなさい。',
-      figure: fig,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: 'sin = 対辺 ÷ 斜辺　cos = となりの辺 ÷ 斜辺　tan = 対辺 ÷ となりの辺',
-      explain: fn + ' A = ' + correct + ' です。（斜辺は ' + t.c + '、角Aの対辺は ' + t.a + '、となりの辺は ' + t.b + '）'
-    };
-  }
-
-  /* ---------- レベル3：三角比から辺の長さを求める ---------- */
-  var KNOWN = [
-    { deg: 30, sin: '1/2', cos: '√3/2', tan: '1/√3' },
-    { deg: 45, sin: '1/√2', cos: '1/√2', tan: '1' },
-    { deg: 60, sin: '√3/2', cos: '1/2', tan: '√3' }
-  ];
-
-  function level3() {
-    var k = Quiz.pick(KNOWN);
-    var c = Quiz.pick([2, 4, 6, 8, 10, 12]);          // 斜辺
-    var fn = Quiz.pick(['sin', 'cos']);
-    var ratio = k[fn];
-
-    var label = simplify(ratio, c);
-
-    var wrongs = [];
-    [simplify(k[fn === 'sin' ? 'cos' : 'sin'], c), simplify(k.tan, c), String(c)].forEach(function (w) {
-      if (wrongs.length < 3 && w !== label && wrongs.indexOf(w) < 0) wrongs.push(w);
-    });
-    var guard = 0;
-    while (wrongs.length < 3 && guard++ < 20) {
-      var w2 = String(Quiz.randInt(1, 20));
-      if (w2 !== label && wrongs.indexOf(w2) < 0) wrongs.push(w2);
-    }
-
-    var side = fn === 'sin' ? '対辺（角' + k.deg + '°の向かい側の辺）' : 'となりの辺';
-
-    return {
-      tag: 'レベル3',
-      text: '斜辺の長さが <b>' + c + '</b>、ひとつの角が <b>' + k.deg + '°</b> の直角三角形があります。<br>' +
-        '<b>' + side + '</b> の長さを求めなさい。',
-      math: fn + ' ' + k.deg + '° = ' + ratio,
-      mathPlain: true,
-      type: 'choice',
-      choices: [label].concat(wrongs),
-      correct: 0,
-      hint: fn === 'sin' ? '対辺 = 斜辺 × sin（角）' : 'となりの辺 = 斜辺 × cos（角）',
-      explain: (fn === 'sin' ? '対辺' : 'となりの辺') + ' = ' + c + ' × ' + ratio + ' = ' + label
-    };
-  }
-
-  /** c × ratio を、なるべくきれいな形の文字列にする */
-  function simplify(ratio, c) {
-    if (ratio === '1/2') return String(c / 2 % 1 === 0 ? c / 2 : c + '/2');
-    if (ratio === '1') return String(c);
-    if (ratio === '√3/2') return (c % 2 === 0 ? (c / 2 === 1 ? '' : c / 2) + '√3' : c + '√3/2');
-    if (ratio === '1/√2') return (c % 2 === 0 ? (c / 2 === 1 ? '' : c / 2) + '√2' : c + '√2/2');
-    if (ratio === '1/√3') return (c % 3 === 0 ? (c / 3 === 1 ? '' : c / 3) + '√3' : c + '√3/3');
-    if (ratio === '√3') return (c === 1 ? '' : c) + '√3';
-    return String(c);
-  }
-
-  var MAKERS = [level1, level2, level3];
-
-  Quiz.start({
-    title: '三角比クイズ',
-    subtitle: '数学Ⅰの三角比をマスターしよう！',
-    modes: [
-      { id: '1', name: 'レベル1: 三角形の回転', desc: '直角と角Aの位置を見分ける（8問）' },
-      { id: '2', name: 'レベル2: 三角比の計算', desc: '3辺から sin・cos・tan（10問）' },
-      { id: '3', name: 'レベル3: 応用問題', desc: '三角比から辺の長さを求める（8問）' },
-      { id: '4', name: 'レベル4: 応用問題のシャッフル', desc: 'レベル1〜3をまぜて（12問）' }
-    ],
-    build: function (id) {
-      var out = [], i;
-      if (id === '1') { for (i = 0; i < 8; i++) out.push(level1()); }
-      else if (id === '2') { for (i = 0; i < 10; i++) out.push(level2()); }
-      else if (id === '3') { for (i = 0; i < 8; i++) out.push(level3()); }
-      else { for (i = 0; i < 12; i++) out.push(Quiz.pick(MAKERS)()); }
-      return out;
-    }
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".title": "u-title",
+    ".level-btn:not(.active)": "u-btn u-btn-plain",
+    ".level-btn.active": "u-btn",
+    ".progress": "u-progress",
+    ".option": "u-choice",
+    ".option.correct": "u-ok",
+    ".option.incorrect": "u-ng",
+    ".buttons .btn-secondary": "u-btn u-btn-plain",
+    ".buttons .btn-primary": "u-btn u-btn-blue",
+    ".result-nav .again": "u-btn",
+    ".result-nav .next": "u-btn u-btn-blue"
   });
-})();
 </script>
 </body>
 </html>
