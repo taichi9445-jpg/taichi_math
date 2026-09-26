@@ -1,101 +1,1092 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="h-full">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ルート・アルケミスト</title>
-<link rel="stylesheet" href="../assets/base.css">
-</head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+  <meta charset="UTF-8">
+  <!--
+    15. ルートの計算（ルート・アルケミスト）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../data/root-alchemist.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   15. ルートの計算（ルート・アルケミスト）
-   7つのステージ × 難易度5段階。問題データ（全64問）は元教材のまま。
-
-   元教材から直した点：
-     ・最後のステージをクリアしたあと、次のステージ番号のデータが無いために
-       画面が真っ白になって進めなくなっていた。
-       → 最後まで解いたらきちんと結果画面に進む。
-     ・難易度を上げると一部のステージにデータが無く、そこで止まっていた。
-       → 用意されている難易度・ステージだけを表示する。
-     ・経験値バーが問題文に重なって、式が読めなくなることがあった。
-       → 進捗は上部の細いバーに分離し、式にかぶらないようにした。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
-
-  var DATA = window.DATA_ALCHEMIST;
-  var STAGES = DATA.stages;
-  var MONSTERS = DATA.monsters;
-
-  var DIFF_NAME = { 1: '見習い', 2: '弟子', 3: '術師', 4: '賢者', 5: '大賢者' };
-
-  function emojiOf(monsterName) {
-    var m = MONSTERS[monsterName];
-    return m ? m.emoji : '✨';
-  }
-
-  function toQuestion(q, stage) {
-    return {
-      tag: stage.name,
-      text: emojiOf(stage.monster) + '　<b>' + stage.monster + '</b> があらわれた！',
-      math: q.q,
-      mathPlain: true,
-      type: 'choice',
-      choices: q.choices.slice(),
-      correct: q.choices.indexOf(q.answer),
-      answerLabel: q.answer
-    };
-  }
-
-  // 実際にデータがある難易度・ステージだけをモードにする
-  var modes = [];
-  Object.keys(STAGES).sort().forEach(function (d) {
-    var pack = STAGES[d];
-    var total = 0;
-    Object.keys(pack).forEach(function (s) { total += pack[s].questions.length; });
-    modes.push({
-      id: 'all:' + d,
-      group: '難易度 ' + d + '　' + DIFF_NAME[d],
-      name: '全ステージ通し',
-      desc: '7ステージ ' + total + '問を続けて'
-    });
-    Object.keys(pack).sort().forEach(function (s) {
-      var st = pack[s];
-      modes.push({
-        id: d + ':' + s,
-        group: '難易度 ' + d + '　' + DIFF_NAME[d],
-        name: emojiOf(st.monster) + ' ' + s + '. ' + st.name,
-        desc: st.monster + '（' + st.questions.length + '問）'
-      });
-    });
-  });
-
-  Quiz.start({
-    title: 'ルート・アルケミスト',
-    subtitle: '7つのステージのモンスターを、ルートの計算で倒していこう。',
-    modes: modes,
-    build: function (id) {
-      var p = id.split(':');
-      var out = [];
-      if (p[0] === 'all') {
-        var pack = STAGES[p[1]] || {};
-        Object.keys(pack).sort().forEach(function (s) {
-          pack[s].questions.forEach(function (q) { out.push(toQuestion(q, pack[s])); });
-        });
-      } else {
-        var st = (STAGES[p[0]] || {})[p[1]];
-        if (st) st.questions.forEach(function (q) { out.push(toQuestion(q, st)); });
-      }
-      return out.filter(function (q) { return q.correct >= 0; });
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ルート・アルケミスト</title>
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+  
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
     }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .game-bg {
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    }
+
+    .card-bg {
+      background: linear-gradient(145deg, rgba(30, 27, 75, 0.9), rgba(20, 18, 50, 0.95));
+      border: 1px solid rgba(147, 51, 234, 0.3);
+    }
+
+    .magic-border {
+      border: 2px solid transparent;
+      background: linear-gradient(145deg, rgba(30, 27, 75, 0.9), rgba(20, 18, 50, 0.95)) padding-box,
+                  linear-gradient(135deg, #9333ea, #ec4899, #9333ea) border-box;
+    }
+
+    .hp-bar {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+
+    .exp-bar {
+      background: linear-gradient(90deg, #22c55e, #84cc16);
+    }
+
+    .choice-btn {
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1.5rem 0.8rem;
+      font-size: 1.2rem;
+      line-height: 1.5;
+      min-height: 120px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(168, 85, 247, 0.5));
+      border: 2px solid rgba(147, 51, 234, 0.5);
+      color: white;
+      font-weight: 700;
+      border-radius: 0.5rem;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      transform: translateX(-3px);
+      box-shadow: 0 8px 20px rgba(147, 51, 234, 0.7);
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.8), rgba(168, 85, 247, 0.8));
+    }
+
+    .choice-btn:active:not(:disabled) {
+      transform: translateX(0px);
+    }
+
+    .scroll-area {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(147, 51, 234, 0.6) transparent;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scroll-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scroll-area::-webkit-scrollbar-thumb {
+      background: rgba(147, 51, 234, 0.6);
+      border-radius: 3px;
+    }
+
+    .message-item {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      text-align: center;
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.3rem;
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .message-item.problem {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.7;
+      color: #fef08a;
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.5), rgba(217, 70, 239, 0.3));
+      border-left: 4px solid #dc2626;
+      padding: 1.2rem 0.8rem;
+    }
+
+    .message-item.story {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #d1d5ff;
+      background: rgba(99, 102, 241, 0.25);
+      border-left: 2px solid #8b5cf6;
+    }
+
+    .message-item.answer-result {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.3);
+      border-left: 3px solid #22c55e;
+    }
+
+    .message-item.answer-result.wrong {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.3);
+      border-left: 3px solid #ef4444;
+    }
+
+    .float-animation {
+      animation: float 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .difficulty-select {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 3px solid transparent;
+    }
+
+    .difficulty-select:hover {
+      transform: scale(1.02);
+    }
+
+    .difficulty-select.selected {
+      border: 3px solid white;
+      transform: scale(1.06);
+      filter: brightness(1.3) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+
+    .frac {
+      display: inline-block;
+      text-align: center;
+      vertical-align: middle;
+      margin: 0 0.15em;
+    }
+
+    .frac > span:first-child {
+      display: block;
+      border-bottom: 2px solid currentColor;
+      padding: 0.1em 0.2em;
+    }
+
+    .frac > span:last-child {
+      display: block;
+      padding: 0.1em 0.2em;
+    }
+  </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #app.game-bg { background: var(--u-bg) !important; font-family: var(--u-font) !important; }
+    #title-screen .text-8xl { color: var(--u-accent-text); }
+    #title-screen h1 { color: var(--u-title) !important; -webkit-text-fill-color: currentColor !important; background: none !important; }
+    #title-screen .text-purple-300 { color: var(--u-title-dark) !important; font-weight: 700; }
+    #title-screen .text-gray-400 { color: var(--u-sub) !important; }
+    #title-screen button { width: 16rem; padding: 14px 20px; }
+    .card-bg { background: #fff !important; border: 3px solid var(--u-line) !important; color: var(--u-ink); }
+    #difficulty-screen > .card-bg, #name-screen > .card-bg, #levelup-modal .card-bg, #clear-modal .card-bg, #collection-modal > .card-bg { border: 8px solid var(--u-frame) !important; border-radius: 32px !important; box-shadow: 0 12px 0 rgba(0,0,0,0.05); }
+    .card-bg h2 { color: var(--u-title) !important; -webkit-text-fill-color: currentColor !important; background: none !important; }
+    .card-bg .text-gray-400 { color: var(--u-sub) !important; }
+    .card-bg .text-white { color: var(--u-ink) !important; }
+    .card-bg .text-yellow-400 { color: var(--u-accent-text) !important; }
+    .card-bg .text-green-400 { color: var(--u-ok) !important; }
+    .card-bg .text-purple-300 { color: var(--u-title-dark) !important; }
+    .card-bg .bg-purple-900\/30 { background: #f8fafc !important; border: 2px dashed var(--u-line); }
+    .difficulty-option { background: #fff !important; }
+    .difficulty-option .text-sm { color: var(--u-sub) !important; }
+    .difficulty-select.selected { border-color: var(--u-accent) !important; background: #fff7ed !important; filter: none; box-shadow: 0 0 0 4px rgba(251,146,60,0.3) !important; transform: scale(1.02); }
+    #player-name-input { text-align: center; }
+    #game-screen { padding: 8px; gap: 8px; }
+    #game-screen > .card-bg { border-radius: 16px; }
+    #game-screen .text-purple-300, #game-screen .text-green-300 { color: var(--u-sub) !important; font-weight: 700; }
+    #player-name-display, #player-level { color: var(--u-ink); }
+    #collection-btn, #menu-btn, #back-btn { border-radius: 10px !important; font-size: 0.8rem !important; padding: 4px 2px !important; }
+    .message-item { text-shadow: none; border-radius: 12px; }
+    .message-item.problem { color: var(--u-ink); background: var(--u-soft-yellow); border-left: 6px solid var(--u-accent); }
+    .message-item.story { color: var(--u-title-dark); background: var(--u-soft-blue); border-left: 4px solid var(--u-soft-blue-line); }
+    .message-item.answer-result { color: var(--u-ok); background: var(--u-ok-soft); border-left: 4px solid var(--u-ok-line); }
+    .message-item.answer-result.wrong { color: var(--u-ng); background: var(--u-ng-soft); border-left-color: var(--u-ng-line); }
+    .message-item.answer-result.close { color: #b45309; background: #fffbeb; border-left-color: #fcd34d; }
+    .choice-btn { min-height: 96px; font-size: 1.25rem; }
+    .scroll-area { scrollbar-color: var(--u-line-dark) transparent; }
+    .scroll-area::-webkit-scrollbar-thumb { background: var(--u-line-dark); }
+    #collection-grid .card-bg { border-width: 2px !important; }
+    .clear-nav { display: flex; flex-direction: column; gap: 10px; }
+    .clear-nav a { color: var(--u-sub); font-weight: 700; }
+    /* スマホ：左右に分けていた「問題」と「選択肢」を上下に並べる */
+    @media (max-width: 640px) {
+      #game-screen > .flex-1 { flex-direction: column; }
+      #game-screen > .flex-1 > .card-bg:first-child { flex: 1 1 auto; min-height: 0; }
+      #game-screen > .flex-1 > .card-bg:last-child { flex: 0 0 auto; }
+      #choice-area { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; height: auto !important; }
+      .choice-btn { min-height: 64px; padding: 0.7rem 0.4rem; font-size: 1.1rem; }
+      .message-item.problem { font-size: 1.25rem; padding: 0.9rem 0.6rem; }
+      #title-screen h1 { font-size: min(3rem, 9vw); white-space: nowrap; }
+      #game-screen .grid-cols-4 { grid-template-columns: 1.2fr 1fr 1fr 1.3fr; }
+    }
+  
+  </style>
+</head>
+<body class="u-theme h-full overflow-hidden">
+  <div id="app" class="game-bg h-full w-full flex flex-col" style="font-family: 'Noto Sans JP', sans-serif;">
+
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <!-- タイトル画面 -->
+    <div id="title-screen" class="flex-1 flex items-center justify-center p-6 overflow-auto">
+      <div class="text-center">
+        <div class="float-animation mb-4">
+          <div class="text-8xl mb-4">√</div>
+        </div>
+        <h1 class="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+          ルート・アルケミスト
+        </h1>
+        <p class="text-purple-300 text-lg mb-2">〜根号の錬金術師〜</p>
+        <p class="text-gray-400 text-sm mb-8">世界を覆う「ルートの霧」を晴らす冒険へ...</p>
+
+        <div class="space-y-2">
+          <button id="new-game-btn" class="w-64 py-3 px-6 magic-border rounded-lg text-white font-bold text-lg hover:brightness-110 transition-all">
+            🗡️ 新しい冒険
+          </button>
+          <button id="continue-btn" class="w-64 py-3 px-6 card-bg rounded-lg text-purple-300 font-bold text-lg hover:bg-purple-700/50 transition-all hidden">
+            📜 続ける
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 難易度選択画面 -->
+    <div id="difficulty-screen" class="flex-1 flex items-center justify-center p-4 hidden overflow-auto">
+      <div class="card-bg rounded-xl p-6 max-w-2xl w-full">
+        <h2 class="text-2xl font-bold text-center text-purple-300 mb-1">難易度を選択</h2>
+        <p class="text-center text-gray-400 mb-4 text-sm">選んだ難易度で試練が変わります</p>
+
+        <div class="grid grid-cols-1 gap-3">
+          <button class="difficulty-select difficulty-option p-4 rounded-lg bg-green-900/20 hover:bg-green-900/40 transition-all text-left border-2 border-transparent" data-difficulty="1">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xl font-bold text-green-400">★☆☆☆☆ イージー</div>
+                <div class="text-sm text-green-300">基礎をマスター</div>
+              </div>
+              <div class="text-3xl">🟢</div>
+            </div>
+          </button>
+
+          <button class="difficulty-select difficulty-option p-4 rounded-lg bg-blue-900/20 hover:bg-blue-900/40 transition-all text-left border-2 border-transparent" data-difficulty="2">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xl font-bold text-blue-400">★★☆☆☆ ノーマル</div>
+                <div class="text-sm text-blue-300">基本を極める</div>
+              </div>
+              <div class="text-3xl">🔵</div>
+            </div>
+          </button>
+
+          <button class="difficulty-select difficulty-option p-4 rounded-lg bg-purple-900/20 hover:bg-purple-900/40 transition-all text-left border-2 border-transparent selected" data-difficulty="3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xl font-bold text-purple-400">★★★☆☆ ハード</div>
+                <div class="text-sm text-purple-300">推奨 / 公式を活用</div>
+              </div>
+              <div class="text-3xl">🟣</div>
+            </div>
+          </button>
+
+          <button class="difficulty-select difficulty-option p-4 rounded-lg bg-orange-900/20 hover:bg-orange-900/40 transition-all text-left border-2 border-transparent" data-difficulty="4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xl font-bold text-orange-400">★★★★☆ ベリーハード</div>
+                <div class="text-sm text-orange-300">複雑な展開</div>
+              </div>
+              <div class="text-3xl">🟠</div>
+            </div>
+          </button>
+
+          <button class="difficulty-select difficulty-option p-4 rounded-lg bg-red-900/20 hover:bg-red-900/40 transition-all text-left border-2 border-transparent" data-difficulty="5">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xl font-bold text-red-400">★★★★★ インフェルノ</div>
+                <div class="text-sm text-red-300">達人向け</div>
+              </div>
+              <div class="text-3xl">🔴</div>
+            </div>
+          </button>
+        </div>
+
+        <button id="difficulty-confirm-btn" class="w-full mt-4 py-3 magic-border rounded-lg text-white font-bold text-base hover:brightness-110 transition-all">
+          冒険を始める！
+        </button>
+      </div>
+    </div>
+
+    <!-- 名前入力画面 -->
+    <div id="name-screen" class="flex-1 flex items-center justify-center p-4 hidden">
+      <div class="card-bg rounded-xl p-6 max-w-sm w-full">
+        <h2 class="text-2xl font-bold text-center text-purple-300 mb-4">名前を入力</h2>
+        <div class="mb-4">
+          <input type="text" id="player-name-input"
+                 class="w-full bg-purple-900/30 border border-purple-500/50 rounded-lg px-3 py-2 text-white text-center text-lg focus:outline-none focus:border-purple-400"
+                 placeholder="名前を入力..." maxlength="10">
+        </div>
+        <button id="start-adventure-btn" class="w-full py-3 magic-border rounded-lg text-white font-bold text-base hover:brightness-110 transition-all">
+          開始！ ⚔️
+        </button>
+      </div>
+    </div>
+
+    <!-- メインゲーム画面 -->
+    <div id="game-screen" class="flex-1 flex flex-col p-1.5 hidden overflow-hidden gap-1">
+      <!-- ステータスバー -->
+      <div class="card-bg rounded-lg p-1.5">
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+          <div class="text-white font-bold truncate text-xs"><span id="player-name-display">勇者</span> Lv.<span id="player-level">1</span></div>
+          <div class="text-purple-300">
+            <div class="text-xs leading-tight">HP <span id="hp-text">100/100</span></div>
+            <div class="h-1 bg-gray-700 rounded-full overflow-hidden mt-0.5">
+              <div id="hp-bar" class="hp-bar h-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="text-green-300">
+            <div class="text-xs leading-tight">EXP <span id="exp-text">0/100</span></div>
+            <div class="h-1 bg-gray-700 rounded-full overflow-hidden mt-0.5">
+              <div id="exp-bar" class="exp-bar h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <button id="collection-btn" class="flex-1 px-0.5 py-0.5 bg-purple-600/50 hover:bg-purple-600 rounded text-white text-xs font-bold transition-all">📚</button>
+            <button id="menu-btn" class="flex-1 px-0.5 py-0.5 bg-gray-600/50 hover:bg-gray-600 rounded text-white text-xs font-bold transition-all">💚</button>
+            <button id="back-btn" class="flex-1 px-0.5 py-0.5 bg-blue-600/50 hover:bg-blue-600 rounded text-white text-xs font-bold transition-all">戻</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- コンテンツエリア（左右分割） -->
+      <div class="flex-1 flex gap-1.5 min-h-0 overflow-hidden">
+        <!-- 左側：ストーリー・問題 -->
+        <div class="flex-1 card-bg rounded-lg p-2 overflow-hidden">
+          <div id="message-area" class="h-full overflow-y-auto scroll-area flex flex-col gap-1">
+          </div>
+        </div>
+
+        <!-- 右側：選択肢 -->
+        <div class="flex-1 card-bg rounded-lg p-2 overflow-hidden">
+          <div id="choice-area" class="h-full overflow-y-auto scroll-area flex flex-col gap-2">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- モンスター図鑑 -->
+    <div id="collection-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50 overflow-auto">
+      <div class="card-bg rounded-xl p-4 max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col my-auto">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-lg font-bold text-purple-300">📚 モンスター図鑑</h2>
+          <button id="close-collection-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="collection-grid" class="flex-1 overflow-auto scroll-area grid grid-cols-3 gap-2">
+        </div>
+      </div>
+    </div>
+
+    <!-- レベルアップ -->
+    <div id="levelup-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50">
+      <div class="card-bg rounded-xl p-6 max-w-sm w-full text-center">
+        <div class="text-5xl mb-2">⬆️</div>
+        <h2 class="text-3xl font-bold text-yellow-400 mb-2">LEVEL UP!</h2>
+        <p class="text-white text-xl mb-1">Lv.<span id="new-level">2</span></p>
+        <p id="new-title-text" class="text-purple-300 mb-4 hidden">新しい称号: <span id="new-title" class="text-yellow-400"></span></p>
+        <button id="close-levelup-btn" class="w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-bold transition-colors">
+          続ける
+        </button>
+      </div>
+    </div>
+
+    <!-- クリア -->
+    <div id="clear-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-50 overflow-auto">
+      <div class="card-bg rounded-xl p-6 max-w-sm w-full text-center my-auto">
+        <div class="text-5xl mb-2">🏆</div>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          冒険完了！
+        </h2>
+        <p class="text-white text-lg mb-1"><span id="clear-name">勇者</span>のお疲れ！</p>
+        <div class="bg-purple-900/30 rounded-lg p-3 mb-4 text-sm">
+          <p class="text-gray-400 mb-1">最高称号</p>
+          <p id="final-title" class="text-lg text-yellow-400 font-bold">実数の賢者</p>
+          <p class="text-gray-400 mt-2 mb-1">正解率</p>
+          <p id="accuracy-rate" class="text-2xl text-green-400 font-bold">100%</p>
+        </div>
+        <!-- 【ブラッシュアップ】次の難易度へそのまま進めるようにした -->
+        <div class="clear-nav">
+          <button id="next-diff-btn" class="w-full px-6 py-3 rounded-lg font-bold">次の難易度へ ▶</button>
+          <button id="restart-btn" class="w-full px-6 py-3 rounded-lg font-bold">
+            別の難易度を選択
+          </button>
+          <a href="../remake.html">ほかの教材をえらぶ</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let playerData = null;
+    let allRecords = [];
+    let currentStage = 1;
+    let currentQuestion = 0;
+    let selectedDifficulty = 3;
+    let wrongAnswerCount = 0;
+    let messageHistory = [];
+
+    const titles = [
+      { level: 1, name: 'ルートの迷子', emoji: '🌀' },
+      { level: 3, name: '平方根の見習い', emoji: '📚' },
+      { level: 5, name: '計算修行者', emoji: '🧘' },
+      { level: 8, name: '理化の騎士', emoji: '⚔️' },
+      { level: 12, name: '展開の魔術師', emoji: '🔮' },
+      { level: 15, name: '実数の賢者', emoji: '👑' }
+    ];
+
+    const monsters = {
+      '平方根スライム': { emoji: '🟢', stage: 1, desc: '基本的な平方根' },
+      '±ゴースト': { emoji: '👻', stage: 2, desc: '正負両方の根' },
+      '根号ゴーレム': { emoji: '🗿', stage: 3, desc: '√の計算' },
+      '簡略化フェアリー': { emoji: '🧚', stage: 4, desc: '複雑な根号を整える' },
+      '合成ドラゴン': { emoji: '🐉', stage: 5, desc: '同類項を合わせる' },
+      '展開フェニックス': { emoji: '🔥', stage: 6, desc: '式を展開する' },
+      '有理化の大魔王': { emoji: '👿', stage: 7, desc: '分母のルートを支配' }
+    };
+
+    function shuffleArray(arr) {
+      const shuffled = [...arr];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    const stagesByDifficulty = {
+      1: {
+        1: { name: '封印の門', monster: '平方根スライム', questions: [
+          { q: '9の平方根を求めよ', choices: shuffleArray(['±3', '3', '6', '18']), answer: '±3' },
+          { q: '16の平方根を求めよ', choices: shuffleArray(['±4', '4', '8', '32']), answer: '±4' }
+        ]},
+        2: { name: '真実の鏡', monster: '±ゴースト', questions: [
+          { q: '√4 の値を求めよ', choices: shuffleArray(['2', '±2', '4', '1']), answer: '2' },
+          { q: '(√5)² を計算せよ', choices: shuffleArray(['5', '√25', '10', '2.5']), answer: '5' }
+        ]},
+        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+          { q: '√3 × √5 を計算せよ', choices: shuffleArray(['√15', '√8', '3√5', '5√3']), answer: '√15' },
+          { q: '√2 × √7 を計算せよ', choices: shuffleArray(['√14', '√9', '2√7', '7√2']), answer: '√14' }
+        ]},
+        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+          { q: '√18 を簡単にせよ', choices: shuffleArray(['3√2', '√9', '√2', '9']), answer: '3√2' },
+          { q: '√20 を簡単にせよ', choices: shuffleArray(['2√5', '√4', '√5', '4']), answer: '2√5' }
+        ]},
+        5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
+          { q: '√2 + 2√2 を計算せよ', choices: shuffleArray(['3√2', '2√2', '√2', '2']), answer: '3√2' }
+        ]},
+        6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
+          { q: '√2(√3 + 1) を展開せよ', choices: shuffleArray(['√6 + √2', '√3 + √2', '√6 + 1', '2 + √2']), answer: '√6 + √2' }
+        ]},
+        7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
+          { q: '<div class="frac"><span>1</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['<div class="frac"><span>√2</span><span>2</span></div>', '<div class="frac"><span>1</span><span>2</span></div>', '<div class="frac"><span>√2</span><span>4</span></div>', '1']), answer: '<div class="frac"><span>√2</span><span>2</span></div>' }
+        ]}
+      },
+      2: {
+        1: { name: '封印の門', monster: '平方根スライム', questions: [
+          { q: '25の平方根を求めよ', choices: shuffleArray(['±5', '5', '10', '50']), answer: '±5' },
+          { q: '49の平方根を求めよ', choices: shuffleArray(['±7', '7', '14', '98']), answer: '±7' }
+        ]},
+        2: { name: '真実の鏡', monster: '±ゴースト', questions: [
+          { q: '√9 の値を求めよ', choices: shuffleArray(['3', '±3', '9', '1.5']), answer: '3' },
+          { q: '(√8)² を計算せよ', choices: shuffleArray(['8', '√64', '16', '4']), answer: '8' }
+        ]},
+        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+          { q: '√7 × √3 を計算せよ', choices: shuffleArray(['√21', '√10', '3√2', '√4']), answer: '√21' },
+          { q: '√5 × √2 を計算せよ', choices: shuffleArray(['√10', '√7', '5√2', '2√5']), answer: '√10' }
+        ]},
+        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+          { q: '√32 を簡単にせよ', choices: shuffleArray(['4√2', '√16', '√2', '16']), answer: '4√2' },
+          { q: '√50 を簡単にせよ', choices: shuffleArray(['5√2', '√25', '√2', '25']), answer: '5√2' }
+        ]},
+        5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
+          { q: '3√2 + √2 を計算せよ', choices: shuffleArray(['4√2', '3√2', '2√2', '3']), answer: '4√2' },
+          { q: '2√5 - 3√5 を計算せよ', choices: shuffleArray(['-√5', '√5', '-√10', '5']), answer: '-√5' }
+        ]},
+        6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
+          { q: '√3(4√2 + 2) を展開せよ', choices: shuffleArray(['4√6 + 2√3', '4√3 + 2√3', '4 + 2', '4√6 + 2']), answer: '4√6 + 2√3' }
+        ]},
+        7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
+          { q: '<div class="frac"><span>2</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['√2', '<div class="frac"><span>2√2</span><span>2</span></div>', '<div class="frac"><span>1</span><span>√2</span></div>', '2']), answer: '√2' }
+        ]}
+      },
+      3: {
+        1: { name: '封印の門', monster: '平方根スライム', questions: [
+          { q: '64の平方根を求めよ', choices: shuffleArray(['±8', '8', '16', '128']), answer: '±8' },
+          { q: '81の平方根を求めよ', choices: shuffleArray(['±9', '9', '18', '162']), answer: '±9' }
+        ]},
+        2: { name: '真実の鏡', monster: '±ゴースト', questions: [
+          { q: '√16 の値を求めよ', choices: shuffleArray(['4', '±4', '8', '2']), answer: '4' },
+          { q: '(√11)² を計算せよ', choices: shuffleArray(['11', '√121', '22', '5.5']), answer: '11' }
+        ]},
+        3: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+          { q: '√18 を簡単にせよ', choices: shuffleArray(['3√2', '√9', '√2', '9']), answer: '3√2' },
+          { q: '√48 を簡単にせよ', choices: shuffleArray(['4√3', '√16', '√3', '16']), answer: '4√3' }
+        ]},
+        4: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+          { q: '√3 × √6 を計算せよ', choices: shuffleArray(['3√2', '√18', '√9', '2√3']), answer: '3√2' },
+          { q: '<div class="frac"><span>√125</span><span>√5</span></div> を計算せよ', choices: shuffleArray(['5', '√25', '√5', '√100']), answer: '5' }
+        ]},
+        5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
+          { q: '√12 + √3 を計算せよ', choices: shuffleArray(['3√3', '2√3', '√3', '√15']), answer: '3√3' }
+        ]},
+        6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
+          { q: '(√2 + 1)² を展開せよ', choices: shuffleArray(['3 + 2√2', '2 + 1', '2 + 2√2', '3 + √2']), answer: '3 + 2√2' },
+          { q: '(√5 + 1)(√5 - 1) を展開せよ', choices: shuffleArray(['5', '4', '-4', '6']), answer: '4' }
+        ]},
+        7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
+          { q: '<div class="frac"><span>4</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['2√2', '<div class="frac"><span>4√2</span><span>2</span></div>', '<div class="frac"><span>2</span><span>√2</span></div>', '4']), answer: '2√2' },
+          { q: '<div class="frac"><span>6</span><span>√3</span></div> を有理化せよ', choices: shuffleArray(['2√3', '<div class="frac"><span>6√3</span><span>3</span></div>', '<div class="frac"><span>2</span><span>√3</span></div>', '6']), answer: '2√3' }
+        ]}
+      },
+      4: {
+        1: { name: '封印の門', monster: '平方根スライム', questions: [
+          { q: '100の平方根を求めよ', choices: shuffleArray(['±10', '10', '20', '200']), answer: '±10' },
+          { q: '121の平方根を求めよ', choices: shuffleArray(['±11', '11', '22', '242']), answer: '±11' }
+        ]},
+        2: { name: '真実の鏡', monster: '±ゴースト', questions: [
+          { q: '√25 の値を求めよ', choices: shuffleArray(['5', '±5', '10', '2.5']), answer: '5' },
+          { q: '(√13)² を計算せよ', choices: shuffleArray(['13', '√169', '26', '6.5']), answer: '13' }
+        ]},
+        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+          { q: '√72 を簡単にせよ', choices: shuffleArray(['6√2', '√36', '√2', '36']), answer: '6√2' },
+          { q: '√75 を簡単にせよ', choices: shuffleArray(['5√3', '√25', '√3', '25']), answer: '5√3' }
+        ]},
+        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+          { q: '√2 × √32 を計算せよ', choices: shuffleArray(['8', '√64', '4√2', '√34']), answer: '8' },
+          { q: '√3 × √27 を計算せよ', choices: shuffleArray(['9', '√81', '3√3', '√30']), answer: '9' }
+        ]},
+        5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
+          { q: '3√12 - √3 を計算せよ', choices: shuffleArray(['5√3', '2√3', '√3', '3']), answer: '5√3' },
+          { q: '4√27 - 3√3 を計算せよ', choices: shuffleArray(['9√3', '4√3', '√3', '7']), answer: '9√3' }
+        ]},
+        6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
+          { q: '(√3 + 2)² を展開せよ', choices: shuffleArray(['7 + 4√3', '3 + 4', '3 + 4√3', '7 + 2√3']), answer: '7 + 4√3' },
+          { q: '(2√2 + 1)(2√2 - 1) を展開せよ', choices: shuffleArray(['6', '7', '5', '8']), answer: '7' }
+        ]},
+        7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
+          { q: '<div class="frac"><span>8</span><span>√2</span></div> を有理化せよ', choices: shuffleArray(['4√2', '<div class="frac"><span>8√2</span><span>2</span></div>', '<div class="frac"><span>4</span><span>√2</span></div>', '8']), answer: '4√2' },
+          { q: '<div class="frac"><span>9</span><span>√3</span></div> を有理化せよ', choices: shuffleArray(['3√3', '<div class="frac"><span>9√3</span><span>3</span></div>', '<div class="frac"><span>3</span><span>√3</span></div>', '9']), answer: '3√3' }
+        ]}
+      },
+      5: {
+        1: { name: '封印の門', monster: '平方根スライム', questions: [
+          { q: '144の平方根を求めよ', choices: shuffleArray(['±12', '12', '24', '288']), answer: '±12' },
+          { q: '169の平方根を求めよ', choices: shuffleArray(['±13', '13', '26', '338']), answer: '±13' }
+        ]},
+        2: { name: '真実の鏡', monster: '±ゴースト', questions: [
+          { q: '√36 の値を求めよ', choices: shuffleArray(['6', '±6', '12', '3']), answer: '6' },
+          { q: '(√15)² を計算せよ', choices: shuffleArray(['15', '√225', '30', '7.5']), answer: '15' }
+        ]},
+        3: { name: '計算の試練', monster: '根号ゴーレム', questions: [
+          { q: '√108 を簡単にせよ', choices: shuffleArray(['6√3', '√36', '√3', '36']), answer: '6√3' },
+          { q: '√128 を簡単にせよ', choices: shuffleArray(['8√2', '√64', '√2', '64']), answer: '8√2' }
+        ]},
+        4: { name: '簡略化の森', monster: '簡略化フェアリー', questions: [
+          { q: '2√3 × √6 を計算せよ', choices: shuffleArray(['6√2', '√18', '2√9', '√36']), answer: '6√2' },
+          { q: '<div class="frac"><span>3√125</span><span>√5</span></div> を計算せよ', choices: shuffleArray(['15', '3√25', '√625', '√125']), answer: '15' }
+        ]},
+        5: { name: '精霊の合流', monster: '合成ドラゴン', questions: [
+          { q: '5√18 - 2√2 を計算せよ', choices: shuffleArray(['13√2', '3√2', '√2', '7']), answer: '13√2' },
+          { q: '2√12 + √27 を計算せよ', choices: shuffleArray(['7√3', '2√3', '√3', '3']), answer: '7√3' }
+        ]},
+        6: { name: '魔法陣の発動', monster: '展開フェニックス', questions: [
+          { q: '(√7 + 2)² を展開せよ', choices: shuffleArray(['11 + 4√7', '7 + 4', '7 + 4√7', '11 + 2√7']), answer: '11 + 4√7' },
+          { q: '(3√3 - 1)(3√3 + 1) を展開せよ', choices: shuffleArray(['25', '26', '24', '27']), answer: '26' }
+        ]},
+        7: { name: '浄化の儀式', monster: '有理化の大魔王', questions: [
+          { q: '<div class="frac"><span>1</span><span>√6 + √2</span></div> を有理化せよ', choices: shuffleArray(['<div class="frac"><span>√6 - √2</span><span>4</span></div>', '<div class="frac"><span>√6 + √2</span><span>2</span></div>', '<div class="frac"><span>√6 - √2</span><span>2</span></div>', '<div class="frac"><span>√2 - √6</span><span>4</span></div>']), answer: '<div class="frac"><span>√6 - √2</span><span>4</span></div>' },
+          { q: '<div class="frac"><span>2</span><span>√6 - 2</span></div> を有理化せよ', choices: shuffleArray(['√6 + 2', '<div class="frac"><span>√6 + 2</span><span>2</span></div>', '<div class="frac"><span>2(√6 + 2)</span><span>2</span></div>', '<div class="frac"><span>√6 - 2</span><span>2</span></div>']), answer: '√6 + 2' }
+        ]}
+      }
+    };
+
+    async function initSDKs() {
+      if (window.dataSdk) {
+        await window.dataSdk.init({
+          onDataChanged: (data) => {
+            allRecords = data;
+            if (data.length > 0) {
+              playerData = data[0];
+              updateContinueButton();
+            }
+          }
+        });
+      }
+    }
+
+    function updateContinueButton() {
+      if (playerData) {
+        document.getElementById('continue-btn').classList.remove('hidden');
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('#title-screen, #name-screen, #difficulty-screen, #game-screen').forEach(el => {
+        el.classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function renderMessages() {
+      const area = document.getElementById('message-area');
+      area.innerHTML = '';
+      messageHistory.forEach((msg) => {
+        const div = document.createElement('div');
+        div.className = 'message-item ' + msg.type;
+        div.innerHTML = msg.text;
+        area.appendChild(div);
+      });
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function addMessage(text, type = 'story') {
+      messageHistory.push({ text, type });
+      renderMessages();
+    }
+
+    function showChoices(choices, onSelect) {
+      const choiceArea = document.getElementById('choice-area');
+      choiceArea.innerHTML = '';
+
+      choices.forEach((choice, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = `${String.fromCharCode(65 + index)}. ${choice}`;
+
+        btn.onclick = () => {
+          Array.from(choiceArea.querySelectorAll('button')).forEach(b => b.disabled = true);
+          onSelect(choice);
+        };
+        choiceArea.appendChild(btn);
+      });
+    }
+
+    function updateStatus() {
+      if (!playerData) return;
+
+      document.getElementById('player-name-display').textContent = playerData.player_name;
+      document.getElementById('player-level').textContent = playerData.level;
+      document.getElementById('hp-text').textContent = `${playerData.hp}/100`;
+      document.getElementById('hp-bar').style.width = `${playerData.hp}%`;
+      document.getElementById('exp-text').textContent = `${playerData.exp}/100`;
+      document.getElementById('exp-bar').style.width = `${playerData.exp}%`;
+    }
+
+    async function addExp(amount) {
+      let newExp = playerData.exp + amount;
+      let newLevel = playerData.level;
+      let leveledUp = false;
+      let newTitle = playerData.title;
+
+      while (newExp >= 100) {
+        newExp -= 100;
+        newLevel++;
+        leveledUp = true;
+
+        for (const t of titles) {
+          if (newLevel >= t.level) {
+            newTitle = t.name;
+          }
+        }
+      }
+
+      playerData.exp = newExp;
+      playerData.level = newLevel;
+      playerData.title = newTitle;
+
+      await window.dataSdk.update(playerData);
+      updateStatus();
+
+      if (leveledUp) {
+        document.getElementById('new-level').textContent = newLevel;
+        document.getElementById('levelup-modal').classList.remove('hidden');
+      }
+    }
+
+    async function takeDamage(amount) {
+      playerData.hp = Math.max(0, playerData.hp - amount);
+      await window.dataSdk.update(playerData);
+      updateStatus();
+    }
+
+    function showCollection() {
+      const grid = document.getElementById('collection-grid');
+      grid.innerHTML = '';
+
+      const collected = playerData?.monster_collection ? playerData.monster_collection.split(',').filter(m => m) : [];
+
+      for (const [name, data] of Object.entries(monsters)) {
+        const card = document.createElement('div');
+        const isCollected = collected.includes(name);
+
+        card.className = `card-bg rounded-lg p-2 text-center text-xs ${isCollected ? '' : 'opacity-50'}`;
+        card.innerHTML = `
+          <div class="text-3xl mb-1">${isCollected ? data.emoji : '❓'}</div>
+          <div class="text-white font-bold mb-0.5">${isCollected ? name : '???'}</div>
+          <div class="text-gray-400">${isCollected ? data.desc : '未発見'}</div>
+        `;
+        grid.appendChild(card);
+      }
+
+      document.getElementById('collection-modal').classList.remove('hidden');
+    }
+
+    async function addMonster(name) {
+      const collected = playerData.monster_collection ? playerData.monster_collection.split(',').filter(m => m) : [];
+      if (!collected.includes(name)) {
+        collected.push(name);
+        playerData.monster_collection = collected.join(',');
+        await window.dataSdk.update(playerData);
+      }
+    }
+
+    async function clearStage(stageNum) {
+      const cleared = playerData.cleared_stages ? playerData.cleared_stages.split(',').filter(s => s) : [];
+      if (!cleared.includes(String(stageNum))) {
+        cleared.push(String(stageNum));
+        playerData.cleared_stages = cleared.join(',');
+        await window.dataSdk.update(playerData);
+      }
+    }
+
+    async function startGame(isNew = true) {
+      flow++;
+      if (isNew) {
+        showScreen('difficulty-screen');
+      } else {
+        showScreen('game-screen');
+        messageHistory = [];
+        selectedDifficulty = playerData.difficulty || 3;
+        updateStatus();
+
+        const cleared = playerData.cleared_stages ? playerData.cleared_stages.split(',').filter(s => s) : [];
+        currentStage = cleared.length + 1;
+        if (currentStage > 7) currentStage = 7;
+        currentQuestion = 0;
+        wrongAnswerCount = 0;
+
+        addMessage(`${playerData.player_name}、かえり！`, 'story');
+        await delayMs(800);
+        startStage(currentStage);
+      }
+    }
+
+    // 【ブラッシュアップ】元は「戻」→「続ける」とすると、前の進行の処理が残っていて問題が 2 重に出ることがあった。
+    //   画面を切りかえるたびに番号を変え、古い進行の「待ち」は終わらないようにする。
+    let flow = 0;
+    function delayMs(ms) {
+      const f = flow;
+      return new Promise(r => setTimeout(() => { if (f === flow) r(); }, ms));
+    }
+
+    async function createNewGame(name) {
+      flow++;
+      if (allRecords.length >= 999) {
+        addMessage('セーブがいっぱい', 'story');
+        return;
+      }
+
+      const newPlayer = {
+        player_name: name,
+        level: 1,
+        exp: 0,
+        hp: 100,
+        title: 'ルートの迷子',
+        cleared_stages: '',
+        monster_collection: '',
+        correct_count: 0,
+        total_count: 0,
+        difficulty: selectedDifficulty,
+        created_at: new Date().toISOString()
+      };
+
+      const result = await window.dataSdk.create(newPlayer);
+
+      if (result.isOk) {
+        playerData = { ...newPlayer };
+        showScreen('game-screen');
+        messageHistory = [];
+        updateStatus();
+
+        currentStage = 1;
+        currentQuestion = 0;
+        wrongAnswerCount = 0;
+
+        addMessage(`${name}、冒険へようこそ！`, 'story');
+        await delayMs(800);
+        startStage(1);
+      }
+    }
+
+    async function startStage(stageNum) {
+      const stage = stagesByDifficulty[selectedDifficulty][stageNum];
+      if (!stage) {
+        showClearScreen();
+        return;
+      }
+
+      currentStage = stageNum;
+      currentQuestion = 0;
+      wrongAnswerCount = 0;
+
+      addMessage(`第${stageNum}章 : ${stage.name}`, 'story');
+      document.getElementById('choice-area').innerHTML = '';
+
+      await delayMs(600);
+
+      const monsterEmoji = monsters[stage.monster].emoji;
+      addMessage(`${monsterEmoji} ${stage.monster}が現れた！`, 'story');
+      await addMonster(stage.monster);
+
+      await delayMs(600);
+      askQuestion();
+    }
+
+    function askQuestion() {
+      const stage = stagesByDifficulty[selectedDifficulty][currentStage];
+      const question = stage.questions[currentQuestion];
+
+      addMessage(question.q, 'problem');
+      showChoices(question.choices, (selected) => checkAnswer(selected, question));
+    }
+
+    async function checkAnswer(answer, question) {
+      document.getElementById('choice-area').innerHTML = '';
+
+      const isCorrect = answer === question.answer;
+
+      // 【ブラッシュアップ】元は √25（＝5）のように「値は同じだけど、まだ簡単にできる形」を選んでも
+      //   不正解になり HP が減っていた。「おしい」と伝えて、もう一度選ばせる。
+      if (!isCorrect && sameValue(answer, question.answer)) {
+        addMessage('🤏 おしい！値は同じだけど、もっと簡単な形にできるよ', 'answer-result close');
+        await delayMs(900);
+        showChoices(question.choices.filter(c => c !== answer), (selected) => checkAnswer(selected, question));
+        return;
+      }
+
+      playerData.total_count++;
+
+      if (isCorrect) {
+        playerData.correct_count++;
+        await window.dataSdk.update(playerData);
+
+        addMessage('✨ 正解！', 'answer-result');
+        await addExp(30);
+
+        currentQuestion++;
+
+        const stage = stagesByDifficulty[selectedDifficulty][currentStage];
+        if (currentQuestion >= stage.questions.length) {
+          await delayMs(500);
+          addMessage(`🎉 ${stage.monster}を倒した！`, 'story');
+          await clearStage(currentStage);
+
+          await delayMs(800);
+
+          if (currentStage < 7) {
+            startStage(currentStage + 1);
+          } else {
+            showClearScreen();
+          }
+        } else {
+          await delayMs(800);
+          askQuestion();
+        }
+      } else {
+        await window.dataSdk.update(playerData);
+        wrongAnswerCount++;
+
+        if (wrongAnswerCount === 1) {
+          addMessage('❌ 不正解...もう一度！', 'answer-result wrong');
+          await takeDamage(15);
+          await delayMs(800);
+          askQuestion();
+        } else if (wrongAnswerCount === 2) {
+          addMessage('⚠️ 最後のチャンス！', 'answer-result wrong');
+          await takeDamage(15);
+          await delayMs(800);
+          askQuestion();
+        } else {
+          addMessage(`📍 正解は「${question.answer}」`, 'answer-result wrong');
+          await takeDamage(15);
+          currentQuestion++;
+
+          const stage = stagesByDifficulty[selectedDifficulty][currentStage];
+          if (currentQuestion >= stage.questions.length) {
+            await delayMs(500);
+            addMessage(`🎉 ${stage.monster}を倒した！`, 'story');
+            await clearStage(currentStage);
+
+            await delayMs(800);
+
+            if (currentStage < 7) {
+              startStage(currentStage + 1);
+            } else {
+              showClearScreen();
+            }
+          } else {
+            await delayMs(800);
+            askQuestion();
+          }
+        }
+
+        if (playerData.hp <= 0) {
+          playerData.hp = 100;
+          await window.dataSdk.update(playerData);
+          updateStatus();
+        }
+      }
+    }
+
+    function showClearScreen() {
+      const accuracy = playerData.total_count > 0
+        ? Math.round((playerData.correct_count / playerData.total_count) * 100)
+        : 0;
+
+      document.getElementById('clear-name').textContent = playerData.player_name;
+      document.getElementById('final-title').textContent = playerData.title;
+      document.getElementById('accuracy-rate').textContent = `${accuracy}%`;
+      document.getElementById('next-diff-btn').style.display = selectedDifficulty < 5 ? '' : 'none';
+      document.getElementById('levelup-modal').classList.add('hidden');   // 【ブラッシュアップ】前のレベルアップ表示が残らないように
+      document.getElementById('clear-modal').classList.remove('hidden');
+    }
+
+    document.getElementById('new-game-btn').onclick = () => startGame(true);
+    document.getElementById('continue-btn').onclick = () => startGame(false);
+
+    document.querySelectorAll('.difficulty-option').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.difficulty-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedDifficulty = parseInt(btn.dataset.difficulty);
+      };
+    });
+
+    document.getElementById('difficulty-confirm-btn').onclick = () => {
+      showScreen('name-screen');
+    };
+
+    document.getElementById('start-adventure-btn').onclick = () => {
+      const name = document.getElementById('player-name-input').value.trim();
+      if (name) {
+        createNewGame(name);
+      }
+    };
+
+    document.getElementById('player-name-input').onkeypress = (e) => {
+      if (e.key === 'Enter') {
+        const name = e.target.value.trim();
+        if (name) createNewGame(name);
+      }
+    };
+
+    document.getElementById('collection-btn').onclick = showCollection;
+    document.getElementById('close-collection-btn').onclick = () => {
+      document.getElementById('collection-modal').classList.add('hidden');
+    };
+
+    document.getElementById('close-levelup-btn').onclick = () => {
+      document.getElementById('levelup-modal').classList.add('hidden');
+    };
+
+    // 【ブラッシュアップ】次の難易度へ：同じ名前で、ひとつ上の難易度の冒険を始める
+    document.getElementById('next-diff-btn').onclick = async () => {
+      const name = playerData ? playerData.player_name : '勇者';
+      if (playerData) await window.dataSdk.delete(playerData);
+      document.getElementById('clear-modal').classList.add('hidden');
+      selectedDifficulty = Math.min(5, selectedDifficulty + 1);
+      document.querySelectorAll('.difficulty-option').forEach(b => b.classList.toggle('selected', +b.dataset.difficulty === selectedDifficulty));
+      createNewGame(name);
+    };
+
+    document.getElementById('restart-btn').onclick = async () => {
+      if (playerData) {
+        await window.dataSdk.delete(playerData);
+      }
+      document.getElementById('clear-modal').classList.add('hidden');
+      messageHistory = [];
+      showScreen('title-screen');
+      playerData = null;
+      updateContinueButton();
+    };
+
+    document.getElementById('back-btn').onclick = () => {
+      flow++;
+      if (document.getElementById('clear-modal').classList.contains('hidden') === false) {
+        document.getElementById('clear-modal').classList.add('hidden');
+      }
+      messageHistory = [];
+      showScreen('title-screen');
+    };
+
+    document.getElementById('menu-btn').onclick = async () => {
+      if (playerData && playerData.hp < 100) {
+        playerData.hp = 100;
+        await window.dataSdk.update(playerData);
+        updateStatus();
+        addMessage('💚 体力全回復！', 'story');
+      }
+    };
+
+    // 【ブラッシュアップ】選択肢の値を計算する（「値は同じだけど形がちがう」を見分けるため）
+    function valueOf(s) {
+      let t = String(s).replace(/<div class="frac"><span>(.*?)<\/span><span>(.*?)<\/span><\/div>/g, '(($1)/($2))');
+      if (/±/.test(t)) return NaN;
+      t = t.replace(/\s+/g, '').replace(/√(\d+)/g, 'Math.sqrt($1)').replace(/×/g, '*').replace(/(\d|\))(?=M|\()/g, '$1*');
+      if (!/^[0-9+\-*/().Mathsqr]+$/.test(t)) return NaN;
+      try { return Function('return (' + t + ');')(); } catch (e) { return NaN; }
+    }
+    function sameValue(a, b) {
+      const x = valueOf(a), y = valueOf(b);
+      return isFinite(x) && isFinite(y) && Math.abs(x - y) < 1e-9;
+    }
+
+    initSDKs();
+  </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#new-game-btn": "u-btn",
+    "#continue-btn": "u-btn u-btn-blue",
+    ".difficulty-option": "u-choice",
+    "#difficulty-confirm-btn": "u-btn",
+    "#player-name-input": "u-input",
+    "#start-adventure-btn": "u-btn",
+    "#collection-btn": "u-btn u-btn-blue",
+    "#menu-btn": "u-btn",
+    "#back-btn": "u-btn u-btn-plain",
+    ".choice-btn": "u-choice",
+    "#close-levelup-btn": "u-btn",
+    "#next-diff-btn": "u-btn",
+    "#restart-btn": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
