@@ -1578,32 +1578,74 @@
                 for (let k = 0; k <= 200; k++) { const x = xMin + (xMax - xMin) * k / 200; d.push((k ? 'L' : 'M') + pt(x, f(x))); }
                 svg.push(`<path d="${d.join(' ')}" class="function-curve ${colors[i]}" clip-path="url(#plotClip)"/>`);
             });
-            // 曲線の名前：枠の中に入っている右のほうの場所に書く
             // 交点（2 曲線）・x軸との交点に点と座標
             const dots = [];
             if (fns.length > 1) { dots.push([a, fns[0](a)], [b, fns[0](b)]); }
             else if (axisOnly(question)) { dots.push([a, 0], [b, 0]); }
             else { const m = crossOf(question); if (m !== null) dots.push([m, 0]); }
-            const labels = curvesOf(question).map(labelOf);
-            const used = [];
-            fns.forEach((f, i) => {
-                for (let k = 0; k <= 40; k++) {
-                    const x = xMax - (xMax - xMin) * (0.06 + k * 0.02);
-                    const y = f(x), Y = sy(y);
-                    if (Y < T + 14 || Y > H - B - 6) continue;
-                    if (used.some(u => Math.abs(u - Y) < 18)) continue;
-                    // 交点の座標の文字と重ならないように
-                    if (dots.some(([dx, dy]) => Math.abs(sx(dx) - sx(x)) < 70 && Math.abs(sy(dy) - Y) < 26)) continue;
-                    used.push(Y);
-                    const anchor = sx(x) > W - 90 ? 'end' : 'start';
-                    svg.push(`<text x="${fmt(sx(x) + (anchor === 'end' ? -4 : 6))}" y="${fmt(Y - 6)}" class="curve-label ${colors[i]}" text-anchor="${anchor}">${svgMath(pretty(labels[i]))}</text>`);
-                    break;
-                }
+
+            // 【ブラッシュアップ】曲線の名前は、軸・目盛りの数字・曲線・点・ほかの文字と重ならない場所をさがして書く
+            //   曲線にそった場所をいくつもためし（右から順に、点の右上・左上・右下・左下）、どれとも重ならない最初の場所を使う
+            const occupied = [];   // すでに使っている四角 [左, 上, 右, 下]
+            const textW = (s, size) => { let w = 0; for (const ch of String(s)) w += ch === ' ' ? size * 0.3 : /[−+=]/.test(ch) ? size * 0.62 : size * 0.56; return w; };
+            const rectOf = (x, y, s, size, anchor) => {
+                const w = textW(s, size);
+                const x1 = anchor === 'end' ? x - w : anchor === 'middle' ? x - w / 2 : x;
+                return [x1, y - size * 0.82, x1 + w, y + size * 0.28];
+            };
+            for (let gx = Math.ceil(xMin / stX) * stX; gx <= xMax; gx += stX) if (gx !== 0) occupied.push(rectOf(sx(gx), sy(0) + 17, pretty(gx), 14, 'middle'));
+            for (let gy = Math.ceil(yLo / stY) * stY; gy <= yHi; gy += stY) if (gy !== 0) occupied.push(rectOf(sx(0) - 7, sy(gy) + 4, pretty(gy), 14, 'end'));
+            occupied.push(rectOf(W - 12, sy(0) - 8, 'x', 15, 'start'), rectOf(sx(0) + 8, T - 2, 'y', 15, 'start'), rectOf(sx(0) - 7, sy(0) + 17, 'O', 13, 'end'));
+            const ptTexts = dots.map(([x, y]) => {
+                occupied.push([sx(x) - 5, sy(y) - 5, sx(x) + 5, sy(y) + 5]);
+                if (fns.length < 2) return null;
+                const txt = `(${pretty(x)}, ${pretty(Math.round(y * 100) / 100)})`;
+                const t = { x: sx(x) + (x === a ? -6 : 6), y: sy(y) - 8, anchor: x === a ? 'end' : 'start', txt };
+                occupied.push(rectOf(t.x, t.y, txt, 14, t.anchor));
+                return t;
             });
-            dots.forEach(([x, y]) => {
+            const hLines = [sy(0)];
+            const vLines = [sx(0)];
+            if (fns.length === 1 && !axisOnly(question)) [a, b].forEach(v => { if (v !== 0) vLines.push(sx(v)); });
+            const curvePts = [];
+            fns.forEach(f => { for (let k = 0; k <= 400; k++) { const x = xMin + (xMax - xMin) * k / 400; curvePts.push([sx(x), sy(f(x))]); } });
+            const M = 3;   // すき間
+            const hit = r => {
+                if (r[0] < L + 2 || r[2] > W - R - 2 || r[1] < T + 2 || r[3] > H - B - 2) return true;
+                if (occupied.some(o => r[0] < o[2] + M && r[2] > o[0] - M && r[1] < o[3] + M && r[3] > o[1] - M)) return true;
+                if (hLines.some(y => y > r[1] - M && y < r[3] + M)) return true;
+                if (vLines.some(x => x > r[0] - M && x < r[2] + M)) return true;
+                return curvePts.some(([px, py]) => px > r[0] - M && px < r[2] + M && py > r[1] - M && py < r[3] + M);
+            };
+            const labels = curvesOf(question).map(labelOf);
+            const colors2 = ['curve-1', 'curve-2'];
+            fns.forEach((f, i) => {
+                const s = pretty(labels[i]), size = 16;
+                let best = null;
+                for (let k = 0; k <= 90 && !best; k++) {
+                    const x = xMax - (xMax - xMin) * (0.03 + k * 0.0105);
+                    const X = sx(x), Y = sy(f(x));
+                    if (Y < T || Y > H - B) continue;
+                    for (const [dx, dy, anchor] of [[6, -8, 'start'], [-6, -8, 'end'], [6, 20, 'start'], [-6, 20, 'end']]) {
+                        const r = rectOf(X + dx, Y + dy, s, size, anchor);
+                        if (!hit(r)) { best = { x: X + dx, y: Y + dy, anchor, r }; break; }
+                    }
+                }
+                // 曲線の近くに場所がないとき：枠の中のあいている場所
+                for (let yy = T + 20; yy < H - B && !best; yy += 8) {
+                    for (let xx = W - R - 4; xx > L + 40 && !best; xx -= 8) {
+                        const r = rectOf(xx, yy, s, size, 'end');
+                        if (!hit(r)) best = { x: xx, y: yy, anchor: 'end', r };
+                    }
+                }
+                if (!best) return;
+                occupied.push(best.r);
+                svg.push(`<text x="${fmt(best.x)}" y="${fmt(best.y)}" class="curve-label ${colors2[i]}" text-anchor="${best.anchor}">${svgMath(s)}</text>`);
+            });
+            dots.forEach(([x, y], j) => {
                 svg.push(`<circle cx="${fmt(sx(x))}" cy="${fmt(sy(y))}" r="4" class="pt"/>`);
-                const txt = fns.length > 1 ? `(${pretty(x)}, ${pretty(Math.round(y * 100) / 100)})` : '';
-                if (txt) svg.push(`<text x="${fmt(sx(x) + (x === a ? -6 : 6))}" y="${fmt(sy(y) - 8)}" class="pt-label" text-anchor="${x === a ? 'end' : 'start'}">${txt}</text>`);
+                const t = ptTexts[j];
+                if (t) svg.push(`<text x="${fmt(t.x)}" y="${fmt(t.y)}" class="pt-label" text-anchor="${t.anchor}">${t.txt}</text>`);
             });
             svg.push('</svg>');
             const holder = document.createElement('div');
