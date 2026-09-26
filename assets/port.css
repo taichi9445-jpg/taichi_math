@@ -1,0 +1,46 @@
+/* ===========================================================================
+   port.css  —  先生の GAS 版を移植した教材で共通に使う設定
+   各教材の見た目は先生の版のまま。ここには「どの教材にも効く直し」だけを置く。
+   ========================================================================= */
+
+/* 日本語を「言葉の切れ目」で改行する（「マスターしよ／う！」のような改行を防ぐ）。
+   新しめの Chrome で有効。古いブラウザでは今までどおりの改行になるだけ。 */
+body { word-break: auto-phrase; line-break: strict; }
+h1, h2, h3 { text-wrap: balance; }
+
+/* 数式が長いときは、枠からはみ出さずに横へ動かせるようにする */
+mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+/* 紙吹雪などの演出が、ボタンのタップをじゃましないようにする */
+.confetti, canvas[style*="pointer-events"] { pointer-events: none; }
+
+/* 一覧へ戻るリンク（ページのいちばん上に置く） */
+.port-back {
+  display: block;
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto 8px;
+  padding: 2px 4px;
+  font-weight: 700;
+  font-size: .95rem;
+  color: #64748b;
+  text-decoration: none;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+}
+.port-back:hover { text-decoration: underline; }
+
+/* 結果画面などに足す「えらび直す」ボタンの並び */
+.port-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.port-nav > * { flex: 1 1 180px; }
+
+/* 動きを減らす設定の端末では、アニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

@@ -1,99 +1,457 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>正負の九九</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+
+    <!--
+      05. 正負の九九（正負の数 スーパーチャレンジ！）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正負の数 スーパーチャレンジ！</title>
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+         本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+         同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+    <link rel="stylesheet" href="../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap');
+        
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%);
+            touch-action: manipulation;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .ud-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 40px;
+            box-shadow: 0 20px 0 #cbd5e1;
+            border: 6px solid #6366f1;
+            width: 100%;
+            max-width: 650px;
+            position: relative;
+        }
+
+        .btn-push {
+            transition: all 0.1s;
+            border-bottom: 6px solid #cbd5e1;
+        }
+        .btn-push:active:not(:disabled) {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .choice-selected-correct {
+            background-color: #f0fdf4 !important;
+            border-color: #22c55e !important;
+            color: #15803d !important;
+            box-shadow: 0 4px 0 #15803d !important;
+            transform: translateY(2px);
+        }
+
+        .choice-selected-wrong {
+            background-color: #fff1f2 !important;
+            border-color: #fda4af !important;
+            color: #e11d48 !important;
+            box-shadow: 0 4px 0 #e11d48 !important;
+            transform: translateY(2px);
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) translateY(2px); }
+            25% { transform: translateX(-5px) translateY(2px); }
+            75% { transform: translateX(5px) translateY(2px); }
+        }
+
+        .problem-text {
+            font-size: clamp(3rem, 15vw, 6.5rem);
+            font-weight: 900;
+            color: #4338ca;
+            text-shadow: 4px 4px 0px #e0e7ff;
+        }
+
+        .rainbow-text {
+            background: linear-gradient(to right, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        .mode-card {
+            border: 3px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .mode-card:hover {
+            border-color: #6366f1;
+            background-color: #f5f3ff;
+        }
+
+        ruby rt {
+            font-size: 0.4em;
+            font-weight: bold;
+            color: #6366f1;
+        }
+
+        .bg-indigo-600 ruby rt {
+            color: #e0e7ff;
+        }
+
+        /* ゲーム情報エリアの配置調整用 */
+        .game-header {
+            margin-top: 1rem;
+        }
+
+        /* 【ブラッシュアップ】一覧へ戻るリンクをカードの上に置くため、縦に並べる */
+        body { flex-direction: column; }
+        .port-back { max-width: 650px; }
+
+        /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+        @media (max-width: 640px) {
+            body { padding: .5rem; justify-content: flex-start; }
+            .ud-card { border-width: 4px; border-radius: 28px; box-shadow: 0 10px 0 #cbd5e1; }
+            #main-container { padding: 1.1rem .9rem 1.4rem; }
+            #start-screen h1 { font-size: min(2.1rem, 8vw); margin-bottom: 1.4rem; white-space: nowrap; }   /* 見出しは途中で改行させない */
+            #result-title { font-size: min(2.25rem, 8vw); white-space: nowrap; }
+            #start-screen .mode-card span.text-2xl { font-size: 1.35rem; }
+            #start-screen .mode-card span.text-sm { font-size: .8rem; }
+            #game-screen { margin-top: 2.6rem; }
+            .game-header { margin-top: .4rem; }
+            #game-info-left, #game-info-right { font-size: 1.05rem; }
+            #timer-display { font-size: 1.3rem; }
+            .problem-text { font-size: 3.6rem; margin-bottom: 1.2rem; }
+            #choice-container { gap: .75rem; }
+            #choice-container .choice-btn { font-size: 2.6rem; padding: 1.3rem 0; }
+            #answer-input { font-size: 2.6rem; }
+            #feedback { height: 4rem; font-size: 1.6rem; }
+            #hint-panel { margin-top: 1.2rem; padding: .7rem; }
+            #hint-panel span { font-size: 1rem; }
+        }
+        .result-nav { display: flex; flex-direction: column; gap: .8rem; max-width: 22rem; margin: 0 auto; }
+    </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   05. 正負の九九（正負の数スーパーチャレンジ）
-     10問練習 ／ タイムアタック ／ サバイバル　×　4択 ／ 入力
+    <div id="main-container" class="ud-card p-6 md:p-10 text-center overflow-hidden">
+        
+        <!-- ホーム戻るボタン（カードの最上部に独立して配置） -->
+        <div id="home-btn-container" class="hidden absolute top-4 left-0 w-full px-6 flex justify-start">
+            <button onclick="backToTitle()" class="bg-white border-2 border-indigo-200 text-indigo-600 font-bold px-4 py-1 rounded-full text-sm hover:bg-indigo-50 transition-colors z-50 shadow-sm flex items-center gap-1">
+                🏠 <ruby>最初<rt>さいしょ</rt></ruby>に<ruby>戻<rt>もど</rt></ruby>る
+            </button>
+        </div>
 
-   元教材から直した点：
-     ・サバイバルでまちがえても終わらず、そのまま進み続けることがあった。
-       → 1問まちがえたらきちんと結果画面へ。
-     ・タイムアタックのタイマーが、途中で戻ると二重に動いて時間が倍速になった。
-       → 画面を作り直すたびに前のタイマーを止めるようにした。
-     ・「-12」を「ー12」（長音）で入力すると不正解になっていた。
-       → 全角のマイナスや長音も正しく読み取る。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+        <!-- タイトル画面 -->
+        <div id="start-screen" class="mt-4">
+            <h1 class="text-4xl md:text-5xl font-black text-indigo-600 mb-8">
+                <ruby>正負<rt>せいふ</rt></ruby>の<ruby>数<rt>すう</rt></ruby><br>スーパーチャレンジ！
+            </h1>
+            
+            <div class="space-y-4 mb-8 text-left">
+                <button onclick="setupGame('practice')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
+                    <span class="text-2xl font-black text-gray-700">🟢 10<ruby>問練習<rt>もんれんしゅう</rt></ruby></span>
+                    <span class="text-sm font-bold text-gray-400">じっくり<ruby>学習<rt>がくしゅう</rt></ruby></span>
+                </button>
+                <button onclick="setupGame('timeattack')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
+                    <span class="text-2xl font-black text-gray-700">🟡 タイムアタック</span>
+                    <span class="text-sm font-bold text-gray-400">10<ruby>問<rt>もん</rt></ruby>を<ruby>最速<rt>さいそく</rt></ruby>で！</span>
+                </button>
+                <button onclick="setupGame('survival')" class="w-full btn-push bg-white p-4 rounded-2xl mode-card flex items-center justify-between">
+                    <span class="text-2xl font-black text-gray-700">🔴 サバイバル</span>
+                    <span class="text-sm font-bold text-gray-400">ミスまでずっと<ruby>挑戦<rt>ちょうせん</rt></ruby>！</span>
+                </button>
+            </div>
 
-  function signed(n) { return n < 0 ? '(' + n + ')' : String(n); }
+            <div class="flex justify-center gap-4">
+                <button id="type-select-1" onclick="setInputType(1)" class="px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md">4<ruby>択<rt>たく</rt></ruby>モード</button>
+                <button id="type-select-2" onclick="setInputType(2)" class="px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600"><ruby>入力<rt>にゅうりょく</rt></ruby>モード</button>
+            </div>
+        </div>
 
-  function makeQuestion(useChoices) {
-    var a = Quiz.randInt(1, 9) * (Math.random() < 0.5 ? -1 : 1);
-    var b = Quiz.randInt(1, 9) * (Math.random() < 0.5 ? -1 : 1);
-    var ans = a * b;
+        <!-- クイズ画面 -->
+        <div id="game-screen" class="hidden mt-10">
+            <div class="game-header flex items-center justify-between mb-4">
+                <div id="game-info-left" class="text-xl font-black text-indigo-600"><ruby>問<rt>もん</rt></ruby> 1 / 10</div>
+                <div id="timer-display" class="text-2xl font-black text-red-500">0.0秒</div>
+                <div id="game-info-right" class="text-xl font-bold text-orange-500"><ruby>正解<rt>せいかい</rt></ruby>: 0</div>
+            </div>
+            
+            <div class="w-full bg-gray-200 h-4 rounded-full mb-8 overflow-hidden">
+                <div id="progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-300"></div>
+            </div>
 
-    var rule = (a < 0) === (b < 0)
-      ? '同じ符号どうしのかけ算は ＋ になります。'
-      : 'ちがう符号どうしのかけ算は － になります。';
+            <div id="problem-display" class="problem-text mb-8 select-none pop-in"></div>
 
-    var q = {
-      text: '次の計算をしなさい。',
-      math: signed(a) + ' × ' + signed(b),
-      hint: rule,
-      explain: rule + '　絶対値は ' + Math.abs(a) + ' × ' + Math.abs(b) + ' = ' + Math.abs(ans) +
-        ' なので、答えは ' + ans + ' です。'
-    };
+            <div id="choice-container" class="grid grid-cols-2 gap-4"></div>
 
-    if (useChoices) {
-      // 符号だけまちがえた答えを必ず入れる（ここが最大のつまずきどころ）
-      var wrongs = [-ans];
-      [Math.abs(a) * Math.abs(b) + 1, -(Math.abs(a) * Math.abs(b)) - 1,
-       a + b, ans + 10].forEach(function (v) {
-        if (wrongs.length < 3 && v !== ans && wrongs.indexOf(v) < 0) wrongs.push(v);
-      });
-      var guard = 0;
-      while (wrongs.length < 3 && guard++ < 40) {
-        var v2 = Quiz.randInt(-81, 81);
-        if (v2 !== ans && wrongs.indexOf(v2) < 0) wrongs.push(v2);
-      }
-      q.type = 'choice';
-      q.choices = [String(ans)].concat(wrongs.map(String));
-      q.correct = 0;
-    } else {
-      q.type = 'input';
-      q.inputmode = 'text';
-      q.answer = String(ans);
-      q.placeholder = '例： -12';
-    }
-    return q;
-  }
+            <div id="input-container" class="hidden">
+                <input type="number" id="answer-input" class="w-full max-w-xs text-5xl p-4 text-center border-8 border-indigo-100 rounded-3xl mb-4 focus:outline-none focus:border-indigo-400 text-indigo-600 font-black" placeholder="?">
+                <br>
+                <button id="input-submit-btn" onclick="handleAnswer(parseInt(document.getElementById('answer-input').value), null)" class="w-full max-w-xs bg-indigo-500 text-white font-black py-4 rounded-2xl text-3xl btn-push shadow-indigo-700">できた！</button>
+            </div>
 
-  function build(n, useChoices) {
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(makeQuestion(useChoices));
-    return out;
-  }
+            <div id="feedback" class="h-20 mt-4 flex flex-col items-center justify-center text-3xl font-black"></div>
+        </div>
 
-  Quiz.start({
-    title: '正負の九九',
-    subtitle: '符号のつけまちがいをなくそう。同符号は＋、異符号は−。',
-    modes: [
-      { id: 'c10', group: '4択モード', name: '10問練習', desc: 'じっくり学習' },
-      { id: 'ct', group: '4択モード', name: 'タイムアタック', desc: '10問を最速で', timed: true },
-      { id: 'cs', group: '4択モード', name: 'サバイバル', desc: 'ミスまでずっと挑戦', survival: true },
-      { id: 'i10', group: '入力モード', name: '10問練習', desc: 'じっくり学習' },
-      { id: 'it', group: '入力モード', name: 'タイムアタック', desc: '10問を最速で', timed: true },
-      { id: 'is', group: '入力モード', name: 'サバイバル', desc: 'ミスまでずっと挑戦', survival: true }
-    ],
-    build: function (id) {
-      var useChoices = id[0] === 'c';
-      if (id === 'cs' || id === 'is') return build(100, useChoices);   // 事実上むげん
-      return build(10, useChoices);
-    }
-  });
-})();
-</script>
+        <!-- リザルト画面 -->
+        <div id="result-screen" class="hidden py-6 mt-4">
+            <div id="result-emoji" class="text-8xl mb-4">🎉</div>
+            <h2 id="result-title" class="text-4xl font-black text-indigo-600 mb-2">クリア！</h2>
+            <div id="result-stats" class="text-6xl font-black rainbow-text mb-6">0</div>
+            <p id="result-comment" class="text-xl font-bold text-gray-600 mb-8"></p>
+            <!-- 【ブラッシュアップ】同じモードでもう一度・モードをえらび直す・ほかの教材 を選べるようにした -->
+            <div class="result-nav">
+                <button onclick="setupGame(gameMode)" class="bg-orange-500 text-white font-black px-6 py-4 rounded-3xl text-2xl btn-push shadow-orange-700">
+                    もう<ruby>一度<rt>いちど</rt></ruby>！
+                </button>
+                <button onclick="backToTitle()" class="bg-white text-indigo-600 font-black px-6 py-4 rounded-3xl text-xl btn-push border-2 border-indigo-200">
+                    タイトルへ<ruby>戻<rt>もど</rt></ruby>る
+                </button>
+                <a href="../remake.html" class="text-gray-500 underline mt-1">ほかの教材をえらぶ</a>
+            </div>
+        </div>
+
+        <!-- 符号ルール -->
+        <div id="hint-panel" class="mt-8 p-4 bg-indigo-50 rounded-3xl border-4 border-dashed border-indigo-200">
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm md:text-lg text-indigo-600 font-black">
+                <span>(+)×(+)=(+)</span>
+                <span>(+)×(-)=(-)</span>
+                <span>(-)×(+)=(-)</span>
+                <span>(-)×(-)=(+)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameMode = 'practice'; 
+        let inputType = 1; 
+        let questionCount = 0;
+        let score = 0;
+        let startTime = 0;
+        let timerInterval = null;
+        let currentAnswer = 0;
+        let isWaiting = false;
+        // 【ブラッシュアップ】その問題でまちがえた回数。1回目で正解したときだけ得点にする。
+        //   元はまちがえても選び直して正解すれば 1 点入り、10問練習の結果が必ず「10問せいかい」になっていた。
+        let missThisQuestion = 0;
+
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen')
+        };
+        const homeBtnContainer = document.getElementById('home-btn-container');
+
+        const encourageMsg = ["どんまい！もういっかい！", "おしい！つぎはあたるよ！", "あきらめないで！", "もういちど考えてみよう！"];
+
+        function setInputType(type) {
+            inputType = type;
+            document.getElementById('type-select-1').className = type === 1 ? 'px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md' : 'px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600';
+            document.getElementById('type-select-2').className = type === 2 ? 'px-6 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md' : 'px-6 py-2 rounded-xl font-bold bg-gray-200 text-gray-600';
+        }
+
+        function setupGame(mode) {
+            gameMode = mode;
+            questionCount = 0;
+            score = 0;
+            isWaiting = false;
+            
+            screens.start.classList.add('hidden');
+            screens.game.classList.remove('hidden');
+            screens.result.classList.add('hidden');
+            homeBtnContainer.classList.remove('hidden'); 
+
+            if (mode === 'survival') {
+                document.getElementById('game-info-left').innerHTML = "🔥 サバイバル";
+            } else {
+                document.getElementById('game-info-left').innerHTML = `<ruby>問<rt>もん</rt></ruby> 1 / 10`;
+            }
+
+            startTimer();
+            nextQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);   // 【ブラッシュアップ】前のタイマーが残っていたら止める
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                document.getElementById('timer-display').innerText = elapsed.toFixed(1) + "秒";
+            }, 100);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            return ((Date.now() - startTime) / 1000).toFixed(2);
+        }
+
+        function nextQuestion() {
+            questionCount++;
+            if (gameMode !== 'survival' && questionCount > 10) {
+                endGame();
+                return;
+            }
+
+            updateStatusUI();
+
+            const nums = [-9, -8, -7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7, 8, 9];
+            const a = nums[Math.floor(Math.random() * nums.length)];
+            const b = nums[Math.floor(Math.random() * nums.length)];
+            currentAnswer = a * b;
+
+            const format = (n) => n < 0 ? `(${n})` : n;
+            document.getElementById('problem-display').innerText = `${format(a)} × ${format(b)}`;
+            document.getElementById('feedback').innerText = "";
+            document.getElementById('answer-input').value = "";
+            isWaiting = false;
+            missThisQuestion = 0;
+
+            if (inputType === 1) {
+                document.getElementById('choice-container').classList.remove('hidden');
+                document.getElementById('input-container').classList.add('hidden');
+                generateChoices();
+            } else {
+                document.getElementById('choice-container').classList.add('hidden');
+                document.getElementById('input-container').classList.remove('hidden');
+                document.getElementById('answer-input').disabled = false;
+                document.getElementById('input-submit-btn').disabled = false;
+                document.getElementById('answer-input').focus();
+            }
+        }
+
+        function updateStatusUI() {
+            if (gameMode !== 'survival') {
+                document.getElementById('game-info-left').innerHTML = `<ruby>問<rt>もん</rt></ruby> ${questionCount} / 10`;
+                document.getElementById('progress-bar').style.width = `${(questionCount - 1) * 10}%`;
+            } else {
+                document.getElementById('game-info-left').innerHTML = `🔥 ${questionCount}<ruby>問目<rt>もんめ</rt></ruby>`;
+                document.getElementById('progress-bar').style.width = `100%`;
+            }
+            document.getElementById('game-info-right').innerHTML = `<ruby>正解<rt>せいかい</rt></ruby>: ${score}`;
+            document.getElementById('game-info-right').title = '1回目で正解した数';
+        }
+
+        function generateChoices() {
+            const choices = new Set([currentAnswer]);
+            choices.add(currentAnswer * -1);
+            while(choices.size < 4) {
+                choices.add((Math.floor(Math.random() * 18) - 9) * (Math.floor(Math.random() * 9) + 1));
+            }
+            const arr = Array.from(choices).sort(() => Math.random() - 0.5);
+            
+            const container = document.getElementById('choice-container');
+            container.innerHTML = '';
+            arr.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = "choice-btn btn-push bg-white text-4xl font-black py-6 rounded-3xl text-indigo-700 shadow-indigo-100 border-4 border-indigo-100";
+                btn.innerText = val;
+                btn.onclick = (e) => handleAnswer(val, e.target);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(val, targetElement) {
+            if (isWaiting || isNaN(val)) return;
+
+            const isCorrect = val === currentAnswer;
+            const fb = document.getElementById('feedback');
+
+            if (isCorrect) {
+                isWaiting = true;
+                if (missThisQuestion === 0) score++;
+                if (targetElement) targetElement.classList.add('choice-selected-correct');
+                if (inputType === 2) {
+                    document.getElementById('answer-input').disabled = true;
+                    document.getElementById('input-submit-btn').disabled = true;
+                }
+
+                fb.innerHTML = `<span class="text-green-600 pop-in animate-bounce">★ <ruby>正解<rt>せいかい</rt></ruby>！ ★</span>`;
+                setTimeout(nextQuestion, 800);
+            } else {
+                if (gameMode === 'survival') {
+                    isWaiting = true;
+                    if (targetElement) targetElement.classList.add('choice-selected-wrong');
+                    fb.innerHTML = `<span class="text-red-500 text-2xl">× まちがい！<ruby>終了<rt>しゅうりょう</rt></ruby>！</span>`;
+                    setTimeout(endGame, 1000);
+                } else {
+                    missThisQuestion++;
+                    if (targetElement) {
+                        targetElement.classList.add('choice-selected-wrong');
+                        setTimeout(() => {
+                            targetElement.classList.remove('choice-selected-wrong');
+                        }, 1000);
+                    }
+                    const msg = encourageMsg[Math.floor(Math.random() * encourageMsg.length)];
+                    fb.innerHTML = `<span class="text-rose-500 text-2xl">${msg}</span>`;
+                    
+                    if (inputType === 2) {
+                        document.getElementById('answer-input').value = "";
+                        document.getElementById('answer-input').focus();
+                    }
+                }
+            }
+        }
+
+        function endGame() {
+            const finalTime = stopTimer();
+            screens.game.classList.add('hidden');
+            screens.result.classList.remove('hidden');
+            homeBtnContainer.classList.add('hidden'); 
+
+            const title = document.getElementById('result-title');
+            const stats = document.getElementById('result-stats');
+            const comment = document.getElementById('result-comment');
+            const emoji = document.getElementById('result-emoji');
+
+            if (gameMode === 'survival') {
+                title.innerHTML = "サバイバル<ruby>終了<rt>しゅうりょう</rt></ruby>！";
+                stats.innerText = `${questionCount - 1}問`;
+                comment.innerHTML = `${finalTime}秒 いきのこったよ！`;
+                emoji.innerText = "🔥";
+            } else if (gameMode === 'timeattack') {
+                title.innerHTML = "タイムアタック<ruby>完了<rt>かんりょう</rt></ruby>！";
+                stats.innerText = `${finalTime}秒`;
+                comment.innerHTML = `10<ruby>問<rt>もん</rt></ruby>とくのに かかった<ruby>時間<rt>じかん</rt></ruby>だよ！`;
+                emoji.innerText = "⏱️";
+            } else {
+                title.innerHTML = "10<ruby>問練習終了<rt>もんれんしゅうしゅうりょう</rt></ruby>！";
+                stats.innerText = `${score}問せいかい`;
+                // 【ブラッシュアップ】点数に合わせてことばを変える
+                comment.innerHTML = score === 10
+                    ? "<ruby>全問<rt>ぜんもん</rt></ruby>1<ruby>回目<rt>かいめ</rt></ruby>で<ruby>正解<rt>せいかい</rt></ruby>！すごい！"
+                    : score >= 8
+                        ? "あと<ruby>少<rt>すこ</rt></ruby>し！<ruby>全問正解<rt>ぜんもんせいかい</rt></ruby>までもうちょっと！"
+                        : "<ruby>全問正解<rt>ぜんもんせいかい</rt></ruby> めざしてがんばろう！";
+                emoji.innerText = "⭐";
+            }
+        }
+
+        function backToTitle() {
+            clearInterval(timerInterval);
+            screens.start.classList.remove('hidden');
+            screens.result.classList.add('hidden');
+            screens.game.classList.add('hidden');
+            homeBtnContainer.classList.add('hidden');
+        }
+
+        document.getElementById('answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAnswer(parseInt(e.target.value), null);
+        });
+    </script>
 </body>
 </html>

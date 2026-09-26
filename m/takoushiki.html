@@ -1,174 +1,650 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>多項式マスター</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+
+    <!--
+      03. 多項式の計算（多項式マスター）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多項式マスター</title>
+    <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+         本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+         同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+    <link rel="stylesheet" href="../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+        
+        :root {
+            --bg-main: #f0f9ff;
+            --text-main: #1e293b;
+            --sky-dark: #0369a1;
+            --sky-mid: #0ea5e9;
+        }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 0 #bae6fd;
+        }
+
+        .btn-pop {
+            transition: all 0.2s;
+            box-shadow: 0 6px 0 #0369a1;
+        }
+
+        .btn-pop:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .input-hole {
+            border: 3px solid #cbd5e1;
+            border-bottom: 5px solid var(--sky-mid);
+            width: 3.2rem; /* 少しスリムに */
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.4rem; /* 少し小さく */
+            color: var(--sky-dark);
+            background: #ffffff;
+            outline: none;
+            margin: 2px; /* 余白を詰める */
+            border-radius: 10px;
+        }
+
+        .input-hole-sign {
+            width: 2.6rem; /* 少しスリムに */
+            border-bottom-color: #f97316;
+            color: #c2410c;
+        }
+
+        .input-hole.error {
+            border-color: #ef4444;
+            background-color: #fee2e2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .math-text {
+            font-weight: 700;
+            font-size: 1.4rem; /* デフォルトを少しだけ小さく調整 */
+            letter-spacing: -0.02em; /* 文字間を少し詰める */
+        }
+
+        /* 1行に収めるための修正 */
+        .step-box {
+            background-color: #f8fafc;
+            padding: 12px 8px; /* 上下左右の余白を少し詰める */
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            margin: 8px 0;
+            display: flex;
+            flex-wrap: nowrap; /* 絶対に折り返さない */
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            min-height: 70px;
+            /* 【ブラッシュアップ】元は hidden で、項が多いと右側の穴埋め欄が見えず入力できなかった。
+               はみ出すときは横に動かせるようにする（スマホでは下の設定で折り返す）。 */
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        /* スマートフォンなどの狭い画面でも収まりやすくする */
+        @media (max-width: 640px) {
+            .math-text {
+                font-size: 1.1rem;
+            }
+            .input-hole {
+                width: 2.6rem;
+                font-size: 1.1rem;
+            }
+            .input-hole-sign {
+                width: 2.2rem;
+            }
+            /* 【ブラッシュアップ】スマホでは途中式を折り返して、全部の穴が見えるようにする */
+            .step-box { flex-wrap: wrap; white-space: normal; row-gap: 6px; overflow-x: visible; }
+            .step-box .math-text { font-size: 1.35rem; }
+            .step-box .input-hole { width: 3rem; height: 2.8rem; font-size: 1.35rem; }
+            .step-box .input-hole-sign { width: 2.6rem; }
+            body { padding: .75rem; }
+            #menu { padding-top: 1rem; }
+            #menu h1 { font-size: 2.2rem; margin-bottom: 1.5rem; }
+            #menu .card h2 { font-size: 1.35rem; }
+            #problem-header { font-size: 1.5rem; }
+            #problem-header .text-3xl { font-size: 2rem; }
+            #problem-instruction { font-size: 1.35rem; margin-bottom: 1rem; }
+            .choice-btn { font-size: 1.5rem; min-height: 90px; padding: .6rem; }
+            #game .card { padding: 1rem; }
+            #check-btn, #next-trigger-btn { font-size: 1.6rem; }
+            #feedback h2 { font-size: 1.5rem; }
+            #feedback .card { padding: 1rem; }
+            #explanation { padding: 1rem; }
+            .hissan-block { font-size: 1.15rem; padding: 10px; }
+        }
+        /* 【ブラッシュアップ】符号の欄はタップで ＋／− を切り替える */
+        .input-hole-sign { cursor: pointer; caret-color: transparent; }
+        .choice-grid.locked .choice-btn { pointer-events: none; }
+        #finish .big { font-size: 3rem; }
+
+        .choice-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-bottom-width: 6px;
+            border-radius: 18px;
+            padding: 1rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+        }
+
+        .choice-btn:hover {
+            border-color: var(--sky-mid);
+            background-color: #f0f9ff;
+        }
+
+        .choice-btn.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .choice-btn.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .hissan-block {
+            font-family: monospace;
+            font-size: 1.4rem;
+            text-align: right;
+            padding: 15px;
+            display: inline-block;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .hissan-line {
+            border-top: 3px solid #333;
+            margin-top: 5px;
+            padding-top: 5px;
+        }
+
+        .sign-change {
+            color: #ef4444;
+            font-weight: 900;
+        }
+    </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="p-4 md:p-8">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div id="app" class="max-w-3xl mx-auto">
+        <!-- メインメニュー -->
+        <div id="menu" class="text-center py-10">
+            <h1 class="text-4xl font-black text-sky-600 mb-10">多項式マスター</h1>
+            <div class="grid gap-6">
+                <button onclick="startMode(1)" class="card p-6 hover:bg-emerald-50 text-left border-2 border-emerald-200">
+                    <h2 class="text-2xl font-bold text-emerald-600 mb-1">モード1：選ぶトレーニング</h2>
+                    <p class="text-gray-500">同じ仲間の項をまとめて、答えを選ぼう！</p>
+                </button>
+                <button onclick="startMode(2)" class="card p-6 hover:bg-sky-50 text-left border-2 border-sky-200">
+                    <h2 class="text-2xl font-bold text-sky-600 mb-1">モード2：穴埋めチャレンジ</h2>
+                    <p class="text-gray-500">段階的に穴が増えていくよ！</p>
+                </button>
+                <button onclick="startMode(3)" class="card p-6 hover:bg-rose-50 text-left border-2 border-rose-200">
+                    <h2 class="text-2xl font-bold text-rose-600 mb-1">モード3：フル計算マスター</h2>
+                    <p class="text-gray-500">符号もすべて自分で埋めよう！</p>
+                </button>
+            </div>
+        </div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   03. 多項式の計算（多項式マスター）
-     モード1：選ぶトレーニング   同類項をまとめて、答えを選ぶ
-     モード2：穴埋めチャレンジ   係数だけを自分で埋める
-     モード3：フル計算マスター   符号もふくめて全部書く
+        <!-- ゲーム画面 -->
+        <div id="game" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="showMenu()" class="text-sky-600 font-black text-lg bg-white px-4 py-2 rounded-xl shadow-sm border border-sky-100">メニューへ</button>
+                <div id="progress" class="bg-sky-600 px-6 py-2 rounded-full text-white font-black text-lg">Q 1 / 4</div>
+            </div>
 
-   元教材から直した点：
-     ・モード3の採点が文字列一致で、「-2x+5」と「5-2x」で片方しか通らなかった。
-       → 数式として同値かで判定するので、順番が違っても正解になる。
-     ・引き算のとき、かっこを外す符号の処理をまちがえた表示になることがあった。
-       → 式を作る部分を係数の計算に一本化し、表示は共通の関数で生成する。
-     ・穴埋めで空欄のまま「答え合わせ」を押すと正解になってしまっていた。
-       → 空欄が残っているうちは採点しない。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+            <div class="card p-6 mb-6">
+                <div id="problem-header" class="mb-4 p-4 bg-sky-50 rounded-xl math-text text-center text-sky-900 min-height-[60px]"></div>
+                <div id="problem-instruction" class="text-2xl font-black text-center mb-6 text-sky-700"></div>
+                <div id="answer-area" class="space-y-4"></div>
+            </div>
 
-  var F = Quiz.fmt;
+            <div id="message-box" class="hidden mb-4 p-4 rounded-xl text-center font-black text-xl"></div>
 
-  function nz(min, max) {          // 0 以外の整数
-    var v = 0;
-    while (v === 0) v = Quiz.randInt(min, max);
-    return v;
-  }
+            <div class="flex flex-col gap-3">
+                <button id="check-btn" onclick="checkAnswer()" class="w-full py-5 bg-sky-500 text-white text-3xl font-black rounded-2xl btn-pop">答え合わせ！</button>
+                <button id="show-ans-btn" onclick="showAnswerAuto()" class="w-full py-3 bg-gray-400 text-white text-xl font-bold rounded-xl hover:bg-gray-500 transition-colors">答えを見る</button>
+                <button id="next-trigger-btn" onclick="goToFeedback()" class="hidden w-full py-5 bg-emerald-500 text-white text-3xl font-black rounded-2xl btn-pop">正解！解説へ進む →</button>
+            </div>
+        </div>
 
-  /** 2つの多項式と演算（＋ or −）から、問題に必要な材料をまとめて作る */
-  function makePair(hasSquare) {
-    var op = Math.random() < 0.5 ? '+' : '-';
-    var A = {
-      x2: hasSquare ? nz(-4, 5) : 0,
-      x: nz(-6, 7),
-      c: Quiz.randInt(-8, 9)
-    };
-    var B = {
-      x2: hasSquare ? nz(-4, 5) : 0,
-      x: nz(-6, 7),
-      c: Quiz.randInt(-8, 9)
-    };
-    var s = op === '+' ? 1 : -1;
-    var R = { x2: A.x2 + s * B.x2, x: A.x + s * B.x, c: A.c + s * B.c };
+        <!-- 【ブラッシュアップ】全問クリアの画面。元は alert() を出してメニューに戻っていた。
+             alert は学校の環境によっては出ずに止まることがあるため、画面で出すようにした。 -->
+        <div id="finish" class="hidden text-center py-8">
+            <div class="card p-8 border-4 border-sky-200">
+                <p class="big">🌸</p>
+                <h2 class="text-3xl font-black text-sky-700 mb-2">全問クリア！</h2>
+                <p class="text-xl font-bold text-gray-600 mb-6">この調子で頑張ろう！</p>
+                <div class="flex flex-col gap-3 max-w-sm mx-auto">
+                    <button onclick="startMode(currentMode)" class="w-full py-4 bg-sky-500 text-white text-2xl font-black rounded-2xl btn-pop">同じモードでもう一度</button>
+                    <button onclick="showMenu()" class="w-full py-4 bg-white text-sky-700 text-xl font-black rounded-2xl border-2 border-sky-200">モードをえらび直す</button>
+                    <a href="../remake.html" class="text-gray-500 underline mt-2">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
 
-    var showA = F.poly([[A.x2, F.pow('x', 2)], [A.x, 'x'], [A.c, '']]);
-    var showB = F.poly([[B.x2, F.pow('x', 2)], [B.x, 'x'], [B.c, '']]);
-    var question = '( ' + showA + ' ) ' + op + ' ( ' + showB + ' )';
-    var answerHtml = F.poly([[R.x2, F.pow('x', 2)], [R.x, 'x'], [R.c, '']]);
+        <!-- 解説画面 -->
+        <div id="feedback" class="hidden">
+            <div class="card p-6 border-4 border-emerald-400 bg-emerald-50 mb-6 text-center">
+                <h2 class="text-3xl font-black mb-4 text-emerald-700">正解！解説をチェック ✨</h2>
+                <div id="explanation" class="text-left bg-white p-6 rounded-xl shadow-inner overflow-x-auto min-w-full"></div>
+            </div>
+            <button onclick="nextProblem()" class="w-full py-5 bg-orange-500 text-white text-3xl font-black rounded-2xl btn-pop">次の問題へ！</button>
+        </div>
+    </div>
 
-    return { op: op, A: A, B: B, R: R, question: question, answerHtml: answerHtml, hasSquare: hasSquare };
-  }
+    <script>
+        let currentMode = 1;
+        let currentIdx = 0;
+        let currentProblem = null;
 
-  function explainOf(p) {
-    var s = p.op === '+' ? '' : '引き算なので、うしろのかっこを外すとき符号が全部逆になります。<br>';
-    var sign = p.op === '+' ? 1 : -1;
-    var parts = [];
-    if (p.hasSquare) parts.push('x² の項： ' + p.A.x2 + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.x2) + ' = ' + p.R.x2);
-    parts.push('x の項： ' + p.A.x + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.x) + ' = ' + p.R.x);
-    parts.push('数の項： ' + p.A.c + (sign > 0 ? ' + ' : ' - ') + Math.abs(p.B.c) + ' = ' + p.R.c);
-    return s + parts.join('<br>');
-  }
+        const stageDataMode1 = [
+            { display: "2x + 3 + x", resultCoeffs: [0, 0, 3, 3] },
+            { display: "5x - 4 + 2x + 1", resultCoeffs: [0, 0, 7, -3] },
+            { display: "3x² + 2x + x²", resultCoeffs: [0, 4, 2, 0] },
+            { display: "2x² + 3x + 5x² - 2x", resultCoeffs: [0, 7, 1, 0] }
+        ];
 
-  /* ---------- モード1：選ぶトレーニング ---------- */
+        const stageDataNormal = [
+            { a: [0, 0, 5, 2], b: [0, 0, 3, 1], type: "A+B" },
+            { a: [0, 0, 4, 3], b: [0, 0, 2, -1], type: "A-B" },
+            { a: [0, 3, 6, 4], b: [0, 2, -4, -3], type: "A+B" },
+            { a: [0, 1, -2, 5], b: [0, 2, 3, -1], type: "A-B" }
+        ];
 
-  function mode1() {
-    var p = makePair(Math.random() < 0.5);
+        function formatTerm(coeff, power, isFirst = false) {
+            if (coeff === 0) return "";
+            const abs = Math.abs(coeff);
+            const units = ["x³", "x²", "x", ""];
+            const sign = coeff > 0 ? (isFirst ? "" : "+ ") : "- ";
+            let valStr = abs.toString();
+            if (abs === 1 && power < 3) valStr = ""; 
+            return sign + valStr + units[power];
+        }
 
-    // ありがちなまちがいを誤答にする（符号ミス・同類項の取りちがえ）
-    var wrongSign = F.poly([
-      [p.A.x2 + p.B.x2, F.pow('x', 2)],
-      [p.A.x + p.B.x, 'x'],
-      [p.A.c - p.B.c, '']
-    ]);
-    var wrongAll = F.poly([
-      [p.R.x2, F.pow('x', 2)],
-      [p.R.x + 1, 'x'],
-      [p.R.c, '']
-    ]);
-    var wrongMix = F.poly([
-      [p.R.x2, F.pow('x', 2)],
-      [p.R.c, 'x'],
-      [p.R.x, '']
-    ]);
+        function formatPoly(coeffs, isJoinAfterOperator = false) {
+            let res = "";
+            coeffs.forEach((c, i) => {
+                const isActuallyFirstInPoly = (res === "");
+                const t = formatTerm(c, i, isActuallyFirstInPoly && !isJoinAfterOperator);
+                if (t) res += (res === "" ? "" : " ") + t;
+            });
+            return res || "0";
+        }
 
-    var choices = [p.answerHtml];
-    [wrongSign, wrongAll, wrongMix].forEach(function (w) {
-      if (choices.indexOf(w) < 0) choices.push(w);
-    });
-    // 3つそろわなかったときの予備
-    var guard = 0;
-    while (choices.length < 4 && guard++ < 30) {
-      var w = F.poly([[p.R.x2, F.pow('x', 2)], [p.R.x + Quiz.randInt(-3, 3), 'x'], [p.R.c + Quiz.randInt(-3, 3), '']]);
-      if (choices.indexOf(w) < 0) choices.push(w);
-    }
+        function showMenu() {
+            document.getElementById('finish').classList.add('hidden');
+            document.getElementById('menu').classList.remove('hidden');
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+        }
 
-    return {
-      tag: 'モード1',
-      text: '同じ仲間の項をまとめて、答えを選びなさい。',
-      math: p.question,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: 'x² は x² どうし、x は x どうし、数は数どうしでまとめます。',
-      explain: explainOf(p)
-    };
-  }
+        function startMode(mode) {
+            currentMode = mode;
+            currentIdx = 0;
+            document.getElementById('finish').classList.add('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            loadProblem();
+        }
 
-  /* ---------- モード2：穴埋めチャレンジ ---------- */
+        function loadProblem() {
+            const data = (currentMode === 1) ? stageDataMode1 : stageDataNormal;
+            currentProblem = data[currentIdx];
+            
+            document.getElementById('progress').innerText = `Q ${currentIdx + 1} / 4`;
+            document.getElementById('message-box').classList.add('hidden');
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('show-ans-btn').classList.remove('hidden');
+            document.getElementById('next-trigger-btn').classList.add('hidden');
+            
+            const area = document.getElementById('answer-area');
+            area.innerHTML = "";
 
-  function mode2() {
-    var p = makePair(true);
-    return {
-      tag: 'モード2',
-      text: '計算して、空欄に係数を入れなさい。（符号もふくめて入力）',
-      math: p.question,
-      type: 'blanks',
-      template: '_ x<sup>2</sup> ＋ _ x ＋ _',
-      answers: [String(p.R.x2), String(p.R.x), String(p.R.c)],
-      inputmode: 'text',
-      answerLabel: p.answerHtml,
-      hint: 'マイナスのときは「-3」のように符号もつけて入れます。',
-      explain: explainOf(p)
-    };
-  }
+            if (currentMode === 1) {
+                document.getElementById('problem-header').innerHTML = `<span class="text-3xl">${currentProblem.display}</span>`;
+                document.getElementById('problem-instruction').innerText = `同類項をまとめよう！`;
+                renderMode1();
+            } else {
+                const A_str = formatPoly(currentProblem.a);
+                const B_str = formatPoly(currentProblem.b);
+                document.getElementById('problem-header').innerHTML = `A = ${A_str}<br>B = ${B_str}`;
+                document.getElementById('problem-instruction').innerText = `${currentProblem.type} の計算をしよう！`;
+                renderInputModes();
+            }
+        }
 
-  /* ---------- モード3：フル計算マスター ---------- */
+        function renderMode1() {
+            const res = currentProblem.resultCoeffs;
+            const correctAns = formatPoly(res);
+            const choices = [correctAns];
+            let guard = 0;   // 【ブラッシュアップ】万一ダミーが作れなくても固まらないように
+            while(choices.length < 4 && guard++ < 200) {
+                let offset = (Math.floor(Math.random() * 3) + 1) * (Math.random() > 0.5 ? 1 : -1);
+                const dummyRes = res.map(v => (v !== 0) ? v + offset : 0);
+                const dummyStr = formatPoly(dummyRes);
+                if(!choices.includes(dummyStr) && dummyStr !== "" && dummyStr !== "0") choices.push(dummyStr);
+            }
+            choices.sort(() => Math.random() - 0.5);
 
-  function mode3() {
-    var p = makePair(Math.random() < 0.7);
-    return {
-      tag: 'モード3',
-      text: '次の計算をして、答えを書きなさい。',
-      math: p.question,
-      type: 'input',
-      answer: F.plain(p.answerHtml),
-      answerLabel: p.answerHtml,
-      placeholder: '例： 2x^2 - 3x + 1',
-      note: '2乗は「x^2」または「x²」と書けます。書く順番は自由です。',
-      hint: 'まずかっこを外し、それから同類項をまとめます。',
-      explain: explainOf(p)
-    };
-  }
+            const grid = document.createElement('div');
+            grid.className = "choice-grid grid grid-cols-2 gap-4 mt-4";
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = "choice-btn math-text";
+                btn.innerText = c;
+                btn.onclick = () => {
+                    if (c === correctAns) {
+                        btn.classList.add('correct');
+                        grid.classList.add('locked');   // 【ブラッシュアップ】正解のあとは押せないように
+                        document.getElementById('next-trigger-btn').classList.remove('hidden');
+                        document.getElementById('check-btn').classList.add('hidden');
+                        document.getElementById('show-ans-btn').classList.add('hidden');
+                        showMessage("正解！", true);
+                    } else {
+                        btn.classList.add('wrong');
+                        btn.disabled = true;
+                        showMessage("違うみたい...", false);
+                    }
+                };
+                grid.appendChild(btn); 
+            });
+            document.getElementById('answer-area').appendChild(grid);
+            document.getElementById('check-btn').classList.add('hidden');
+            document.getElementById('show-ans-btn').classList.add('hidden');
+        }
 
-  Quiz.start({
-    title: '多項式マスター',
-    subtitle: '選ぶ → 穴埋め → フル計算。3段階で多項式の計算を仕上げよう。',
-    modes: [
-      { id: '1', name: 'モード1：選ぶトレーニング', desc: '同じ仲間の項をまとめて、答えを選ぼう（10問）' },
-      { id: '2', name: 'モード2：穴埋めチャレンジ', desc: '係数だけを自分で埋めよう（8問）' },
-      { id: '3', name: 'モード3：フル計算マスター', desc: '符号もすべて自分で書こう（8問）' }
-    ],
-    build: function (id) {
-      var out = [], i;
-      if (id === '1') { for (i = 0; i < 10; i++) out.push(mode1()); }
-      else if (id === '2') { for (i = 0; i < 8; i++) out.push(mode2()); }
-      else { for (i = 0; i < 8; i++) out.push(mode3()); }
-      return out;
-    }
-  });
-})();
-</script>
+        function renderInputModes() {
+            const area = document.getElementById('answer-area');
+            const p = currentProblem;
+            const isAdd = p.type === "A+B";
+
+            area.innerHTML += `<div class="step-box"><span class="math-text flex-shrink-0">= (${formatPoly(p.a)}) ${isAdd?'+':'-'} (${formatPoly(p.b)})</span></div>`;
+
+            const step2 = document.createElement('div');
+            step2.className = "step-box";
+            step2.innerHTML = `<span class="math-text flex-shrink-0">= </span>`;
+            
+            const terms = [];
+            p.a.forEach((v, i) => { if(v !== 0) terms.push({v, i}); });
+            p.b.forEach((v, i) => { if(v !== 0) terms.push({v: isAdd ? v : -v, i}); });
+
+            // 非常に項が多い場合は少しフォントを小さくする
+            if (terms.length > 4) {
+                step2.style.fontSize = "0.9em";
+            }
+
+            terms.forEach((t, idx) => {
+                const sign = t.v >= 0 ? "+" : "-";
+                const absV = Math.abs(t.v);
+                const displayVal = (absV === 1 && t.i < 3) ? "" : absV;
+                const unit = ["x³", "x²", "x", ""][t.i];
+
+                if (idx > 0 || t.v < 0) {
+                    if (currentMode === 3) {
+                        step2.innerHTML += `<input type="text" class="input-hole flex-shrink-0 input-hole-sign sign-part" data-target="${sign}" placeholder="±">`;
+                    } else {
+                        step2.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign}</span>`;
+                    }
+                }
+
+                let isHole = (currentMode === 3);
+                if (currentMode === 2) {
+                    if (currentIdx === 0 && idx === terms.length - 1) isHole = true;
+                    if (currentIdx === 1 && idx >= terms.length - 2) isHole = true;
+                }
+                
+                if (isHole && displayVal !== "") {
+                    step2.innerHTML += `<input type="text" class="input-hole flex-shrink-0 val-part" data-target="${displayVal}" placeholder="?">`;
+                } else if (displayVal !== "") {
+                    step2.innerHTML += `<span class="math-text flex-shrink-0">${displayVal}</span>`;
+                }
+                step2.innerHTML += `<span class="math-text flex-shrink-0">${unit}</span>`;
+            });
+            area.appendChild(step2);
+
+            const res = getResultCoeffs(p);
+            const step3 = document.createElement('div');
+            step3.className = "step-box";
+            step3.innerHTML = `<span class="math-text flex-shrink-0">= </span>`;
+            
+            let first = true;
+            res.forEach((v, i) => {
+                if (v === 0) return;
+                const sign = v >= 0 ? "+" : "-";
+                const absV = Math.abs(v);
+                const displayVal = (absV === 1 && i < 3) ? "" : absV;
+                const unit = ["x³", "x²", "x", ""][i];
+
+                if (!first || v < 0) {
+                    if (currentMode === 3) {
+                        step3.innerHTML += `<input type="text" class="input-hole flex-shrink-0 input-hole-sign final-sign" data-target="${sign}" placeholder="±">`;
+                    } else {
+                        step3.innerHTML += `<span class="math-text mx-0.5 flex-shrink-0">${sign}</span>`;
+                    }
+                }
+
+                if (displayVal !== "") {
+                    step3.innerHTML += `<input type="text" class="input-hole flex-shrink-0 final-val" data-target="${displayVal}" placeholder="?">`;
+                } else {
+                    step3.innerHTML += `<span class="math-text flex-shrink-0">${displayVal}</span>`;
+                }
+                step3.innerHTML += `<span class="math-text flex-shrink-0">${unit}</span>`;
+                first = false;
+            });
+            area.appendChild(step3);
+            setupHoles();
+        }
+
+        // 【ブラッシュアップ】入力欄の使い勝手
+        //   ・数の欄はスマホで数字キーボードを出す
+        //   ・符号の欄はタップするたびに ＋ → − と切り替わる（キーボードで + - を打ってもよい）
+        //   ・Enter で答え合わせ
+        function setupHoles() {
+            document.querySelectorAll('.input-hole').forEach(input => {
+                input.setAttribute('autocomplete', 'off');
+                if (input.classList.contains('input-hole-sign')) {
+                    input.readOnly = true;
+                    input.setAttribute('inputmode', 'none');
+                    input.addEventListener('click', () => {
+                        input.value = input.value === '+' ? '-' : '+';
+                        input.classList.remove('error');
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === '+' || e.key === '-') { input.value = e.key; input.classList.remove('error'); e.preventDefault(); }
+                        if (e.key === 'Enter') checkAnswer();
+                    });
+                } else {
+                    input.setAttribute('inputmode', 'numeric');
+                    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
+                }
+            });
+        }
+
+        function getResultCoeffs(p) {
+            if (p.resultCoeffs) return p.resultCoeffs;
+            const res = [0,0,0,0];
+            const isAdd = p.type === "A+B";
+            for(let i=0; i<4; i++) {
+                res[i] = isAdd ? (p.a[i] + p.b[i]) : (p.a[i] - p.b[i]);
+            }
+            return res;
+        }
+
+        function checkAnswer() {
+            let allCorrect = true;
+            document.querySelectorAll('.input-hole').forEach(input => {
+                // 【ブラッシュアップ】全角の数字（「３」）や、いろいろなマイナス記号（− ー）も受け付ける
+                const val = input.value.trim()
+                    .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
+                    .replace(/＋/g, '+').replace(/[－−–ー]/g, '-');
+                if (val !== input.dataset.target) {
+                    input.classList.add('error');
+                    allCorrect = false;
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+            if (allCorrect) {
+                showMessage("正解！完璧です！", true);
+                document.getElementById('check-btn').classList.add('hidden');
+                document.getElementById('show-ans-btn').classList.add('hidden');
+                document.getElementById('next-trigger-btn').classList.remove('hidden');
+            } else {
+                showMessage("どこか間違っているかも...", false);
+            }
+        }
+
+        function showAnswerAuto() {
+            document.querySelectorAll('.input-hole').forEach(input => {
+                input.value = input.dataset.target;
+                input.classList.remove('error');
+            });
+        }
+
+        function showMessage(txt, isSuccess) {
+            const msg = document.getElementById('message-box');
+            msg.innerText = txt;
+            msg.className = `mb-4 p-4 rounded-xl text-center font-black text-xl block ${isSuccess ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+        }
+
+        function goToFeedback() {
+            document.getElementById('game').classList.add('hidden');
+            document.getElementById('feedback').classList.remove('hidden');
+            showExplanation();
+        }
+
+        function formatHissanRow(coeffs) {
+            let row = "";
+            coeffs.forEach((c, i) => {
+                if (c === 0) return;
+                const s = c > 0 ? "+ " : "- ";
+                const abs = Math.abs(c);
+                const unit = ["x³", "x²", "x", ""][i];
+                const dispVal = (abs === 1 && i < 3) ? "" : abs;
+                row += (row === "" && c > 0 ? "  " : s) + dispVal + unit + " ";
+            });
+            return row || " 0";
+        }
+
+        function coeffsToHissanFlipped(coeffs) {
+            let res = "";
+            coeffs.forEach((c, i) => {
+                if(c === 0) return;
+                const flipped = -c;
+                const s = flipped > 0 ? `<span class="sign-change">+</span> ` : `<span class="sign-change">-</span> `;
+                const abs = Math.abs(flipped);
+                const unit = ["x³", "x²", "x", ""][i];
+                const dispVal = (abs === 1 && i < 3) ? "" : abs;
+                res += s + dispVal + unit + " ";
+            });
+            return res;
+        }
+
+        function showExplanation() {
+            const p = currentProblem;
+            const res = getResultCoeffs(p);
+            const area = document.getElementById('explanation');
+            area.innerHTML = "";
+
+            if (currentMode === 1) {
+                area.innerHTML = `<div class="math-text p-4 bg-slate-50 rounded-xl mb-6 text-center">${p.display}<br>= <span class="text-rose-600 font-black underline">${formatPoly(res)}</span></div>`;
+                return;
+            }
+
+            const isSub = p.type === "A-B";
+            
+            let stepHtml = `<div class="mb-8">
+                <p class="font-black text-xl text-sky-700 mb-4 border-l-4 border-sky-400 pl-3">① 横書きで計算する</p>
+                <div class="math-text space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>(${formatPoly(p.a)}) ${isSub ? '-' : '+'} (${formatPoly(p.b)})</div>`;
+
+            const bModified = isSub ? p.b.map(v => -v) : p.b;
+            stepHtml += `<div>= ${formatPoly(p.a)} ${formatPoly(bModified, true)} <span class="text-sm text-gray-500 font-normal">（かっこを外す）</span></div>`;
+            
+            stepHtml += `<div class="text-rose-600 underline font-black">= ${formatPoly(res)}</div>
+                </div>
+            </div>`;
+
+            let hissanHtml = `<div class="mb-4">
+                <p class="font-black text-xl text-sky-700 mb-4 border-l-4 border-sky-400 pl-3">② ひっ算で計算する</p>
+                <div class="flex items-center gap-4 flex-wrap">`;
+            
+            if (isSub) {
+                hissanHtml += `<div class="hissan-block border border-slate-200">
+                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
+                    <div>-) ${formatHissanRow(p.b)}</div>
+                    <div class="hissan-line"></div>
+                </div>`;
+                hissanHtml += `<span class="text-2xl">➡</span>`;
+                hissanHtml += `<div class="hissan-block border-2 border-rose-300 bg-rose-50">
+                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
+                    <div><span class="sign-change">+)</span> ${coeffsToHissanFlipped(p.b)}</div>
+                    <div class="hissan-line"></div>
+                    <div class="text-rose-600 font-bold">${formatHissanRow(res)}</div>
+                </div>`;
+                hissanHtml += `</div><p class="text-rose-600 font-bold mt-4 bg-rose-50 p-3 rounded-lg">💡 引き算は、引く方の式のすべての符号を逆にして「足し算」として計算するのがミスを防ぐコツだよ！</p>`;
+            } else {
+                hissanHtml += `<div class="hissan-block border border-slate-200">
+                    <div>&nbsp;&nbsp;${formatHissanRow(p.a)}</div>
+                    <div>+) ${formatHissanRow(p.b)}</div>
+                    <div class="hissan-line">${formatHissanRow(res)}</div>
+                </div>`;
+                hissanHtml += `</div>`;
+            }
+            hissanHtml += `</div>`;
+
+            area.innerHTML = stepHtml + hissanHtml;
+        }
+
+        function nextProblem() {
+            currentIdx++;
+            const data = (currentMode === 1) ? stageDataMode1 : stageDataNormal;
+            if (currentIdx < data.length) {
+                document.getElementById('feedback').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+                loadProblem();
+            } else {
+                document.getElementById('feedback').classList.add('hidden');
+                document.getElementById('finish').classList.remove('hidden');
+                window.scrollTo(0, 0);
+            }
+        }
+    </script>
 </body>
 </html>
