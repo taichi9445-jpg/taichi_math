@@ -1,217 +1,304 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>指数法則★MASTER</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+
+    <!--
+      08. 指数法則（指数法則★MASTER）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+    <!-- 【ブラッシュアップ】スマホで縮小表示されないように画面幅の設定を追加 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指数法則★完全攻略</title>
+    <style>
+        :root { --primary: #FFD93D; --secondary: #6BCB77; --accent: #4D96FF; --error: #FF6B6B; --bg: #FFF9F0; --text: #333; }
+        * { box-sizing: border-box; }
+        /* 【ブラッシュアップ】元は height: 100vh; overflow: hidden で、画面が低いと下のボタンが隠れて押せなかった */
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 12px 0; }
+        
+        .math { font-family: "Times New Roman", serif; font-style: italic; display: inline-flex; align-items: baseline; line-height: 1; }
+        sup { font-style: normal; font-size: 0.6em; position: relative; top: -0.7em; left: 1px; }
+
+        .container { width: 95vw; max-width: 1050px; min-height: 85vh; background: white; border: 5px solid var(--text); border-radius: 30px; box-shadow: 12px 12px 0px var(--text); padding: 25px; display: flex; flex-direction: column; }
+        .screen { display: none; height: 100%; flex-direction: column; }
+        .active { display: flex; }
+
+        .lv-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 50px; }
+        .btn-main { cursor: pointer; border: 4px solid var(--text); border-radius: 15px; padding: 25px; font-size: 1.5rem; font-weight: bold; background: #fff; }
+
+        .main-content { display: grid; grid-template-columns: 1fr 1.1fr; gap: 25px; flex-grow: 1; min-height: 0; }
+        .box-q { background: #fafafa; border: 4px solid var(--text); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .txt-q { font-size: 4rem; text-align: center; }
+
+        .box-ans { display: flex; flex-direction: column; gap: 15px; }
+        .ans-display { min-height: 110px; border: 4px dashed var(--text); border-radius: 15px; background: white; font-size: 4rem; display: flex; align-items: center; justify-content: center; }
+        
+        /* 選択肢をさらに大きく */
+        .choice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-choice { border: 3px solid var(--text); border-radius: 12px; padding: 25px; background: white; font-size: 3rem; cursor: pointer; }
+
+        .palette { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; background: #f0f0f0; padding: 15px; border-radius: 15px; }
+        .btn-p { border: 2px solid var(--text); border-radius: 8px; padding: 12px 18px; background: white; font-size: 1.8rem; cursor: pointer; font-weight: bold; min-width: 65px; }
+        .btn-p.sup { background: #FFD1DC; }
+
+        .btn-action { background: var(--accent); color: white; border: 4px solid var(--text); border-radius: 12px; padding: 15px; font-size: 1.8rem; font-weight: bold; cursor: pointer; }
+        .btn-next { background: var(--secondary); display: none; margin-top: 10px; }
+        .btn-hint { background: #bbb; color: white; border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
+        
+        .feedback { font-size: 2.2rem; font-weight: bold; text-align: center; height: 3rem; margin: 10px 0; }
+
+        /* 【ブラッシュアップ】終了画面・選択肢の状態 */
+        .btn-choice:disabled { opacity: .3; cursor: default; }
+        .btn-choice.math { justify-content: center; }   /* 選択肢の式をボタンの中央に */
+        .done-box { text-align: center; margin: auto; display: flex; flex-direction: column; gap: 14px; max-width: 26rem; width: 100%; }
+        .done-box h2 { font-size: 2.6rem; margin: 0; }
+        .done-box p { font-size: 1.3rem; margin: 0 0 10px; }
+        .done-box a { color: #666; font-weight: bold; }
+        .port-back { max-width: 1050px; width: 95vw; }
+
+        /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+        @media (max-width: 640px) {
+            body { justify-content: flex-start; padding: 8px 0; }
+            .container { min-height: 0; padding: 14px; border-width: 4px; border-radius: 22px; box-shadow: 6px 6px 0 var(--text); }
+            #scrHome h1 { font-size: min(2.2rem, 9vw) !important; white-space: nowrap; margin: 6px 0 0; }
+            .lv-menu { gap: 12px; margin-top: 18px; }
+            .btn-main { font-size: 1.3rem; padding: 22px 8px; }
+            #qInfo { font-size: 1.3rem !important; }
+            .main-content { grid-template-columns: 1fr; gap: 12px; }
+            .box-q { min-height: 150px; padding: 10px 6px; }
+            .txt-q { font-size: 3.1rem; }
+            .feedback { font-size: 1.6rem; height: 2.4rem; margin: 6px 0 0; }
+            .choice-list { gap: 10px; }
+            .btn-choice { font-size: 2.3rem; padding: 18px 6px; }
+            .ans-display { min-height: 88px; font-size: 3rem; }
+            .palette { gap: 6px; padding: 10px; }
+            .btn-p { font-size: 1.6rem; padding: 10px 12px; min-width: 56px; }
+            .btn-action { font-size: 1.4rem; padding: 14px; }
+            .done-box h2 { font-size: 2rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
+<a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+<div class="container">
+    <div id="scrHome" class="screen active">
+        <h1 style="text-align: center; font-size: 3rem;">指数法則★MASTER</h1>
+        <div class="lv-menu">
+            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'choice')">Lv.1 4択</button>
+            <button class="btn-main" style="background:#E2F0D9;" onclick="start(1, 'build')">Lv.1 つなげる</button>
+            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'choice')">Lv.2 4択</button>
+            <button class="btn-main" style="background:#FCE4D6;" onclick="start(2, 'build')">Lv.2 つなげる</button>
+        </div>
+    </div>
+
+    <!-- 【ブラッシュアップ】全問クリアの画面。元は alert() を出してホームに戻っていた -->
+    <div id="scrDone" class="screen">
+        <div class="done-box">
+            <div style="font-size:4rem;">🎉</div>
+            <h2>全問クリア！</h2>
+            <p id="doneMsg"></p>
+            <button class="btn-action" onclick="start(st.lv, st.mode)">同じレベルでもう一度</button>
+            <button class="btn-main" style="font-size:1.3rem; padding:16px;" onclick="goHome()">レベルをえらび直す</button>
+            <a href="../remake.html">ほかの教材をえらぶ</a>
+        </div>
+    </div>
+
+    <div id="scrQuiz" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <button onclick="goHome()" style="padding:10px 20px; cursor:pointer; font-weight:bold; border-radius:10px;">🏠 ホーム</button>
+            <div id="qInfo" style="font-size:1.8rem; font-weight:bold;"></div>
+        </div>
+        <div class="main-content">
+            <div class="box-q">
+                <div id="qTxt" class="math txt-q"></div>
+                <div id="fb" class="feedback"></div>
+            </div>
+            <div class="box-ans">
+                <div id="modeChoice" class="choice-list"></div>
+                <div id="modeBuild" style="display:none;">
+                    <div id="uAns" class="ans-display math"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <button class="btn-hint" onclick="showHint()">💡 答えを見る (3秒)</button>
+                        <button onclick="pop()" style="color:red; font-weight:bold; border:none; background:none; cursor:pointer; font-size:1.2rem;">⌫ 1つ消す</button>
+                    </div>
+                    <div id="palette" class="palette"></div>
+                    <button id="btnJudge" class="btn-action" style="margin-top:15px; width:100%;" onclick="judgeBuild()">判定する！</button>
+                </div>
+                <button id="btnNext" class="btn-action btn-next" style="width:100%;" onclick="nextQ()">正解！次へ 🚀</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-/* ---------------------------------------------------------------------------
-   08. 指数法則（指数法則★MASTER）
-     Lv.1 … a^m × a^n ／ (a^m)^n ／ (ab)^n
-     Lv.2 … わり算をふくむ、係数つきの式
-     それぞれ「4択」と「つなげる」で練習できる。
+let st = { lv:1, mode:'', cur:0, prob:{}, solved:false };
+let uIn = [];
 
-   元教材から直した点：
-     ・(a³)² を a⁵ と答えても正解になってしまうことがあった
-       （選択肢の中に正解と同じ値になるものが混ざっていた）。
-       → 選択肢は指数まで含めて重複チェックし、同じ式は入れない。
-     ・「つなげる」で指数を置いたあと消せず、まちがえたらリロードするしかなかった。
-       → 空欄をタップし直せば置き換えられる。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+function goHome() {
+    document.getElementById('scrDone').classList.remove('active');
+    document.getElementById('scrQuiz').classList.remove('active');
+    document.getElementById('scrHome').classList.add('active');
+}
 
-  var F = Quiz.fmt;
+function start(l, m) {
+    st.lv = l; st.mode = m; st.cur = 0;
+    document.getElementById('scrDone').classList.remove('active');
+    document.getElementById('scrHome').classList.remove('active');
+    document.getElementById('scrQuiz').classList.add('active');
+    nextQ();
+}
 
-  function pow(base, n) {
-    if (n === 1) return base;
-    return base + '<sup>' + n + '</sup>';
-  }
-
-  /* ---------- Lv.1 の3つの法則 ---------- */
-
-  function ruleMultiply(level) {
-    var v = Quiz.pick(['a', 'x', 'y']);
-    var m = Quiz.randInt(2, level >= 2 ? 6 : 4);
-    var n = Quiz.randInt(2, level >= 2 ? 6 : 4);
-    return {
-      q: pow(v, m) + ' × ' + pow(v, n),
-      ansExp: m + n,
-      base: v,
-      wrongExps: [m * n, Math.abs(m - n), m + n + 1, m + n - 1],
-      law: 'a<sup>m</sup> × a<sup>n</sup> = a<sup>m+n</sup>（指数はたす）',
-      explain: '指数をたして ' + m + ' + ' + n + ' = ' + (m + n) + '。答えは ' + pow(v, m + n) + ' です。'
-    };
-  }
-
-  function rulePower(level) {
-    var v = Quiz.pick(['a', 'x', 'y']);
-    var m = Quiz.randInt(2, level >= 2 ? 5 : 4);
-    var n = Quiz.randInt(2, level >= 2 ? 4 : 3);
-    return {
-      q: '(' + pow(v, m) + ')' + '<sup>' + n + '</sup>',
-      ansExp: m * n,
-      base: v,
-      wrongExps: [m + n, m * n + 1, m * n - m, Math.pow(m, n)],
-      law: '(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup>（指数はかける）',
-      explain: '指数をかけて ' + m + ' × ' + n + ' = ' + (m * n) + '。答えは ' + pow(v, m * n) + ' です。'
-    };
-  }
-
-  function ruleDivide(level) {
-    var v = Quiz.pick(['a', 'x']);
-    var n = Quiz.randInt(2, 4);
-    var m = n + Quiz.randInt(1, level >= 2 ? 4 : 2);
-    return {
-      q: pow(v, m) + ' ÷ ' + pow(v, n),
-      ansExp: m - n,
-      base: v,
-      wrongExps: [m + n, m * n, m - n + 1, Math.max(1, m - n - 1)],
-      law: 'a<sup>m</sup> ÷ a<sup>n</sup> = a<sup>m−n</sup>（指数はひく）',
-      explain: '指数をひいて ' + m + ' − ' + n + ' = ' + (m - n) + '。答えは ' + pow(v, m - n) + ' です。'
-    };
-  }
-
-  /** (ab)^n 型 — こちらは係数もかかるので別あつかい */
-  function ruleProductPower() {
-    var k = Quiz.randInt(2, 4);
-    var n = Quiz.randInt(2, 3);
-    var m = Quiz.randInt(1, 3);
-    var correct = Math.pow(k, n) + pow('x', m * n);
-    var wrongs = [
-      (k * n) + pow('x', m * n),
-      Math.pow(k, n) + pow('x', m + n),
-      (k * n) + pow('x', m + n),
-      Math.pow(k, n) + pow('x', m)
-    ];
-    return {
-      isProduct: true,
-      q: '(' + (k === 1 ? '' : k) + pow('x', m) + ')<sup>' + n + '</sup>',
-      correct: correct,
-      wrongs: wrongs,
-      law: '(ab)<sup>n</sup> = a<sup>n</sup>b<sup>n</sup>（係数も n 乗する）',
-      explain: '係数は ' + k + '<sup>' + n + '</sup> = ' + Math.pow(k, n) +
-        '、文字は指数をかけて ' + m + ' × ' + n + ' = ' + (m * n) + '。答えは ' + correct + ' です。'
-    };
-  }
-
-  var LAWS = {
-    mul: ruleMultiply,
-    pow: rulePower,
-    div: ruleDivide
-  };
-
-  function makeItem(kind, level) {
-    if (kind === 'prod') return ruleProductPower();
-    if (kind === 'mix') {
-      var keys = level >= 2 ? ['mul', 'pow', 'div'] : ['mul', 'pow'];
-      if (level >= 2 && Math.random() < 0.25) return ruleProductPower();
-      return LAWS[Quiz.pick(keys)](level);
+function nextQ() {
+    if (st.cur >= 5) {
+        document.getElementById('scrQuiz').classList.remove('active');
+        document.getElementById('scrDone').classList.add('active');
+        document.getElementById('doneMsg').textContent = `Lv.${st.lv}（${st.mode === 'choice' ? '4択' : 'つなげる'}）をクリアしたよ！`;
+        return;
     }
-    return LAWS[kind](level);
-  }
+    st.cur++; st.solved = false; uIn = [];
+    st.prob = getProb(st.lv, st.cur);
+    
+    document.getElementById('qInfo').innerText = `第 ${st.cur} / 5 問`;
+    document.getElementById('qTxt').innerHTML = st.prob.q;
+    document.getElementById('fb').innerText = '';
+    document.getElementById('btnNext').style.display = 'none';
 
-  function toChoice(item) {
-    if (item.isProduct) {
-      var cs = [item.correct];
-      item.wrongs.forEach(function (w) { if (cs.length < 4 && cs.indexOf(w) < 0) cs.push(w); });
-      return {
-        text: '次の式を計算しなさい。',
-        math: item.q,
-        type: 'choice',
-        choices: cs,
-        correct: 0,
-        hint: item.law,
-        explain: item.explain
-      };
+    if (st.mode === 'choice') {
+        document.getElementById('modeChoice').style.display = 'grid';
+        document.getElementById('modeBuild').style.display = 'none';
+        renderChoices();
+    } else {
+        document.getElementById('modeChoice').style.display = 'none';
+        document.getElementById('modeBuild').style.display = 'block';
+        document.getElementById('uAns').innerHTML = '';
+        document.getElementById('btnJudge').style.display = 'block';
+        renderPalette();
     }
-    var correct = item.ansExp === 1 ? item.base : item.base + '<sup>' + item.ansExp + '</sup>';
-    var choices = [correct];
-    Quiz.shuffle(item.wrongExps).forEach(function (e) {
-      if (choices.length >= 4) return;
-      if (e === item.ansExp || e <= 0) return;              // 正解と同じ指数は入れない
-      var s = e === 1 ? item.base : item.base + '<sup>' + e + '</sup>';
-      if (choices.indexOf(s) < 0) choices.push(s);
+}
+
+function getProb(lv, step) {
+    const vars = ['x', 'y', 'a', 'b'];
+    const v = vars[Math.floor(Math.random() * 2)];
+    const v2 = vars[Math.floor(Math.random() * 2) + 2];
+    const m = Math.floor(Math.random() * 3) + 2; 
+    const n = Math.floor(Math.random() * 3) + 2;
+
+    if (lv === 1) {
+        if (step <= 2) return { q:`${v}<sup>${m}</sup>×${v}<sup>${n}</sup>`, a:`${v}^${m+n}`, h:`${v}<sup>${m+n}</sup>`, p:[v, String(m+n)], d:[String(m*n)] };
+        if (step <= 4) return { q:`(${v}<sup>${m}</sup>)<sup>${n}</sup>`, a:`${v}^${m*n}`, h:`${v}<sup>${m*n}</sup>`, p:[v, String(m*n)], d:[String(m+n)] };
+        return { q:`(${v}<sup>${m}</sup>${v2})<sup>${n}</sup>`, a:`${v}^${m*n}${v2}^${n}`, h:`${v}<sup>${m*n}</sup>${v2}<sup>${n}</sup>`, p:[v, String(m*n), v2, String(n)], d:[String(m+n)] };
+    } else {
+        const c1 = Math.floor(Math.random() * 3) + 2;
+        const c2 = Math.floor(Math.random() * 3) + 2;
+        if (step <= 2) return { q:`${c1}${v}<sup>${m}</sup>×${c2}${v}<sup>${n}</sup>`, a:`${c1*c2}${v}^${m+n}`, h:`${c1*c2}${v}<sup>${m+n}</sup>`, p:[String(c1*c2), v, String(m+n)], d:[String(c1+c2)] };
+        return { q:`(${c1}${v}<sup>2</sup>${v2}<sup>3</sup>)<sup>2</sup>`, a:`${c1*c1}${v}^4${v2}^6`, h:`${c1*c1}${v}<sup>4</sup>${v2}<sup>6</sup>`, p:[String(c1*c1), v, '4', v2, '6'], d:[String(c1*2), '5'] };
+    }
+}
+
+// 【ブラッシュアップ】誤答の作り方
+//   元は「ほかの問題の答え」を誤答にしていたため、文字まで違う選択肢が混ざり、ひと目で正解が分かった。
+//   正解の式の数字を、ひっかけの数（st.prob.d：足すべきところを掛けた数など）や ±1 に入れかえて作る。
+function toHtml(a) { return a.replace(/\^(\d+)/g, '<sup>$1</sup>'); }
+function makeDummies(prob) {
+    const tokens = [...prob.a.matchAll(/\d+/g)];
+    const traps = (prob.d || []).map(Number);
+    const out = [];
+    tokens.forEach(t => {
+        const val = Number(t[0]);
+        [...traps, val + 1, val - 1, val + 2].forEach(nv => {
+            if (nv < 1 || nv === val) return;
+            const cand = prob.a.slice(0, t.index) + nv + prob.a.slice(t.index + t[0].length);
+            if (cand !== prob.a && !out.includes(cand)) out.push(cand);
+        });
     });
-    var guard = 0;
-    while (choices.length < 4 && guard++ < 30) {
-      var e2 = Quiz.randInt(2, 12);
-      if (e2 === item.ansExp) continue;
-      var s2 = item.base + '<sup>' + e2 + '</sup>';
-      if (choices.indexOf(s2) < 0) choices.push(s2);
+    return out.sort(() => Math.random() - 0.5);
+}
+
+function renderChoices() {
+    let cs = [{ k: st.prob.a, h: st.prob.h }];
+    makeDummies(st.prob).forEach(k => { if (cs.length < 4) cs.push({ k, h: toHtml(k) }); });
+    let guard = 0;
+    while (cs.length < 4 && guard++ < 200) {
+        let p = getProb(st.lv, Math.floor(Math.random()*5)+1);
+        if (!cs.find(i => i.k === p.a)) cs.push({ k: p.a, h: p.h });
     }
-    return {
-      text: '次の式を計算しなさい。',
-      math: item.q,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: item.law,
-      explain: item.explain
-    };
-  }
+    cs.sort(() => Math.random() - 0.5);
+    let html = '';
+    cs.forEach(c => html += `<button class="btn-choice math" onclick="judgeChoice('${c.k}', this)">${c.h}</button>`);
+    document.getElementById('modeChoice').innerHTML = html;
+}
 
-  function toPick(item) {
-    if (item.isProduct) return toChoice(item);   // (ab)^n は4択のまま
+function renderPalette() {
+    let core = st.prob.p;
+    let dums = st.prob.d || []; // 問題に応じたひっかけ数字
+    let all = [...new Set([...core, ...dums, '2', 'a', 'x'])];
+    
+    let bases = all.filter(x => isNaN(x)).sort();
+    let nums = all.filter(x => !isNaN(x)).sort((a,b) => a-b);
+    
+    let html = '';
+    nums.forEach(n => html += `<button class="btn-p math" onclick="add('${n}','b')">${n}</button>`);
+    bases.forEach(b => html += `<button class="btn-p math" onclick="add('${b}','b')">${b}</button>`);
+    nums.forEach(n => html += `<button class="btn-p sup math" onclick="add('${n}','s')"><sup>${n}</sup></button>`);
+    document.getElementById('palette').innerHTML = html;
+}
 
-    var bank = [String(item.ansExp)];
-    Quiz.shuffle(item.wrongExps).forEach(function (e) {
-      if (bank.length < 6 && e > 0 && bank.indexOf(String(e)) < 0) bank.push(String(e));
-    });
-    var guard = 0;
-    while (bank.length < 5 && guard++ < 30) {
-      var e = Quiz.randInt(1, 12);
-      if (bank.indexOf(String(e)) < 0) bank.push(String(e));
+function add(v, t) { if (!st.solved) { uIn.push({ v, t }); update(); } }
+function pop() { if (!st.solved) { uIn.pop(); update(); } }
+function update() {
+    let h = ''; uIn.forEach(i => h += (i.t === 's' ? `<sup>${i.v}</sup>` : i.v));
+    document.getElementById('uAns').innerHTML = h;
+    document.getElementById('fb').innerText = '';
+}
+
+function showHint() {
+    const original = document.getElementById('uAns').innerHTML;
+    document.getElementById('uAns').innerHTML = `<span style="color:#aaa">${st.prob.h}</span>`;
+    setTimeout(() => { if(!st.solved) update(); }, 3000);
+}
+
+function judgeChoice(k, btn) {
+    if (st.solved) return;
+    if (k === st.prob.a) {
+        document.getElementById('fb').innerHTML = '<span style="color:var(--secondary);">⭕ 正解！</span>';
+        st.solved = true; document.getElementById('btnNext').style.display = 'block';
+    } else {
+        document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！</span>';
+        btn.disabled = true;   // 【ブラッシュアップ】薄くするだけでなく、押せなくする
     }
+}
 
-    return {
-      text: '答えの指数にあてはまる数を選びなさい。',
-      math: item.q,
-      type: 'pick',
-      template: item.base + '<sup>_</sup>',
-      choices: bank,
-      answers: [String(item.ansExp)],
-      answerLabel: item.base + '<sup>' + item.ansExp + '</sup>',
-      hint: item.law,
-      explain: item.explain
-    };
-  }
-
-  function build(kind, level, style, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) {
-      var item = makeItem(kind, level);
-      out.push(style === 'choice' ? toChoice(item) : toPick(item));
+// 【ブラッシュアップ】かける順番を問わずに比べる。
+//   元は文字の並びまで同じでないと不正解で、(x³a)² を a²x⁶ と組み立てると正しいのに不正解だった。
+//   「係数」と「文字ごとの指数」に分けて比べる。組み立て方がおかしいときは null を返して不正解にする。
+function canonical(s) {
+    const m = s.match(/^(\d*)((?:[a-z](?:\^\d+)?)+)$/);
+    if (!m) return null;
+    const coef = m[1] || '1';
+    const pow = {};
+    for (const t of m[2].matchAll(/([a-z])(?:\^(\d+))?/g)) {
+        if (pow[t[1]] !== undefined) return null;   // 同じ文字が2回（x³x³ など）は、まだまとめ切れていないので不正解
+        pow[t[1]] = Number(t[2] || 1);
     }
-    return out;
-  }
+    return coef + '|' + Object.keys(pow).sort().map(k => k + pow[k]).join(',');
+}
 
-  Quiz.start({
-    title: '指数法則★MASTER',
-    subtitle: 'たす・かける・ひく。3つの法則を、まちがえずに使い分けよう。',
-    modes: [
-      { id: 'mul:1:choice', group: '法則ごとに練習', name: 'a<sup>m</sup>×a<sup>n</sup>　4択', desc: '指数はたす（10問）' },
-      { id: 'pow:1:choice', group: '法則ごとに練習', name: '(a<sup>m</sup>)<sup>n</sup>　4択', desc: '指数はかける（10問）' },
-      { id: 'div:1:choice', group: '法則ごとに練習', name: 'a<sup>m</sup>÷a<sup>n</sup>　4択', desc: '指数はひく（10問）' },
-      { id: 'prod:1:choice', group: '法則ごとに練習', name: '(ka<sup>m</sup>)<sup>n</sup>　4択', desc: '係数も n 乗（8問）' },
-      { id: 'mix:1:choice', group: 'Lv.1', name: 'Lv.1　4択', desc: '10問' },
-      { id: 'mix:1:pick', group: 'Lv.1', name: 'Lv.1　つなげる', desc: '10問' },
-      { id: 'mix:2:choice', group: 'Lv.2', name: 'Lv.2　4択', desc: 'わり算・係数つき（10問）' },
-      { id: 'mix:2:pick', group: 'Lv.2', name: 'Lv.2　つなげる', desc: 'わり算・係数つき（10問）' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      return build(p[0], Number(p[1]), p[2], p[0] === 'prod' ? 8 : 10);
+function judgeBuild() {
+    let res = ""; uIn.forEach(i => res += (i.t === 's' ? '^' + i.v : i.v));
+    const same = res === st.prob.a || (canonical(res) !== null && canonical(res) === canonical(st.prob.a));
+    if (!res) { document.getElementById('fb').innerHTML = '<span style="color:#999;">パーツを選んで式を作ろう</span>'; return; }
+    if (same) {
+        document.getElementById('fb').innerHTML = '<span style="color:var(--secondary);">⭕ 正解！</span>';
+        st.solved = true; document.getElementById('btnJudge').style.display = 'none';
+        document.getElementById('btnNext').style.display = 'block';
+    } else {
+        document.getElementById('fb').innerHTML = '<span style="color:var(--error);">❌ おしい！パーツを確認してね</span>';
     }
-  });
-})();
+}
 </script>
 </body>
 </html>

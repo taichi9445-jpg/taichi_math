@@ -1,206 +1,372 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>因数分解マスター Pro</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <base target="_top">
+  <meta charset="UTF-8">
+
+    <!--
+      12. 因数分解の練習（因数分解マスター Pro）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定とタイトルを、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>因数分解マスター Pro</title>
+  <style>
+    :root { --primary: #2980b9; --secondary: #8e44ad; --success: #27ae60; --bg: #f4f7f6; }
+    body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; overflow-y: auto; }
+    #container { width: 100%; max-width: 850px; background: white; margin: 0 auto; border: 8px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.3); min-height: 100vh; display: flex; flex-direction: column; }
+    .screen { display: none; flex-direction: column; padding: 25px; box-sizing: border-box; flex-grow: 1; }
+    .active { display: flex; }
+    button { transition: all 0.1s; cursor: pointer; border: none; }
+    button:active { transform: translateY(4px); }
+
+    .menu-header { text-align: center; font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; }
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .menu-card { border: 4px solid #eee; border-radius: 20px; padding: 15px; background: #fff; }
+    .card-title { font-size: 1.8rem; text-align: center; margin-top: 0; border-bottom: 4px solid #333; padding-bottom: 10px; }
+    .mode-row { display: flex; align-items: center; justify-content: space-between; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 12px; }
+    .math-txt { font-size: 1.2rem; font-weight: 900; }
+    .btn-group { display: flex; gap: 8px; }
+    .btn-start { padding: 10px 15px; border-radius: 10px; font-weight: 900; color: white; font-size: 1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+
+    #tasuki-area { background: #fff; border: 5px solid var(--secondary); border-radius: 20px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: center; }
+    .t-grid { display: grid; grid-template-columns: 80px 60px 80px 40px 100px; align-items: center; gap: 10px; }
+    .t-in { width: 80px; height: 60px; font-size: 2.5rem; text-align: center; border: 3px solid #ccc; border-radius: 10px; font-weight: 900; }
+    .t-cross { position: relative; width: 60px; height: 130px; grid-row: span 2; display: flex; align-items: center; justify-content: center; }
+    .t-cross::before, .t-cross::after { content: ""; position: absolute; width: 70px; height: 4px; background: #bbb; top: 50%; left: 50%; }
+    .t-cross::before { transform: translate(-50%, -50%) rotate(40deg); }
+    .t-cross::after { transform: translate(-50%, -50%) rotate(-40deg); }
+    .t-res { font-size: 2.5rem; font-weight: 900; text-align: right; }
+    .t-sum-line { grid-column: 5; border-top: 5px solid #333; text-align: right; font-size: 2.8rem; color: red; font-weight: 900; }
+
+    #ans-box { background: #fff9c4; border: 4px solid #fbc02d; border-radius: 25px; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 3rem; gap: 2px; margin-bottom: 15px; padding: 10px; position: relative; cursor: text; flex-wrap: wrap; }
+    .ans-char { padding: 0 2px; cursor: pointer; border-radius: 5px; }
+    .ans-char:hover { background: rgba(0,0,0,0.1); }
+    .cursor { width: 4px; height: 3.2rem; background: #f39c12; animation: blink 0.8s infinite; margin: 0 2px; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    #problem { font-size: 3.5rem; text-align: center; margin: 20px 0; font-weight: 900; color: #2c3e50; }
+    .tile-wrap { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #e3f2fd; padding: 20px; border-radius: 25px; }
+    .btn-tile { padding: 12px 22px; font-size: 1.8rem; background: white; border-radius: 12px; font-weight: 900; box-shadow: 0 5px 0 #bdc3c7; }
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .btn-choice { padding: 20px; font-size: 1.6rem; font-weight: 900; background: white; border: 4px solid var(--primary); border-radius: 18px; box-shadow: 0 5px 0 var(--primary); }
+    .btn-submit { background: var(--success); color: white; padding: 15px; font-size: 2.2rem; border-radius: 20px; font-weight: 900; margin-top: 15px; width: 100%; }
+    .btn-show-ans { background: #e74c3c; color: white; padding: 10px; font-size: 1.2rem; border-radius: 12px; font-weight: 900; margin-top: 10px; width: 100%; }
+    .btn-home { background: #95a5a6; color: white; padding: 15px; border-radius: 15px; width: 100%; font-weight: 900; margin-top: 20px; }
+    #peek-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { max-width: 850px; margin-top: 8px; }
+    #container { box-sizing: border-box; }
+    .btn-choice:disabled { opacity: .35; }
+    .locked .btn-choice, .locked .btn-submit, .locked .btn-tile { pointer-events: none; }
+    #finish-nav { display: none; flex-direction: column; gap: 12px; max-width: 26rem; width: 100%; margin: 0 auto; }
+    #finish-nav a { text-align: center; color: #7f8c8d; }
+    .modal-content button { font-size: 1.3rem; padding: 10px 30px; border-radius: 12px; background: #3498db; color: white; font-weight: 900; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      #container { border-width: 4px; }
+      .screen { padding: 14px 10px; }
+      .menu-header { font-size: min(2rem, 8.5vw); white-space: nowrap; }
+      .menu-grid { grid-template-columns: 1fr; gap: 14px; }
+      .card-title { font-size: 1.4rem; }
+      .mode-row { margin: 10px 0; }
+      .math-txt { font-size: 1.15rem; }
+      .btn-start { font-size: 1.05rem; padding: 12px 16px; }
+      #problem { font-size: min(2.6rem, 10vw); margin: 12px 0; }
+      /* たすき掛けの図：元は固定幅（約400px）でスマホからはみ出していた */
+      #tasuki-area { padding: 12px 6px; }
+      .t-grid { grid-template-columns: 56px 34px 56px 20px 64px; gap: 6px; }
+      .t-in { width: 56px; height: 50px; font-size: 1.8rem; }
+      .t-cross { width: 34px; height: 106px; }
+      .t-cross::before, .t-cross::after { width: 44px; }
+      .t-res { font-size: 1.8rem; }
+      .t-sum-line { font-size: 2rem; }
+      .choice-grid { gap: 10px; }
+      .btn-choice { font-size: min(1.6rem, 6.4vw); padding: 18px 4px; }
+      #ans-box { font-size: 2.2rem; min-height: 70px; }
+      .cursor { height: 2.4rem; }
+      .tile-wrap { padding: 12px 8px; gap: 8px; }
+      .btn-tile { font-size: 1.6rem; padding: 10px 16px; }
+      .btn-submit { font-size: 1.8rem; }
+    }
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body onkeydown="handleGlobalKey(event)">
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
+<a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+<div id="container">
+  <div id="home" class="screen active">
+    <div class="menu-header">因数分解マスター Pro</div>
+    <div class="menu-grid">
+      <div class="menu-card" style="border-color: #3498db;">
+        <h2 class="card-title">【基本公式】</h2>
+        <div class="mode-row"><span class="math-txt">x²+(a+b)x+ab</span><div class="btn-group"><button class="btn-start" style="background:#3498db;" onclick="start(1,1,'4')">4択</button><button class="btn-start" style="background:#e67e22;" onclick="start(1,1,'T')">🧩</button></div></div>
+        <div class="mode-row"><span class="math-txt">(x±a)²</span><div class="btn-group"><button class="btn-start" style="background:#3498db;" onclick="start(1,2,'4')">4択</button><button class="btn-start" style="background:#e67e22;" onclick="start(1,2,'T')">🧩</button></div></div>
+        <div class="mode-row"><span class="math-txt">x²-a²</span><div class="btn-group"><button class="btn-start" style="background:#3498db;" onclick="start(1,3,'4')">4択</button><button class="btn-start" style="background:#e67e22;" onclick="start(1,3,'T')">🧩</button></div></div>
+      </div>
+      <div class="menu-card" style="border-color: var(--secondary);">
+        <h2 class="card-title">【応用】</h2>
+        <div class="mode-row"><span class="math-txt">Lv.2 ミックス</span><div class="btn-group"><button class="btn-start" style="background:#3498db;" onclick="start(2,0,'4')">4択</button><button class="btn-start" style="background:#e67e22;" onclick="start(2,0,'T')">🧩</button></div></div>
+        <div class="mode-row"><span class="math-txt">Lv.3 たすき掛け</span><div class="btn-group"><button class="btn-start" style="background:#3498db;" onclick="start(3,0,'4')">4択</button><button class="btn-start" style="background:#e67e22;" onclick="start(3,0,'T')">🧩</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="quiz" class="screen">
+    <div id="problem"></div>
+    <div id="tasuki-area" style="display:none">
+      <div class="t-grid">
+        <input type="number" id="ta" class="t-in" tabindex="1" oninput="calcT()">
+        <div class="t-cross"></div>
+        <input type="number" id="tb" class="t-in" tabindex="3" oninput="calcT()">
+        <div style="font-size:2rem; color:#888;">→</div>
+        <div id="tr_top" class="t-res">0</div>
+        <input type="number" id="tc" class="t-in" tabindex="2" oninput="calcT()">
+        <input type="number" id="td" class="t-in" tabindex="4" oninput="calcT()">
+        <div style="font-size:2rem; color:#888;">→</div>
+        <div id="tr_bottom" class="t-res">0</div>
+        <div id="tsum" class="t-sum-line">0</div>
+      </div>
+    </div>
+    <div id="4択-area" class="choice-grid"></div>
+    <div id="つなげる-area" style="display:none; flex-direction:column;">
+      <div id="ans-box" onclick="setCursorEnd()"></div>
+      <div id="tiles" class="tile-wrap"></div>
+      <button class="btn-submit" onclick="submitAns()">できた！</button>
+      <button class="btn-show-ans" onclick="openModal()">答えをチラ見する</button>
+    </div>
+    <div id="feedback" style="text-align:center; font-size:2rem; min-height:45px; margin:10px; font-weight:900;"></div>
+    <!-- 【ブラッシュアップ】全問クリアのあとに、同じ問題の種類でもう一度・メニューへ・ほかの教材 を選べるようにした -->
+    <div id="finish-nav">
+      <button class="btn-submit" style="margin-top:0;" onclick="start(...lastStart)">同じ問題の種類でもう一度</button>
+      <button class="btn-home" style="margin-top:0;" onclick="backToHome()">🏠 メニューにもどる</button>
+      <a href="../remake.html">ほかの教材をえらぶ</a>
+    </div>
+    <button id="home-btn" class="btn-home" onclick="backToHome()">🏠 ホームへ戻る</button>
+  </div>
+</div>
+
+<div id="peek-modal"><div class="modal-content"><h2 id="peek-ans" style="font-size:2.5rem;"></h2><button onclick="closeModal()">OK</button></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-/* ---------------------------------------------------------------------------
-   12. 因数分解の練習（因数分解マスター Pro）
-     【基本公式】x²+(a+b)x+ab ／ (x±a)² ／ x²−a²
-     【応用】Lv.2 ミックス ／ Lv.3 たすき掛け
-   それぞれ「4択」と「穴埋め」で練習できる。
+  let qs = [], qIdx = 0, currentMode = "", userAns = [], cursorIdx = 0;
+  let lastStart = [1, 1, '4'];   // 【ブラッシュアップ】「同じ種類でもう一度」用
+  let solved = false;             // 【ブラッシュアップ】正解のあとの連打よけ
 
-   元教材から直した点：
-     ・記述で答えるとき、展開したままの x²+5x+6 を入力しても正解になっていた。
-       → 因数分解の問題では「積の形になっているか」も判定する。
-         値が合っていても、くくれていなければ不正解にする。
-     ・(x+2)(x+3) と (x+3)(x+2) で片方しか正解にならなかった。
-       → 数式として同値かで見るので、どちらでも正解。
-     ・たすき掛けの選択肢に、展開すると同じ式になる重複が混ざっていた。
-       → 選択肢を作るときに、正解と同値なものを除外する。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+  function backToHome() {
+    document.getElementById('quiz').classList.remove('active');
+    document.getElementById('home').classList.add('active');
+    qs = []; qIdx = 0;
+  }
 
-  var A = Algebra, F = Quiz.fmt, M = MathCore;
-
-  var KINDS = {
-    ab: { label: 'x²+(a+b)x+ab', make: function () { return A.quadraticFromRoots({ lo: -8, hi: 8, allowSame: false }); },
-          hint: 'かけて定数項、たして x の係数になる 2 数をさがします。' },
-    sq: { label: '(x±a)²', make: function () { return A.squareForm({ lo: -8, hi: 8 }); },
-          hint: 'x² ± 2ax + a² = (x ± a)² の形です。定数項が平方数になっています。' },
-    df: { label: 'x²−a²', make: function () { return A.diffOfSquares({ hi: 9 }); },
-          hint: 'x² − a² = (x + a)(x − a)。2乗の差の形です。' },
-    cross: { label: 'たすき掛け', make: function () { return A.crossForm(); },
-          hint: 'x² の係数と定数項を、たすきにかけて x の係数になる組をさがします。' }
-  };
-
-  /* --- 誤答（因数の形）を作る。正解と同値になるものは採用しない --- */
-  function wrongFactorForms(it, need) {
-    var correctPlain = F.plain(it.expanded);
-    var out = [];
-    var candidates = [];
-
-    if (it.a !== undefined && it.b !== undefined) {
-      // 符号のミス・数のミスをそのまま因数の形にする
-      candidates.push(A.paren(1, -it.a) + A.paren(1, it.b));
-      candidates.push(A.paren(1, it.a) + A.paren(1, -it.b));
-      candidates.push(A.paren(1, -it.a) + A.paren(1, -it.b));
-      candidates.push(A.paren(1, it.a + 1) + A.paren(1, it.b - 1));
-      candidates.push(A.paren(1, it.a) + A.paren(1, it.b + 1));
-    } else if (it.p !== undefined) {
-      candidates.push(A.paren(it.p, -it.q) + A.paren(it.r, it.s));
-      candidates.push(A.paren(it.p, it.s) + A.paren(it.r, it.q));
-      candidates.push(A.paren(it.r, it.q) + A.paren(it.p, it.s));
-      candidates.push(A.paren(it.p, it.q + 1) + A.paren(it.r, it.s));
+  function start(lv, sub, m) {
+    lastStart = [lv, sub, m];
+    currentMode = m; qIdx = 0; qs = [];
+    document.getElementById('finish-nav').style.display = 'none';
+    document.getElementById('home-btn').style.display = 'block';
+    if(lv === 2) {
+      let pool = [1, 2, 3, 1, 2].sort(() => Math.random() - 0.5);
+      for(let i=0; i<5; i++) qs.push(generateQ(1, pool[i]));
+    } else {
+      for(let i=0; i<5; i++) qs.push(generateQ(lv, sub));
     }
-    if (it.a !== undefined && it.b === undefined) {
-      candidates.push(A.paren(1, -it.a) + '<sup>2</sup>');
-      candidates.push(A.paren(1, it.a) + A.paren(1, -it.a));
-      candidates.push(A.paren(1, it.a + 1) + '<sup>2</sup>');
-      candidates.push(A.paren(1, 2 * it.a) + '<sup>2</sup>');
+    document.getElementById('home').classList.remove('active');
+    document.getElementById('quiz').classList.add('active');
+    render();
+  }
+
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while(b){ a%=b; [a,b]=[b,a]; } return a; }
+
+  function generateQ(lv, sub) {
+    const r = (min, max) => Math.floor(Math.random()*(max-min+1))+min;
+    let a=1, b, c=1, d, limit=0;
+    while(limit < 500) {
+      limit++;
+      if(lv===1) {
+        if(sub===1) { b=r(1,9)*(r(0,1)?1:-1); d=r(1,9)*(r(0,1)?1:-1); if(Math.abs(b)===Math.abs(d) || b*d===0) continue; }
+        else if(sub===2) { b=r(1,9)*(r(0,1)?1:-1); d=b; } 
+        else { b=r(1,9); d=-b; }
+      } else {
+        a=r(1,5); c=r(1,5); b=r(1,6)*(r(0,1)?1:-1); d=r(1,6)*(r(0,1)?1:-1);
+        if(a*c<=1 || gcd(a*c, gcd(a*d+b*c, b*d))!==1) continue;
+      } break;
+    }
+    const ac=a*c, adbc=a*d+b*c, bd=b*d;
+    let f = (ac===1?'':ac===-1?'-':ac)+'x²'+(adbc===0?'':(adbc>0?'+':'-')+(Math.abs(adbc)===1?'':Math.abs(adbc))+'x')+(bd===0?'':(bd>0?'+':'')+bd);
+    const fmt = (k1, k2) => (k1===1?'':k1) + 'x' + (k2>=0?'+':'') + k2;
+    let s1 = (a===c && b===d) ? `(${fmt(a,b)})²` : `(${fmt(a,b)})(${fmt(c,d)})`;
+    let s2 = (a===c && b===d) ? s1 : `(${fmt(c,d)})(${fmt(a,b)})`;
+    return { form: f, sols: [s1, s2], raw: {a,b,c,d} };
+  }
+
+  function render() {
+    if (qIdx >= 5) { finish(); return; }
+    const q = qs[qIdx];
+    document.getElementById('problem').innerText = q.form;
+    document.getElementById('feedback').innerText = "";
+    solved = false;
+    document.getElementById('quiz').classList.remove('locked');
+    ["ta","tb","tc","td"].forEach(id => { document.getElementById(id).value=""; });
+    ["tr_top","tr_bottom","tsum"].forEach(id => document.getElementById(id).innerText = "0");
+    document.getElementById('tasuki-area').style.display = (q.raw.a * q.raw.c > 1) ? 'flex' : 'none';
+    
+    if(currentMode === '4') {
+      document.getElementById('4択-area').style.display = 'grid';
+      document.getElementById('つなげる-area').style.display = 'none';
+      renderChoices(q);
+    } else {
+      document.getElementById('4択-area').style.display = 'none';
+      document.getElementById('つなげる-area').style.display = 'flex';
+      userAns = []; cursorIdx = 0; updateAns(); renderTiles(q);
+    }
+  }
+
+  function renderChoices(q) {
+    const {a,b,c,d} = q.raw;
+    const fmt = (k1, k2) => (k1===1?'':k1) + 'x' + (k2>=0?'+':'') + k2;
+    
+    // カッコ内の重複(順序違い)を検知するための正規化関数
+    const normalize = (k1, k2, k3, k4) => {
+      let p1 = fmt(k1,k2), p2 = fmt(k3,k4);
+      return (k1===k3 && k2===k4) ? `(${p1})²` : [p1, p2].sort().map(s => `(${s})`).join("");
+    };
+
+    let set = new Set();
+    let displayMap = new Map(); // 正規化キー -> 実際の表示文字列
+
+    const addChoice = (k1, k2, k3, k4) => {
+      // 共通因数チェック: どちらかのカッコが2以上の数で割り切れるなら無効
+      if(gcd(k1, k2) > 1 || gcd(k3, k4) > 1) return;
+      let key = normalize(k1, k2, k3, k4);
+      if(!set.has(key)) {
+        set.add(key);
+        displayMap.set(key, (k1===k3 && k2===k4) ? `(${fmt(k1,k2)})²` : `(${fmt(k1,k2)})(${fmt(k3,k4)})`);
+      }
+    };
+
+    addChoice(a, b, c, d); // 正解
+    addChoice(a, -b, c, -d); // 符号違い
+    if(a*c > 1) addChoice(a, d, c, b); // たすき掛けミス
+    
+    // 【ブラッシュアップ】元は試す回数が少なく数の変え方も狭かったため、たすき掛けでは
+    //   選択肢が 2〜3 個しか出ないことがあった（約 4%）。変え方を広げ、4 つそろうまで試す。
+    let timeout = 0;
+    while(set.size < 4 && timeout < 600) {
+      timeout++;
+      const spread = timeout < 100 ? 1 : 3;
+      let nb = (Math.abs(b) + Math.floor(Math.random()*(2*spread+1)) - spread) || 1;
+      let nd = (Math.abs(d) + Math.floor(Math.random()*(2*spread+1)) - spread) || 1;
+      if (timeout < 100) addChoice(a, nb, c, -nd);
+      else addChoice(a, nb * (Math.random() < 0.5 ? 1 : -1), c, nd * (Math.random() < 0.5 ? 1 : -1));
     }
 
-    Quiz.shuffle(candidates).forEach(function (c) {
-      if (out.length >= need) return;
-      if (c === it.factored) return;
-      if (M.isEqual(F.plain(c), correctPlain)) return;   // 展開すると同じになるものは誤答にしない
-      if (out.indexOf(c) >= 0) return;
-      out.push(c);
+    let arr = Array.from(displayMap.values()).sort(()=>Math.random()-0.5);
+    const area = document.getElementById('4択-area'); area.innerHTML = "";
+    arr.forEach(t => {
+      const btn = document.createElement('button'); btn.className="btn-choice"; btn.innerText=t;
+      btn.onclick=()=>check(t, btn); area.appendChild(btn);
     });
+  }
 
-    var guard = 0;
-    while (out.length < need && guard++ < 40) {
-      var w = A.paren(1, A.nz(-9, 9)) + A.paren(1, A.nz(-9, 9));
-      if (!M.isEqual(F.plain(w), correctPlain) && out.indexOf(w) < 0) out.push(w);
+  function updateAns() {
+    const box = document.getElementById('ans-box'); box.innerHTML = "";
+    userAns.forEach((char, i) => {
+      if(i === cursorIdx) box.appendChild(createCursor());
+      const s = document.createElement('span'); s.className="ans-char"; s.innerText=char;
+      s.onclick=(e)=>{ e.stopPropagation(); cursorIdx=i; updateAns(); };
+      box.appendChild(s);
+    });
+    if(cursorIdx === userAns.length) box.appendChild(createCursor());
+  }
+  function createCursor() { const d = document.createElement('div'); d.className="cursor"; return d; }
+  function setCursorEnd() { cursorIdx = userAns.length; updateAns(); }
+
+  function handleGlobalKey(e) {
+    if(currentMode !== 'T' || !document.getElementById('quiz').classList.contains('active')) return;
+    // 【ブラッシュアップ】たすき掛けの入力欄で打っているときは、答えの欄を操作しない。
+    //   元はたすきの欄で Backspace を押すと、答えの欄の文字まで消えていた。
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if(e.key === "ArrowLeft" && cursorIdx > 0) { cursorIdx--; updateAns(); }
+    if(e.key === "ArrowRight" && cursorIdx < userAns.length) { cursorIdx++; updateAns(); }
+    if(e.key === "Backspace" && cursorIdx > 0) { userAns.splice(cursorIdx-1, 1); cursorIdx--; updateAns(); }
+    if(e.key === "Delete" && cursorIdx < userAns.length) { userAns.splice(cursorIdx, 1); updateAns(); }
+  }
+
+  function renderTiles(q) {
+    const tArea = document.getElementById('tiles'); tArea.innerHTML = "";
+    const base = ["x","²","(",")","+","-"];
+    const nums = [...new Set([Math.abs(q.raw.a), Math.abs(q.raw.b), Math.abs(q.raw.c), Math.abs(q.raw.d), 1, 2, 3, 4, 5])].sort((a,b)=>a-b);
+    [...base, ...nums].forEach(p => {
+      const b = document.createElement('button'); b.className="btn-tile"; b.innerText=p;
+      b.onclick=(e)=>{ e.stopPropagation(); userAns.splice(cursorIdx, 0, String(p)); cursorIdx++; updateAns(); };
+      tArea.appendChild(b);
+    });
+  }
+
+  function calcT() {
+    const a = Number(document.getElementById('ta').value), c = Number(document.getElementById('tc').value);
+    const b = Number(document.getElementById('tb').value), d = Number(document.getElementById('td').value);
+    document.getElementById('tr_top').innerText = c * b || 0;
+    document.getElementById('tr_bottom').innerText = a * d || 0;
+    document.getElementById('tsum').innerText = (c*b + a*d) || 0;
+  }
+
+  // 【ブラッシュアップ】組み立てた答えを「かっこの組」として比べる。
+  //   元は決まった書き方の文字列と完全一致でないと不正解で、(x+3)² を (x+3)(x+3) と書くと
+  //   正しいのに不正解だった。かっこの順番がちがうもの・2乗を 2 つのかっこで書いたものも正解にする。
+  function factorsOf(s) {
+    const m = s.match(/^(\([^()]+\)(²)?)+$/);
+    if (!m) return null;
+    const list = [];
+    for (const f of s.matchAll(/\(([^()]+)\)(²)?/g)) {
+      const t = f[1].match(/^(\d*)x([+-]\d+)$/);
+      if (!t) return null;
+      const key = (t[1] || '1') + 'x' + t[2];
+      list.push(key);
+      if (f[2]) list.push(key);
     }
-    return out;
+    return list.sort().join('|');
   }
 
-  function choiceQuestion(kindKey) {
-    var k = KINDS[kindKey];
-    var it = k.make();
-    return {
-      tag: '4択',
-      text: '次の式を因数分解しなさい。',
-      math: it.expanded,
-      type: 'choice',
-      choices: [it.factored].concat(wrongFactorForms(it, 3)),
-      correct: 0,
-      hint: k.hint,
-      explain: k.hint + '<br>答え： ' + it.factored
-    };
-  }
-
-  function blankQuestion(kindKey) {
-    var k = KINDS[kindKey];
-    var it = k.make();
-
-    if (kindKey === 'cross') {
-      return {
-        tag: '穴埋め',
-        text: '因数分解した形になるように、空欄を埋めなさい。',
-        math: it.expanded,
-        type: 'blanks',
-        template: '( _ x ＋ _ )( _ x ＋ _ )',
-        answers: [String(it.p), String(it.q), String(it.r), String(it.s)],
-        answerLabel: it.factored,
-        hint: k.hint + '　マイナスのときは符号もつけて入れます。',
-        explain: k.hint + '<br>答え： ' + it.factored
-      };
+  function check(v, btn) {
+    if (solved) return;   // 【ブラッシュアップ】元は正解を続けて押すと 1 問とばしていた
+    if (currentMode === 'T' && !v) { document.getElementById('feedback').style.color = "#999"; document.getElementById('feedback').innerText = "タイルを並べて式を作ろう"; return; }
+    const q = qs[qIdx];
+    const same = q.sols.includes(v) || (factorsOf(v) !== null && factorsOf(v) === factorsOf(q.sols[0]));
+    if(same) {
+      solved = true;
+      document.getElementById('quiz').classList.add('locked');
+      document.getElementById('feedback').style.color="var(--success)";
+      document.getElementById('feedback').innerText="✨ 正解！！";
+      // 【ブラッシュアップ】紙吹雪の部品が読み込めなかったときでも、次の問題へ進めるようにする
+      if (window.confetti) confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
+      setTimeout(()=>{ qIdx++; render(); }, 1000);
+    } else {
+      document.getElementById('feedback').style.color="orange";
+      document.getElementById('feedback').innerText="❌ 違いそうです";
+      if (btn) btn.disabled = true;
     }
-
-    if (kindKey === 'sq') {
-      return {
-        tag: '穴埋め',
-        text: '因数分解した形になるように、空欄を埋めなさい。',
-        math: it.expanded,
-        type: 'blanks',
-        template: '( x ＋ _ )<sup>2</sup>',
-        answers: [String(it.a)],
-        answerLabel: it.factored,
-        hint: k.hint,
-        explain: k.hint + '<br>答え： ' + it.factored
-      };
-    }
-
-    var a = it.a !== undefined ? it.a : 0;
-    var b = it.b !== undefined ? it.b : -a;
-    return {
-      tag: '穴埋め',
-      text: '因数分解した形になるように、空欄を埋めなさい。',
-      math: it.expanded,
-      type: 'blanks',
-      template: '( x ＋ _ )( x ＋ _ )',
-      answers: [String(a), String(b)],
-      // どちらの順番で入れても正解にする
-      checkEach: function (value, index) {
-        return MathCore.isEqualNumber(value, index === 0 ? a : b) ||
-               MathCore.isEqualNumber(value, index === 0 ? b : a);
-      },
-      answerLabel: it.factored,
-      hint: k.hint + '　順番はどちらでもかまいません。',
-      explain: k.hint + '<br>答え： ' + it.factored
-    };
   }
 
-  function inputQuestion(kindKey) {
-    var k = KINDS[kindKey];
-    var it = k.make();
-    return {
-      tag: '記述',
-      text: '次の式を因数分解しなさい。',
-      math: it.expanded,
-      type: 'input',
-      answer: F.plain(it.expanded),
-      answerLabel: it.factored,
-      requireFactored: true,          // 展開したままの式は不正解にする
-      placeholder: '例： (x+2)(x+3)',
-      note: 'かけ算の形（かっこの積）で答えます。',
-      hint: k.hint,
-      explain: k.hint + '<br>答え： ' + it.factored
-    };
+  function submitAns() { check(userAns.join("")); }
+  function finish() { 
+    document.getElementById('problem').innerText = "🎉 全問クリア！"; 
+    document.getElementById('4択-area').style.display="none"; 
+    document.getElementById('つなげる-area').style.display="none"; 
+    document.getElementById('tasuki-area').style.display="none";
+    document.getElementById('feedback').innerText = "";
+    document.getElementById('finish-nav').style.display = 'flex';
+    document.getElementById('home-btn').style.display = 'none';
   }
-
-  function build(kinds, maker, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) out.push(maker(Quiz.pick(kinds)));
-    return out;
-  }
-
-  Quiz.start({
-    title: '因数分解マスター Pro',
-    subtitle: '基本の3公式をかためてから、ミックスとたすき掛けへ。',
-    modes: [
-      { id: 'ab:c', group: '【基本公式】', name: 'x²+(a+b)x+ab　4択', desc: '10問' },
-      { id: 'ab:b', group: '【基本公式】', name: 'x²+(a+b)x+ab　穴埋め', desc: '8問' },
-      { id: 'sq:c', group: '【基本公式】', name: '(x±a)²　4択', desc: '8問' },
-      { id: 'sq:b', group: '【基本公式】', name: '(x±a)²　穴埋め', desc: '8問' },
-      { id: 'df:c', group: '【基本公式】', name: 'x²−a²　4択', desc: '8問' },
-      { id: 'df:b', group: '【基本公式】', name: 'x²−a²　穴埋め', desc: '8問' },
-      { id: 'mix:c', group: '【応用】', name: 'Lv.2 ミックス　4択', desc: '3公式まぜて10問' },
-      { id: 'mix:i', group: '【応用】', name: 'Lv.2 ミックス　記述', desc: '自分で書く8問' },
-      { id: 'cross:c', group: '【応用】', name: 'Lv.3 たすき掛け　4択', desc: '8問' },
-      { id: 'cross:b', group: '【応用】', name: 'Lv.3 たすき掛け　穴埋め', desc: '6問' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      var kinds = p[0] === 'mix' ? ['ab', 'sq', 'df'] : [p[0]];
-      if (p[1] === 'c') return build(kinds, choiceQuestion, p[0] === 'ab' || p[0] === 'mix' ? 10 : 8);
-      if (p[1] === 'b') return build(kinds, blankQuestion, p[0] === 'cross' ? 6 : 8);
-      return build(kinds, inputQuestion, 8);
-    }
-  });
-})();
+  function openModal() { document.getElementById('peek-ans').innerText = qs[qIdx].sols[0]; document.getElementById('peek-modal').style.display='flex'; }
+  function closeModal() { document.getElementById('peek-modal').style.display='none'; }
 </script>
 </body>
 </html>

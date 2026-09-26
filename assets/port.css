@@ -18,6 +18,7 @@ mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
 /* 一覧へ戻るリンク（ページのいちばん上に置く） */
 .port-back {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   max-width: 48rem;
   margin: 0 auto 8px;

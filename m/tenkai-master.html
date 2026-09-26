@@ -1,173 +1,312 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>展開マスター</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <base target="_top">
+  <meta charset="utf-8">
+
+    <!--
+      09. 展開の練習（展開マスター）
+      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <link rel="stylesheet" href="../assets/port.css">
+    <script src="../assets/port.js"></script>
+  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定を、ページに直接書く -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>展開マスター</title>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&family=Noto+Serif+JP:ital,wght@1,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #FFFDE7; --pop-blue: #4FC3F7; --pop-orange: #FF9800; --correct: #66BB6A; }
+    /* 【ブラッシュアップ】元は height: 100vh; overflow: hidden で、画面が低いと下のボタンが隠れて押せなかった */
+    body { font-family: 'M PLUS Rounded 1c', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 12px 0; }
+    #app { width: 95vw; max-width: 1000px; min-height: 85vh; background: white; border-radius: 40px; border: 8px solid white; position: relative; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+    
+    .screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+    .active { display: flex; }
+    
+    #home-btn { position: absolute; top: 20px; left: 20px; padding: 10px 20px; border-radius: 15px; border: none; cursor: pointer; background: #eee; font-weight: bold; z-index: 100; }
+    .math-font { font-family: 'Noto Serif JP', serif; font-style: italic; color: #2D3436; }
+
+    #progress-container { width: 80%; text-align: center; margin-bottom: 10px; }
+    #progress-text { font-size: 18px; color: #666; margin-bottom: 5px; }
+    #progress-bar-bg { width: 100%; height: 12px; background: #eee; border-radius: 10px; overflow: hidden; }
+    #progress-bar-fill { width: 0%; height: 100%; background: var(--correct); transition: width 0.3s ease; }
+
+    #feedback { font-size: 40px; font-weight: 800; height: 50px; margin-bottom: 5px; text-align: center; }
+    #q-area { background: #f9f9f9; border: 4px dashed #FFEB3B; border-radius: 30px; padding: 30px; width: 90%; text-align: center; margin-bottom: 20px; }
+    #q-text { font-size: 48px; }
+
+    .btn-group { display: flex; gap: 15px; margin-bottom: 20px; }
+    .mode-btn { padding: 12px 30px; font-size: 22px; border-radius: 15px; border: none; cursor: pointer; background: #eee; font-weight: 800; }
+    .mode-btn.selected { background: var(--pop-blue); color: white; box-shadow: 0 5px 0 #0288D1; }
+
+    #choice-ui { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; }
+    .choice-btn { background: white; border: 4px solid #E1F5FE; border-radius: 20px; padding: 20px; font-size: 28px; cursor: pointer; box-shadow: 0 6px 0 #E1F5FE; }
+    
+    #ans-zone { min-height: 80px; width: 100%; background: #FFF9C4; border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; padding: 10px; }
+    .ans-chip { background: white; padding: 8px 18px; border-radius: 12px; font-size: 30px; border: 2px solid var(--pop-orange); cursor: pointer; }
+    .tile-tray { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; background: #E1F5FE; padding: 15px; border-radius: 25px; width: 100%; }
+    .tile { background: white; border-radius: 12px; padding: 10px 22px; font-size: 28px; cursor: pointer; box-shadow: 0 4px 0 #BDBDBD; }
+    .judge-btn { margin-top: 20px; padding: 15px 60px; font-size: 28px; background: #4CAF50; color: white; border: none; border-radius: 40px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { max-width: 1000px; width: 95vw; }
+    #feedback { white-space: nowrap; }
+    #ans-zone, .tile-tray { box-sizing: border-box; }   /* 余白の分だけ枠からはみ出していたのを直す */
+    .choice-btn:disabled { opacity: .35; cursor: default; }
+    .locked .choice-btn, .locked .judge-btn { pointer-events: none; }
+    #done-screen .done-msg { font-size: 22px; color: #666; margin: 0 0 20px; }
+    #done-screen .nav { display: flex; flex-direction: column; gap: 14px; width: min(26rem, 90%); }
+    #done-screen .nav a { color: #888; font-weight: bold; text-align: center; }
+    .order-note { font-size: 18px; color: #F57C00; min-height: 1.2em; margin-bottom: 6px; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      body { justify-content: flex-start; padding: 6px 0; }
+      #app { min-height: 0; padding: 14px 10px 20px; border-radius: 26px; }
+      #menu-screen h1 { font-size: min(44px, 12vw) !important; margin: 10px 0 18px; }
+      .btn-group { gap: 10px; flex-wrap: wrap; justify-content: center; }
+      .mode-btn { font-size: 19px; padding: 12px 16px; }
+      #home-btn { position: static; align-self: flex-start; margin-bottom: 8px; }
+      #progress-container { width: 100%; }
+      #feedback { font-size: min(34px, 9vw); height: 44px; }
+      #q-area { padding: 18px 8px; width: 100%; box-sizing: border-box; margin-bottom: 14px; }
+      #q-text { font-size: min(40px, 10.5vw); }
+      #choice-ui { width: 100%; gap: 10px; }
+      .choice-btn { font-size: min(26px, 7vw); padding: 18px 6px; }
+      #connect-ui { width: 100% !important; }
+      .ans-chip { font-size: 24px; padding: 6px 12px; }
+      .tile { font-size: 24px; padding: 8px 14px; }
+      .judge-btn { font-size: 24px; padding: 14px 40px; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap"><div id="app"></div></div>
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+  <div id="app">
+    <div id="menu-screen" class="screen active">
+      <h1 style="font-size:50px; color:var(--pop-orange);">展開マスター</h1>
+      <div class="btn-group">
+        <button class="mode-btn selected" onclick="sel('level', 1, this)">レベル1 (10問)</button>
+        <button class="mode-btn" onclick="sel('level', 2, this)">レベル2 (5問)</button>
+      </div>
+      <div class="btn-group">
+        <button class="mode-btn selected" onclick="sel('mode', 'choice', this)">選択式</button>
+        <button class="mode-btn" onclick="sel('mode', 'connect', this)">つなげる</button>
+      </div>
+      <button style="padding:20px 60px; font-size:30px;" class="mode-btn selected" onclick="startGame()">スタート！</button>
+    </div>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
+    <!-- 【ブラッシュアップ】全問クリアの画面。元は alert() を出してホームに戻っていた -->
+    <div id="done-screen" class="screen">
+      <div style="font-size:64px;">🌸</div>
+      <h2 style="font-size:40px; color:var(--pop-orange); margin:10px 0;">全問クリア！</h2>
+      <p class="done-msg">お疲れ様でした。</p>
+      <div class="nav">
+        <button class="mode-btn selected" style="font-size:24px; padding:16px;" onclick="startGame()">同じ設定でもう一度</button>
+        <button class="mode-btn" style="font-size:20px; padding:14px;" onclick="goHome()">レベル・形式をえらび直す</button>
+        <a href="../remake.html">ほかの教材をえらぶ</a>
+      </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+      <button id="home-btn" onclick="goHome()">🏠 ホーム</button>
+      <div id="progress-container">
+        <div id="progress-text"></div>
+        <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+      </div>
+      <div id="feedback"></div>
+      <div id="q-area"><div id="q-text" class="math-font"></div></div>
+      <div id="choice-ui"></div>
+      <div id="connect-ui" style="display:none; width:90%; text-align:center;">
+        <div id="order-note" class="order-note"></div>
+        <div id="ans-zone" class="math-font"></div>
+        <div id="tile-tray" class="tile-tray math-font"></div>
+        <button class="judge-btn" onclick="judgeConnect()">できた！</button>
+      </div>
+    </div>
+  </div>
 <script>
-/* ---------------------------------------------------------------------------
-   09. 展開マスター
-     レベル1（10問）… 単項式×多項式、そして基本の展開
-     レベル2（5問） … 少し複雑な展開
-     方式は「選択式」と「つなげる（候補をタップして式を組み立てる）」の2つ。
+const level1Data = [
+  { q: "4(x + 3)", a: "4x + 12", o: ["4x + 3", "4x + 7", "x + 12"], c: ["4x", "+", "12"], p: ["4x", "12", "x", "3", "+", "-"] },
+  { q: "x(x - 7)", a: "x² - 7x", o: ["x² - 7", "2x - 7", "x² + 7x"], c: ["x²", "-", "7x"], p: ["x²", "7x", "x", "7", "+", "-"] },
+  { q: "-2(3x - 5)", a: "-6x + 10", o: ["-6x - 10", "6x + 10", "-6x - 5"], c: ["-6x", "+", "10"], p: ["-6x", "10", "6x", "5", "+", "-"] },
+  { q: "5x(2x + 1)", a: "10x² + 5x", o: ["10x² + 1", "7x² + 5x", "10x + 5x"], c: ["10x²", "+", "5x"], p: ["10x²", "5x", "x²", "1", "+", "-"] },
+  { q: "(x - 4) × (-3x)", a: "-3x² + 12x", o: ["-3x² - 12x", "3x² + 12x", "-3x - 12"], c: ["-3x²", "+", "12x"], p: ["-3x²", "12x", "3x²", "4x", "+", "-"] },
+  { q: "x(2x² - x)", a: "2x³ - x²", o: ["2x³ - x", "2x² - x²", "x³ - x²"], c: ["2x³", "-", "x²"], p: ["2x³", "x²", "x³", "x", "+", "-"] },
+  { q: "3(2x - 4)", a: "6x - 12", o: ["6x - 4", "6x + 12", "5x - 12"], c: ["6x", "-", "12"], p: ["6x", "12", "x", "4", "+", "-"] },
+  { q: "-x(3x + 2)", a: "-3x² - 2x", o: ["-3x² + 2x", "3x² - 2x", "-3x - 2"], c: ["-3x²", "-", "2x"], p: ["-3x²", "2x", "3x²", "x", "+", "-"] },
+  { q: "(x + 6)(x - 6)", a: "x² - 36", o: ["x² + 36", "x² - 12x - 36", "x² - 12"], c: ["x²", "-", "36"], p: ["x²", "36", "12x", "6", "+", "-"] },
+  { q: "2x(x² + 4)", a: "2x³ + 8x", o: ["2x³ + 4", "2x² + 8x", "x³ + 8x"], c: ["2x³", "+", "8x"], p: ["2x³", "8x", "x³", "4x", "+", "-"] }
+];
 
-   元教材から直した点：
-     ・「つなげる」でパーツを置いたあと、置き直しができず詰んでいた。
-       → 空欄をタップし直せばいつでも入れ替えられる。「やり直す」ボタンも追加。
-     ・レベル2で問題が5問より多く出たり、途中で止まったりしていた。
-       → 問題数を出題エンジンが管理するので、指定どおりに終わる。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+const level2Data = [
+  { q: "(2x + 3)(3x + 1)", a: "6x² + 11x + 3", o: ["6x² + 9x + 3", "5x² + 11x + 3", "6x² + 11x + 4"], c: ["6x²", "+", "11x", "+", "3"], p: ["6x²", "11x", "3", "5x²", "9x", "+", "-"] },
+  { q: "(3x - 2)(2x + 4)", a: "6x² + 8x - 8", o: ["6x² - 8x - 8", "6x² + 16x - 8", "5x² + 8x - 8"], c: ["6x²", "+", "8x", "-", "8"], p: ["6x²", "8x", "8", "16x", "x²", "+", "-"] },
+  { q: "(4x - 1)(2x - 3)", a: "8x² - 14x + 3", o: ["8x² + 14x + 3", "8x² - 14x - 3", "6x² - 14x + 3"], c: ["8x²", "-", "14x", "+", "3"], p: ["8x²", "14x", "3", "6x²", "12x", "+", "-"] },
+  { q: "(2x + 5)(5x - 2)", a: "10x² + 21x - 10", o: ["10x² - 21x - 10", "10x² + 29x - 10", "7x² + 21x - 10"], c: ["10x²", "+", "21x", "-", "10"], p: ["10x²", "21x", "10", "29x", "x²", "+", "-"] },
+  { q: "(3x + 2)(3x - 2)", a: "9x² - 4", o: ["9x² + 4", "9x² - 12x - 4", "6x² - 4"], c: ["9x²", "-", "4"], p: ["9x²", "4", "12x", "x²", "+", "-"] }
+];
 
-  var A = Algebra, F = Quiz.fmt, M = MathCore;
+let cfg = { level: 1, mode: 'choice' };
+let state = { index: 0, questions: [], current: null, user: [] };
 
-  /* ---------- レベル1：単項式 × 多項式 ---------- */
-  function monoTimesPoly() {
-    var k = A.nz(-6, 6);
-    var hasX = Math.random() < 0.5;          // かける側に x をつけるか
-    var p = A.nz(1, 6), q = A.nz(-8, 8);
+function sel(type, val, btn) {
+  cfg[type] = val;
+  [...btn.parentElement.children].forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
 
-    var left = (k === 1 && hasX) ? 'x' : (k === -1 && hasX) ? '-x' : (hasX ? k + 'x' : String(k));
-    var right = '(' + A.linear(p, q) + ')';
+function goHome() {
+  document.getElementById('done-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('menu-screen').classList.add('active');
+}
 
-    var t1 = k * p, t2 = k * q;
-    var expanded = hasX
-      ? F.poly([[t1, F.pow('x', 2)], [t2, 'x']])
-      : F.poly([[t1, 'x'], [t2, '']]);
+function startGame() {
+  const data = cfg.level === 1 ? [...level1Data] : [...level2Data];
+  // 問題をシャッフル
+  state.questions = data.sort(() => Math.random() - 0.5);
+  state.index = 0;
+  
+  document.getElementById('done-screen').classList.remove('active');
+  document.getElementById('menu-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  next();
+}
 
-    return {
-      question: left + right,
-      answer: expanded,
-      hint: 'かっこの外の数を、中のどちらの項にもかけます（分配法則）。',
-      explain: '分配法則より ' + left + ' × ' + A.linear(p, q) + ' = ' + expanded
-    };
+function next() {
+  const max = cfg.level === 1 ? 10 : 5;
+
+  if(state.index >= max) {
+    document.getElementById('game-screen').classList.remove('active');
+    document.getElementById('done-screen').classList.add('active');
+    document.querySelector('#done-screen .done-msg').textContent =
+      `レベル${cfg.level}（${cfg.mode === 'choice' ? '選択式' : 'つなげる'}）をクリア！お疲れ様でした。`;
+    return;
   }
 
-  /* ---------- レベル1・2：2項×2項 ---------- */
-  function twoByTwo(level) {
-    var it = level >= 2 ? A.crossForm() : Quiz.pick([
-      A.quadraticFromRoots({ lo: -7, hi: 7 }),
-      A.squareForm({ lo: -7, hi: 7 }),
-      A.diffOfSquares({ hi: 8 })
-    ]);
-    return {
-      question: it.factored,
-      answer: it.expanded,
-      coefs: it.coefs,
-      hint: level >= 2
-        ? '前どうし・外どうし・内どうし・後ろどうしを、すべてかけて足します。'
-        : '(x + a)(x + b) = x² + (a + b)x + ab',
-      explain: '答え： ' + it.expanded
-    };
+  const progressPercent = (state.index / max) * 100;
+  document.getElementById('progress-bar-fill').style.width = progressPercent + "%";
+  document.getElementById('progress-text').innerText = `${state.index + 1} 問目 / 全 ${max} 問`;
+
+  state.current = state.questions[state.index];
+  state.index++;
+  
+  document.getElementById('q-text').innerText = state.current.q;
+  document.getElementById('feedback').innerText = "";
+  document.getElementById('order-note').textContent = "";
+  document.getElementById('game-screen').classList.remove('locked');
+  state.solved = false;
+  state.user = [];
+
+  if(cfg.mode === 'choice') {
+    renderChoice();
+  } else {
+    renderConnect();
   }
+}
 
-  /* ---------- 出題の形 ---------- */
-
-  function toChoice(item) {
-    var correct = item.answer;
-    var correctPlain = F.plain(correct);
-    var wrongs = [];
-    var tries = 0;
-    while (wrongs.length < 3 && tries++ < 60) {
-      var c = item.coefs;
-      var cand;
-      if (c) {
-        cand = F.poly([
-          [c.x2, F.pow('x', 2)],
-          [c.x1 + Quiz.pick([-2, -1, 1, 2, 0]), 'x'],
-          [c.x0 + Quiz.pick([-3, -1, 1, 2, 0]), '']
-        ]);
-      } else {
-        // 単項式×多項式のときは、片方だけかけ忘れた形などを作る
-        cand = correct.replace(/(\d+)/, function (m) { return String(Number(m) + Quiz.pick([1, -1, 2])); });
-      }
-      if (cand === correct) continue;
-      if (M.isEqual(F.plain(cand), correctPlain)) continue;   // 中身が同じものは誤答にしない
-      if (wrongs.indexOf(cand) >= 0) continue;
-      wrongs.push(cand);
-    }
-    return {
-      text: '次の式を展開しなさい。',
-      math: item.question,
-      type: 'choice',
-      choices: [correct].concat(wrongs),
-      correct: 0,
-      hint: item.hint,
-      explain: item.explain
-    };
-  }
-
-  /** 「つなげる」＝候補をタップして係数の空欄を埋める形 */
-  function toPick(item) {
-    var c = item.coefs;
-    if (!c) {
-      // 単項式×多項式のときは記述で答える
-      return {
-        text: '次の式を展開しなさい。',
-        math: item.question,
-        type: 'input',
-        answer: F.plain(item.answer),
-        answerLabel: item.answer,
-        placeholder: '例： 3x^2 - 6x',
-        hint: item.hint,
-        explain: item.explain
-      };
-    }
-
-    // 正解の係数＋まぎらわしい数を候補にする
-    var bank = [String(c.x1), String(c.x0)];
-    [c.x1 * -1, c.x0 * -1, c.x1 + 1, c.x0 - 1, c.x1 + c.x0].forEach(function (v) {
-      var s = String(v);
-      if (bank.length < 6 && bank.indexOf(s) < 0) bank.push(s);
-    });
-
-    return {
-      text: '展開した式になるように、空欄に入る数を選びなさい。',
-      math: item.question,
-      type: 'pick',
-      template: (c.x2 === 1 ? 'x<sup>2</sup>' : c.x2 + 'x<sup>2</sup>') + ' ＋ _ x ＋ _',
-      choices: bank,
-      answers: [String(c.x1), String(c.x0)],
-      answerLabel: item.answer,
-      hint: item.hint,
-      explain: item.explain
-    };
-  }
-
-  function build(level, style, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) {
-      var item = (level === 1 && Math.random() < 0.4) ? monoTimesPoly() : twoByTwo(level);
-      out.push(style === 'choice' ? toChoice(item) : toPick(item));
-    }
-    return out;
-  }
-
-  Quiz.start({
-    title: '展開マスター',
-    subtitle: '分配法則から展開の公式まで。選択式とつなげるの2つの方式で。',
-    modes: [
-      { id: '1:choice', group: '選択式', name: 'レベル1', desc: '10問' },
-      { id: '2:choice', group: '選択式', name: 'レベル2', desc: '係数つき　5問' },
-      { id: '1:pick', group: 'つなげる', name: 'レベル1', desc: '10問' },
-      { id: '2:pick', group: 'つなげる', name: 'レベル2', desc: '係数つき　5問' }
-    ],
-    build: function (id) {
-      var p = id.split(':');
-      var level = Number(p[0]);
-      return build(level, p[1], level === 1 ? 10 : 5);
-    }
+function renderChoice() {
+  const ui = document.getElementById('choice-ui');
+  ui.style.display = 'grid';
+  document.getElementById('connect-ui').style.display = 'none';
+  ui.innerHTML = "";
+  let choices = [state.current.a, ...state.current.o].sort(() => Math.random() - 0.5);
+  choices.forEach(txt => {
+    const b = document.createElement('button');
+    b.className = "choice-btn math-font";
+    b.innerText = txt;
+    b.onclick = () => { if(txt === state.current.a) ok(); else { b.disabled = true; fail(); } };
+    ui.appendChild(b);
   });
-})();
+}
+
+function renderConnect() {
+  document.getElementById('choice-ui').style.display = 'none';
+  document.getElementById('connect-ui').style.display = 'block';
+  updateAns();
+  const tray = document.getElementById('tile-tray');
+  tray.innerHTML = "";
+  const sorted = [...new Set(state.current.p)].sort((a,b) => {
+     const score = (s) => s.includes('³') ? 40 : s.includes('²') ? 30 : s.includes('x') ? 20 : (s==='+'||s==='-') ? 0 : 10;
+     const diff = score(b) - score(a);
+     return diff !== 0 ? diff : a.localeCompare(b);
+  });
+  sorted.forEach(v => {
+    const t = document.createElement('div');
+    t.className = "tile";
+    t.innerText = v;
+    t.onclick = () => { state.user.push(v); updateAns(); };
+    tray.appendChild(t);
+  });
+}
+
+function updateAns() {
+  const zone = document.getElementById('ans-zone');
+  zone.innerHTML = "";
+  state.user.forEach((v, i) => {
+    const c = document.createElement('div');
+    c.className = "ans-chip";
+    c.innerText = v;
+    c.onclick = () => { state.user.splice(i, 1); updateAns(); };
+    zone.appendChild(c);
+  });
+}
+
+// 【ブラッシュアップ】項の順番がちがっても正解にする。
+//   元はパーツの並びまで同じでないと不正解で、「12 + 4x」のように入れかえると正しいのに不正解だった。
+//   符号つきの項に分けて比べる。並びが教科書どおりでないときは、正解にしたうえでひとこと出す。
+function signedTerms(chips) {
+  const terms = [];
+  let sign = '+', expectTerm = true;
+  for (const c of chips) {
+    if (c === '+' || c === '-') {
+      if (!expectTerm || terms.length === 0) { sign = c; expectTerm = true; continue; }
+      return null;                     // 符号が続いた
+    }
+    if (!expectTerm) return null;      // 項が続いた（符号がない）
+    let t = c;
+    if (t.startsWith('-')) { sign = sign === '-' ? '+' : '-'; t = t.slice(1); }
+    terms.push(sign + t);
+    sign = '+'; expectTerm = false;
+  }
+  if (expectTerm) return null;         // 最後が符号で終わった
+  return terms;
+}
+
+function judgeConnect() {
+  if (state.solved) return;
+  if (state.user.join("") === state.current.c.join("")) { ok(); return; }
+  const mine = signedTerms(state.user), want = signedTerms(state.current.c);
+  if (mine && want && mine.length === want.length &&
+      [...mine].sort().join('|') === [...want].sort().join('|')) {
+    document.getElementById('order-note').textContent = '正解！ ふつうは次数の高い順（' + state.current.a + '）に書くよ';
+    ok();
+    return;
+  }
+  fail();
+}
+
+function ok() {
+  // 【ブラッシュアップ】元は正解のボタンを続けて押すと next() が 2 回呼ばれ、1 問とばしていた
+  if (state.solved) return;
+  state.solved = true;
+  document.getElementById('game-screen').classList.add('locked');
+  const f = document.getElementById('feedback');
+  f.innerText = "🌸 正解！！ 🌸";
+  f.style.color = "#4CAF50";
+  const max = cfg.level === 1 ? 10 : 5;
+  document.getElementById('progress-bar-fill').style.width = (state.index / max) * 100 + "%";
+  setTimeout(next, 1200);
+}
+
+function fail() {
+  const f = document.getElementById('feedback');
+  f.innerText = "❌ ちがうよ！";
+  f.style.color = "#F44336";
+  setTimeout(() => f.innerText = "", 1000);
+}
 </script>
 </body>
 </html>
