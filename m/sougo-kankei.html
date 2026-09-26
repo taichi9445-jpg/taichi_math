@@ -1,36 +1,1602 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>相互関係の計算</title>
-<link rel="stylesheet" href="../assets/base.css">
+ <head>
+  <meta charset="UTF-8">
+  <!--
+    27. 相互関係の計算（三角比の相互関係 段階学習）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三角比の相互関係 段階学習</title>
+  
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.5rem;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem;
+      max-width: 1000px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      height: 98%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page {
+      display: none;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .page.active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.5s;
+    }
+
+    .top-page {
+      text-align: center;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .top-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+    }
+
+    .version {
+      font-size: 0.9rem;
+      color: #718096;
+      margin-bottom: 0.5rem;
+    }
+
+    .top-description {
+      font-size: 1rem;
+      color: #4a5568;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .device-selection {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .device-selection-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 1rem;
+    }
+
+    .device-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .device-button {
+      flex: 1;
+      max-width: 200px;
+      background: white;
+      border: 3px solid #cbd5e0;
+      padding: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #4a5568;
+    }
+
+    .device-button:hover {
+      border-color: #667eea;
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .device-button.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+    }
+
+    .device-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .top-features {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      color: #2d3748;
+    }
+
+    .feature-icon {
+      font-size: 1.2rem;
+      margin-right: 0.8rem;
+    }
+
+    .start-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1.2rem 3rem;
+      border-radius: 12px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .start-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #718096;
+    }
+
+    .problem {
+      background: white;
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    body.mobile-mode .problem {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .problem-left {
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    body.mobile-mode .problem-left {
+      width: 100%;
+      flex: 1;
+    }
+
+    .problem-right {
+      display: none;
+    }
+
+    body.mobile-mode .problem-right {
+      width: 100%;
+      flex: 0;
+      margin-top: 0;
+      margin-left: 0;
+      display: flex;
+    }
+
+    .problem-number {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 0.3rem;
+    }
+
+    .problem-text {
+      font-size: 1.1rem;
+      color: #2d3748;
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+    }
+
+    body.mobile-mode .problem-text {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .solution-steps {
+      background: transparent;
+      padding: 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      line-height: 1.8;
+      font-size: 0.95rem;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    body.mobile-mode .solution-steps {
+      font-size: 0.75rem;
+      padding: 0.5rem;
+      line-height: 1.5;
+      flex-direction: column;
+    }
+
+    .steps-content {
+      flex: 0 1 auto;
+      max-width: fit-content;
+    }
+
+    body.mobile-mode .steps-content {
+      flex: auto;
+      max-width: none;
+    }
+
+    .steps-options {
+      width: 200px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 5.2rem;
+    }
+
+    body.mobile-mode .steps-options {
+      display: none;
+    }
+
+    .step-line {
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+
+    body.mobile-mode .step-line {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 0.2rem;
+      position: relative;
+    }
+
+    body.mobile-mode .fraction {
+      margin: 0 0.1rem;
+    }
+
+    .fraction-numerator {
+      border-bottom: 1px solid #2d3748;
+      padding: 0 0.3rem 0.1rem;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+
+    body.mobile-mode .fraction-numerator {
+      padding: 0 0.2rem 0.05rem;
+      min-width: 1rem;
+      font-size: 0.75rem;
+    }
+
+    .fraction-denominator {
+      padding: 0.1rem 0.3rem 0;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+
+    body.mobile-mode .fraction-denominator {
+      padding: 0.05rem 0.2rem 0;
+      min-width: 1rem;
+      font-size: 0.75rem;
+    }
+
+    /* 分数を囲むカッコのスタイル */
+    .fraction-with-parens {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 0.1rem;
+      position: relative;
+    }
+
+    .fraction-paren {
+      font-size: 2.5em;
+      line-height: 0.8;
+      font-weight: 300;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+    }
+
+    .fraction-paren.left {
+      margin-right: 0.1rem;
+    }
+
+    .fraction-paren.right {
+      margin-left: 0.1rem;
+    }
+
+    .superscript {
+      font-size: 0.7em;
+      vertical-align: super;
+      position: relative;
+      top: -0.6em;
+      margin-left: 0.1rem;
+    }
+
+    .drop-zone {
+      display: inline-flex;
+      background: #edf2f7;
+      border: 2px dashed #cbd5e0;
+      border-radius: 6px;
+      padding: 0.3rem 0.8rem;
+      min-width: 80px;
+      min-height: 35px;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      vertical-align: middle;
+      margin: 0.1rem;
+    }
+
+    body.mobile-mode .drop-zone {
+      min-width: 60px;
+      min-height: 28px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .drop-zone.drag-over {
+      border-color: #667eea;
+      background: #e6fffa;
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+      border-style: solid;
+    }
+
+    .drop-zone.filled {
+      border-style: solid;
+      border-color: #667eea;
+      background: #e6f7ff;
+    }
+
+    .drop-zone.correct {
+      border-color: #48bb78;
+      background: #c6f6d5;
+      animation: correctPulse 0.5s;
+    }
+
+    .drop-zone.incorrect {
+      border-color: #f56565;
+      background: #fed7d7;
+      animation: shake 0.5s;
+    }
+
+    @keyframes correctPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 200px;
+      margin: 0 auto;
+    }
+
+    body.mobile-mode .options {
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      max-width: 100%;
+      margin-top: 0;
+    }
+
+    .option {
+      background: #667eea;
+      color: white;
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+      cursor: grab;
+      user-select: none;
+      font-size: 0.8rem;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 90px;
+      margin: 0 auto;
+    }
+
+    .option:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .option.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .option.used {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .option.selected {
+      background: #48bb78;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(72, 187, 120, 0.6);
+      animation: pulse 1s infinite;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .check-button, .show-answer-button {
+      flex: 1;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .check-button {
+      background: #48bb78;
+    }
+
+    .check-button:hover:not(:disabled) {
+      background: #38a169;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .check-button:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .show-answer-button {
+      background: #ed8936;
+    }
+
+    .show-answer-button:hover {
+      background: #dd6b20;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .result {
+      margin-top: 0.5rem;
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      display: none;
+      font-size: 0.95rem;
+    }
+
+    .result.correct {
+      background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+      color: #22543d;
+      display: block;
+      animation: celebration 0.6s;
+    }
+
+    @keyframes celebration {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.02) rotate(1deg); }
+      75% { transform: scale(1.02) rotate(-1deg); }
+    }
+
+    .explanation {
+      margin-top: 0.5rem;
+      padding: 0.8rem;
+      background: #fffaf0;
+      border-left: 3px solid #ed8936;
+      border-radius: 6px;
+      display: none;
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+
+    .explanation.show {
+      display: block;
+      animation: slideDown 0.4s;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .explanation-title {
+      font-weight: bold;
+      color: #c05621;
+      margin-bottom: 0.3rem;
+      font-size: 0.95rem;
+    }
+
+    .navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .nav-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .nav-button:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-button:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .page-indicator {
+      font-size: 0.95rem;
+      color: #4a5568;
+      font-weight: bold;
+    }
+
+    .progress {
+      text-align: center;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .progress-text {
+      font-size: 0.95rem;
+      color: #2d3748;
+      font-weight: bold;
+    }
+
+    .score {
+      font-size: 1.5rem;
+      color: #667eea;
+      margin-top: 0.3rem;
+    }
+
+    .final-celebration {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .final-celebration.show {
+      display: flex;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .celebration-content {
+      background: white;
+      padding: 3rem;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 500px;
+      animation: bounceIn 0.6s;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .celebration-emoji {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+    }
+
+    .celebration-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 1rem;
+    }
+
+    .celebration-message {
+      font-size: 1.3rem;
+      color: #2d3748;
+      line-height: 1.8;
+    }
+
+    .sqrt {
+      position: relative;
+      padding-left: 0.15rem;
+      letter-spacing: -0.1em;
+    }
+
+    .sqrt::before {
+      content: '√';
+      position: absolute;
+      left: 0;
+    }
+
+    /* ルート記号内の数字の間隔を詰める */
+    .fraction-numerator,
+    .fraction-denominator,
+    .option,
+    .drop-zone {
+      letter-spacing: -0.05em;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    html, body { height: auto !important; }
+    body { display: block; padding: 12px; }
+    .container { height: auto; overflow: visible; max-width: 1000px; margin: 0 auto; padding: 24px 20px; box-sizing: border-box; }
+    .page, .top-page { height: auto; overflow: visible; }
+    .problem, .problem-left, .solution-steps { overflow: visible; }
+    .device-selection { display: none; }
+    .top-title { font-size: min(2rem, 6.2vw); white-space: nowrap; }
+    .top-description { color: var(--u-sub); font-weight: 700; }
+    .top-features { background: var(--u-soft-yellow); border: 3px dashed #fde68a; border-radius: 20px; }
+    .feature-item { color: var(--u-ink); font-weight: 700; }
+    .start-button { font-size: 1.2rem; padding: 14px 36px; align-self: center; }
+    .problem-number { display: inline-block; align-self: flex-start; }
+    .problem-text { color: var(--u-ink); font-weight: 800; font-size: 1.15rem; line-height: 1.8; }
+    .problem { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; }
+    .solution-steps { font-size: 1.05rem; color: var(--u-ink); }
+    .step-line { font-weight: 700; }
+    .drop-zone { background: #fff; border-color: var(--u-line-dark); border-radius: 10px; }
+    .drop-zone.filled { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); }
+    .drop-zone.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
+    .drop-zone.incorrect { background: var(--u-ng-soft); border-color: var(--u-ng-line); color: var(--u-ng); }
+    .steps-options { width: 240px; align-self: stretch; }
+    .steps-options .options { position: sticky; top: 12px; }
+    .options { max-width: 240px; }
+    .option { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; font-size: 0.95rem; font-weight: 700; max-width: none; width: 100%; box-sizing: border-box; padding: 6px 4px; }
+    .option:hover { background: var(--u-blue-dark); }
+    .option.selected { background: var(--u-accent); border-bottom-color: var(--u-accent-dark); }
+    .fraction-numerator { border-bottom-color: currentColor; }
+    .result { border-radius: 16px; }
+    .result.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .explanation { background: #fff; border: 3px dashed var(--u-line); border-left: 3px dashed var(--u-line); border-radius: 16px; color: var(--u-ink); line-height: 1.8; }
+    .explanation-title { color: var(--u-accent-text); }
+    .navigation { border-top-color: var(--u-line); }
+    .nav-button:disabled { opacity: 0.4; }
+    .page-indicator { color: var(--u-sub); }
+    .progress { border-top-color: var(--u-line); }
+    .progress-text { color: var(--u-sub); }
+    .score { color: var(--u-accent-text); font-weight: 800; }
+    .final-celebration { padding: 16px; overflow-y: auto; box-sizing: border-box; background: rgba(75, 44, 32, 0.55); }
+    .celebration-content { border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; margin: auto; box-sizing: border-box; }
+    .celebration-emoji { font-size: 3rem; margin-bottom: 4px; }
+    .celebration-title { color: var(--u-accent-text); font-size: min(2.2rem, 8vw); white-space: nowrap; margin-bottom: 6px; }
+    .final-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); white-space: nowrap; margin-bottom: 8px; }
+    .celebration-message { color: var(--u-ink); font-size: 1rem; font-weight: 700; line-height: 1.8; }
+    .final-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .final-nav button { padding: 12px; }
+    .final-nav a { color: var(--u-sub); font-weight: 700; }
+    /* スマホ：選択肢を画面の下に固定して、上の空欄をタップで埋められるようにする */
+    body.mobile-mode .solution-steps { font-size: 1rem; line-height: 1.8; }
+    body.mobile-mode .fraction-numerator, body.mobile-mode .fraction-denominator { font-size: 0.9rem; }
+    body.mobile-mode .drop-zone { font-size: 0.95rem; min-width: 56px; min-height: 34px; }
+    body.mobile-mode .problem-text { font-size: 1rem; }
+    body.mobile-mode .problem-right { position: sticky; bottom: 0; z-index: 5; background: #fff; border: 3px solid var(--u-line); border-radius: 16px; padding: 8px; max-height: 36vh; overflow-y: auto; box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
+    body.mobile-mode .problem.solved .problem-right { display: none; }
+    body.mobile-mode .step-line { flex-wrap: wrap; white-space: normal; overflow-x: visible; }
+    body.mobile-mode .options { grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); max-width: none; gap: 6px; }
+    body.mobile-mode .option { font-size: 0.95rem; }
+    @media (max-width: 700px) {
+      body { padding: 8px; }
+      .container { padding: 16px 10px; }
+      .problem { padding: 10px 6px; }
+    }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+ <body class="u-theme">
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+  <div class="container"><!-- トップページ -->
+   <div class="page active" id="page-0">
+    <div class="top-page">
+     <div class="top-title" id="main-title">
+      三角比の相互関係 段階学習
+     </div>
+     <div class="top-description" id="subtitle">
+      途中式の空欄に、正しい式を入れていきましょう
+     </div>
+     <div class="device-selection">
+      <div class="device-selection-title">
+       使用するデバイスを選択してください
+      </div>
+      <div class="device-buttons"><button class="device-button selected" id="pc-button" onclick="selectDevice('pc')">
+        <div class="device-icon">
+         💻
+        </div>
+        <div>
+         PC
+        </div></button> <button class="device-button" id="mobile-button" onclick="selectDevice('mobile')">
+        <div class="device-icon">
+         📱
+        </div>
+        <div>
+         スマホ
+        </div></button>
+      </div>
+     </div>
+     <div class="top-features">
+      <div class="feature-item"><span class="feature-icon">👆</span> <span>式をタップ → 空欄をタップ で入ります（パソコンはドラッグでも OK）</span>
+      </div>
+      <div class="feature-item"><span class="feature-icon">📝</span> <span>問題1から5へ徐々に難易度が上がります</span>
+      </div>
+      <div class="feature-item"><span class="feature-icon">✅</span> <span>正解すると大きく褒めてくれます</span>
+      </div>
+      <div class="feature-item"><span class="feature-icon">❌</span> <span>間違えても何度でも挑戦できます</span>
+      </div>
+      <div class="feature-item"><span class="feature-icon">📖</span> <span>正解したときのみ解説が表示されます</span>
+      </div>
+      <div class="feature-item"><span class="feature-icon">💡</span> <span>困ったときは「答えを見る」ボタンで確認</span>
+      </div>
+     </div><button class="start-button" onclick="goToPage(1)">学習を始める 🚀</button>
+    </div>
+   </div><!-- 問題ページ -->
+   <main id="problems-container"></main>
+   <div class="progress">
+    <div class="progress-text">
+     自力で正解
+    </div>
+    <div class="score" id="score">
+     0 / 5
+    </div>
+   </div>
+  </div>
+  <div class="final-celebration" id="final-celebration">
+   <div class="celebration-content">
+    <div class="celebration-emoji">
+     🎉🎊✨
+    </div>
+    <div class="celebration-title">
+     完璧です！
+    </div>
+    <div class="celebration-message">
+     全問正解、本当に素晴らしいです！<br>
+      三角比の相互関係を完全にマスターしましたね！<br>
+      あなたの努力と集中力に拍手を送ります！👏<br>
+      この調子で数学を楽しんでください！
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      main_title: "三角比の相互関係 段階学習",
+      subtitle: "途中式の空欄に、正しい式を入れていきましょう"
+    };
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/steps.js"></script>
-<script src="../data/sougo-kankei.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   27. 相互関係の計算（三角比の相互関係 段階学習）
-   5問ぶんの解答手順は元教材からそのまま引き継いでいる。
+    let selectedDeviceMode = 'pc'; // デフォルトはPC
 
-   元教材から直した点：
-     ・ドラッグ＆ドロップだったため、スマホで空欄に落とせず操作不能になった。
-       また PC 用・スマホ用の切り替えボタンを押し間違えると入力できなくなった。
-       → 「空欄をタップ → 候補をタップ」の一本化。切り替えボタンは不要にした。
-     ・候補が正答ばかりで、考えなくても順に置けば正解になっていた。
-       → よくある誤答を候補に混ぜた。
-     ・まちがえた後にやり直せず、リロードするしかなかった。
-       → 何度でも直せる。「答えを見る」も用意した。
---------------------------------------------------------------------------- */
-Steps.start({
-  title: '相互関係の計算',
-  subtitle: 'sin²A + cos²A = 1 と tan A = sin A ÷ cos A を、手順を追って使えるようにする。',
-  problems: window.DATA_SOUGO
-});
+    function selectDevice(mode) {
+      selectedDeviceMode = mode;
+      const pcButton = document.getElementById('pc-button');
+      const mobileButton = document.getElementById('mobile-button');
+
+      if (mode === 'pc') {
+        pcButton.classList.add('selected');
+        mobileButton.classList.remove('selected');
+        document.body.classList.remove('mobile-mode');
+      } else {
+        mobileButton.classList.add('selected');
+        pcButton.classList.remove('selected');
+        document.body.classList.add('mobile-mode');
+      }
+    }
+
+    const problems = [
+      {
+        id: 1,
+        given: "0° < A < 90°、cos A = 2/3",
+        target: "sin A と tan A",
+        steps: [
+          { text: "【三角比の相互関係】", blanks: [{ id: 0, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 1, answer: "cos²A", type: "text" }], after2: " = ", blanks3: [{ id: 2, answer: "1", type: "num" }], after3: " より" },
+          { text: "", blanks: [] },
+          { text: "", blanks: [{ id: 3, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 4, answer: "(2/3)²", type: "full" }], after2: " = 1" },
+          { text: "sin²A = 1 - ", blanks: [{ id: 5, answer: "4/9", type: "full" }] },
+          { text: "sin²A = ", blanks: [{ id: 6, answer: "5/9", type: "full" }] },
+          { text: "", blanks: [{ id: 7, answer: "sin A > 0", type: "text" }], after: " より" },
+          { text: "sin A = ", blanks: [{ id: 8, answer: "√5/3", type: "full" }] },
+          { text: "", blanks: [] },
+          { text: "【三角比の相互関係】tan A = ", blanks: [{ id: 9, answer: "sin A", type: "text" }], after: " ÷ ", blanks2: [{ id: 10, answer: "cos A", type: "text" }], after2: " より" },
+          { text: "", blanks: [] },
+          { text: "tan A = ", blanks: [{ id: 11, answer: "√5/3", type: "full" }], after: " ÷ ", blanks2: [{ id: 12, answer: "2/3", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 13, answer: "√5/3", type: "full" }], after: " × ", blanks2: [{ id: 14, answer: "3/2", type: "full" }] },
+          { text: "tan A = √5/2" }
+        ],
+        options: ["sin²A", "cos²A", "1", "(2/3)²", "4/9", "5/9", "sin A > 0", "√5/3", "sin A", "cos A", "2/3", "3/2"],
+        explanation: "三角比の基本公式 sin²A + cos²A = 1 を使って sin²A を求めます。0° < A < 90° より sin A > 0 なので、正の平方根を取ります。次に tan A = sin A / cos A の公式を使って tan A を計算します。"
+      },
+      {
+        id: 2,
+        given: "0° < A < 90°、sin A = 1/3",
+        target: "cos A と tan A",
+        steps: [
+          { text: "【三角比の相互関係】", blanks: [{ id: 0, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 1, answer: "cos²A", type: "text" }], after2: " = ", blanks3: [{ id: 2, answer: "1", type: "num" }], after3: " より" },
+          { text: "", blanks: [] },
+          { text: "", blanks: [{ id: 3, answer: "(1/3)²", type: "full" }], after: " + ", blanks2: [{ id: 4, answer: "cos²A", type: "text" }], after2: " = 1" },
+          { text: "cos²A = 1 - ", blanks: [{ id: 5, answer: "1/9", type: "full" }] },
+          { text: "cos²A = 8/9" },
+          { text: "", blanks: [{ id: 6, answer: "cos A > 0", type: "text" }], after: " より" },
+          { text: "cos A = ", blanks: [{ id: 7, answer: "2√2/3", type: "full" }] },
+          { text: "", blanks: [] },
+          { text: "【三角比の相互関係】tan A = ", blanks: [{ id: 8, answer: "sin A", type: "text" }], after: " ÷ ", blanks2: [{ id: 9, answer: "cos A", type: "text" }], after2: " より" },
+          { text: "", blanks: [] },
+          { text: "tan A = ", blanks: [{ id: 10, answer: "1/3", type: "full" }], after: " ÷ ", blanks2: [{ id: 11, answer: "2√2/3", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 12, answer: "1/3", type: "full" }], after: " × ", blanks2: [{ id: 13, answer: "3/2√2", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 14, answer: "1/2√2", type: "full" }] },
+          { text: "tan A = √2/4" }
+        ],
+        options: ["sin²A", "cos²A", "1", "(1/3)²", "1/9", "cos A > 0", "2√2/3", "sin A", "cos A", "1/3", "3/2√2", "1/2√2"],
+        explanation: "まず sin²A + cos²A = 1 から cos²A を求めます。0° < A < 90° より cos A > 0 なので、正の平方根を取ります。次に tan A = sin A / cos A の公式を使って計算します。"
+      },
+      {
+        id: 3,
+        given: "0° < A < 90°、cos A = 3/5",
+        target: "sin A と tan A",
+        steps: [
+          { text: "【三角比の相互関係】", blanks: [{ id: 0, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 1, answer: "cos²A", type: "text" }], after2: " = ", blanks3: [{ id: 2, answer: "1", type: "num" }], after3: " より" },
+          { text: "", blanks: [] },
+          { text: "", blanks: [{ id: 3, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 4, answer: "(3/5)²", type: "full" }], after2: " = 1" },
+          { text: "sin²A = 1 - ", blanks: [{ id: 5, answer: "9/25", type: "full" }] },
+          { text: "sin²A = 16/25" },
+          { text: "", blanks: [{ id: 6, answer: "sin A > 0", type: "text" }], after: " より" },
+          { text: "sin A = ", blanks: [{ id: 7, answer: "4/5", type: "full" }] },
+          { text: "", blanks: [] },
+          { text: "【三角比の相互関係】tan A = ", blanks: [{ id: 8, answer: "sin A", type: "text" }], after: " ÷ ", blanks2: [{ id: 9, answer: "cos A", type: "text" }], after2: " より" },
+          { text: "", blanks: [] },
+          { text: "tan A = 4/5 ÷ 3/5" },
+          { text: "tan A = ", blanks: [{ id: 10, answer: "4/5", type: "full" }], after: " × ", blanks2: [{ id: 11, answer: "5/3", type: "full" }] },
+          { text: "tan A = 4/3" }
+        ],
+        options: ["9/25", "sin A", "1", "cos²A", "sin A > 0", "4/5", "(3/5)²", "cos A", "sin²A", "5/3"],
+        explanation: "cos A から sin²A を求め、0° < A < 90° より sin A > 0 なので正の平方根を取ります。その後 tan A = sin A / cos A を使います。分数の割り算は、割る数の逆数をかけることで計算できます。"
+      },
+      {
+        id: 4,
+        given: "0° < A < 90°、sin A = 3/4",
+        target: "cos A と tan A",
+        steps: [
+          { text: "【三角比の相互関係】", blanks: [{ id: 0, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 1, answer: "cos²A", type: "text" }], after2: " = ", blanks3: [{ id: 2, answer: "1", type: "num" }], after3: " より" },
+          { text: "", blanks: [] },
+          { text: "", blanks: [{ id: 3, answer: "(3/4)²", type: "full" }], after: " + ", blanks2: [{ id: 4, answer: "cos²A", type: "text" }], after2: " = 1" },
+          { text: "cos²A = ", blanks: [{ id: 5, answer: "1", type: "num" }], after: " - ", blanks2: [{ id: 6, answer: "9/16", type: "full" }] },
+          { text: "cos²A = ", blanks: [{ id: 7, answer: "7/16", type: "full" }] },
+          { text: "", blanks: [{ id: 8, answer: "cos A > 0", type: "text" }], after: " より" },
+          { text: "cos A = ", blanks: [{ id: 9, answer: "√7/4", type: "full" }] },
+          { text: "", blanks: [] },
+          { text: "【三角比の相互関係】tan A = ", blanks: [{ id: 10, answer: "sin A", type: "text" }], after: " ÷ ", blanks2: [{ id: 11, answer: "cos A", type: "text" }], after2: " より" },
+          { text: "", blanks: [] },
+          { text: "tan A = ", blanks: [{ id: 12, answer: "3/4", type: "full" }], after: " ÷ ", blanks2: [{ id: 13, answer: "√7/4", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 14, answer: "3/4", type: "full" }], after: " × ", blanks2: [{ id: 15, answer: "4/√7", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 16, answer: "3/√7", type: "full" }] },
+          { text: "tan A = 3√7/7" }
+        ],
+        options: ["cos A > 0", "sin²A", "9/16", "1", "√7/4", "cos²A", "7/16", "3/4", "sin A", "cos A", "4/√7", "3/√7", "(3/4)²"],
+        explanation: "基本公式から cos²A を求め、0° < A < 90° より cos A > 0 なので正の平方根を取ります。その後 tan A = sin A / cos A を計算します。分数の割り算は掛け算に直し、分母に根号がある場合は有理化します。"
+      },
+      {
+        id: 5,
+        given: "0° < A < 90°、sin A = 2/5",
+        target: "cos A と tan A",
+        steps: [
+          { text: "【三角比の相互関係】", blanks: [{ id: 0, answer: "sin²A", type: "text" }], after: " + ", blanks2: [{ id: 1, answer: "cos²A", type: "text" }], after2: " = ", blanks3: [{ id: 2, answer: "1", type: "num" }], after3: " より" },
+          { text: "", blanks: [] },
+          { text: "", blanks: [{ id: 3, answer: "(2/5)²", type: "full" }], after: " + ", blanks2: [{ id: 4, answer: "cos²A", type: "text" }], after2: " = 1" },
+          { text: "cos²A = 1 - ", blanks: [{ id: 5, answer: "4/25", type: "full" }] },
+          { text: "cos²A = ", blanks: [{ id: 6, answer: "21/25", type: "full" }] },
+          { text: "", blanks: [{ id: 7, answer: "cos A > 0", type: "text" }], after: " より" },
+          { text: "cos A = ", blanks: [{ id: 8, answer: "√21/5", type: "full" }] },
+          { text: "", blanks: [] },
+          { text: "【三角比の相互関係】tan A = ", blanks: [{ id: 9, answer: "sin A", type: "text" }], after: " ÷ ", blanks2: [{ id: 10, answer: "cos A", type: "text" }], after2: " より" },
+          { text: "", blanks: [] },
+          { text: "tan A = ", blanks: [{ id: 11, answer: "2/5", type: "full" }], after: " ÷ ", blanks2: [{ id: 12, answer: "√21/5", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 13, answer: "2/5", type: "full" }], after: " × ", blanks2: [{ id: 14, answer: "5/√21", type: "full" }] },
+          { text: "tan A = ", blanks: [{ id: 15, answer: "2/√21", type: "full" }] },
+          { text: "tan A = 2√21/21" }
+        ],
+        options: ["sin²A", "4/25", "cos A > 0", "1", "cos²A", "21/25", "√21/5", "sin A", "cos A", "2/5", "5/√21", "2/√21", "(2/5)²"],
+        explanation: "基本公式 sin²A + cos²A = 1 から cos²A を求め、0° < A < 90° より cos A > 0 なので正の平方根を取ります。その後 tan A = sin A / cos A を計算します。分数の割り算は掛け算に直し、分母に根号がある場合は有理化します。"
+      }
+    ];
+
+    let correctCount = 0;
+    // 【ブラッシュアップ】問題ごとの記録（'self' = 自力で正解、'shown' = 答えを見た）と、まちがえた回数
+    let doneFlags = {};
+    let mistakes = 0;
+    let draggedElement = null;
+    let currentPage = 0;
+
+    function goToPage(pageNum) {
+      const pages = document.querySelectorAll('.page');
+      pages.forEach(page => page.classList.remove('active'));
+
+      const targetPage = document.getElementById(`page-${pageNum}`);
+      if (targetPage) {
+        targetPage.classList.add('active');
+        currentPage = pageNum;
+        window.scrollTo(0, 0);
+      }
+    }
+
+    function createFraction(numerator, denominator) {
+      return `<span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
+    }
+
+    function formatText(text) {
+      // 3/2√2 のような形式（分母に係数とルート）- 最優先で処理
+      text = text.replace(/(\d+)\/(\d+)√(\d+)/g, (match, num, coef, root) => createFraction(num, `${coef}√${root}`));
+      // 3√7/7 のような形式（分子に係数付きルート）
+      text = text.replace(/(\d+)√(\d+)\s*\/\s*(\d+)/g, (match, coef, root, den) => createFraction(`${coef}√${root}`, den));
+      // 2√2/3 のような形式
+      text = text.replace(/(\d+)√(\d+)\/(\d+)/g, (match, coef, root, den) => createFraction(`${coef}√${root}`, den));
+      // √5/3 のような形式
+      text = text.replace(/√(\d+)\/(\d+)/g, (match, root, den) => createFraction(`√${root}`, den));
+      // (2/3)² のような形式 - 分数より先に処理
+      text = text.replace(/\(([^)]+)\)²/g, (match, inner) => {
+        if (inner.includes('/')) {
+          const parts = inner.split('/');
+          return `<span class="fraction-with-parens"><span class="fraction-paren left">(</span>${createFraction(parts[0], parts[1])}<span class="fraction-paren right">)</span><span class="superscript">2</span></span>`;
+        }
+        return `(${inner})²`;
+      });
+      // 分母にルートがある分数（4/√7, 3/√7, 5/√21, 2/√21など）
+      text = text.replace(/(\d+)\/√(\d+)/g, (match, num, root) => createFraction(num, `√${root}`));
+      // 通常の分数（まだ処理されていないもの）
+      text = text.replace(/(\d+)\/(\d+)/g, (match, num, den) => createFraction(num, den));
+      return text;
+    }
+
+    function createStepHTML(step, problemId) {
+      let html = '<div class="step-line">';
+
+      if (step.text) {
+        html += `<span>${formatText(step.text)}</span>`;
+      }
+
+      if (step.blanks && step.blanks.length > 0) {
+        step.blanks.forEach(blank => {
+          html += `<span class="drop-zone" data-problem-id="${problemId}" data-blank-id="${blank.id}" data-answer="${blank.answer}">___</span>`;
+        });
+      }
+
+      if (step.after) {
+        html += `<span>${formatText(step.after)}</span>`;
+      }
+
+      if (step.blanks2 && step.blanks2.length > 0) {
+        step.blanks2.forEach(blank => {
+          html += `<span class="drop-zone" data-problem-id="${problemId}" data-blank-id="${blank.id}" data-answer="${blank.answer}">___</span>`;
+        });
+      }
+
+      if (step.after2) {
+        html += `<span>${formatText(step.after2)}</span>`;
+      }
+
+      if (step.blanks3 && step.blanks3.length > 0) {
+        step.blanks3.forEach(blank => {
+          html += `<span class="drop-zone" data-problem-id="${problemId}" data-blank-id="${blank.id}" data-answer="${blank.answer}">___</span>`;
+        });
+      }
+
+      if (step.after3) {
+        html += `<span>${formatText(step.after3)}</span>`;
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function createProblemHTML(problem) {
+      const stepsHTML = problem.steps.map(step => createStepHTML(step, problem.id)).join('');
+
+      return `
+        <div class="page" id="page-${problem.id}">
+          <div class="problem-number">問題 ${problem.id}</div>
+          <div class="problem-text">${formatText(problem.given)} のとき、${problem.target} を求めなさい。</div>
+
+          <div class="problem" data-problem-id="${problem.id}">
+            <div class="problem-left">
+              <div class="solution-steps">
+                <div class="steps-content">
+                  ${stepsHTML}
+                </div>
+                <div class="steps-options">
+                  <div class="options" id="options-${problem.id}">
+                    ${problem.options.map(opt => `
+                      <div class="option" draggable="true" data-value="${opt}">${formatText(opt)}</div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button class="show-answer-button">答えを見る</button>
+              </div>
+
+              <div class="result"></div>
+              <div class="explanation">
+                <div class="explanation-title">📝 解説</div>
+                <div>${problem.explanation}</div>
+              </div>
+
+              <div class="navigation">
+                <button class="nav-button" onclick="goToPage(${problem.id - 1})" ${problem.id === 1 ? 'disabled' : ''}>← 前へ</button>
+                <div class="page-indicator">${problem.id} / 5</div>
+                ${problem.id === 5 ? '<button class="nav-button" onclick="showFinal()">結果を見る →</button>' : '<button class="nav-button" onclick="goToPage(' + (problem.id + 1) + ')">次へ →</button>'}
+              </div>
+            </div>
+
+            <div class="problem-right">
+              <div class="options" id="options-mobile-${problem.id}">
+                ${problem.options.map(opt => `
+                  <div class="option" draggable="true" data-value="${opt}">${formatText(opt)}</div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initializeProblem(problemElement, problem) {
+      const dropZones = problemElement.querySelectorAll('.drop-zone');
+      const options = problemElement.querySelectorAll('.option');
+      const checkButton = problemElement.querySelector('.check-button');
+      const showAnswerButton = problemElement.querySelector('.show-answer-button');
+      const resultDiv = problemElement.querySelector('.result');
+      const explanationDiv = problemElement.querySelector('.explanation');
+      let answers = {};
+      let totalBlanks = dropZones.length;
+      let selectedOption = null;
+      let locked = false;   // 【ブラッシュアップ】正解した・答えを見たあとは空欄を変えられないようにする
+
+      // 【ブラッシュアップ】今の答えから、すべての選択肢（PC 用・スマホ用の両方）の「使用済み」を決め直す
+      function refreshUsed() {
+        options.forEach(opt => {
+          const v = opt.dataset.value;
+          const used = Object.values(answers).filter(x => x === v).length;
+          const need = Array.from(dropZones).filter(z => z.dataset.answer === v).length;
+          opt.classList.toggle('used', used > 0 && used >= need);
+        });
+      }
+
+      // タップ/クリックで選択肢を選択
+      options.forEach(option => {
+        option.addEventListener('click', (e) => {
+          if (option.classList.contains('used')) {
+            return;
+          }
+
+          // 既に選択されている選択肢の選択を解除
+          if (selectedOption) {
+            selectedOption.classList.remove('selected');
+          }
+
+          // 同じ選択肢をクリックした場合は選択解除
+          if (selectedOption === option) {
+            selectedOption = null;
+          } else {
+            selectedOption = option;
+            option.classList.add('selected');
+          }
+        });
+
+        option.addEventListener('dragstart', (e) => {
+          if (option.classList.contains('used')) {
+            e.preventDefault();
+            return;
+          }
+          draggedElement = option;
+          option.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        option.addEventListener('dragend', () => {
+          option.classList.remove('dragging');
+        });
+      });
+
+      dropZones.forEach(zone => {
+        // タップ/クリックで空欄に答えを入れる
+        zone.addEventListener('click', (e) => {
+          if (!selectedOption || locked) return;
+
+          const blankId = zone.dataset.blankId;
+          const value = selectedOption.dataset.value;
+          const correctAnswer = zone.dataset.answer;
+
+          if (answers[blankId]) {
+            const oldValue = answers[blankId];
+            const oldUsageCount = Object.values(answers).filter(v => v === oldValue).length;
+            const oldTotalNeeded = Array.from(dropZones).filter(z => z.dataset.answer === oldValue).length;
+
+            if (oldUsageCount <= oldTotalNeeded) {
+              const oldOption = problemElement.querySelector(`.option[data-value="${oldValue}"]`);
+              if (oldOption) {
+                oldOption.classList.remove('used');
+              }
+            }
+          }
+
+          answers[blankId] = value;
+          zone.innerHTML = formatText(value);
+          const token = zone._token = (zone._token || 0) + 1;   // 【ブラッシュアップ】
+
+          // 使用回数をカウント（同じ選択肢を複数回使える）
+          const usageCount = Object.values(answers).filter(v => v === value).length;
+          const totalNeeded = Array.from(dropZones).filter(z => z.dataset.answer === value).length;
+
+          // 必要な回数だけ使われたら、usedクラスを追加
+          if (usageCount >= totalNeeded) {
+            selectedOption.classList.add('used');
+          } else {
+            selectedOption.classList.remove('used');
+          }
+
+          // 選択を解除
+          selectedOption.classList.remove('selected');
+          selectedOption = null;
+
+          // 即座に正誤判定
+          zone.classList.remove('correct', 'incorrect', 'filled');
+          if (value === correctAnswer) {
+            zone.classList.add('filled', 'correct');
+          } else {
+            zone.classList.add('filled', 'incorrect');
+            mistakes++;   // 【ブラッシュアップ】
+            // 間違いの場合は0.5秒後にリセット
+            const incorrectValue = value;
+            setTimeout(() => {
+              if (zone._token !== token) return;   // 【ブラッシュアップ】そのあと別の答えを入れていたら消さない
+              zone.classList.remove('filled', 'incorrect');
+              zone.innerHTML = '___';
+
+              // 使用回数を再計算してused状態を更新
+              const newUsageCount = Object.values(answers).filter(v => v === incorrectValue).length - 1;
+              if (newUsageCount < totalNeeded) {
+                const incorrectOption = problemElement.querySelector(`.option[data-value="${incorrectValue}"]`);
+                if (incorrectOption) {
+                  incorrectOption.classList.remove('used');
+                }
+              }
+
+              delete answers[blankId];
+              refreshUsed();
+            }, 500);
+          }
+
+          refreshUsed();
+          // 全ての空欄が埋まったら自動で答え合わせ
+          if (Object.keys(answers).length === totalBlanks && Array.from(dropZones).every(z => answers[z.dataset.blankId] === z.dataset.answer)) {
+            setTimeout(() => {
+              checkAnswers();
+            }, 300);
+          }
+        });
+
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+
+          if (!draggedElement || draggedElement.classList.contains('used') || locked) return;
+
+          const blankId = zone.dataset.blankId;
+          const value = draggedElement.dataset.value;
+          const correctAnswer = zone.dataset.answer;
+
+          if (answers[blankId]) {
+            const oldValue = answers[blankId];
+            const oldUsageCount = Object.values(answers).filter(v => v === oldValue).length;
+            const oldTotalNeeded = Array.from(dropZones).filter(z => z.dataset.answer === oldValue).length;
+
+            if (oldUsageCount <= oldTotalNeeded) {
+              const oldOption = problemElement.querySelector(`.option[data-value="${oldValue}"]`);
+              if (oldOption) {
+                oldOption.classList.remove('used');
+              }
+            }
+          }
+
+          answers[blankId] = value;
+          zone.innerHTML = formatText(value);
+          const token = zone._token = (zone._token || 0) + 1;   // 【ブラッシュアップ】
+
+          // 使用回数をカウント（同じ選択肢を複数回使える）
+          const usageCount = Object.values(answers).filter(v => v === value).length;
+          const totalNeeded = Array.from(dropZones).filter(z => z.dataset.answer === value).length;
+
+          // 必要な回数だけ使われたら、usedクラスを追加
+          if (usageCount >= totalNeeded) {
+            draggedElement.classList.add('used');
+          } else {
+            draggedElement.classList.remove('used');
+          }
+
+          // 即座に正誤判定
+          zone.classList.remove('correct', 'incorrect', 'filled');
+          if (value === correctAnswer) {
+            zone.classList.add('filled', 'correct');
+          } else {
+            zone.classList.add('filled', 'incorrect');
+            mistakes++;   // 【ブラッシュアップ】
+            // 間違いの場合は0.5秒後にリセット
+            const incorrectValue = value;
+            setTimeout(() => {
+              if (zone._token !== token) return;   // 【ブラッシュアップ】そのあと別の答えを入れていたら消さない
+              zone.classList.remove('filled', 'incorrect');
+              zone.innerHTML = '___';
+
+              // 使用回数を再計算してused状態を更新
+              const newUsageCount = Object.values(answers).filter(v => v === incorrectValue).length - 1;
+              if (newUsageCount < totalNeeded) {
+                const incorrectOption = problemElement.querySelector(`.option[data-value="${incorrectValue}"]`);
+                if (incorrectOption) {
+                  incorrectOption.classList.remove('used');
+                }
+              }
+
+              delete answers[blankId];
+              refreshUsed();
+            }, 500);
+          }
+
+          refreshUsed();
+          // 全ての空欄が埋まったら自動で答え合わせ
+          if (Object.keys(answers).length === totalBlanks && Array.from(dropZones).every(z => answers[z.dataset.blankId] === z.dataset.answer)) {
+            setTimeout(() => {
+              checkAnswers();
+            }, 300);
+          }
+        });
+      });
+
+      function checkAnswers() {
+        let allCorrect = true;
+        let hasIncorrect = false;
+
+        dropZones.forEach(zone => {
+          const blankId = zone.dataset.blankId;
+          const correctAnswer = zone.dataset.answer;
+          const userAnswer = answers[blankId];
+
+          zone.classList.remove('correct', 'incorrect');
+
+          if (userAnswer === correctAnswer) {
+            zone.classList.add('correct');
+          } else {
+            zone.classList.add('incorrect');
+            allCorrect = false;
+            hasIncorrect = true;
+          }
+        });
+
+        if (allCorrect) {
+          if (locked) return;   // 【ブラッシュアップ】
+          locked = true;
+          doneFlags[problem.id] = 'self';
+          problemElement.classList.add('solved');
+          const praises = [
+            '🎉 完璧です！素晴らしい理解力ですね！',
+            '✨ 大正解！あなたは天才です！',
+            '🌟 パーフェクト！完璧な解答です！',
+            '👏 すごい！完全に理解していますね！',
+            '🎊 見事です！数学のセンスが光っています！'
+          ];
+          const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+
+          resultDiv.className = 'result correct';
+          resultDiv.textContent = randomPraise;
+          explanationDiv.classList.add('show');
+          correctCount++;
+          updateScore();
+          showAnswerButton.disabled = true;
+          options.forEach(opt => opt.draggable = false);
+
+          const nextButton = problemElement.querySelector('.navigation .nav-button:last-child');
+          if (nextButton && !nextButton.disabled) {
+            nextButton.style.background = '#48bb78';
+            nextButton.style.animation = 'pulse 1s infinite';
+          }
+
+          // 【ブラッシュアップ】5 問ともおわったら結果を出す
+          if (Object.keys(doneFlags).length === 5) {
+            setTimeout(showFinal, 1200);
+          }
+        } else if (hasIncorrect) {
+          setTimeout(() => {
+            dropZones.forEach(zone => {
+              const blankId = zone.dataset.blankId;
+              if (zone.classList.contains('incorrect')) {
+                zone.classList.remove('filled', 'incorrect');
+                zone.innerHTML = '___';
+
+                const oldOption = problemElement.querySelector(`.option[data-value="${answers[blankId]}"]`);
+                if (oldOption) {
+                  oldOption.classList.remove('used');
+                }
+
+                delete answers[blankId];
+              }
+            });
+          }, 500);
+        }
+      }
+
+      showAnswerButton.addEventListener('click', () => {
+        dropZones.forEach(zone => {
+          const blankId = zone.dataset.blankId;
+          const correctAnswer = zone.dataset.answer;
+
+          if (!answers[blankId]) {
+            answers[blankId] = correctAnswer;
+            zone.classList.add('filled', 'correct');
+            zone.innerHTML = formatText(correctAnswer);
+
+            const correctOption = problemElement.querySelector(`.option[data-value="${correctAnswer}"]`);
+            if (correctOption) {
+              correctOption.classList.add('used');
+            }
+          }
+        });
+
+        explanationDiv.classList.add('show');
+        showAnswerButton.disabled = true;
+        options.forEach(opt => opt.draggable = false);
+        // 【ブラッシュアップ】答えを見たあとは空欄を固定（元は入れかえて答え合わせをすると正解数に入り、5 を超えることもあった）
+        locked = true;
+        if (!doneFlags[problem.id]) doneFlags[problem.id] = 'shown';
+        problemElement.classList.add('solved');
+        refreshUsed();
+        if (Object.keys(doneFlags).length === 5) setTimeout(showFinal, 800);
+      });
+    }
+
+    // 【ブラッシュアップ】結果：自力で解けた数・まだの問題・最初から・ほかの教材
+    function showFinal() {
+      const self = Object.values(doneFlags).filter(v => v === 'self').length;
+      const rest = problems.map(p => p.id).filter(id => !doneFlags[id]);
+      const shown = problems.map(p => p.id).filter(id => doneFlags[id] === 'shown');
+      const perfect = self === 5;
+      let message;
+      if (perfect) {
+        message = '全問正解、本当に素晴らしいです！<br>三角比の相互関係を完全にマスターしましたね！<br>あなたの努力と集中力に拍手を送ります！👏';
+      } else if (rest.length) {
+        message = 'まだ解いていない問題があります：問題 ' + rest.join('、');
+      } else {
+        message = '「答えを見る」を使った問題（問題 ' + shown.join('、') + '）は、もう一度自分で解いてみよう！';
+      }
+      document.querySelector('#final-celebration .celebration-content').innerHTML = `
+        <div class="celebration-emoji">${perfect ? '🎉🎊✨' : (rest.length ? '📝' : '👍')}</div>
+        <div class="celebration-title">${perfect ? '完璧です！' : (rest.length ? 'とちゅうの記録' : 'おつかれさま！')}</div>
+        <div class="final-score">自力で正解 ${self} / 5 問</div>
+        <div class="celebration-message">${message}<br><span style="color: var(--u-sub);">まちがえて入れた回数：${mistakes} 回</span></div>
+        <div class="final-nav">
+          ${rest.length ? `<button class="next" onclick="closeFinal(); goToPage(${rest[0]});">問題 ${rest[0]} を解く ▶</button>` : ''}
+          <button class="again" onclick="restartAll()">最初からもう一度</button>
+          <button class="plain" onclick="closeFinal()">閉じる（解説を見直す）</button>
+          <a href="../remake.html">ほかの教材をえらぶ</a>
+        </div>`;
+      document.getElementById('final-celebration').classList.add('show');
+    }
+
+    function closeFinal() {
+      document.getElementById('final-celebration').classList.remove('show');
+    }
+
+    function restartAll() {
+      closeFinal();
+      correctCount = 0;
+      doneFlags = {};
+      mistakes = 0;
+      updateScore();
+      renderProblems();
+      goToPage(1);
+    }
+
+    function updateScore() {
+      document.getElementById('score').textContent = `${correctCount} / 5`;
+    }
+
+    function renderProblems() {
+      const container = document.getElementById('problems-container');
+      container.innerHTML = '';
+
+      problems.forEach(problem => {
+        const problemDiv = document.createElement('div');
+        problemDiv.innerHTML = createProblemHTML(problem);
+        container.appendChild(problemDiv.firstElementChild);
+
+        const problemElement = container.querySelector(`[data-problem-id="${problem.id}"]`);
+        initializeProblem(problemElement, problem);
+      });
+    }
+
+    async function onConfigChange(config) {
+      document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["main_title", config.main_title || defaultConfig.main_title],
+          ["subtitle", config.subtitle || defaultConfig.subtitle]
+        ])
+      });
+    }
+
+    renderProblems();
+    onConfigChange(window.elementSdk?.config || defaultConfig);
+
+    // 【ブラッシュアップ】画面のはばで PC / スマホ の並べ方を自動で切りかえる
+    function autoDevice() {
+      const mode = window.innerWidth <= 700 ? 'mobile' : 'pc';
+      if (mode !== selectedDeviceMode || !autoDevice.done) selectDevice(mode);
+      autoDevice.done = true;
+    }
+    autoDevice();
+    window.addEventListener('resize', autoDevice);
+  </script>
+ <script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".top-title": "u-title",
+    ".start-button": "u-btn",
+    ".problem-number": "u-pill",
+    ".show-answer-button": "u-btn u-btn-plain",
+    ".nav-button": "u-btn u-btn-blue",
+    ".celebration-content": "u-card",
+    ".final-nav .next": "u-btn u-btn-blue",
+    ".final-nav .again": "u-btn",
+    ".final-nav .plain": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>
