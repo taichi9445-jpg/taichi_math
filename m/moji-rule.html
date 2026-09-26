@@ -1,200 +1,482 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>文字式のルール</title>
-<link rel="stylesheet" href="../assets/base.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字式のルール・マスタークイズ</title>
+    <!--
+      01. 文字式のルール
+      山﨑先生の GAS 版「文字式のルール・マスタークイズ」をもとにブラッシュアップしたもの。
+      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    -->
+    <!-- 数式の表示用ライブラリ -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- 【ブラッシュアップ】デザイン用フレームワーク
+         元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+         これは本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+         同じクラスから作った固定の CSS ファイルに置きかえた。見た目は同じ。 -->
+    <link rel="stylesheet" href="../assets/gas.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+
+        body {
+            font-family: 'M PLUS Rounded 1c', "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+            background-color: #fff9e6;
+            color: #4b2c20;
+        }
+
+        /* 【ブラッシュアップ】式の文字サイズを画面幅に合わせて縮めるようにした。
+           固定の 3rem だと「b×b×8×a」などがスマホで枠からはみ出していた。 */
+        .math-text { font-size: clamp(1.7rem, 7vw, 3rem); font-weight: bold; }
+        .explanation-math { font-size: clamp(1.6rem, 6.5vw, 2.5rem); color: #d946ef; font-weight: bold; }
+        .alt-math { font-size: clamp(1.4rem, 5.5vw, 2.2rem); }
+
+        /* 【ブラッシュアップ】数式がそれでも長いときは、枠からはみ出さず横に動かせるようにする */
+        mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
+        /* 【ブラッシュアップ】数式の準備ができるまでは隠しておく。
+           以前は「\( 5 \times x \)」のような記号が一瞬そのまま見えていた。 */
+        .math-wait { visibility: hidden; }
+
+        .bubble-btn {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-bottom: 6px solid #cbd5e1;
+        }
+
+        .bubble-btn:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .btn-wrong {
+            background-color: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            color: #ef4444 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .float-icon { animation: floating 3s ease-in-out infinite; }
+
+        .card {
+            border-radius: 40px;
+            box-shadow: 0 15px 0 rgba(0,0,0,0.05);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 100;
+            pointer-events: none; /* 【ブラッシュアップ】紙吹雪がボタンのタップをじゃましないように */
+        }
+
+        /* 【ブラッシュアップ】サイトの一覧へ戻るリンク */
+        .back-link {
+            align-self: flex-start;
+            max-width: 42rem;
+            width: 100%;
+            margin: 0 auto;
+            font-weight: 700;
+            color: #b45309;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .float-icon, .btn-wrong { animation: none; }
+        }
+    </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="min-h-screen flex flex-col items-center p-4">
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   01. 文字式のルール
-   「×を省く」「数を前に」「アルファベット順」「÷は分数に」といった
-   文字式の書き方のきまりを、10問で確認する。
+    <a class="back-link" href="../remake.html">← 教材の一覧へ</a>
 
-   元教材から直した点：
-     ・正誤の判定が入力文字列の一致だったため、「2ab」と「2ba」で
-       片方しか正解にならないなど、書き方のゆれで理不尽な不正解が出ていた。
-       → 4択で「書き方」を問う問題と、記述で「値」を問う問題を分け、
-         記述問題は数式として判定するようにした。
-     ・10問目まで進むとスコア表示が固まることがあった。
-       → 出題エンジンで一括管理するようにして解消。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+    <div id="app" class="max-w-2xl w-full bg-white card p-6 md:p-10 mt-4 border-8 border-yellow-300 relative overflow-hidden">
 
-  // ------------------------------------------------------------------
-  // ルールを説明つきで持たせる。問題は毎回この中からランダムに10問。
-  // ------------------------------------------------------------------
-  var ITEMS = [
-    {
-      raw: 'a × b',
-      right: 'ab',
-      wrongs: ['a・b', 'ab×', 'a b ×'],
-      rule: '× は書かずに、文字をならべて書く。'
-    },
-    {
-      raw: '3 × x',
-      right: '3x',
-      wrongs: ['x3', 'x・3', '3・x'],
-      rule: '数は文字より前に書く。'
-    },
-    {
-      raw: 'x × 5',
-      right: '5x',
-      wrongs: ['x5', '5・x', 'x・5'],
-      rule: '数が後ろにあっても、書くときは前に出す。'
-    },
-    {
-      raw: '1 × a',
-      right: 'a',
-      wrongs: ['1a', 'a1', '1・a'],
-      rule: '1 はかけても値が変わらないので書かない。'
-    },
-    {
-      raw: '(-1) × y',
-      right: '-y',
-      wrongs: ['-1y', 'y-1', '-1・y'],
-      rule: '−1 をかけたときは、マイナスだけ書く。'
-    },
-    {
-      raw: 'b × a',
-      right: 'ab',
-      wrongs: ['ba', 'b・a', 'a・b'],
-      rule: '文字はアルファベット順にならべる。'
-    },
-    {
-      raw: 'y × 2 × x',
-      right: '2xy',
-      wrongs: ['2yx', 'xy2', 'y2x'],
-      rule: '数を前に出し、文字はアルファベット順にする。'
-    },
-    {
-      raw: 'a × a',
-      right: 'a<sup>2</sup>',
-      wrongs: ['2a', 'aa', 'a×2'],
-      rule: '同じ文字のかけ算は、指数を使って書く。'
-    },
-    {
-      raw: 'x × x × x',
-      right: 'x<sup>3</sup>',
-      wrongs: ['3x', 'x<sup>2</sup>', 'xxx'],
-      rule: '3個かけたら 3 乗。'
-    },
-    {
-      raw: 'a × a × b',
-      right: 'a<sup>2</sup>b',
-      wrongs: ['ab<sup>2</sup>', '2ab', 'a<sup>2</sup>+b'],
-      rule: '同じ文字だけをまとめて指数にする。'
-    },
-    {
-      raw: 'a ÷ 3',
-      right: '<span class="frac"><span class="num">a</span><span class="den">3</span></span>',
-      wrongs: ['3a', '<span class="frac"><span class="num">3</span><span class="den">a</span></span>', 'a3'],
-      rule: '÷ は分数の形にする。わられる数が分子。'
-    },
-    {
-      raw: 'x ÷ y',
-      right: '<span class="frac"><span class="num">x</span><span class="den">y</span></span>',
-      wrongs: ['xy', '<span class="frac"><span class="num">y</span><span class="den">x</span></span>', 'x−y'],
-      rule: '文字どうしのわり算も分数にする。'
-    },
-    {
-      raw: '2 × (a + b)',
-      right: '2(a + b)',
-      wrongs: ['2a + b', '(a + b)2', '2 + a + b'],
-      rule: 'かっこはそのまま。数はかっこの前に置く。'
-    },
-    {
-      raw: 'a × 3 + b',
-      right: '3a + b',
-      wrongs: ['3(a + b)', 'a3 + b', '3ab'],
-      rule: '＋でつながれた部分は、それぞれ別に整える。'
-    },
-    {
-      raw: '(x + 1) ÷ 2',
-      right: '<span class="frac"><span class="num">x + 1</span><span class="den">2</span></span>',
-      wrongs: ['x + <span class="frac"><span class="num">1</span><span class="den">2</span></span>',
-               '<span class="frac"><span class="num">2</span><span class="den">x + 1</span></span>', '2(x + 1)'],
-      rule: 'かっこ全体を分子にする。'
-    },
-    {
-      raw: '0.1 × a',
-      right: '0.1a',
-      wrongs: ['0.1・a', 'a0.1', '.1a'],
-      rule: '小数のときは 1 と違って、0.1 はそのまま書く。'
-    }
-  ];
+        <!-- 装飾用背景要素 -->
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-100 rounded-full opacity-50"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 rounded-full opacity-50"></div>
 
-  // ------------------------------------------------------------------
-  // 代入して値を求める問題（記述式）。数式として判定するので書き方は自由。
-  // ------------------------------------------------------------------
-  function substitutionQuestion() {
-    var a = Quiz.randInt(2, 6);
-    var b = Quiz.randInt(2, 6);
-    var patterns = [
-      { expr: '3x', calc: 3 * a, show: 'x = ' + a, note: '3 × ' + a },
-      { expr: 'x + 2y', calc: a + 2 * b, show: 'x = ' + a + '、y = ' + b, note: a + ' + 2 × ' + b },
-      { expr: '2ab', calc: 2 * a * b, show: 'a = ' + a + '、b = ' + b, note: '2 × ' + a + ' × ' + b },
-      { expr: 'a<sup>2</sup>', calc: a * a, show: 'a = ' + a, note: a + ' × ' + a },
-      { expr: '5x - y', calc: 5 * a - b, show: 'x = ' + a + '、y = ' + b, note: '5 × ' + a + ' − ' + b }
-    ];
-    var p = Quiz.pick(patterns);
-    return {
-      tag: '代入',
-      text: p.show + ' のとき、次の式の値を求めなさい。',
-      math: p.expr,
-      type: 'input',
-      inputmode: 'numeric',
-      answer: String(p.calc),
-      placeholder: '数を入力',
-      explain: p.note + ' = ' + p.calc + ' です。'
-    };
-  }
+        <!-- 進行度バー -->
+        <div class="w-full bg-slate-100 h-6 rounded-full mb-8 overflow-hidden border-2 border-slate-200">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500" style="width: 0%"></div>
+        </div>
 
-  function ruleQuestion(item) {
-    var choices = [item.right].concat(item.wrongs.slice(0, 3));
-    return {
-      tag: '書き方',
-      text: '次の式を、文字式のきまりにしたがって書き直すとどれですか。',
-      math: item.raw,
-      type: 'choice',
-      choices: choices,
-      correct: 0,
-      hint: item.rule,
-      explain: item.rule
-    };
-  }
+        <div id="header-info" class="flex justify-between items-center mb-6 px-2">
+            <div class="bg-yellow-100 px-4 py-2 rounded-full font-bold text-yellow-700">
+                第 <span id="current-q-num">1</span> 問
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-3xl float-icon">✨</span>
+                <span class="font-bold text-xl text-orange-400">スコア: <span id="score-val">0</span></span>
+            </div>
+        </div>
 
-  Quiz.start({
-    title: '文字式のルール',
-    subtitle: '×を省く・数を前に・アルファベット順。書き方のきまりをマスターしよう。',
-    modes: [
-      { id: 'rule', name: '書き方の練習', desc: '10問（4択）' },
-      { id: 'sub', name: '代入して値を求める', desc: '8問（記述）' },
-      { id: 'mix', name: '総合', desc: '書き方＋代入を12問' }
-    ],
-    build: function (id) {
-      if (id === 'rule') {
-        return Quiz.shuffle(ITEMS).slice(0, 10).map(ruleQuestion);
-      }
-      if (id === 'sub') {
-        var out = [];
-        for (var i = 0; i < 8; i++) out.push(substitutionQuestion());
-        return out;
-      }
-      var a = Quiz.shuffle(ITEMS).slice(0, 8).map(ruleQuestion);
-      var b = [];
-      for (var j = 0; j < 4; j++) b.push(substitutionQuestion());
-      return Quiz.shuffle(a.concat(b));
-    }
-  });
-})();
-</script>
+        <!-- スタート画面 -->
+        <div id="start-screen" class="text-center space-y-8 py-10 relative z-10">
+            <div class="text-6xl mb-4 float-icon">✏️</div>
+            <h1 class="text-4xl font-extrabold text-blue-600 leading-tight">文字式のルールを<br>マスターしよう！</h1>
+            <p class="text-lg text-slate-500 font-bold">ルール通りに書けるかな？ (全10問)</p>
+            <button onclick="startGame()" class="bubble-btn w-full py-6 bg-orange-400 hover:bg-orange-500 text-white rounded-3xl text-3xl font-black shadow-lg border-orange-600">
+                スタート！
+            </button>
+        </div>
+
+        <!-- クイズ画面 -->
+        <div id="quiz-screen" class="hidden relative z-10">
+            <div class="text-center mb-8">
+                <div id="quiz-instruction" class="inline-block bg-blue-50 text-blue-600 px-6 py-2 rounded-full font-bold mb-4 border-2 border-blue-200">
+                    この式を文字式のルールで書くと？
+                </div>
+                <div id="question-text" class="math-text text-slate-700"></div>
+            </div>
+
+            <div id="choice-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8"></div>
+            <div id="try-again-msg" class="text-center text-red-500 font-bold hidden mb-4">
+                ちがうみたい...！もういちど選んでみてね！
+                <!-- 【ブラッシュアップ】まちがえたとき、そのルールのヒントを出す -->
+                <div id="try-again-hint" class="mt-3 text-base text-blue-600 bg-blue-50 rounded-2xl px-4 py-3 border-2 border-blue-100"></div>
+            </div>
+        </div>
+
+        <!-- 解説画面 -->
+        <div id="explanation-screen" class="hidden relative z-10 text-center">
+            <div id="result-badge" class="text-5xl font-black mb-4 text-orange-500">✨ せいかい！ ✨</div>
+            <div class="bg-slate-50 rounded-3xl p-6 border-4 border-dashed border-slate-200 mb-6 text-left">
+                <p class="text-slate-500 font-bold mb-2 text-center">答えは...</p>
+                <div id="correct-answer-math" class="explanation-math mb-4 text-center"></div>
+                <hr class="my-4">
+                <div id="explanation-text" class="text-lg leading-relaxed text-slate-700 space-y-3"></div>
+            </div>
+            <button id="next-btn" onclick="goNext()" class="bubble-btn w-full py-5 bg-blue-500 hover:bg-blue-600 text-white rounded-3xl text-2xl font-black shadow-lg border-blue-700">
+                つぎの問題へ！ ➔
+            </button>
+        </div>
+
+        <!-- 結果画面 -->
+        <div id="result-screen" class="hidden text-center space-y-8 py-10 relative z-10">
+            <h2 class="text-4xl font-black text-blue-800">けっか発表！</h2>
+            <div class="text-8xl font-black text-orange-500 mb-2"><span id="final-score">0</span><span class="text-3xl text-slate-400"> / 10</span></div>
+            <p id="result-comment" class="text-2xl font-bold text-slate-600"></p>
+            <!-- 【ブラッシュアップ】ページを読み込み直さずに、その場でもう一度始める -->
+            <button onclick="startGame()" class="bubble-btn w-full py-5 bg-slate-200 rounded-3xl text-xl font-bold hover:bg-slate-300 border-slate-400">
+                もういちど遊ぶ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 大量の問題バンク（先生の版のまま）
+        // 【ブラッシュアップ】値は同じでも書き方がルール違反になっている選択肢には note を付けて、
+        //   解説で「なぜダメなのか」を説明するようにした。
+        const ruleLevels = [
+            { // ルール①: かけるをはぶく
+                desc: "数字をさきに書いて、記号の \\(\\times\\) をはぶきます。",
+                questions: [
+                    { q: "5 \\times x", a: ["5x"], opts: ["5x", "x5", "x+5", "5.x"] },
+                    { q: "a \\times 8", a: ["8a"], opts: ["8a", "a8", "8+a", "8-a"] },
+                    { q: "12 \\times y", a: ["12y"], opts: ["12y", "y12", "12+y", "y+12"] },
+                    { q: "b \\times 3", a: ["3b"], opts: ["3b", "b3", "3+b", "b"] },
+                    { q: "m \\times 10", a: ["10m"], opts: ["10m", "m10", "10+m", "m"] }
+                ]
+            },
+            { // ルール②: アルファベット順
+                desc: "数字をさきに、文字はアルファベット順が一般的です。入れ替わっても正解だよ！",
+                questions: [
+                    { q: "b \\times a \\times 7", a: ["7ab", "7ba"], opts: ["7ab", "ab7", "7ba", "a7b"] },
+                    { q: "y \\times 3 \\times x", a: ["3xy", "3yx"], opts: ["3xy", "3yx", "xy3", "x3y"] },
+                    { q: "a \\times c \\times 4", a: ["4ac", "4ca"], opts: ["4ac", "4ca", "ac4", "4+ac"] },
+                    { q: "10 \\times z \\times x", a: ["10xz", "10zx"], opts: ["10xz", "10zx", "xz10", "10+xz"] },
+                    { q: "b \\times 5 \\times c", a: ["5bc", "5cb"], opts: ["5bc", "bc5", "5b+c", "5b"] }
+                ]
+            },
+            { // ルール③: 同じ文字は累乗
+                desc: "同じ文字をかけるときは、右上に小さく「指数（しすう）」を書いてまとめます。",
+                questions: [
+                    { q: "x \\times x \\times 5", a: ["5x^2"], opts: ["5x^2", "x^25", "10x", "x2"] },
+                    { q: "a \\times a \\times a", a: ["a^3"], opts: ["a^3", "3a", "a3", "a^2"] },
+                    { q: "y \\times 2 \\times y", a: ["2y^2"], opts: ["2y^2", "y^22", "4y", "2y"] },
+                    { q: "b \\times b \\times 8 \\times a", a: ["8ab^2", "8b^2a"], opts: ["8ab^2", "8b^2a", "8ab2", "ab^28"] },
+                    { q: "z \\times 3 \\times z \\times z", a: ["3z^3"], opts: ["3z^3", "z^33", "9z", "3z"] }
+                ]
+            },
+            { // ルール④: 1の省略
+                desc: "「1」や「-1」をかけるときは、数字の1をはぶいて書きます。",
+                questions: [
+                    { q: "x \\times 1", a: ["x"], opts: ["x", "1x", "x1", "x+1"] },
+                    { q: "(-1) \\times a", a: ["-a"], opts: ["-a", "-1a", "a-1", "1a"] },
+                    { q: "1 \\times y \\times y", a: ["y^2"], opts: ["y^2", "1y^2", "y2", "2y"] },
+                    { q: "(-1) \\times x \\times y", a: ["-xy", "-yx"], opts: ["-xy", "-yx", "-1xy", "xy-1"] },
+                    { q: "b \\times 1 \\times a", a: ["ab", "ba"], opts: ["ab", "1ab", "ab1", "a+b"] }
+                ]
+            },
+            { // ルール⑤: マイナスの数字
+                desc: "マイナスのついた数字も、いちばん前に書くのが文字式のマナーです。",
+                questions: [
+                    { q: "(-6) \\times a", a: ["-6a"], opts: ["-6a", "a-6", "-a6", "6a"] },
+                    { q: "x \\times (-3)", a: ["-3x"], opts: ["-3x", "x-3", "3x", "-x3"] },
+                    { q: "b \\times (-9) \\times a", a: ["-9ab", "-9ba"], opts: ["-9ab", "-9ba", "ab-9", "9ab"] },
+                    { q: "(-2) \\times x \\times x", a: ["-2x^2"], opts: ["-2x^2", "-x^22", "-4x", "2x^2"] },
+                    { q: "(-5) \\times z", a: ["-5z"], opts: ["-5z", "z-5", "5z", "-z5"] }
+                ]
+            },
+            { // ルール⑥: わり算は分数
+                desc: "わり算は分数にします。文字は上にのせても、よこに並べても正解です。",
+                questions: [
+                    { q: "a \\div 9", a: ["\\frac{a}{9}", "\\frac{1}{9}a"], opts: ["\\frac{a}{9}", "\\frac{9}{a}", "9a", "a-9"] },
+                    { q: "5x \\div 2", a: ["\\frac{5x}{2}", "\\frac{5}{2}x"], opts: ["\\frac{5x}{2}", "\\frac{2}{5x}", "\\frac{5}{2}x", "2.5x"],
+                      note: "\\(2.5x\\) も値は同じですが、文字式では小数ではなく<b>分数</b>で書くのがルールです。" },
+                    { q: "x \\div (-4)", a: ["-\\frac{x}{4}", "-\\frac{1}{4}x"], opts: ["-\\frac{x}{4}", "\\frac{x}{-4}", "-4x", "x-4"],
+                      note: "\\(\\frac{x}{-4}\\) も値は同じですが、マイナスは分母に残さず、<b>分数の前</b>に出して書きます。" },
+                    { q: "3a \\div 7", a: ["\\frac{3a}{7}", "\\frac{3}{7}a"], opts: ["\\frac{3a}{7}", "\\frac{7}{3a}", "\\frac{3}{7}a", "3a-7"] },
+                    { q: "b \\div 5", a: ["\\frac{b}{5}", "\\frac{1}{5}b"], opts: ["\\frac{b}{5}", "\\frac{5}{b}", "5b", "b-5"] }
+                ]
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let gameQuestions = [];
+        let currentMistakes = 0;
+        // 【ブラッシュアップ】正解したあとの連打で、得点が2回入ったり画面が二重に進んだりしないようにする
+        let answered = false;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /* 【ブラッシュアップ】数式の表示
+           MathJax の読み込みが終わってから表示する。学校の回線で MathJax が読み込めない
+           ときも、× や分数を普通の文字に置きかえて表示するので、問題が解けなくなることはない。 */
+        function texToPlain(tex) {
+            return tex
+                .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)')
+                .replace(/\\times/g, '×')
+                .replace(/\\div/g, '÷')
+                .replace(/\^(\d)/g, (m, d) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d])
+                .replace(/\\\(|\\\)/g, '')
+                .replace(/\\/g, '');
+        }
+
+        function renderMath(elements) {
+            elements.forEach(el => el.classList.add('math-wait'));
+            const reveal = () => elements.forEach(el => el.classList.remove('math-wait'));
+            const fallback = () => {
+                elements.forEach(el => {
+                    if (el.dataset.tex) { el.textContent = texToPlain(el.dataset.tex); return; }
+                    el.querySelectorAll('[data-tex]').forEach(n => { n.textContent = texToPlain(n.dataset.tex); });
+                    // 解説文の中に書かれた \( … \) も普通の文字にする
+                    el.innerHTML = el.innerHTML.replace(/\\\(([\s\S]*?)\\\)/g, (m, t) => texToPlain(t));
+                });
+                reveal();
+            };
+            let tries = 0;
+            (function wait() {
+                if (window.MathJax && MathJax.typesetPromise) {
+                    // 前の問題の数式の記録を消してから描き直す（残ったままだと動作が重くなる）
+                    if (MathJax.typesetClear) MathJax.typesetClear(elements);
+                    MathJax.typesetPromise(elements).then(reveal).catch(fallback);
+                } else if (tries++ < 50) {
+                    setTimeout(wait, 100);      // 最大 5 秒まで MathJax を待つ
+                } else {
+                    fallback();
+                }
+            })();
+        }
+
+        /** 数式を 1 つ入れた要素を作る（MathJax が使えないとき用に元の式も持たせておく） */
+        function setMath(el, tex) {
+            el.dataset.tex = tex;
+            el.innerHTML = `\\( ${tex} \\)`;
+        }
+
+        function startGame() {
+            gameQuestions = [];
+            // ルール順（①〜⑥）に従って10問組み立て
+            const counts = [2, 2, 2, 1, 1, 2];
+            counts.forEach((count, levelIdx) => {
+                const pool = shuffle([...ruleLevels[levelIdx].questions]);
+                for(let i=0; i<count; i++) {
+                    gameQuestions.push({
+                        ...pool[i],
+                        levelDesc: ruleLevels[levelIdx].desc
+                    });
+                }
+            });
+
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('explanation-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const currentQ = gameQuestions[currentIndex];
+            currentMistakes = 0;
+            answered = false;
+            document.getElementById('current-q-num').innerText = currentIndex + 1;
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('progress-bar').style.width = `${(currentIndex / 10) * 100}%`;
+            document.getElementById('try-again-msg').classList.add('hidden');
+
+            const qEl = document.getElementById('question-text');
+            setMath(qEl, currentQ.q);
+
+            const container = document.getElementById('choice-container');
+            container.innerHTML = '';
+
+            const shuffledOpts = shuffle([...currentQ.opts]);
+            shuffledOpts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "bubble-btn p-6 bg-white rounded-3xl text-2xl md:text-3xl font-bold shadow-md border-slate-200 text-slate-700";
+                const span = document.createElement('span');
+                setMath(span, opt);
+                btn.appendChild(span);
+                btn.onclick = (e) => checkAnswer(opt, e.currentTarget);
+                container.appendChild(btn);
+            });
+
+            renderMath([qEl, container]);
+            window.scrollTo(0, 0);
+        }
+
+        function checkAnswer(selected, btnElement) {
+            if (answered) return;               // 【ブラッシュアップ】連打よけ
+            const currentQ = gameQuestions[currentIndex];
+            const isCorrect = currentQ.a.includes(selected);
+
+            if (isCorrect) {
+                answered = true;
+                if (currentMistakes === 0) score++;
+                showExplanation(selected);
+            } else {
+                // 【ブラッシュアップ】同じまちがいを何度押しても、ミスは1回として数える
+                if (btnElement.classList.contains('btn-wrong')) return;
+                currentMistakes++;
+                btnElement.classList.add('btn-wrong');
+                btnElement.disabled = true;
+                const hint = document.getElementById('try-again-hint');
+                hint.innerHTML = '💡 ヒント：' + currentQ.levelDesc;
+                document.getElementById('try-again-msg').classList.remove('hidden');
+                renderMath([hint]);
+            }
+        }
+
+        function showExplanation(selected) {
+            const currentQ = gameQuestions[currentIndex];
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('explanation-screen').classList.remove('hidden');
+
+            // 【ブラッシュアップ】一発で正解できなかったときは、見出しを変える
+            document.getElementById('result-badge').innerHTML =
+                currentMistakes === 0 ? '✨ せいかい！ ✨' : '👍 せいかい！（つぎは一発で！）';
+
+            // 【ブラッシュアップ】選んだ書き方が「別の正しい書き方」のときは、それを答えとして大きく出す
+            const main = selected || currentQ.a[0];
+            const others = currentQ.a.filter(x => x !== main);
+            setMath(document.getElementById('correct-answer-math'), main);
+
+            let extraInfo = "";
+            if (others.length > 0) {
+                extraInfo = `
+                <div class="bg-blue-50 p-5 rounded-2xl mt-4 border-2 border-blue-100">
+                    <p class="text-blue-600 font-bold mb-2 text-xl">💡 ほかにもこんな書き方があるよ：</p>
+                    <div class="alt-math flex flex-wrap gap-6 justify-center text-blue-800 font-bold">
+                        ${others.map(alt => `<span data-tex="${alt}">\\( ${alt} \\)</span>`).join(' , ')}
+                    </div>
+                </div>`;
+            }
+
+            // 【ブラッシュアップ】値は同じでもルール違反の選択肢がある問題は、その理由も出す
+            const noteInfo = currentQ.note ? `
+                <div class="bg-yellow-50 p-5 rounded-2xl mt-4 border-2 border-yellow-200 text-yellow-800 font-bold">
+                    ⚠️ ${currentQ.note}
+                </div>` : "";
+
+            document.getElementById('explanation-text').innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="text-4xl">💡</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-2xl mb-2 text-blue-600">${currentQ.levelDesc}</p>
+                        ${extraInfo}
+                        ${noteInfo}
+                    </div>
+                </div>
+            `;
+
+            renderMath([document.getElementById('correct-answer-math'), document.getElementById('explanation-text')]);
+            createConfetti();
+            window.scrollTo(0, 0);
+        }
+
+        function goNext() {
+            currentIndex++;
+            document.getElementById('explanation-screen').classList.add('hidden');
+            if (currentIndex < 10) {
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('progress-bar').style.width = `100%`;
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+
+            let comment = "";
+            if (score === 10) comment = "全問正解！文字式のパーフェクトマスターだ！";
+            else if (score >= 8) comment = "すごい！ほとんど一発で正解できたね！";
+            else comment = "最後までがんばったね！もう一回やって満点を目指そう！";
+
+            document.getElementById('result-comment').innerText = comment;
+            window.scrollTo(0, 0);
+        }
+
+        function createConfetti() {
+            // 【ブラッシュアップ】動きを減らす設定の端末では紙吹雪を出さない
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            for (let i = 0; i < 40; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = Math.random() * 8 + 8 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { top: '-10px', opacity: 1, transform: 'rotate(0deg)' },
+                    { top: '100vh', opacity: 0, transform: `rotate(${Math.random() * 1000}deg)` }
+                ], {
+                    duration: Math.random() * 1000 + 1500,
+                    easing: 'cubic-bezier(0, .9, .57, 1)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+    </script>
 </body>
 </html>
