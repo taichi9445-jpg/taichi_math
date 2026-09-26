@@ -6,7 +6,7 @@
     <!--
       31. 三角比の値（三角比・三角関数マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -203,8 +203,33 @@
       .modal-row { padding: 10px 8px; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    :root { --primary: var(--u-title); --primary-light: var(--u-soft-blue); --accent: var(--u-accent); --bg-gradient: var(--u-bg); --text-main: var(--u-ink); }
+    :where(body.u-theme) * { font-family: var(--u-font); }
+    .container { box-sizing: border-box; }
+    .menu-subtitle { color: var(--u-sub); }
+    .menu-card { border: 3px solid var(--u-line); box-shadow: none; border-radius: 22px; }
+    .menu-card.special { background: var(--u-soft-yellow); border: 3px dashed #fde68a; }
+    .menu-card.marathon { background: var(--u-ok-soft); border: 3px dashed var(--u-ok-line); }
+    .mode-desc { color: var(--u-sub); font-weight: 700; }
+    .tab { background: #fff; border: 2px solid var(--u-line); color: var(--u-ink); }
+    .tab.active { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
+    .canvas-container { background: #fff; border: 3px solid var(--u-line); border-radius: 18px; }
+    .section-title { color: var(--u-title-dark); border-left-color: var(--u-accent); }
+    .drop-box { border-color: var(--u-line-dark); border-radius: 10px; }
+    .chip { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; }
+    .question-large-box { background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; }
+    .result-title { color: var(--u-accent-text); }
+    .result-time { color: var(--u-ink); }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div class="container" id="app">
@@ -901,6 +926,25 @@
       container.appendChild(btn);
     });
   }
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".menu-title": "u-title",
+    ".menu-card .btn": "u-btn",
+    ".menu-card.marathon .btn": "u-btn-blue",
+    ".btn-back": "u-btn u-btn-plain",
+    ".btn-hint": "u-btn u-btn-plain",
+    ".opt-btn": "u-choice",
+    ".opt-btn.correct-ans": "u-ok",
+    ".opt-btn.wrong-ans": "u-ng",
+    ".angle-clear-btns .btn:not(.btn-sub)": "u-btn u-btn-blue",
+    ".angle-clear-btns .btn.btn-sub": "u-btn u-btn-plain",
+    ".result-nav .btn:not(.btn-sub)": "u-btn",
+    "#btn-result-next": "u-btn-blue",
+    ".result-nav .btn.btn-sub": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>
