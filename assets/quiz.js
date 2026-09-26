@@ -97,7 +97,7 @@
     var head = el('div', 'app-head');
     head.appendChild(el('h1', null, esc(this.cfg.title)));
     var home = el('a', 'home', '一覧へ');
-    home.href = '../index.html';
+    home.href = '../remake.html';
     head.appendChild(home);
 
     this.root.innerHTML = '';
@@ -648,7 +648,7 @@
     row.appendChild(back);
 
     var home = el('a', 'btn ghost', '教材一覧へ');
-    home.href = '../index.html';
+    home.href = '../remake.html';
     row.appendChild(home);
 
     card.appendChild(row);

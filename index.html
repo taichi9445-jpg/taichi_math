@@ -11,57 +11,92 @@
     color: #fff;
     border-radius: var(--radius);
     padding: clamp(22px, 5vw, 38px);
-    margin-bottom: 22px;
+    margin-bottom: 18px;
     box-shadow: var(--shadow);
   }
   .hero h1 { margin: 0 0 8px; font-size: clamp(23px, 5.5vw, 34px); line-height: 1.3; }
-  .hero p { margin: 0; opacity: .9; font-size: .96em; }
+  .hero p { margin: 0; opacity: .92; font-size: .96em; }
 
-  .unit { margin-bottom: 26px; }
+  .notice {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: .9em;
+    color: var(--ink-soft);
+  }
+  .notice b { color: var(--ink); }
+
+  .unit { margin-bottom: 28px; }
   .unit > h2 {
     font-size: clamp(17px, 3.2vw, 21px);
     margin: 0 0 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   }
   .unit > h2 .count { font-size: .7em; font-weight: 500; color: var(--ink-soft); }
   .unit > .lead { color: var(--ink-soft); font-size: .9em; margin: 0 0 12px; }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
   }
 
   .item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 16px 18px;
-    min-height: 96px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-left: 5px solid var(--c, var(--brand));
+    border-top: 5px solid var(--c, var(--brand));
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     text-decoration: none;
     color: var(--ink);
+    overflow: hidden;
     transition: transform .1s ease, box-shadow .15s ease;
   }
-  .item:hover {
+  a.item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(16,24,40,.06), 0 14px 30px rgba(16,24,40,.12);
   }
+  .item img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    background: #eef2f8;
+    border-bottom: 1px solid var(--line);
+    display: block;
+  }
+  .item .body { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
   .item .no { font-size: .74em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-  .item .name { font-weight: 700; font-size: 1.02em; line-height: 1.4; }
-  .item .desc { font-size: .84em; color: var(--ink-soft); line-height: 1.5; }
+  .item .name { font-weight: 700; font-size: 1em; line-height: 1.45; }
+  .item .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .item.off { opacity: .55; cursor: not-allowed; }
+  .item.off img { filter: grayscale(1); }
+
+  .tag.canva { background: #e6f7f5; color: #0b7a6e; }
+  .tag.gas { background: #eaf1ff; color: #1e4fbc; }
+  .tag.login { background: #fff4e0; color: #9a5a00; }
+  .tag.warn { background: #fdeceb; color: #a32a20; }
 
   .u1 { --c: #2f6fed; }
   .u2 { --c: #10a05a; }
   .u3 { --c: #e79b16; }
   .u4 { --c: #d1477a; }
+
+  .extra {
+    margin-top: 10px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    font-size: .9em;
+    color: var(--ink-soft);
+  }
+  .extra a { color: var(--brand-dark); font-weight: 700; }
 
   footer { color: var(--ink-soft); font-size: .84em; text-align: center; padding: 20px 0 8px; }
 </style>
@@ -71,26 +106,31 @@
 
   <div class="hero">
     <h1>数学Ⅰ デジタル教材</h1>
-    <p>スマホでも Chromebook でも動きます。やりたいものをタップして始めてください。</p>
+    <p>やりたい教材をタップすると、新しいタブで開きます。</p>
+  </div>
+
+  <div class="notice">
+    <b>「学校アカウント」</b>のついた教材は、学校の Google アカウントでログインしていると開けます。
+    ログイン画面が出たら、学校のアカウントでログインしてください。
   </div>
 
   <section class="unit">
     <h2>式の計算 <span class="count">13教材</span></h2>
     <p class="lead">文字式のきまりから、展開・因数分解まで。</p>
     <div class="grid">
-      <a class="item u1" href="m/moji-rule.html"><span class="no">01</span><span class="name">文字式のルール</span><span class="desc">×を省く、数を前に、アルファベット順。書き方のきまりを10問で。</span></a>
-      <a class="item u1" href="m/jisu-keisu.html"><span class="no">02</span><span class="name">次数と係数</span><span class="desc">単項式・多項式・同類項を3レベルで攻略。</span></a>
-      <a class="item u1" href="m/takoushiki.html"><span class="no">03</span><span class="name">多項式の計算</span><span class="desc">選ぶ → 穴埋め → フル計算と、3段階で仕上げる。</span></a>
-      <a class="item u1" href="m/kuku.html"><span class="no">04</span><span class="name">九九の練習</span><span class="desc">フラッシュカード形式。計算の土台をつくる。</span></a>
-      <a class="item u1" href="m/seifu-kuku.html"><span class="no">05</span><span class="name">正負の九九</span><span class="desc">符号つきのかけ算。練習・タイムアタック・サバイバル。</span></a>
-      <a class="item u1" href="m/moji-keisan.html"><span class="no">06</span><span class="name">文字式の計算</span><span class="desc">四則計算と分配法則。数式バトル形式。</span></a>
-      <a class="item u1" href="m/tenkai-quest.html"><span class="no">07</span><span class="name">展開の練習（クエスト）</span><span class="desc">敵を倒しながら展開を進める冒険モード。</span></a>
-      <a class="item u1" href="m/shisu.html"><span class="no">08</span><span class="name">指数法則</span><span class="desc">a<sup>m</sup>×a<sup>n</sup> などの法則を2レベルで。</span></a>
-      <a class="item u1" href="m/tenkai-master.html"><span class="no">09</span><span class="name">展開マスター</span><span class="desc">選択式と穴埋めの2方式。レベル1・2。</span></a>
-      <a class="item u1" href="m/tenkai-koushiki.html"><span class="no">10</span><span class="name">展開の公式</span><span class="desc">公式別に練習してから、ミックスで実戦。</span></a>
-      <a class="item u1" href="m/insu-step.html"><span class="no">11</span><span class="name">因数分解を段階的に学ぶ</span><span class="desc">かけて○・たして△を、手順を追って身につける。</span></a>
-      <a class="item u1" href="m/insu-master.html"><span class="no">12</span><span class="name">因数分解の練習</span><span class="desc">基本3公式＋ミックス＋たすき掛け。</span></a>
-      <a class="item u1" href="m/kyotsu-insu.html"><span class="no">13</span><span class="name">共通因数の練習</span><span class="desc">共通因数を見つけて、くくり出す。</span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbwfc7G5Z1R6TvAqYX4d3ZguqZA6-P4BQnxmd4R4tCJ8T0RUEc_9hhlRfiAWEbILjs2UvA/exec" target="_blank" rel="noopener"><img src="thumbs/01.jpg" alt="" loading="lazy"><span class="body"><span class="no">01</span><span class="name">文字式のルール</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/macros/s/AKfycbx_wq9rCKoNuzpTtDjSJxha9E3Sp_2_e6NOeQ8dVkJAmmtWMtYwPpzKE76lWGTIlg_Stw/exec" target="_blank" rel="noopener"><img src="thumbs/02.jpg" alt="" loading="lazy"><span class="body"><span class="no">02</span><span class="name">次数と係数</span><span class="tags"><span class="tag gas">GAS</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbw5mjitRqNlAkcT0rfDmNZ0xN_LG2K6h7hMx3AcvwFfhPViwrq4sCSGGRLFv-X8y1CSVA/exec" target="_blank" rel="noopener"><img src="thumbs/03.jpg" alt="" loading="lazy"><span class="body"><span class="no">03</span><span class="name">多項式の計算</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://taichi9445.my.canva.site/br8m1mtb2ryx2agm" target="_blank" rel="noopener"><img src="thumbs/04.jpg" alt="" loading="lazy"><span class="body"><span class="no">04</span><span class="name">九九の練習</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbzRkBFdEapo88mm_4FwroKFNMKccewvAiCD1CcLW_b9hvo67fowBmZCc1chEmZlwyyI/exec" target="_blank" rel="noopener"><img src="thumbs/05.jpg" alt="" loading="lazy"><span class="body"><span class="no">05</span><span class="name">正負の九九</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://taichi9445.my.canva.site/byhtagmhc7hpw2jp" target="_blank" rel="noopener"><img src="thumbs/06.jpg" alt="" loading="lazy"><span class="body"><span class="no">06</span><span class="name">文字式の計算 四則計算 分配法則</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u1" href="https://taichi9445.my.canva.site/byma4304p4w6v33c" target="_blank" rel="noopener"><img src="thumbs/07.jpg" alt="" loading="lazy"><span class="body"><span class="no">07</span><span class="name">展開の練習</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbx4joxrpOz-0l1wrdKaysMr0BZTwr5wvBcnEYhQSSpTYYzghlDgh7xT1ZMFamqLelo1uw/exec" target="_blank" rel="noopener"><img src="thumbs/08.jpg" alt="" loading="lazy"><span class="body"><span class="no">08</span><span class="name">指数法則</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbxOP-zhqMd1qak9R_PvalxrFft37UbeKvI0mt0pFEZjh3qrecgCxqSo6H6UmgJYeFUPNA/exec" target="_blank" rel="noopener"><img src="thumbs/09.jpg" alt="" loading="lazy"><span class="body"><span class="no">09</span><span class="name">展開の練習</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbx29sYG9x348N3-yQU6RjAmXMysKkFLiahJ3ZfNbebxM6Yn02werc2ThTo0sctPjMjj/exec" target="_blank" rel="noopener"><img src="thumbs/10.jpg" alt="" loading="lazy"><span class="body"><span class="no">10</span><span class="name">展開の公式</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://taichi9445.my.canva.site/c1bsah3xdb9n50gg" target="_blank" rel="noopener"><img src="thumbs/11.jpg" alt="" loading="lazy"><span class="body"><span class="no">11</span><span class="name">因数分解を 段階的に学ぶ</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbwZrVSHL-TEFKeaS7OD04i2PuKJwIBnsec3OIkbnGL4Xd5TKVFS6FXkHCHNUerAnfS0/exec" target="_blank" rel="noopener"><img src="thumbs/12.jpg" alt="" loading="lazy"><span class="body"><span class="no">12</span><span class="name">因数分解の練習</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbwNEPBSOQqb0DQhscwry-v-DFGW5SLHy8RATHA3wWKrHgdb1VY46N0ifhZmc8zYyEJl/exec" target="_blank" rel="noopener"><img src="thumbs/13.jpg" alt="" loading="lazy"><span class="body"><span class="no">13</span><span class="name">共通因数の練習</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
     </div>
   </section>
 
@@ -98,11 +138,11 @@
     <h2>実数 <span class="count">5教材</span></h2>
     <p class="lead">平方根の意味と計算、方程式・不等式。</p>
     <div class="grid">
-      <a class="item u2" href="m/root-basic.html"><span class="no">14</span><span class="name">ルートの基礎</span><span class="desc">平方根とは何か。根号を外す・値を求める。</span></a>
-      <a class="item u2" href="m/root-alchemist.html"><span class="no">15</span><span class="name">ルートの計算</span><span class="desc">ルート・アルケミスト。素材を集めて計算を極める。</span></a>
-      <a class="item u2" href="m/root-tower.html"><span class="no">16</span><span class="name">ルートの計算全般</span><span class="desc">平方根タワー。9つのフロアを登りきろう。</span></a>
-      <a class="item u2" href="m/houteishiki-step.html"><span class="no">17</span><span class="name">1次方程式・不等式</span><span class="desc">方程式と不等式を、初級・上級で。</span></a>
-      <a class="item u2" href="m/nijihouteishiki.html"><span class="no">18</span><span class="name">2次方程式</span><span class="desc">因数分解・解の公式・実戦ランダムの4モード。</span></a>
+      <a class="item u2" href="https://taichi9445.my.canva.site/c1efq68kjryy5r67" target="_blank" rel="noopener"><img src="thumbs/14.jpg" alt="" loading="lazy"><span class="body"><span class="no">14</span><span class="name">ルートの基礎</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u2" href="https://taichi9445.my.canva.site/c1c1mjg898v97d2n" target="_blank" rel="noopener"><img src="thumbs/15.jpg" alt="" loading="lazy"><span class="body"><span class="no">15</span><span class="name">ルートの計算</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u2" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycby8Zk0sxwpIQlaGQ9-RDYMsqBSzhNzPkgALpQmiJjsa61XzcQd45VpuJ2s1IzxZU4Kt/exec" target="_blank" rel="noopener"><img src="thumbs/16.jpg" alt="" loading="lazy"><span class="body"><span class="no">16</span><span class="name">ルートの計算全般</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u2" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbwEgnOdBRO9I1wFqIEDTTIt7Huc2DZULO_yFagK2uQUyv3qc69GkfU8O-LLWXwmQmJ-Ng/exec" target="_blank" rel="noopener"><img src="thumbs/17.jpg" alt="" loading="lazy"><span class="body"><span class="no">17</span><span class="name">１次方程式 不等式練習</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u2" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbzzZsxJXRTXp3rNyiQmDkncZE5vvmw0fSKl4g7t7a1qTnZIBuC5KgAzu-zpGBplx5H2Gg/exec" target="_blank" rel="noopener"><img src="thumbs/18.jpg" alt="" loading="lazy"><span class="body"><span class="no">18</span><span class="name">２次方程式</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
     </div>
   </section>
 
@@ -110,28 +150,32 @@
     <h2>2次関数 <span class="count">6教材</span></h2>
     <p class="lead">グラフの読み取りから、2次不等式まで。</p>
     <div class="grid">
-      <a class="item u3" href="m/nijikansu-zahyou.html"><span class="no">19</span><span class="name">x＝○のときのyの値</span><span class="desc">代入して座標を求める。グラフのヒントつき。</span></a>
-      <a class="item u3" href="m/heikou-idou.html"><span class="no">20</span><span class="name">2次関数の平行移動</span><span class="desc">上下左右へどう動いたかを読み取る。</span></a>
-      <a class="item u3" href="m/saidai-saishou.html"><span class="no">21</span><span class="name">最大値・最小値</span><span class="desc">定義域つきの最大・最小をグラフで考える。</span></a>
-      <a class="item u3" href="m/kyouyuuten.html"><span class="no">22</span><span class="name">2次関数と共有点</span><span class="desc">x軸との共有点の座標を求める練習。</span></a>
-      <a class="item u3" href="m/futoushiki-imi.html"><span class="no">23</span><span class="name">不等式の意味</span><span class="desc">日本語 ⇄ 不等式を行き来する10問。</span></a>
-      <a class="item u3" href="m/niji-futoushiki.html"><span class="no">24</span><span class="name">2次不等式</span><span class="desc">因数分解の練習から、グラフで解を読むまで。</span></a>
+      <a class="item u3" href="https://taichi9445.my.canva.site/dagyl5oh8te" target="_blank" rel="noopener"><img src="thumbs/19.jpg" alt="" loading="lazy"><span class="body"><span class="no">19</span><span class="name">x=〇のとき、yの値は？ y=〇のとき、xの値は？</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u3" href="https://taichi9445.my.canva.site/dagx-20f1gi" target="_blank" rel="noopener"><img src="thumbs/20.jpg" alt="" loading="lazy"><span class="body"><span class="no">20</span><span class="name">2次関数の平行移動</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u3" href="https://taichi9445.my.canva.site/dagx-lb3l-q" target="_blank" rel="noopener"><img src="thumbs/21.jpg" alt="" loading="lazy"><span class="body"><span class="no">21</span><span class="name">最大値・最小値</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u3" href="https://taichi9445.my.canva.site/dagydbgmsio" target="_blank" rel="noopener"><img src="thumbs/22.jpg" alt="" loading="lazy"><span class="body"><span class="no">22</span><span class="name">2次関数と共有点の 座標の計算練習</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <div class="item u3 off" aria-disabled="true"><img src="thumbs/23.jpg" alt="" loading="lazy"><span class="body"><span class="no">23</span><span class="name">不等式の意味</span><span class="tags"><span class="tag canva">Canva</span><span class="tag warn">リンク準備中</span></span></span></div>
+      <a class="item u3" href="https://taichi9445.my.canva.site/dagzuaxrml8" target="_blank" rel="noopener"><img src="thumbs/24.jpg" alt="" loading="lazy"><span class="body"><span class="no">24</span><span class="name">２次不等式 （因数分解練習付き）</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
     </div>
   </section>
 
   <section class="unit">
     <h2>三角比 <span class="count">7教材</span></h2>
-    <p class="lead">直角三角形から正弦定理・面積まで。</p>
+    <p class="lead">三角比の値から、正弦定理・面積まで。</p>
     <div class="grid">
-      <a class="item u4" href="m/sankakuhi-quiz.html"><span class="no">25</span><span class="name">三角比の値</span><span class="desc">三角形の回転から応用まで、4レベル。</span></a>
-      <a class="item u4" href="m/yuumeikaku.html"><span class="no">26</span><span class="name">有名角の三角比の値</span><span class="desc">30°・45°・60°をきちんと覚える。</span></a>
-      <a class="item u4" href="m/sougo-kankei.html"><span class="no">27</span><span class="name">相互関係の計算</span><span class="desc">sin²+cos²=1 などを段階的に。</span></a>
-      <a class="item u4" href="m/menseki.html"><span class="no">28</span><span class="name">面積の計算</span><span class="desc">S=½ab sinC の穴埋め練習。</span></a>
-      <a class="item u4" href="m/seigen-teiri.html"><span class="no">29</span><span class="name">正弦定理</span><span class="desc">正弦定理の式を、穴埋めで組み立てる。</span></a>
-      <a class="item u4" href="m/sankakuhi-zahyou.html"><span class="no">30</span><span class="name">三角比（座標）</span><span class="desc">単位円の座標として三角比をとらえる。</span></a>
-      <a class="item u4" href="m/sankakuhi-value.html"><span class="no">31</span><span class="name">三角比の値（総合）</span><span class="desc">0°〜180°の三角比を総合的に確認。</span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/dag0ogqiehy" target="_blank" rel="noopener"><img src="thumbs/25.jpg" alt="" loading="lazy"><span class="body"><span class="no">25</span><span class="name">三角比の値 鋭角の有名角の三角比</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bsyyzw38d7nh22m6" target="_blank" rel="noopener"><img src="thumbs/26.jpg" alt="" loading="lazy"><span class="body"><span class="no">26</span><span class="name">有名角の三角比の値</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bst4cs9jrpdzvvvd" target="_blank" rel="noopener"><img src="thumbs/27.jpg" alt="" loading="lazy"><span class="body"><span class="no">27</span><span class="name">相互関係の計算</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/btktvpw676jbj944" target="_blank" rel="noopener"><img src="thumbs/28.jpg" alt="" loading="lazy"><span class="body"><span class="no">28</span><span class="name">面積の計算</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/btny1axq5hv9vt9e" target="_blank" rel="noopener"><img src="thumbs/29.jpg" alt="" loading="lazy"><span class="body"><span class="no">29</span><span class="name">正弦定理</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bv2vfyjq2aqwyrzt" target="_blank" rel="noopener"><img src="thumbs/30.jpg" alt="" loading="lazy"><span class="body"><span class="no">30</span><span class="name">三角比（座標）</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbwrEV0-zS3hA0oIoZJ7R7KDs0oNj-LpHyLNbcSMWHnw/dev" target="_blank" rel="noopener"><img src="thumbs/31.jpg" alt="" loading="lazy"><span class="body"><span class="no">31</span><span class="name">三角関数の値</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span><span class="tag warn">開発版URL</span></span></span></a>
     </div>
   </section>
+
+  <div class="extra">
+    作り直し版（試作）は <a href="remake.html">こちら</a>。
+  </div>
 
   <footer>数学Ⅰ デジタル教材</footer>
 </div>
