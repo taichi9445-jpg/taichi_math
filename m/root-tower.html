@@ -983,6 +983,12 @@ function getQuizDataFixed() {
     .menu-sub { color: var(--u-title-dark); }
     .judge-msg.ok { color: var(--u-ok); }
     .judge-msg.ng { color: var(--u-ng); }
+    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書の書き方） */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; font-style: normal; }
+    .m i { font-style: italic; padding-right: 0.04em; }
+    /* 【ブラッシュアップ】まちがえた・正解の選択肢：元の塗りつぶし（赤・緑）と文字の色が同じになり、字が読めなかった */
+    .u-theme .opt-btn.wrong { background: var(--u-ng-soft) !important; opacity: 0.8; }
+    .u-theme .opt-btn.correct { background: var(--u-ok-soft) !important; }
   
     </style>
 </head>
@@ -1425,6 +1431,55 @@ function getQuizDataFixed() {
       actionsContainer.appendChild(otherLink);
     }
   </script>
+<script>
+  // 【ブラッシュアップ】式の文字を斜体に（教科書の書き方）。textContent は変えない
+  (function () {
+    var RUN = /[A-Za-z0-9²³√±'()=+\-−·×÷\/.,<> ]*[A-Za-z0-9][A-Za-z0-9²³√±'()=+\-−·×÷\/.,<> ]*/g;
+    var SKIP = ".m, .no-math, script, style, textarea, mjx-container";
+    var SELS = ["#judge-msg",".floor-card > div:last-child","#diff-title-floor"];
+    function mathify(root) {
+      if (!root || !document.createTreeWalker) return;
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+      while (walker.nextNode()) {
+        var n = walker.currentNode, p = n.parentElement;
+        if (!p || p.closest(SKIP)) continue;
+        if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+      }
+      nodes.forEach(function (n) {
+        var s = n.nodeValue, frag = document.createDocumentFragment(), last = 0;
+        s.replace(RUN, function (run, at) {
+          var lead = run.match(/^\s*/)[0].length, text = run.trim();
+          if (!text) return run;
+          frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+          text.split(/(\b\d+F\b)/).forEach(function (seg, j) {
+            if (!seg) return;
+            if (j % 2) { frag.appendChild(document.createTextNode(seg)); return; }   // 「6F」のような階の番号はそのまま
+            var span = document.createElement('span');
+            span.className = 'm';
+            seg.split(/([A-Za-z]+)/).forEach(function (part, k) {
+              if (!part) return;
+              if (k % 2) { var i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+              else span.appendChild(document.createTextNode(part));
+            });
+            frag.appendChild(span);
+          });
+          last = at + lead + text.length;
+          return run;
+        });
+        frag.appendChild(document.createTextNode(s.slice(last)));
+        n.parentNode.replaceChild(frag, n);
+      });
+    }
+    var queued = false;
+    function run() { queued = false; SELS.forEach(function (sel) { document.querySelectorAll(sel).forEach(mathify); }); }
+    function start() {
+      run();
+      if (window.MutationObserver) new MutationObserver(function () { if (!queued) { queued = true; (window.requestAnimationFrame || setTimeout)(run); } })
+        .observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  })();
+</script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
   PortTheme.map({

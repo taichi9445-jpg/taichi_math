@@ -107,6 +107,11 @@
       .btn-grid .nav-card { font-size: 1.1rem; padding: 16px 6px; }
       .key.key-del { font-size: 1.1rem; padding: 0 10px; }
     }
+    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書の書き方） */
+    .m { font-family: var(--u-math-font); font-size: 1.08em; font-style: normal; }
+    .m i { font-style: italic; padding-right: 0.04em; }
+    .problem-box, #choice-list .nav-card, .key, #editor { font-family: var(--u-math-font) !important; }
+    .key.key-del { font-family: var(--u-font) !important; }
   
     </style>
 </head>
@@ -304,7 +309,7 @@ function wrongChoices(pr) {
     if (p) add({ head: mono(sg * g / p, hv), groups: [P.map(t => mono(t.c * p, t.v))] }, 'under');           // くくり不足（数）
     if (vkey(hv) && g > 1) add({ head: mono(head.c, {}), groups: [P.map(t => mmul(t, mono(1, hv)))] }, 'under');        // くくり不足（文字）
     if (head.c < 0) add({ head: mono(-head.c, hv), groups: [P.map(t => mono(-t.c, t.v))] }, 'minus');        // − をくくり出していない
-    if (P.length === 2 && P.some(t => !vkey(t.v) && Math.abs(t.c) === 1)) add({ head: mmul(head, P[0]), groups: [] }, 'one');   // 1 を書き忘れ
+    if (P.length === 2 && P.some(t => !vkey(t.v) && Math.abs(t.c) === 1)) add({ head: head, groups: [[P[0]]] }, 'one');   // 1 を書き忘れ（6x(3x) のように）
     add({ head: head, groups: [P.map((t, i) => i === P.length - 1 ? mmul(t, head) : t)] }, 'forgot');         // 割り忘れ
     add({ head: head, groups: [P.map((t, i) => i === P.length - 1 ? mono(-t.c, t.v) : t)] }, 'sign');         // 符号
     add({ head: head, groups: [P.map((t, i) => i === 0 ? mono(t.c + 1, t.v) : t)] }, 'calc');                 // わり算のミス
@@ -342,7 +347,7 @@ function show() {
   const p = probs[qIdx];
   document.getElementById('q-info').innerText = '第 ' + (qIdx + 1) + ' 問 / 5';
   const box = document.getElementById('problem');
-  box.innerHTML = p.q;
+  box.innerHTML = '<span>' + p.q + '</span>';   // flex の中で上つき文字がずれないように 1 つにまとめる
   box.classList.toggle('long', box.textContent.length > 11);   // 長い式は文字を小さく（スマホではみ出さないように）
   document.getElementById('message').innerText = '';
   document.getElementById('answer-note').innerText = '';
@@ -498,6 +503,55 @@ function success() {
 
 // 【ブラッシュアップ】alert をやめて、画面の中に答えを出す
 function showHint() { document.getElementById('answer-note').innerHTML = '答え： ' + probs[qIdx].ans; }   // 【ブラッシュアップ】
+</script>
+<script>
+  // 【ブラッシュアップ】式の文字を斜体に（教科書の書き方）。textContent は変えない
+  (function () {
+    var RUN = /[A-Za-z0-9²³√±'()=+\-−·×÷\/.,<> ]*[A-Za-z0-9][A-Za-z0-9²³√±'()=+\-−·×÷\/.,<> ]*/g;
+    var SKIP = ".m, .no-math, script, style, textarea, mjx-container";
+    var SELS = ["#problem","#choice-list","#keyboard","#editor","#message","#answer-note"];
+    function mathify(root) {
+      if (!root || !document.createTreeWalker) return;
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+      while (walker.nextNode()) {
+        var n = walker.currentNode, p = n.parentElement;
+        if (!p || p.closest(SKIP)) continue;
+        if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
+      }
+      nodes.forEach(function (n) {
+        var s = n.nodeValue, frag = document.createDocumentFragment(), last = 0;
+        s.replace(RUN, function (run, at) {
+          var lead = run.match(/^\s*/)[0].length, text = run.trim();
+          if (!text) return run;
+          frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
+          text.split(/(\b\d+F\b)/).forEach(function (seg, j) {
+            if (!seg) return;
+            if (j % 2) { frag.appendChild(document.createTextNode(seg)); return; }   // 「6F」のような階の番号はそのまま
+            var span = document.createElement('span');
+            span.className = 'm';
+            seg.split(/([A-Za-z]+)/).forEach(function (part, k) {
+              if (!part) return;
+              if (k % 2) { var i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
+              else span.appendChild(document.createTextNode(part));
+            });
+            frag.appendChild(span);
+          });
+          last = at + lead + text.length;
+          return run;
+        });
+        frag.appendChild(document.createTextNode(s.slice(last)));
+        n.parentNode.replaceChild(frag, n);
+      });
+    }
+    var queued = false;
+    function run() { queued = false; SELS.forEach(function (sel) { document.querySelectorAll(sel).forEach(mathify); }); }
+    function start() {
+      run();
+      if (window.MutationObserver) new MutationObserver(function () { if (!queued) { queued = true; (window.requestAnimationFrame || setTimeout)(run); } })
+        .observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  })();
 </script>
 <script>
   // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
