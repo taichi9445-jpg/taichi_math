@@ -6,7 +6,7 @@
     <!--
       数学Ⅱ 01. 3乗の展開・因数分解（数学パズル）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../../assets/port.css">
     <script src="../../assets/port.js"></script>
@@ -160,8 +160,30 @@
             .tile { min-width: 3.2rem; height: 3.2rem; font-size: 1.25rem; }
         }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body.u-theme { padding: 12px !important; }
+    #app { padding: 16px 16px 24px; box-sizing: border-box; margin: 8px auto 24px; }
+    #app > .card { box-shadow: none; border: none; background: transparent; padding: 8px 0; }
+    header h1 { font-size: min(2rem, 8vw) !important; }
+    #menu-screen p.text-blue-500, #menu-screen p.text-gray-400 { color: var(--u-sub) !important; }
+    .math-display { color: var(--u-ink); background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; }
+    .answer-slot { border-color: var(--u-line-dark); background: var(--u-soft-yellow); }
+    .tile { border-color: var(--u-line-dark); color: var(--u-ink); }
+    #result-screen p.text-gray-400 { color: var(--u-sub) !important; }
+    #final-result { color: var(--u-title) !important; }
+    @media (max-width: 640px) {
+      body.u-theme { padding: 8px !important; }
+      #app { padding: 12px 10px 18px; }
+    }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div id="app">
@@ -603,5 +625,24 @@
             renderMath();
         }, 6000);
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#app": "u-card",
+    "header h1": "u-title",
+    "[id^=\"btn-method\"]:is(.bg-white)": "u-btn u-btn-blue",
+    "[id^=\"btn-method\"]:is(.bg-gray-100)": "u-btn u-btn-plain",
+    "#menu-screen .grid:not(.grid-cols-2) button": "u-choice",
+    ".choice-btn": "u-choice",
+    "#dynamic-content button.bg-orange-500": "u-btn",
+    "#dynamic-content button.bg-blue-600": "u-btn",
+    "#dynamic-content button.bg-slate-800": "u-btn u-btn-blue",
+    "#dynamic-content span.bg-blue-100": "u-pill",
+    "#result-screen h2": "u-title",
+    "#result-screen .flex-col button.bg-blue-600": "u-btn",
+    "#btn-next-course": "u-btn u-btn-blue",
+    "#result-screen .flex-col button.bg-gray-100": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>

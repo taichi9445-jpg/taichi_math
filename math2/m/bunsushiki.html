@@ -6,7 +6,7 @@
     <!--
       数学Ⅱ 02. 分数式の計算（分数式マスター Pro）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../../assets/port.css">
     <script src="../../assets/port.js"></script>
@@ -159,8 +159,28 @@
             #result-screen { padding: 28px 16px; }
         }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #app { padding: 16px 16px 24px; box-sizing: border-box; margin: 8px auto 24px; }
+    #menu-screen > div, #quiz-screen > div, #result-screen > div { box-shadow: none !important; border: none !important; padding-left: 4px !important; padding-right: 4px !important; }
+    header h1 { font-size: min(2rem, 8vw) !important; }
+    header p, #app p.text-slate-400 { color: var(--u-sub) !important; }
+    #question-container { color: var(--u-ink); background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; }
+    .drop-zone { border-color: var(--u-line-dark); }
+    #tile-pool { background: var(--u-soft-blue) !important; }
+    #feedback-overlay { background: rgba(75, 44, 32, 0.55) !important; }
+    #feedback-card { border: 8px solid var(--u-frame); }
+    @media (max-width: 640px) {
+      #app { padding: 12px 10px 18px; }
+    }
+  
+    </style>
 </head>
-<body class="p-2 sm:p-6 text-slate-800">
+<body class="u-theme p-2 sm:p-6 text-slate-800">
 
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div id="app" class="max-w-3xl mx-auto">
@@ -612,5 +632,23 @@
             renderMath();
         }, 6000);
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#app": "u-card",
+    "header h1": "u-title",
+    "[id^=\"btn-m-\"]:is(.bg-white)": "u-btn u-btn-blue",
+    "[id^=\"btn-m-\"]:is(.bg-slate-100)": "u-btn u-btn-plain",
+    "#menu-screen .grid:not(.grid-cols-2) button": "u-choice",
+    "#progress-text": "u-pill",
+    ".choice-card": "u-choice",
+    "button.bubble-btn.bg-orange-500": "u-btn",
+    "button.bubble-btn.bg-blue-600": "u-btn",
+    "button.bubble-btn.bg-slate-800": "u-btn u-btn-blue",
+    "button.bubble-btn.bg-slate-200": "u-btn u-btn-plain",
+    "button.bubble-btn.bg-slate-100": "u-btn u-btn-plain",
+    "#btn-next-course": "u-btn u-btn-blue"
+  });
+</script>
 </body>
 </html>

@@ -7,7 +7,7 @@
     <!--
       数学Ⅱ 03. 組み立て除法（組み立て除法マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../../assets/port.css">
     <script src="../../assets/port.js"></script>
@@ -148,8 +148,23 @@
       #msg { font-size: 1.15rem; height: auto; min-height: 30px; }
     }
   </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .container { box-sizing: border-box; }
+    .level-badge { display: inline-block; padding: 4px 16px; }
+    .problem-box { background: var(--u-soft-yellow); border-color: #fde68a; color: var(--u-ink); }
+    .label-tag { color: var(--u-title); font-weight: 800; }
+    .finish-title { color: var(--u-accent-text); }
+    .finish-label { color: var(--u-sub); font-weight: 700; }
+    .finish-score { color: var(--u-title); }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
 
 <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
 <div class="container">
@@ -494,6 +509,18 @@
     window.scrollTo(0, 0);
   }
   window.onload = initProblem;
+</script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".level-badge": "u-pill",
+    ".choice-btn": "u-choice",
+    ".choice-btn.picked": "u-ok",
+    ".btn.check-btn": "u-btn",
+    ".btn.next-btn": "u-btn u-btn-blue",
+    ".btn.hint-btn": "u-btn u-btn-plain"
+  });
 </script>
 </body>
 </html>
