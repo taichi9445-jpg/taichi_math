@@ -101,6 +101,54 @@
     };
   }
 
+  /* ------------------------------------------------------------------
+     統一デザイン（theme.css）を、各教材の部品に当てる仕組み
+     ------------------------------------------------------------------
+     PortTheme.map({ '.submit-btn': 'u-btn', '.choice-btn': 'u-choice', '.choice-btn.correct': 'u-ok' })
+     のように「元の部品」と「共通デザインのクラス」の組を書くと、今ある部品にも、あとから
+     作られる部品にも、自動でクラスを付ける。元のコードが className を書きかえても付け直す。 */
+  var themeRules = [];
+  function applyTheme(root) {
+    themeRules.forEach(function (r) {
+      var list = [];
+      try {
+        if (root.matches && root.matches(r.sel)) list.push(root);
+        if (root.querySelectorAll) list = list.concat([].slice.call(root.querySelectorAll(r.sel)));
+      } catch (e) { return; }
+      list.forEach(function (el) {
+        r.cls.forEach(function (c) { if (!el.classList.contains(c)) el.classList.add(c); });
+      });
+    });
+    // 状態のクラス（正解・まちがい など）は、元の状態が外れたら外す
+    themeRules.forEach(function (r) {
+      if (!r.state) return;
+      [].slice.call(document.querySelectorAll('.' + r.cls.join('.'))).forEach(function (el) {
+        try { if (!el.matches(r.sel)) r.cls.forEach(function (c) { el.classList.remove(c); }); } catch (e) { }
+      });
+    });
+  }
+  var themeTimer = null;
+  function scheduleTheme() {
+    if (themeTimer) return;
+    themeTimer = setTimeout(function () { themeTimer = null; applyTheme(document.body); }, 0);
+  }
+  global.PortTheme = {
+    map: function (rules) {
+      Object.keys(rules).forEach(function (sel) {
+        var v = rules[sel];
+        var cls = String(v).split(/\s+/).filter(Boolean);
+        // 「.a.b」のように状態を表すクラスが 2 つ以上重なった指定は、状態として扱う
+        var state = /\.[\w-]+\.[\w-]+|:/.test(sel);
+        themeRules.push({ sel: sel, cls: cls, state: state });
+      });
+      var start = function () {
+        applyTheme(document.body);
+        new MutationObserver(scheduleTheme).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+      };
+      if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+    }
+  };
+
   global.google = global.google || {};
   global.google.script = global.google.script || {};
   global.google.script.run = runner(null, null);

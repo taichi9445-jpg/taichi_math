@@ -5,7 +5,7 @@
   <!--
     04. 九九の練習（九九フラッシュカード）
     山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
@@ -297,7 +297,7 @@
         }
 
         /* 【ブラッシュアップ】 */
-        .port-back { color: #fff; max-width: 500px; width: 100%; }
+        .port-back { max-width: 500px; width: 100%; }
         .completion-nav { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .completion-nav a { color: #718096; margin-top: 8px; }
 
@@ -319,8 +319,31 @@
             .score { font-size: 1.05rem; padding: 10px; }
         }
     </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .container { padding: 32px 28px; }
+    .title { font-size: min(2.2rem, 6.4vw); white-space: nowrap; }
+    .level-select h2 { color: var(--u-title-dark); }
+    .level-btn .level-number { color: var(--u-title); }
+    .level-btn .level-name { color: var(--u-ink); font-weight: 700; }
+    .level-btn.special .level-number, .level-btn.special .level-name { color: #fff; }
+    .card { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; box-shadow: none; }
+    .card:hover { transform: none; }
+    .question { color: var(--u-ink); }
+    .game-header, .score { background: #f8fafc; border: 2px solid var(--u-line); border-radius: 20px; color: var(--u-ink); }
+    .current-level { color: var(--u-ink); }
+    .back-btn { font-weight: 700; padding: 8px 14px; }
+    .feedback { border: 3px solid transparent; border-radius: 20px; }
+    .completion-nav a { color: var(--u-sub); }
+    @media (max-width: 600px) { .container { padding: 16px 12px; } }
+  
+  </style>
 </head>
-<body>
+<body class="u-theme">
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div class="container">
         <h1 class="title">🌟 九九フラッシュカード 🌟</h1>
@@ -787,5 +810,20 @@
 
         // 初期化：レベル選択画面を表示
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".title": "u-title",
+    ".level-btn:not(.special)": "u-choice",
+    ".level-btn.special": "u-btn",
+    ".back-btn": "u-btn u-btn-plain",
+    ".answer-input": "u-input",
+    ".submit-btn": "u-btn",
+    ".next-btn": "u-btn u-btn-blue",
+    ".feedback.correct": "u-ok",
+    ".feedback.incorrect": "u-ng"
+  });
+</script>
 </body>
 </html>

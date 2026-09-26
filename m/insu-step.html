@@ -1,86 +1,1040 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="h-full">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>因数分解ステップ学習</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <meta charset="UTF-8">
+  <!--
+    11. 因数分解を段階的に学ぶ（因数分解ステップ学習）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>因数分解ステップ学習</title>
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+    .input-box {
+      width: 3rem;
+      height: 2.5rem;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      border: 2px solid #cbd5e1;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .input-box:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .input-box.correct {
+      border-color: #22c55e;
+      background-color: #dcfce7;
+    }
+    .input-box.incorrect {
+      border-color: #ef4444;
+      background-color: #fee2e2;
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+    .step-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s ease;
+    }
+    .step-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border-radius: 50%;
+      font-weight: 700;
+      margin-right: 0.75rem;
+    }
+    .pair-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .pair-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #f1f5f9;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+    }
+    .math-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .math-formula {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+    }
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #dcfce7;
+      color: #16a34a;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    .problem-display {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .problem-text {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+    }
+    .completion-card {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .all-complete-card {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .progress-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+    }
+    .progress-dot {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    .progress-dot.active {
+      background: #6366f1;
+      color: white;
+    }
+    .progress-dot.complete {
+      background: #22c55e;
+      color: white;
+    }
+    .next-button {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 1rem;
+      transition: all 0.3s;
+    }
+    .next-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .next-button:focus {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { max-width: 42rem; padding: 12px 8px 0; }
+    .check-btn { margin-top: 0.9rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 0.5rem; padding: 0.6rem 1.4rem; font-weight: 700; font-size: 1rem; cursor: pointer; }
+    .check-btn:active { transform: translateY(1px); }
+    .sign-btn { min-width: 2.4rem; height: 2.5rem; border: 2px solid #c7d2fe; background: #eef2ff; color: #4f46e5; border-radius: 0.5rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
+    .key-hint { font-size: 0.8rem; color: #64748b; margin-top: 0.4rem; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      .step-card { padding: 1rem; }
+      .input-box { width: 3.4rem !important; height: 2.8rem; font-size: 1.35rem; }
+      .problem-text { font-size: min(1.75rem, 7.5vw); white-space: nowrap; }
+      .math-text { font-size: 1.2rem; }
+      .pair-item { padding: 0.35rem 0.4rem; }
+      .pair-row { gap: 0.5rem; }
+      .pair-item .input-box { width: 2.9rem !important; }
+    }
+  </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #app-wrapper { background: var(--u-bg) !important; }
+    #app-wrapper > .max-w-2xl { margin-top: 12px; margin-bottom: 24px; }
+    .step-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; box-shadow: none; }
+    .step-card .text-slate-700 { color: var(--u-title-dark); }
+    .step-number { background: var(--u-accent); box-shadow: 0 3px 0 var(--u-accent-dark); }
+    .problem-display { background: var(--u-soft-yellow); border: 4px dashed #fde68a; color: var(--u-title-dark); }
+    .problem-display .opacity-80 { color: var(--u-soft-yellow-text); opacity: 1; font-weight: 700; }
+    .problem-text { color: var(--u-ink); }
+    .math-text { color: var(--u-ink); }
+    .pair-item { background: #fff; border: 2px solid var(--u-line); }
+    .progress-dot { background: #f1f5f9; border: 2px solid var(--u-line); color: var(--u-sub); }
+    .progress-dot.active { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
+    .progress-dot.complete { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
+    .completion-card { background: var(--u-ok-soft); border: 4px solid var(--u-ok-line); color: var(--u-ok); border-radius: 28px; }
+    .all-complete-card { background: var(--u-soft-yellow); border: 4px solid var(--u-frame); color: var(--u-ink); border-radius: 28px; }
+    .all-complete-card a { color: var(--u-sub) !important; }
+    .next-button, .check-btn { padding: 0.75rem 1.6rem; font-size: 1.05rem; }
+    .sign-btn { font-size: 1.1rem; }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme h-full">
+  <div id="app-wrapper" class="h-full w-full overflow-auto" style="background: linear-gradient(135deg, #e0e7ff 0%, #f0e6ff 100%);">
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <div class="max-w-2xl mx-auto p-4 sm:p-6">
+      <h1 id="main-title" class="text-2xl sm:text-3xl font-bold text-center mb-6" style="color: #4f46e5;">🧮 因数分解マスター</h1>
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../assets/algebra.js"></script>
-<script src="../assets/steps.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   11. 因数分解を段階的に学ぶ（因数分解ステップ学習）
-   「かけて○・たして△」を、手順を追って埋めながら身につける。
+      <div class="progress-bar" id="progress-bar"></div>
 
-   元教材から直した点：
-     ・ステップの入力欄が前の入力に連動していて、途中で直すと
-       後ろの欄が空になったまま進めなくなることがあった。
-       → 各欄は独立。いつでも直せるし、「ぜんぶ消す」でやり直せる。
-     ・答えの順番（(x+2)(x+3) と (x+3)(x+2)）で片方しか通らなかった。
-       → 2数は小さい順に入れる形にそろえ、どちらの順でも意味が通るようにした。
-     ・問題が固定で、何度やっても同じだった。 → 毎回作り直すので繰り返し練習できる。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+      <div class="problem-display">
+        <div class="text-sm opacity-80 mb-2">今回の問題</div>
+        <div id="problem-text" class="problem-text">x² − 5x + 6</div>
+      </div>
 
-  var A = Algebra, F = Quiz.fmt;
+      <div id="step1" class="step-card visible">
+        <div class="flex items-center mb-4">
+          <span class="step-number">1</span>
+          <span class="text-lg font-bold text-slate-700">かけていくつ？ たしていくつ？</span>
+          <span id="step1-badge" class="success-badge" style="display: none;">✓ クリア</span>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="math-text">かけて</span>
+            <input type="text" id="multiply-answer" class="input-box" maxlength="4" autocomplete="off">
+            <span id="multiply-feedback" class="text-lg"></span>
+          </div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="math-text">たして</span>
+            <input type="text" id="add-answer" class="input-box" maxlength="4" autocomplete="off">
+            <span id="add-feedback" class="text-lg"></span>
+          </div>
+        </div>
+        <!-- 【ブラッシュアップ】Tab キーのないスマホでも答え合わせできるように -->
+        <button class="check-btn" onclick="checkStep(1)">こたえ合わせ</button>
+        <div class="key-hint">（パソコンは Enter キーや Tab キーでもOK）</div>
+      </div>
 
-  /** かけて prod・たして sum になる 2 数を持つ問題を 1 つ作る */
-  function makeProblem(index, level) {
-    var it = A.quadraticFromRoots({ lo: level === 1 ? 1 : -8, hi: 8, allowSame: false });
-    var a = it.a, b = it.b;
-    // 小さい順にそろえる（どちらの順に書いても同じ式だが、表示は 1 通りに決めておく）
-    if (a > b) { var t = a; a = b; b = t; }
+      <div id="step2" class="step-card">
+        <div class="flex items-center mb-4">
+          <span class="step-number">2</span>
+          <span id="step2-title" class="text-lg font-bold text-slate-700">かけて■になるペアを書き入れよう</span>
+          <span id="step2-badge" class="success-badge" style="display: none;">✓ クリア</span>
+        </div>
+        <div class="text-sm text-slate-500 mb-3">※ 負の数も考えてね！</div>
+        <div class="pair-row" id="pair-row"></div>
+        <button class="check-btn" onclick="checkStep(2)">こたえ合わせ</button>
+      </div>
 
-    var sum = it.sum, prod = it.prod;
+      <div id="step3" class="step-card">
+        <div class="flex items-center mb-4">
+          <span class="step-number">3</span>
+          <span id="step3-title" class="text-lg font-bold text-slate-700">たして■になる2つは？</span>
+          <span id="step3-badge" class="success-badge" style="display: none;">✓ クリア</span>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <input type="text" id="sum-a" class="input-box" maxlength="4" autocomplete="off">
+          <span class="math-text">と</span>
+          <input type="text" id="sum-b" class="input-box" maxlength="4" autocomplete="off">
+        </div>
+        <button class="check-btn" onclick="checkStep(3)">こたえ合わせ</button>
+      </div>
 
-    var lines = [
-      ['まず、かけて ', { a: String(prod), kind: 'math' }, '　たして ', { a: String(sum), kind: 'math' }, ' になる 2 つの数をさがす。'],
-      [],
-      ['その 2 数は　', { a: String(a), kind: 'math' }, '　と　', { a: String(b), kind: 'math' }],
-      [],
-      ['たしかめ：　', { a: String(a), kind: 'math' }, ' × ', { a: String(b), kind: 'math' }, ' = ', { a: String(prod), kind: 'math' }],
-      ['　　　　　　', { a: String(a), kind: 'math' }, ' + ', { a: String(b), kind: 'math' }, ' = ', { a: String(sum), kind: 'math' }],
-      [],
-      ['よって　', it.expanded, '　=　( x ＋ ', { a: String(a), kind: 'math' }, ' )( x ＋ ', { a: String(b), kind: 'math' }, ' )']
-    ];
+      <div id="step4" class="step-card">
+        <div class="flex items-center mb-4">
+          <span class="step-number">4</span>
+          <span class="text-lg font-bold text-slate-700">因数分解の答えは？</span>
+          <span id="step4-badge" class="success-badge" style="display: none;">✓ クリア</span>
+        </div>
+        <div id="step4-description" class="text-slate-600 mb-3"></div>
+        <div id="step4-inputs" class="flex items-center gap-2 flex-wrap"></div>
+        <div class="key-hint">符号は「±」を押すと ＋ と − が切りかわるよ（「−」キーでもOK）</div>
+        <button class="check-btn" onclick="checkStep(4)">こたえ合わせ</button>
+      </div>
 
-    // まぎらわしい数を候補に混ぜる
-    var extras = [];
-    [-a, -b, a + 1, b - 1, sum - a, prod + 1, a * 2].forEach(function (v) {
-      var s = String(v);
-      if (extras.length < 6 && s !== String(a) && s !== String(b) &&
-          s !== String(sum) && s !== String(prod) && extras.indexOf(s) < 0) extras.push(s);
+      <div id="completion" class="completion-card" style="display: none;">
+        <div class="text-3xl mb-2">🎉</div>
+        <div class="text-xl font-bold mb-2">すばらしい！</div>
+        <div class="text-lg mb-4" id="completion-text"></div>
+        <div class="text-2xl font-bold mb-4" id="completion-answer"></div>
+        <button class="next-button" id="next-button">次の問題へ</button>
+      </div>
+
+      <div id="all-complete" class="all-complete-card" style="display: none;">
+        <div class="text-4xl mb-2">🏆</div>
+        <div class="text-2xl font-bold mb-2">5問すべてクリア！</div>
+        <div class="text-lg mb-4">因数分解マスターになれました！</div>
+        <button class="next-button" id="restart-button" style="background: linear-gradient(135deg, #f59e0b, #d97706);">もう一度やる（新しい問題）</button>
+        <div style="margin-top: 14px;"><a href="../remake.html" style="color: #fff; text-decoration: underline;">ほかの教材をえらぶ</a></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 問題パターンをカテゴリ別に分類
+    const problemCategories = {
+      // ①ペアが3個以下の(x+a)(x+b)形式
+      pair3OrLess: [
+        { type: 'two_factor', formula: 'x² + 5x + 6', multiply: 6, add: 5, factorA: 2, factorB: 3 },
+        { type: 'two_factor', formula: 'x² + 7x + 12', multiply: 12, add: 7, factorA: 3, factorB: 4 },
+        { type: 'two_factor', formula: 'x² − 5x + 6', multiply: 6, add: -5, factorA: -2, factorB: -3 },
+        { type: 'two_factor', formula: 'x² − 8x + 12', multiply: 12, add: -8, factorA: -2, factorB: -6 },
+        { type: 'two_factor', formula: 'x² + 3x + 2', multiply: 2, add: 3, factorA: 1, factorB: 2 },
+        { type: 'two_factor', formula: 'x² − 3x + 2', multiply: 2, add: -3, factorA: -1, factorB: -2 },
+      ],
+      // ②ペアが4個以下の(x+a)(x+b)形式
+      pair4OrLess: [
+        { type: 'two_factor', formula: 'x² + 2x − 3', multiply: -3, add: 2, factorA: -1, factorB: 3 },
+        { type: 'two_factor', formula: 'x² − 2x − 3', multiply: -3, add: -2, factorA: -3, factorB: 1 },
+        { type: 'two_factor', formula: 'x² + 5x − 6', multiply: -6, add: 5, factorA: -1, factorB: 6 },
+        { type: 'two_factor', formula: 'x² − 5x − 6', multiply: -6, add: -5, factorA: -6, factorB: 1 },
+        { type: 'two_factor', formula: 'x² + 6x + 8', multiply: 8, add: 6, factorA: 2, factorB: 4 },
+        { type: 'two_factor', formula: 'x² − 6x + 8', multiply: 8, add: -6, factorA: -2, factorB: -4 },
+      ],
+      // ③(x+a)(x-a)の差の平方
+      difference: [
+        { type: 'difference', formula: 'x² − 9', multiply: -9, add: 0, factorA: -3, factorB: 3 },
+        { type: 'difference', formula: 'x² − 4', multiply: -4, add: 0, factorA: -2, factorB: 2 },
+        { type: 'difference', formula: 'x² − 25', multiply: -25, add: 0, factorA: -5, factorB: 5 },
+        { type: 'difference', formula: 'x² − 16', multiply: -16, add: 0, factorA: -4, factorB: 4 },
+        { type: 'difference', formula: 'x² − 1', multiply: -1, add: 0, factorA: -1, factorB: 1 },
+      ],
+      // ④ペアが5個以上の(x+a)(x+b)形式
+      pair5OrMore: [
+        { type: 'two_factor', formula: 'x² − 7x + 10', multiply: 10, add: -7, factorA: -2, factorB: -5 },
+        { type: 'two_factor', formula: 'x² + 7x + 10', multiply: 10, add: 7, factorA: 2, factorB: 5 },
+        { type: 'two_factor', formula: 'x² + 8x + 12', multiply: 12, add: 8, factorA: 2, factorB: 6 },
+        { type: 'two_factor', formula: 'x² − 8x + 15', multiply: 15, add: -8, factorA: -3, factorB: -5 },
+        { type: 'two_factor', formula: 'x² + 9x + 18', multiply: 18, add: 9, factorA: 3, factorB: 6 },
+      ],
+      // ⑤(x+a)²の完全平方
+      perfectSquare: [
+        { type: 'perfect_square', formula: 'x² + 6x + 9', multiply: 9, add: 6, factorA: 3, factorB: 3 },
+        { type: 'perfect_square', formula: 'x² − 8x + 16', multiply: 16, add: -8, factorA: -4, factorB: -4 },
+        { type: 'perfect_square', formula: 'x² + 4x + 4', multiply: 4, add: 4, factorA: 2, factorB: 2 },
+        { type: 'perfect_square', formula: 'x² − 10x + 25', multiply: 25, add: -10, factorA: -5, factorB: -5 },
+        { type: 'perfect_square', formula: 'x² + 2x + 1', multiply: 1, add: 2, factorA: 1, factorB: 1 },
+      ],
+    };
+
+    const defaultConfig = { main_title: '🧮 因数分解マスター' };
+    let currentProblems = [];
+    let currentProblemIndex = 0;
+    let currentProblem = null;
+    let signStateA = '+';
+    let signStateB = '+';
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+        },
+        mapToCapabilities: () => ({ recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined }),
+        mapToEditPanelValues: (config) => new Map([['main_title', config.main_title || defaultConfig.main_title]])
+      });
+    }
+
+    function selectProblems() {
+      // 各カテゴリからランダムに1問ずつ選択（指定の順番で出題）
+      const problem1 = problemCategories.pair3OrLess[Math.floor(Math.random() * problemCategories.pair3OrLess.length)];
+      const problem2 = problemCategories.pair4OrLess[Math.floor(Math.random() * problemCategories.pair4OrLess.length)];
+      const problem3 = problemCategories.difference[Math.floor(Math.random() * problemCategories.difference.length)];
+      const problem4 = problemCategories.pair5OrMore[Math.floor(Math.random() * problemCategories.pair5OrMore.length)];
+      const problem5 = problemCategories.perfectSquare[Math.floor(Math.random() * problemCategories.perfectSquare.length)];
+
+      currentProblems = [problem1, problem2, problem3, problem4, problem5];
+    }
+
+    function updateProgressBar() {
+      const progressBar = document.getElementById('progress-bar');
+      progressBar.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        dot.textContent = i + 1;
+        if (i === currentProblemIndex) dot.classList.add('active');
+        else if (i < currentProblemIndex) dot.classList.add('complete');
+        progressBar.appendChild(dot);
+      }
+    }
+
+    function getPairsForProduct(product) {
+      const pairs = [];
+      const divisors = new Set();
+
+      for (let i = 1; i <= Math.abs(product); i++) {
+        if (Math.abs(product) % i === 0) {
+          divisors.add(i);
+          divisors.add(-i);
+        }
+      }
+
+      divisors.forEach(divisor => {
+        const other = product / divisor;
+        if (divisor <= other) {
+          pairs.push([divisor, other]);
+        }
+      });
+
+      return pairs;
+    }
+
+    function resetUI() {
+      document.getElementById('multiply-answer').value = '';
+      document.getElementById('multiply-answer').classList.remove('correct', 'incorrect');
+      document.getElementById('multiply-feedback').textContent = '';
+      document.getElementById('add-answer').value = '';
+      document.getElementById('add-answer').classList.remove('correct', 'incorrect');
+      document.getElementById('add-feedback').textContent = '';
+      document.getElementById('step1-badge').style.display = 'none';
+
+      document.getElementById('sum-a').value = '';
+      document.getElementById('sum-a').classList.remove('correct', 'incorrect');
+      document.getElementById('sum-b').value = '';
+      document.getElementById('sum-b').classList.remove('correct', 'incorrect');
+      document.getElementById('step3-badge').style.display = 'none';
+
+      document.getElementById('step4-badge').style.display = 'none';
+      document.getElementById('completion').style.display = 'none';
+      document.getElementById('all-complete').style.display = 'none';
+
+      document.getElementById('step1').classList.add('visible');
+      document.getElementById('step2').classList.remove('visible');
+      document.getElementById('step3').classList.remove('visible');
+      document.getElementById('step4').classList.remove('visible');
+
+      signStateA = '+';
+      signStateB = '+';
+    }
+
+    function loadProblem() {
+      currentProblem = currentProblems[currentProblemIndex];
+      resetUI();
+
+      const validPairs = getPairsForProduct(currentProblem.multiply);
+      const pairRow = document.getElementById('pair-row');
+      pairRow.innerHTML = '';
+      document.getElementById('step2-badge').style.display = 'none';
+
+      for (let i = 0; i < validPairs.length; i++) {
+        const pairItem = document.createElement('div');
+        pairItem.className = 'pair-item';
+        pairItem.innerHTML = `
+          <input type="text" id="pair${i}-a" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <span class="math-text math-formula">×</span>
+          <input type="text" id="pair${i}-b" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+        `;
+        pairRow.appendChild(pairItem);
+      }
+
+      document.getElementById('problem-text').textContent = currentProblem.formula;
+      document.getElementById('step2-title').textContent = `かけて${currentProblem.multiply}になるペアを書き入れよう`;
+      document.getElementById('step3-title').textContent = `たして${currentProblem.add}になる2つは？`;
+
+      const step4Desc = document.getElementById('step4-description');
+      step4Desc.innerHTML = `<span class="math-formula">${currentProblem.formula}</span> を因数分解すると...`;
+
+      const step4Inputs = document.getElementById('step4-inputs');
+      if (currentProblem.type === 'perfect_square') {
+        step4Inputs.innerHTML = `<span class="math-text math-formula">(x</span>
+          <span id="sign1" class="math-text math-formula"></span>
+          <input type="text" id="factor-a" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <button type="button" class="sign-btn" onclick="toggleSign('A')">±</button>
+          <span class="math-text math-formula">)²</span>`;
+      } else {
+        step4Inputs.innerHTML = `<span class="math-text math-formula">(x</span>
+          <span id="sign1" class="math-text math-formula"></span>
+          <input type="text" id="factor-a" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <button type="button" class="sign-btn" onclick="toggleSign('A')">±</button>
+          <span class="math-text math-formula">)(x</span>
+          <span id="sign2" class="math-text math-formula"></span>
+          <input type="text" id="factor-b" class="input-box" style="width: 2.5rem;" maxlength="4" autocomplete="off">
+          <button type="button" class="sign-btn" onclick="toggleSign('B')">±</button>
+          <span class="math-text math-formula">)</span>`;
+      }
+
+      setupEventListeners(validPairs);
+      updateProgressBar();
+      document.getElementById('multiply-answer').focus();
+    }
+
+    function setupEventListeners(validPairs) {
+      let step1Complete = false;
+      let step2Complete = false;
+      let step3Complete = false;
+      let multiplyCorrect = false;
+      let addCorrect = false;
+      let completedPairs = new Set();
+
+      const multiplyInput = document.getElementById('multiply-answer');
+      const addInput = document.getElementById('add-answer');
+      const multiplyFeedback = document.getElementById('multiply-feedback');
+      const addFeedback = document.getElementById('add-feedback');
+
+      multiplyInput.addEventListener('keydown', (e) => {
+        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          e.preventDefault();
+          const value = parseInt(multiplyInput.value);
+          if (value === currentProblem.multiply) {
+            multiplyInput.classList.add('correct');
+            multiplyFeedback.textContent = '✓';
+            multiplyFeedback.style.color = '#22c55e';
+            multiplyCorrect = true;
+            addInput.focus();
+          } else {
+            multiplyInput.classList.add('incorrect');
+            multiplyFeedback.textContent = '✗';
+            multiplyFeedback.style.color = '#ef4444';
+            setTimeout(() => {
+              multiplyInput.classList.remove('incorrect');
+              multiplyFeedback.textContent = '';
+              multiplyInput.value = '';
+              multiplyInput.focus();
+            }, 500);
+          }
+        }
+      });
+
+      addInput.addEventListener('keydown', (e) => {
+        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          e.preventDefault();
+          const value = parseInt(addInput.value);
+          if (value === currentProblem.add) {
+            addInput.classList.add('correct');
+            addFeedback.textContent = '✓';
+            addFeedback.style.color = '#22c55e';
+            addCorrect = true;
+            if (multiplyCorrect && addCorrect && !step1Complete) {
+              step1Complete = true;
+              document.getElementById('step1-badge').style.display = 'inline-flex';
+              setTimeout(() => {
+                document.getElementById('step2').classList.add('visible');
+                document.getElementById('pair0-a').focus();
+              }, 400);
+            }
+          } else {
+            addInput.classList.add('incorrect');
+            addFeedback.textContent = '✗';
+            addFeedback.style.color = '#ef4444';
+            setTimeout(() => {
+              addInput.classList.remove('incorrect');
+              addFeedback.textContent = '';
+              addInput.value = '';
+              addInput.focus();
+            }, 500);
+          }
+        }
+      });
+
+      for (let index = 0; index < validPairs.length; index++) {
+        const inputA = document.getElementById(`pair${index}-a`);
+        const inputB = document.getElementById(`pair${index}-b`);
+
+        inputA.addEventListener('keydown', (e) => {
+          if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+            e.preventDefault();
+            inputB.focus();
+          }
+        });
+
+        inputB.addEventListener('keydown', (e) => {
+          if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+            e.preventDefault();
+            const a = parseInt(inputA.value);
+            const b = parseInt(inputB.value);
+
+            if (isNaN(a) || isNaN(b)) {
+              inputA.classList.add('incorrect');
+              inputB.classList.add('incorrect');
+              setTimeout(() => {
+                inputA.classList.remove('incorrect');
+                inputB.classList.remove('incorrect');
+                inputA.value = '';
+                inputB.value = '';
+                inputA.focus();
+              }, 500);
+              return;
+            }
+
+            const productIsCorrect = (a * b === currentProblem.multiply);
+
+            let isUsed = false;
+            for (let i = 0; i < validPairs.length; i++) {
+              if (completedPairs.has(i)) {
+                const ai = document.getElementById(`pair${i}-a`);
+                const bi = document.getElementById(`pair${i}-b`);
+                if (ai && bi) {
+                  const existingA = parseInt(ai.value);
+                  const existingB = parseInt(bi.value);
+                  if (!isNaN(existingA) && !isNaN(existingB)) {
+                    if ((existingA === a && existingB === b) || (existingA === b && existingB === a)) {
+                      isUsed = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+
+            if (productIsCorrect && !isUsed) {
+              inputA.classList.add('correct');
+              inputB.classList.add('correct');
+              completedPairs.add(index);
+
+              if (completedPairs.size === validPairs.length) {
+                document.getElementById('step2-badge').style.display = 'inline-flex';
+                step2Complete = true;
+                setTimeout(() => {
+                  document.getElementById('step3').classList.add('visible');
+                  document.getElementById('sum-a').focus();
+                }, 400);
+              } else {
+                for (let i = 0; i < validPairs.length; i++) {
+                  if (!completedPairs.has(i)) {
+                    document.getElementById(`pair${i}-a`).focus();
+                    break;
+                  }
+                }
+              }
+            } else {
+              inputA.classList.add('incorrect');
+              inputB.classList.add('incorrect');
+              setTimeout(() => {
+                inputA.classList.remove('incorrect');
+                inputB.classList.remove('incorrect');
+                inputA.value = '';
+                inputB.value = '';
+                inputA.focus();
+              }, 500);
+            }
+          }
+        });
+      }
+
+      const sumA = document.getElementById('sum-a');
+      const sumB = document.getElementById('sum-b');
+
+      sumA.addEventListener('keydown', (e) => {
+        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          e.preventDefault();
+          sumB.focus();
+        }
+      });
+
+      sumB.addEventListener('keydown', (e) => {
+        if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          e.preventDefault();
+          const a = parseInt(sumA.value);
+          const b = parseInt(sumB.value);
+
+          if (isNaN(a) || isNaN(b)) {
+            sumA.classList.add('incorrect');
+            sumB.classList.add('incorrect');
+            setTimeout(() => {
+              sumA.classList.remove('incorrect');
+              sumB.classList.remove('incorrect');
+              sumA.value = '';
+              sumB.value = '';
+              sumA.focus();
+            }, 500);
+            return;
+          }
+
+          const isCorrect = (a === currentProblem.factorA && b === currentProblem.factorB) || (a === currentProblem.factorB && b === currentProblem.factorA);
+
+          if (isCorrect) {
+            sumA.classList.add('correct');
+            sumB.classList.add('correct');
+            if (!step3Complete) {
+              step3Complete = true;
+              document.getElementById('step3-badge').style.display = 'inline-flex';
+              setTimeout(() => {
+                document.getElementById('step4').classList.add('visible');
+                document.getElementById('factor-a').focus();
+              }, 400);
+            }
+          } else {
+            sumA.classList.add('incorrect');
+            sumB.classList.add('incorrect');
+            setTimeout(() => {
+              sumA.classList.remove('incorrect');
+              sumB.classList.remove('incorrect');
+              sumA.value = '';
+              sumB.value = '';
+              sumA.focus();
+            }, 500);
+          }
+        }
+      });
+
+      const factorA = document.getElementById('factor-a');
+      const factorB = document.getElementById('factor-b');
+      const sign1 = document.getElementById('sign1');
+      const sign2 = document.getElementById('sign2');
+
+      factorA.addEventListener('keydown', (e) => {
+        if (e.key === '-' || e.key === '−') {
+          e.preventDefault();
+          signStateA = signStateA === '+' ? '−' : '+';
+          sign1.textContent = signStateA;
+        } else if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+          if (currentProblem.type === 'perfect_square') {
+            e.preventDefault();
+            checkFactorPerfectSquare();
+          } else if (factorB) {
+            e.preventDefault();
+            factorB.focus();
+          }
+        }
+      });
+
+      if (factorB) {
+        factorB.addEventListener('keydown', (e) => {
+          if (e.key === '-' || e.key === '−') {
+            e.preventDefault();
+            signStateB = signStateB === '+' ? '−' : '+';
+            sign2.textContent = signStateB;
+          } else if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+            e.preventDefault();
+            checkFactors();
+          }
+        });
+      }
+
+      factorA.addEventListener('input', () => {
+        const value = factorA.value;
+        if (/-/.test(value)) signStateA = signStateA === '+' ? '−' : '+';   // 【ブラッシュアップ】
+        const numberOnly = value.replace(/[^0-9]/g, '');
+        factorA.value = numberOnly;
+        if (numberOnly === '') {
+          sign1.textContent = '';
+        } else {
+          sign1.textContent = signStateA;
+        }
+      });
+
+      if (factorB) {
+        factorB.addEventListener('input', () => {
+          const value = factorB.value;
+          if (/-/.test(value)) signStateB = signStateB === '+' ? '−' : '+';   // 【ブラッシュアップ】
+          const numberOnly = value.replace(/[^0-9]/g, '');
+          factorB.value = numberOnly;
+          if (numberOnly === '') {
+            sign2.textContent = '';
+          } else {
+            sign2.textContent = signStateB;
+          }
+        });
+      }
+
+      function checkFactorPerfectSquare() {
+        const number = factorA.value.trim();
+
+        if (number === '') {
+          factorA.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorA.value = '';
+            sign1.textContent = '';
+            signStateA = '+';
+            factorA.focus();
+          }, 500);
+          return;
+        }
+
+        const a = parseInt(number);
+        if (isNaN(a)) {
+          factorA.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorA.value = '';
+            sign1.textContent = '';
+            signStateA = '+';
+            factorA.focus();
+          }, 500);
+          return;
+        }
+
+        const signedValue = (signStateA === '−' ? -1 : 1) * a;
+
+        // 【ブラッシュアップ】元は Math.abs で比べていて、符号がちがっても正解になっていた
+        if (signedValue === currentProblem.factorA) {
+          factorA.classList.add('correct');
+          document.getElementById('step4-badge').style.display = 'inline-flex';
+          showCompletion();
+          setTimeout(() => {
+            document.getElementById('next-button').focus();
+          }, 100);
+        } else {
+          factorA.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorA.value = '';
+            sign1.textContent = '';
+            signStateA = '+';
+            factorA.focus();
+          }, 500);
+        }
+      }
+
+      function checkFactors() {
+        const numberA = factorA.value.trim();
+        const numberB = factorB.value.trim();
+
+        if (numberA === '' || numberB === '') {
+          factorA.classList.add('incorrect');
+          factorB.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorB.classList.remove('incorrect');
+            factorA.value = '';
+            factorB.value = '';
+            sign1.textContent = '';
+            sign2.textContent = '';
+            signStateA = '+';
+            signStateB = '+';
+            factorA.focus();
+          }, 500);
+          return;
+        }
+
+        const a = parseInt(numberA);
+        const b = parseInt(numberB);
+
+        if (isNaN(a) || isNaN(b)) {
+          factorA.classList.add('incorrect');
+          factorB.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorB.classList.remove('incorrect');
+            factorA.value = '';
+            factorB.value = '';
+            sign1.textContent = '';
+            sign2.textContent = '';
+            signStateA = '+';
+            signStateB = '+';
+            factorA.focus();
+          }, 500);
+          return;
+        }
+
+        const signedA = (signStateA === '−' ? -1 : 1) * a;
+        const signedB = (signStateB === '−' ? -1 : 1) * b;
+
+        const isCorrect = (signedA === currentProblem.factorA && signedB === currentProblem.factorB) || (signedA === currentProblem.factorB && signedB === currentProblem.factorA);
+
+        if (isCorrect) {
+          factorA.classList.add('correct');
+          factorB.classList.add('correct');
+          document.getElementById('step4-badge').style.display = 'inline-flex';
+          showCompletion();
+          setTimeout(() => {
+            document.getElementById('next-button').focus();
+          }, 100);
+        } else {
+          factorA.classList.add('incorrect');
+          factorB.classList.add('incorrect');
+          setTimeout(() => {
+            factorA.classList.remove('incorrect');
+            factorB.classList.remove('incorrect');
+            factorA.value = '';
+            factorB.value = '';
+            sign1.textContent = '';
+            sign2.textContent = '';
+            signStateA = '+';
+            signStateB = '+';
+            factorA.focus();
+          }, 500);
+        }
+      }
+    }
+
+    function formatAnswer() {
+      const factorA = Math.abs(currentProblem.factorA);
+      const factorB = Math.abs(currentProblem.factorB);
+      const signA = currentProblem.factorA > 0 ? '+' : '−';
+      const signB = currentProblem.factorB > 0 ? '+' : '−';
+
+      if (currentProblem.type === 'perfect_square') {
+        return `${currentProblem.formula} = (x ${signA} ${factorA})²`;
+      } else if (currentProblem.type === 'difference') {
+        return `${currentProblem.formula} = (x ${signA} ${factorA})(x ${signB} ${factorB})`;
+      } else {
+        return `${currentProblem.formula} = (x ${signA} ${factorA})(x ${signB} ${factorB})`;
+      }
+    }
+
+    function showCompletion() {
+      const completion = document.getElementById('completion');
+      const completionText = document.getElementById('completion-text');
+      const completionAnswer = document.getElementById('completion-answer');
+
+      completionText.textContent = '問題' + (currentProblemIndex + 1) + 'をクリア！';
+      completionAnswer.innerHTML = `<span class="math-formula">${formatAnswer()}</span>`;
+      completion.style.display = 'block';
+      completion.style.opacity = '0';
+      completion.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        completion.style.transition = 'all 0.5s ease';
+        completion.style.opacity = '1';
+        completion.style.transform = 'scale(1)';
+      }, 100);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'next-button') {
+        currentProblemIndex++;
+        if (currentProblemIndex < 5) {
+          loadProblem();
+        } else {
+          document.getElementById('completion').style.display = 'none';
+          const allComplete = document.getElementById('all-complete');
+          allComplete.style.display = 'block';
+          allComplete.style.opacity = '0';
+          allComplete.style.transform = 'scale(0.9)';
+          setTimeout(() => {
+            allComplete.style.transition = 'all 0.5s ease';
+            allComplete.style.opacity = '1';
+            allComplete.style.transform = 'scale(1)';
+          }, 100);
+        }
+      }
+      if (e.target.id === 'restart-button') {
+        currentProblemIndex = 0;
+        selectProblems();
+        loadProblem();
+      }
     });
 
-    return {
-      name: '問題' + (index + 1),
-      given: it.expanded,
-      target: 'この式を因数分解',
-      lines: lines,
-      extras: extras,
-      hint: '「かけて定数項・たして x の係数」の 2 数をさがすのがコツです。',
-      summary: '答え： ' + it.factored + '　（展開すると ' + it.expanded + ' に戻ります）'
-    };
-  }
+    document.getElementById('next-button').addEventListener('keydown', (e) => {
+      if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('next-button').click();
+      }
+    });
 
-  // レベル1（正の数どうし）を4問、レベル2（負の数もあり）を4問
-  var problems = [];
-  for (var i = 0; i < 4; i++) problems.push(makeProblem(problems.length, 1));
-  for (var j = 0; j < 4; j++) problems.push(makeProblem(problems.length, 2));
+    document.getElementById('restart-button').addEventListener('keydown', (e) => {
+      if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('restart-button').click();
+      }
+    });
 
-  Steps.start({
-    title: '因数分解を段階的に学ぶ',
-    subtitle: '「かけて○・たして△」の手順を、ひとつずつ埋めながら身につけよう。',
-    problems: problems
+    // 【ブラッシュアップ】「こたえ合わせ」ボタン：そのステップの最後の欄で Enter を押したのと同じことをする
+    function fireKey(el) {
+      if (el) el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    }
+    function checkStep(n) {
+      if (n === 1) {
+        const m = document.getElementById('multiply-answer');
+        if (!m.classList.contains('correct')) fireKey(m);
+        if (m.classList.contains('correct')) fireKey(document.getElementById('add-answer'));
+      } else if (n === 2) {
+        document.querySelectorAll('#pair-row .pair-item').forEach((it, i) => {
+          const a = document.getElementById('pair' + i + '-a'), b = document.getElementById('pair' + i + '-b');
+          if (!b.classList.contains('correct') && a.value.trim() !== '' && b.value.trim() !== '') fireKey(b);
+        });
+      } else if (n === 3) {
+        fireKey(document.getElementById('sum-b'));
+      } else {
+        fireKey(document.getElementById('factor-b') || document.getElementById('factor-a'));
+      }
+    }
+    // 【ブラッシュアップ】符号の「±」ボタン
+    function toggleSign(which) {
+      const input = document.getElementById(which === 'A' ? 'factor-a' : 'factor-b');
+      const span = document.getElementById(which === 'A' ? 'sign1' : 'sign2');
+      if (which === 'A') signStateA = signStateA === '+' ? '−' : '+';
+      else signStateB = signStateB === '+' ? '−' : '+';
+      const st = which === 'A' ? signStateA : signStateB;
+      span.textContent = (input.value !== '' || st === '−') ? st : '';
+      input.focus();
+    }
+    // 【ブラッシュアップ】全角の数字（「６」）や、いろいろなマイナス記号（− ー）を半角にそろえる
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      if (!t.classList || !t.classList.contains('input-box')) return;
+      const v = t.value.replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0)).replace(/[−－ー―‐]/g, '-');
+      if (v !== t.value) t.value = v;
+    }, true);
+
+    selectProblems();
+    loadProblem();
+  </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#app-wrapper > .max-w-2xl": "u-card",
+    "#main-title": "u-title",
+    ".input-box": "u-input",
+    ".input-box.correct": "u-ok",
+    ".input-box.incorrect": "u-ng",
+    ".check-btn": "u-btn",
+    "#next-button": "u-btn u-btn-blue",
+    "#restart-button": "u-btn",
+    ".sign-btn": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>

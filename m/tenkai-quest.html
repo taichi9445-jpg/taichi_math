@@ -5,7 +5,7 @@
   <!--
     07. 展開の練習（数学バトルクエスト - 展開の冒険）
     山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
@@ -424,12 +424,12 @@
     }
 
     /* 【ブラッシュアップ】 */
-    .port-back { color: #ffd700; max-width: 900px; width: 100%; padding-left: 0; padding-right: 0; }
+    .port-back { max-width: 900px; width: 100%; padding-left: 0; padding-right: 0; }
     .victory-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 380px; }
     .victory-nav .continue-btn { width: 100%; padding: 1rem 1.5rem; font-size: 1.25rem; }
     .victory-nav .continue-btn.sub { background: rgba(255,255,255,0.15); }
-    .victory-nav a { color: #ffeb3b; }
-    .answer-hint { font-size: 1.3rem; color: #ffeb3b; text-align: center; }
+    .victory-nav a { }
+    .answer-hint { font-size: 1.3rem; text-align: center; }
     .answer-hint .math-expression { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 1.8rem; }
 
     /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
@@ -462,8 +462,41 @@
        本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
        同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
   <link rel="stylesheet" href="../assets/gas.css">
- </head>
- <body>
+   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { color: var(--u-ink); }
+    .title { letter-spacing: 0.04em; font-size: min(2.5rem, 5.6vw); white-space: nowrap; }
+    .subtitle { color: var(--u-sub); font-weight: 700; }
+    .mode-btn { text-align: left; }
+    .mode-btn .mode-title { color: var(--u-title-dark); font-weight: 800; }
+    .mode-btn .mode-desc { color: var(--u-sub); }
+    .mode-btn[style] { background: #fff1f2 !important; border-color: #fecdd3 !important; }
+    .mode-btn[style] .mode-title { color: #be123c; }
+    .question-type-selection { gap: 1rem; }
+    .battle-screen { padding: 1.5rem; max-width: 760px; }
+    .battle-info { background: #f8fafc; border: 2px solid var(--u-line); border-radius: 20px; }
+    .status-label { color: var(--u-sub); font-weight: 700; }
+    .status-value { color: var(--u-ink); }
+    .battle-area { border-radius: 24px; background: linear-gradient(135deg, #dbeafe 0%, #fef3c7 100%) !important; border: 3px solid var(--u-line); }
+    .battle-area[style*="139"] { background: linear-gradient(135deg, #fee2e2 0%, #fde68a 100%) !important; }
+    .question-area { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a !important; box-shadow: none !important; border-radius: 24px; }
+    .question-text { color: var(--u-title-dark); }
+    .input-row { color: var(--u-ink); }
+    .input-row .input-field { color: var(--u-ink) !important; }
+    .sign-before-x, .sign-before-c, .x-span, .x2-span { color: var(--u-ink) !important; }
+    .victory-screen { padding: 2rem 1.5rem; }
+    .victory-title { color: var(--u-accent-text) !important; text-shadow: none !important; }
+    .victory-screen > div { color: var(--u-ink); }
+    .victory-nav a { color: var(--u-sub); }
+    .answer-hint { color: var(--u-title); }
+  
+  </style>
+</head>
+ <body class="u-theme">
   <div class="game-container">
    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
    <h1 class="title" id="gameTitle">数学バトルクエスト - 展開の冒険</h1>
@@ -1428,5 +1461,21 @@
       });
     }
   </script>
- </body>
+ <script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".title": "u-title",
+    ".mode-btn": "u-choice",
+    ".type-btn": "u-btn u-btn-blue",
+    ".battle-screen": "u-card",
+    ".choice-btn": "u-choice",
+    ".input-field": "u-input",
+    ".submit-btn": "u-btn",
+    ".back-btn": "u-btn u-btn-plain",
+    ".victory-screen": "u-card",
+    ".continue-btn:not(.sub)": "u-btn",
+    ".continue-btn.sub": "u-btn u-btn-plain"
+  });
+</script>
+</body>
 </html>

@@ -5,7 +5,7 @@
   <!--
     06. 文字式の計算（数式バトル：6つのダンジョン）
     山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
@@ -1040,7 +1040,7 @@
     }
 
     /* 【ブラッシュアップ】 */
-    .port-back { color: #fff; padding-left: 0; padding-right: 0; flex-shrink: 0; }
+    .port-back { padding-left: 0; padding-right: 0; flex-shrink: 0; }
     .result-nav { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #fff; border-radius: 16px; padding: 20px 16px; margin: 16px auto 8px; max-width: 460px; width: 100%; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
     .result-nav-title { font-size: 22px; font-weight: bold; text-align: center; }
     .result-nav-title.ok { color: #2e7d32; }
@@ -1080,8 +1080,46 @@
        本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
        同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
   <link rel="stylesheet" href="../assets/gas.css">
- </head>
- <body>
+   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    #game-container { background: var(--u-bg) !important; }
+    .game-header { color: var(--u-ink); }
+    .game-title { font-size: min(32px, 6.4vw) !important; }
+    .mode-selection-text { color: var(--u-sub); font-weight: 700; }
+    .mode-grid { max-width: 900px; }
+    .mode-card { padding: 22px 20px 20px; }
+    .mode-card::before { height: 8px; }
+    .mode-number { background: var(--u-accent) !important; box-shadow: 0 3px 0 var(--u-accent-dark); }
+    .mode-title { color: var(--u-title-dark) !important; font-weight: 800; }
+    .mode-description { color: var(--u-sub); }
+    .game-screen { padding: 24px; }
+    .game-nav { border-bottom: 3px dashed var(--u-line); }
+    .stage-info { color: var(--u-ink); }
+    .instruction { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; font-weight: 700; }
+    .dungeon-scene { border-radius: 28px; }
+    .choice-card { font-size: 24px; padding: 16px 12px; color: var(--u-ink); }
+    .choice-card .fraction-line { background: var(--u-ink) !important; }
+    .difficulty-panel { padding: 32px 24px; }
+    .difficulty-title { color: var(--u-title) !important; }
+    .difficulty-button { font-size: 18px; padding: 16px; }
+    .difficulty-button.hell { background: #ef4444 !important; border-bottom-color: #b91c1c !important; }
+    .difficulty-button.pressure { background: #f59e0b !important; border-bottom-color: #b45309 !important; }
+    .term-block { font-size: 22px; color: var(--u-ink); }
+    .term-block.selected { border-color: var(--u-accent) !important; background: #fff7ed !important; box-shadow: 0 0 0 4px rgba(251,146,60,0.35) !important; transform: scale(1.06) !important; }
+    .congratulation-overlay { background: #fff !important; border: 6px solid var(--u-frame) !important; color: var(--u-ink); border-radius: 28px; }
+    .congratulation-text { color: var(--u-accent-text) !important; text-shadow: none !important; }
+    .congratulation-subtext { color: var(--u-ink) !important; }
+    .result-nav { border: 6px solid var(--u-frame); border-radius: 28px; box-shadow: 0 10px 0 rgba(0,0,0,0.05); }
+    .result-nav-title.ok { color: var(--u-accent-text); }
+    .message { color: var(--u-ink); }
+  
+  </style>
+</head>
+ <body class="u-theme">
   <div id="game-container">
    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
    <div id="menu-screen">
@@ -2347,5 +2385,22 @@
       });
     }
   </script>
- </body>
+ <script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".game-title": "u-title",
+    ".mode-card": "u-choice",
+    ".game-screen": "u-card",
+    ".back-button": "u-btn u-btn-plain",
+    ".choice-card": "u-choice",
+    ".difficulty-panel": "u-card",
+    ".difficulty-button": "u-btn u-btn-blue",
+    ".close-difficulty": "u-btn-plain",
+    ".term-block:not(.empty)": "u-choice",
+    ".result-btn.main": "u-btn",
+    ".result-btn.next": "u-btn u-btn-blue",
+    ".result-btn:not(.main):not(.next)": "u-btn u-btn-plain"
+  });
+</script>
+</body>
 </html>

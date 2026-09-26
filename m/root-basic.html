@@ -1,119 +1,999 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="h-full">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ルートの基礎</title>
-<link rel="stylesheet" href="../assets/base.css">
+  <meta charset="UTF-8">
+  <!--
+    14. ルートの基礎（平方根タワー）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../assets/port.css">
+  <script src="../assets/port.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>平方根タワー</title>
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../assets/gas.css">
+  
+  <style>
+    * { font-family: 'Fredoka', sans-serif; }
+    html, body, #app { height: 100%; width: 100%; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #0f1b3d 0%, #1a0f3d 25%, #2d1b4e 50%, #1a0f3d 75%, #0f1b3d 100%);
+      background-attachment: fixed;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .stage-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      border: none;
+      padding: 20px 16px;
+      border-radius: 16px;
+      font-weight: bold;
+      color: white;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .stage-btn:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 16px 48px rgba(102, 126, 234, 0.5);
+    }
+
+    .floor1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .floor2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .floor3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .floor4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .floor5 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+    .floor6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+    .floor7 { background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%); }
+    .floor8 { background: linear-gradient(135deg, #2e2e78 0%, #662d8c 100%); }
+    .floor9 { background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .header-glow {
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.3), rgba(236, 72, 153, 0.3));
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 32px;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    #stage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .btn-difficulty {
+      width: 100%;
+      padding: 20px;
+      border-radius: 16px;
+      font-weight: bold;
+      font-size: 18px;
+      color: white;
+      margin-bottom: 12px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-beginner {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      box-shadow: 0 8px 32px rgba(74, 222, 128, 0.3);
+    }
+
+    .btn-beginner:hover {
+      box-shadow: 0 16px 48px rgba(74, 222, 128, 0.5);
+      transform: translateY(-4px);
+    }
+
+    .btn-intermediate {
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      box-shadow: 0 8px 32px rgba(250, 204, 21, 0.3);
+      color: #1f2937;
+    }
+
+    .btn-intermediate:hover {
+      box-shadow: 0 16px 48px rgba(250, 204, 21, 0.5);
+      transform: translateY(-4px);
+    }
+
+    .btn-advanced {
+      background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+      box-shadow: 0 8px 32px rgba(248, 113, 113, 0.3);
+    }
+
+    .btn-advanced:hover {
+      box-shadow: 0 16px 48px rgba(248, 113, 113, 0.5);
+      transform: translateY(-4px);
+    }
+
+    .choice-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60px;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+    }
+
+    .choice-btn.correct {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    }
+
+    .choice-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 4px;
+    }
+
+    .fraction-numerator {
+      border-bottom: 3px solid currentColor;
+      padding-bottom: 8px;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .fraction-denominator {
+      padding-top: 8px;
+      text-align: center;
+      min-width: 50px;
+    }
+
+    .warning-box {
+      background: rgba(251, 191, 36, 0.2);
+      border: 2px solid rgba(251, 191, 36, 0.5);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      color: #fbbf24;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .hidden { display: none !important; }
+
+    .feedback-section {
+      background: rgba(99, 102, 241, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 2px solid rgba(99, 102, 241, 0.3);
+      text-align: center;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .feedback-incorrect {
+      background: rgba(248, 113, 113, 0.2) !important;
+      border-color: rgba(248, 113, 113, 0.3) !important;
+    }
+
+    .feedback-correct {
+      background: rgba(74, 222, 128, 0.2) !important;
+      border-color: rgba(74, 222, 128, 0.3) !important;
+    }
+
+    #feedback {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .hint-text {
+      font-size: 14px;
+      opacity: 0.8;
+      color: #fbbf24;
+      margin-top: 8px;
+    }
+
+    .retry-btn {
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      color: #1f2937 !important;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+
+    .retry-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .completion-modal {
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 24px;
+      border: 2px solid rgba(74, 222, 128, 0.3);
+    }
+
+    #completion-message {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      background: linear-gradient(to right, #fbbf24, #f87171, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #completion-text {
+      font-size: 18px;
+      color: #e0e7ff;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .completion-btn {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      color: white;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .completion-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .bounce { animation: bounce 0.6s ease-in-out; }
+
+    /* 【ブラッシュアップ】 */
+    .port-back { max-width: 600px; width: 100%; padding-left: 0; padding-right: 0; flex-shrink: 0; }
+    .completion-nav { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .completion-nav .completion-btn { width: 100%; max-width: 340px; }
+    .completion-nav .completion-btn.sub { background: rgba(255,255,255,0.14); }
+    .completion-nav a { margin-top: 4px; }
+    .feedback-close { border: 2px solid #fbbf24 !important; }
+
+    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
+    @media (max-width: 640px) {
+      #app { padding: 10px; }
+      .header-glow { padding: 16px 12px; margin-bottom: 14px; }
+      #game-title { font-size: min(48px, 11vw) !important; margin-bottom: 8px !important; }
+      .glass-panel { padding: 18px 14px; }
+      #stage-grid { gap: 10px; }
+      .stage-btn { padding: 14px 6px; }
+      .choice-btn { padding: 12px 8px; }
+      #question-text { font-size: min(28px, 8vw) !important; }
+      .completion-modal { padding: 24px 14px; }
+      #completion-message { font-size: min(40px, 9vw); }
+    }
+  </style>
+  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { background-attachment: scroll; }
+    .header-glow { background: none; padding: 8px 12px 0; margin-bottom: 12px; }
+    .header-glow p { color: var(--u-sub) !important; font-weight: 700; opacity: 1 !important; }
+    .glass-panel { backdrop-filter: none; }
+    .glass-panel h2 { color: var(--u-title) !important; -webkit-text-fill-color: currentColor !important; background: none !important; }
+    .glass-panel p { color: var(--u-sub) !important; opacity: 1 !important; }
+    #back-btn, #back-to-difficulty { color: var(--u-sub) !important; opacity: 1 !important; }
+    #question-number { color: var(--u-ink) !important; opacity: 1 !important; font-weight: 700; }
+    #question-screen > div:nth-child(2) { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a !important; }
+    #instruction-text { color: var(--u-soft-yellow-text) !important; font-weight: 700; opacity: 1 !important; }
+    #question-text { color: var(--u-ink) !important; }
+    .stage-btn { color: var(--u-ink); padding: 16px 8px; }
+    .stage-btn span:first-child { color: var(--u-title); font-weight: 800; font-size: 20px !important; }
+    .stage-btn span:last-child { opacity: 1 !important; font-weight: 700; }
+    .btn-intermediate { background: var(--u-accent) !important; border-bottom-color: var(--u-accent-dark) !important; }
+    .btn-advanced { background: #8b5cf6 !important; border-bottom-color: #6d28d9 !important; }
+    .btn-difficulty { margin-bottom: 12px; }
+    .choice-btn { font-size: 20px; min-height: 64px; }
+    .warning-box { background: var(--u-soft-yellow); border-color: #fde68a; color: var(--u-soft-yellow-text); }
+    .feedback-section { background: #f8fafc; border: 3px solid var(--u-line); color: var(--u-ink); }
+    .feedback-incorrect { background: var(--u-ng-soft) !important; border-color: var(--u-ng-line) !important; }
+    .feedback-correct { background: var(--u-ok-soft) !important; border-color: var(--u-ok-line) !important; }
+    .feedback-incorrect #feedback { color: var(--u-ng); }
+    .feedback-correct #feedback { color: var(--u-ok); }
+    .hint-text { color: var(--u-title) !important; opacity: 1; font-weight: 700; font-size: 15px; }
+    .completion-modal { background: none; border: none; padding: 16px 0; }
+    #completion-message { color: var(--u-accent-text) !important; -webkit-text-fill-color: currentColor !important; background: none !important; }
+    #completion-text { color: var(--u-ink); }
+    .completion-nav a { color: var(--u-sub); }
+  
+  </style>
 </head>
-<body>
-<div class="wrap"><div id="app"></div></div>
+<body class="u-theme h-full">
+  <div id="app" class="h-full w-full">
 
-<script src="../assets/mathcore.js"></script>
-<script src="../assets/quiz.js"></script>
-<script src="../data/root-tower.js"></script>
-<script>
-/* ---------------------------------------------------------------------------
-   14. ルートの基礎
-   平方根とは何か・根号を外す・値を求める、の3つにしぼった入門編。
-   問題データは平方根タワーの 1F〜4F をそのまま使っている（元教材と同じ問題）。
+    <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+    <!-- ヘッダー -->
+    <div class="header-glow">
+      <h1 id="game-title" style="font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #fbbf24, #f87171, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">平方根タワー</h1>
+      <p style="font-size: 16px; opacity: 0.9; color: white;">9つのフロアを登ってマスターを目指そう！🏗️</p>
+    </div>
 
-   元教材から直した点：
-     ・「平方根を求める」と「根号を外す」の違いが説明されないまま
-       出題され、±の付け忘れが直らなかった。
-       → 各パートの前に、短い確認カードを出すようにした。
-     ・記述で答えるとき「±3」を「+-3」や「3,-3」と書くと不正解になっていた。
-       → 記述パートは選択式にそろえ、判定のぶれをなくした。
---------------------------------------------------------------------------- */
-(function () {
-  'use strict';
+    <!-- ステージ選択画面 -->
+    <div id="stage-select" class="glass-panel">
+      <h2 style="font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 8px; background: linear-gradient(to right, #06b6d4, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">ステージを選択</h2>
+      <p style="font-size: 14px; text-align: center; opacity: 0.7; margin-bottom: 32px; color: white;">🏗️ 登りたいフロアを選んでください</p>
 
-  var P = window.DATA_ROOT_TOWER.problems;
+      <div id="stage-grid"></div>
+    </div>
 
-  var PARTS = [
-    {
-      id: '1',
-      name: '① 平方根を求める（整数）',
-      desc: '2乗すると その数になる数。±を忘れずに。',
-      note: '2乗して 9 になる数は 3 と −3 の 2 つ。だから 9 の平方根は ±3 です。'
-    },
-    {
-      id: '2',
-      name: '② 平方根を求める（ルート使用）',
-      desc: '整数にならないときは √ を使って表す。',
-      note: '7 の平方根は、2乗して 7 になる数。整数では書けないので ±√7 と表します。'
-    },
-    {
-      id: '3',
-      name: '③ 根号を外す',
-      desc: '√ のついた数を、根号なしで表す。',
-      note: '√9 は「2乗して 9 になる正の数」なので 3 です。±ではないことに注意。'
-    },
-    {
-      id: '4',
-      name: '④ 値を求める',
-      desc: '(√2)² のような式の値を求める。',
-      note: '(√a)² = a。√ と 2乗はうち消し合います。'
+    <!-- 難易度選択画面 -->
+    <div id="difficulty-select" class="glass-panel hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <button id="back-btn" style="font-size: 14px; opacity: 0.7; cursor: pointer; background: none; border: none; color: white; font-weight: 600;">← 戻る</button>
+        <h2 id="difficulty-title" style="font-size: 24px; font-weight: bold; background: linear-gradient(to right, #c084fc, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></h2>
+        <div></div>
+      </div>
+      <p style="text-align: center; font-size: 14px; opacity: 0.7; margin-bottom: 32px; color: white;">このステージの5問に挑戦する難易度を選んでください</p>
+
+      <div id="warning-message" class="warning-box hidden"></div>
+      <div id="difficulty-buttons-container"></div>
+    </div>
+
+    <!-- 問題画面 -->
+    <div id="question-screen" class="glass-panel hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <button id="back-to-difficulty" style="font-size: 14px; opacity: 0.7; cursor: pointer; background: none; border: none; color: white; font-weight: 600;">← 戻る</button>
+        <div id="difficulty-badge" style="padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: bold; background: rgba(0, 0, 0, 0.4); color: white; border: 1px solid rgba(255, 255, 255, 0.3);">🌿 初級</div>
+        <span id="question-number" style="font-size: 14px; opacity: 0.7; color: white;">1 / 5</span>
+      </div>
+
+      <div style="background: rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(99, 102, 241, 0.3);">
+        <p id="instruction-text" style="font-size: 14px; opacity: 0.8; margin-bottom: 16px; color: #b0c4ff;"></p>
+        <p id="question-text" style="font-size: 28px; text-align: center; font-weight: bold; color: white; line-height: 1.8;"></p>
+      </div>
+
+      <div id="feedback-section" class="feedback-section hidden">
+        <div id="feedback" style="font-size: 24px; font-weight: bold; margin-bottom: 0;"></div>
+        <div id="hint-text" class="hint-text"></div>
+        <button id="retry-btn" class="retry-btn hidden">もう一度やってみる</button>
+      </div>
+
+      <div id="choices-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;"></div>
+
+      <button id="next-btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: none; font-size: 16px; transition: all 0.3s;">次へ →</button>
+    </div>
+
+    <!-- 完了画面 -->
+    <div id="completion-screen" class="glass-panel hidden">
+      <div class="completion-modal">
+        <h1 id="completion-message">🎉 素晴らしい！</h1>
+        <p id="completion-text">5問全て正解しました！</p>
+        <!-- 【ブラッシュアップ】元は「難易度選択に戻る」だけだった。次の難易度・次のフロアへ進めるようにした -->
+        <div class="completion-nav">
+          <button id="next-target-btn" class="completion-btn" onclick="goNextTarget()">次へ ▶</button>
+          <button class="completion-btn sub" onclick="goTarget(currentFloor, currentDifficulty)">同じ難易度でもう一度</button>
+          <button id="completion-btn" class="completion-btn sub">難易度選択に戻る</button>
+          <button class="completion-btn sub" onclick="backToFloors()">フロアをえらび直す</button>
+          <a href="../remake.html">ほかの教材をえらぶ</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const stages = [
+      { name: '平方根を求める', floor: '1F', hasDifficulty: true },
+      { name: '平方根を求める', floor: '2F', hasDifficulty: false },
+      { name: '根号を外す', floor: '3F', hasDifficulty: true },
+      { name: '値を求める', floor: '4F', hasDifficulty: false },
+      { name: '乗除の基本', floor: '5F', hasDifficulty: true },
+      { name: 'a√bの変形', floor: '6F', hasDifficulty: true },
+      { name: '加減の計算', floor: '7F', hasDifficulty: true },
+      { name: '展開の計算', floor: '8F', hasDifficulty: true },
+      { name: '分母の有理化', floor: '9F', hasDifficulty: true }
+    ];
+
+    function makeFraction(numerator, denominator) {
+      return `<div class="fraction"><div class="fraction-numerator">${numerator}</div><div class="fraction-denominator">${denominator}</div></div>`;
     }
-  ];
 
-  function collect(floor) {
-    var pack = P[floor] || {};
-    var out = [];
-    ['beginner', 'intermediate', 'advanced'].forEach(function (d) {
-      (pack[d] || []).forEach(function (p) { out.push(p); });
-    });
-    // 同じ問題が複数の難易度に入っているので、重複を取り除く
-    var seen = {}, uniq = [];
-    out.forEach(function (p) {
-      var k = p.instruction + '|' + p.q;
-      if (seen[k]) return;
-      seen[k] = true;
-      uniq.push(p);
-    });
-    return uniq;
-  }
-
-  function toQuestion(p, note) {
-    return {
-      text: p.instruction,
-      math: p.q,
-      type: 'choice',
-      choices: p.choices.slice(),
-      correct: p.choices.indexOf(p.answer),
-      answerLabel: p.answer,
-      hint: note,
-      explain: note
-    };
-  }
-
-  var modes = PARTS.map(function (part) {
-    return {
-      id: part.id,
-      name: part.name,
-      desc: part.desc + '（' + collect(part.id).length + '問）'
-    };
-  });
-  modes.push({ id: 'all', name: '⑤ 総まとめ', desc: '①〜④からランダムに12問' });
-
-  Quiz.start({
-    title: 'ルートの基礎',
-    subtitle: '平方根とは何か。まずはここをはっきりさせよう。',
-    modes: modes,
-    build: function (id) {
-      if (id === 'all') {
-        var all = [];
-        PARTS.forEach(function (part) {
-          collect(part.id).forEach(function (p) { all.push(toQuestion(p, part.note)); });
-        });
-        return Quiz.shuffle(all).slice(0, 12).filter(function (q) { return q.correct >= 0; });
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
-      var part = PARTS.filter(function (x) { return x.id === id; })[0];
-      return collect(id).map(function (p) { return toQuestion(p, part.note); })
-        .filter(function (q) { return q.correct >= 0; });
+      return shuffled;
     }
+
+    const hints = {
+      1: {
+        beginner: ['16の平方根は？掛け算で考えると4×4=16', '9の平方根は？両側に±の符号をつけてね', '25の平方根は？5×5=25', '36の平方根は？6×6=36', '49の平方根は？7×7=49'],
+        intermediate: ['もう一度ゆっくり計算してみて', '平方根の定義を思い出して', 'a²=b のときbの平方根は±a', '掛け算で確認してね', '√の中の数を因数分解してみて'],
+        advanced: ['平方根の基本に戻ってね', 'a×a=bのとき、bの平方根は？', '平方数を覚えてる？', 'もう一度丁寧に計算してみて', '√の定義を確認してね']
+      },
+      2: {
+        beginner: ['このままで大丈夫。√の形で答えるよ', '平方根の形で答えましょう', '√で囲まれた数が答えです', 'ルートの形のままで正解！', '無理数になるから√の形です']
+      },
+      3: {
+        beginner: ['√4=2 だからそのままの数が答え', '平方根を計算して外してね', '√の中を因数分解すれば？', '完全平方数を外すのが目標', '√を計算してね'],
+        intermediate: ['-がついてる場合は符号に注意', '√16=4だからマイナスをつけて', 'プラス側の数を出してからマイナスをつけて', '√の計算をしてからマイナスをつけてね', 'マイナスの記号も含めて答えてね'],
+        advanced: ['マイナスの記号も忘れずに', '√を外した後にマイナスをつけてね', '完全平方数を見つけてね', 'ルートを計算してからマイナスをつけて', 'もう一度符号を確認して']
+      },
+      4: {
+        beginner: ['(√a)²=a という性質を使ってね', '√2×√2=2になるよ', 'ルートの二乗は中の数になる', '(√5)²はどうなる？', 'マイナスでも二乗するとプラスになる']
+      },
+      5: {
+        beginner: ['√a×√b=√(ab) という公式だよ', '√3と√2をかけるなら...', 'ルートの中同士をかける', '√を一つにしてね', '35÷7=5だから...'],
+        intermediate: ['√同士をかけて...', '3×6=18だから？', '√の中の数同士をかけて', '125÷5=25だから...', '216÷6=36だから...'],
+        advanced: ['2と√3の部分に分けて考えて', '√6×√3をしてから2をかけて', 'マイナスの符号も忘れずに', '√125÷√5をしてからマイナスをつけて', '2√6÷√216を計算してみて']
+      },
+      6: {
+        beginner: ['8=4×2だから√8=2√2', '12=4×3だから...', '18=9×2だから...', '20=4×5だから...', '27=9×3だから...'],
+        intermediate: ['45=9×5だから...', '60=4×15だから...', '54=9×6だから...', '128=64×2だから...', '75=25×3だから...'],
+        advanced: ['294を因数分解してみて', '147=49×3だから...', '200=100×2だから...', '175=25×7だから...', '363=121×3だから...']
+      },
+      7: {
+        beginner: ['同じルートの数同士は足せます', '4√3+√3=5√3', '同じ√の部分同士をかき集めて', '7√2-3√2=4√2', '同じルートの係数を足し引きしてね'],
+        intermediate: ['√12をまず変形してみて。√12=2√3', '√20を変形すれば...', '√18を変形すればいくつ？', '√8を変形すれば...', '√27を変形すれば...'],
+        advanced: ['√12と√27をそれぞれ変形してね', '2√12-4√27を変形してから計算', '√50+√8-√2を変形してから計算', '3√20-2√45を変形してから計算', '2√8+√18-√32をそれぞれ変形してね']
+      },
+      8: {
+        beginner: ['分配法則を使ってね', '√2×√2=2 と √2×1=√2', '√3×√3=3 と √3×2=2√3', '√5×√5=5 と √5×(-1)=-√5', '√2を配ってみて'],
+        intermediate: ['分配法則で展開してね', '(a+b)²=a²+2ab+b² を使ってね', '(a+b)(a-b)=a²-b² を思い出して', '和と差の展開だ！', '(a+b)(a-b)の公式だよ'],
+        advanced: ['(a+b)²の公式を使ってね', '(a-b)²の公式で...', '(a+b)(a-b)=a²-b²だ！', '(2√5)²=20を計算してね', '(3√2)²=18を計算して']
+      },
+      9: {
+        beginner: ['分母と分子に√2をかけてね', '分母と分子に√3をかけてね', '分母と分子に√5をかけてね', '分母と分子に√2をかけてね', '分母と分子に√6をかけてね'],
+        intermediate: ['2÷√2ならば√2をかけて', '分母と分子に√3をかけてね', '4÷√2を計算してみて', '6÷√3を計算してみて', '3÷√6を計算してみて'],
+        advanced: ['8÷√2を計算してみて', '9÷√3を計算してみて', '3√2÷√3を計算してね', '分母の共役(√7-√5)を使ってね', '分母の共役(√7+√3)を使ってね']
+      }
+    };
+
+    const completionMessages = {
+      beginner: ['🎉 素晴らしい！', '🌿 初級をマスターしました！', 'よくできました！'],
+      intermediate: ['🔥 すごい！圧倒的！', '🔥 中級を完璧に制覇！', 'めちゃくちゃ強い！'],
+      advanced: ['💎 天才ですか！？', '💎 上級を完全にマスター！', '🏆 本当にすごい！最高です！']
+    };
+
+    const completionTexts = {
+      beginner: ['5問全て正解しました！', '基礎がしっかり理解できてますね！', '次のレベルに挑戦する準備ができました！'],
+      intermediate: ['5問全て正解！', '本当に実力がついてきた！', 'このレベルで完璧です！'],
+      advanced: ['5問全て正解！', '君はもう完全なマスター！', 'これ以上ない完璧さです！']
+    };
+
+    let currentFloor = null;
+    let currentStage = null;
+    let currentDifficulty = null;
+    let currentQuestionIndex = 0;
+    let currentProblemSet = [];
+    let isAnswered = false;
+
+    const problems = {
+      1: {
+        beginner: [
+          { instruction: '次の数の平方根を求めなさい。', q: '16', choices: ['±4', '4', '±5', '8'], answer: '±4' },
+          { instruction: '次の数の平方根を求めなさい。', q: '9', choices: ['±3', '3', '±4', '4.5'], answer: '±3' },
+          { instruction: '次の数の平方根を求めなさい。', q: '25', choices: ['±5', '5', '±4', '12.5'], answer: '±5' },
+          { instruction: '次の数の平方根を求めなさい。', q: '36', choices: ['±6', '6', '±5', '18'], answer: '±6' },
+          { instruction: '次の数の平方根を求めなさい。', q: '49', choices: ['±7', '7', '±6', '24.5'], answer: '±7' }
+        ],
+        intermediate: [
+          { instruction: '次の数の平方根を求めなさい。', q: '36', choices: ['±6', '6', '±5', '18'], answer: '±6' },
+          { instruction: '次の数の平方根を求めなさい。', q: '64', choices: ['±8', '8', '±7', '32'], answer: '±8' },
+          { instruction: '次の数の平方根を求めなさい。', q: '81', choices: ['±9', '9', '±8', '40.5'], answer: '±9' },
+          { instruction: '次の数の平方根を求めなさい。', q: '100', choices: ['±10', '10', '±9', '50'], answer: '±10' },
+          { instruction: '次の数の平方根を求めなさい。', q: '121', choices: ['±11', '11', '±10', '60.5'], answer: '±11' }
+        ],
+        advanced: [
+          { instruction: '次の数の平方根を求めなさい。', q: '100', choices: ['±10', '10', '±9', '50'], answer: '±10' },
+          { instruction: '次の数の平方根を求めなさい。', q: '121', choices: ['±11', '11', '±10', '60.5'], answer: '±11' },
+          { instruction: '次の数の平方根を求めなさい。', q: '169', choices: ['±13', '13', '±12', '84.5'], answer: '±13' },
+          { instruction: '次の数の平方根を求めなさい。', q: '196', choices: ['±14', '14', '±13', '98'], answer: '±14' },
+          { instruction: '次の数の平方根を求めなさい。', q: '225', choices: ['±15', '15', '±14', '112.5'], answer: '±15' }
+        ]
+      },
+      2: {
+        beginner: [
+          { instruction: '次の数の平方根を求めなさい。', q: '7', choices: ['±√7', '√7', '±7', '3.5'], answer: '±√7' },
+          { instruction: '次の数の平方根を求めなさい。', q: '13', choices: ['±√13', '√13', '±13', '6.5'], answer: '±√13' },
+          { instruction: '次の数の平方根を求めなさい。', q: '19', choices: ['±√19', '√19', '±19', '9.5'], answer: '±√19' },
+          { instruction: '次の数の平方根を求めなさい。', q: '2', choices: ['±√2', '√2', '±2', '1'], answer: '±√2' },
+          { instruction: '次の数の平方根を求めなさい。', q: '11', choices: ['±√11', '√11', '±11', '5.5'], answer: '±√11' }
+        ]
+      },
+      3: {
+        beginner: [
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√4', choices: ['2', '±2', '√2', '4'], answer: '2' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√16', choices: ['4', '±4', '√32', '16'], answer: '4' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√36', choices: ['6', '±6', '√6', '18'], answer: '6' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√49', choices: ['7', '±7', '√7', '24.5'], answer: '7' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√81', choices: ['9', '±9', '√9', '40.5'], answer: '9' }
+        ],
+        intermediate: [
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√49', choices: ['7', '±7', '√49', '24.5'], answer: '7' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√16', choices: ['-4', '±4', '-√32', '16'], answer: '-4' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√36', choices: ['-6', '±6', '-√6', '18'], answer: '-6' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√64', choices: ['8', '±8', '√64', '32'], answer: '8' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√100', choices: ['-10', '±10', '-√100', '50'], answer: '-10' }
+        ],
+        advanced: [
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√100', choices: ['10', '±10', '√100', '50'], answer: '10' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√121', choices: ['-11', '±11', '-√121', '60.5'], answer: '-11' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√169', choices: ['-13', '±13', '-√169', '84.5'], answer: '-13' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '√196', choices: ['14', '±14', '√196', '98'], answer: '14' },
+          { instruction: '次の数を根号を使わずに表しなさい。', q: '-√225', choices: ['-15', '±15', '-√225', '112.5'], answer: '-15' }
+        ]
+      },
+      4: {
+        beginner: [
+          { instruction: '次の数を求めなさい。', q: '(√2)²', choices: ['2', '√2', '4', '1'], answer: '2' },
+          { instruction: '次の数を求めなさい。', q: '(√5)²', choices: ['5', '√5', '25', '2.5'], answer: '5' },
+          { instruction: '次の数を求めなさい。', q: '(-√3)²', choices: ['3', '-√3', '-3', '-9'], answer: '3' },
+          { instruction: '次の数を求めなさい。', q: '(√7)²', choices: ['7', '√7', '49', '3.5'], answer: '7' },
+          { instruction: '次の数を求めなさい。', q: '(-√2)²', choices: ['2', '-2', '4', '1'], answer: '2' }
+        ]
+      },
+      5: {
+        beginner: [
+          { instruction: '次の計算をしなさい。', q: '√3×√2', choices: ['√6', '√5', '√6×√6', '3√2'], answer: '√6' },
+          { instruction: '次の計算をしなさい。', q: '√5×√3', choices: ['√15', '√8', '√2', '5√3'], answer: '√15' },
+          { instruction: '次の計算をしなさい。', q: '√2×√5', choices: ['√10', '√7', '√3', '2√5'], answer: '√10' },
+          { instruction: '次の計算をしなさい。', q: '√7×√2', choices: ['√14', '7√2', '√9', '2√7'], answer: '√14' },
+          { instruction: '次の計算をしなさい。', q: '√35÷√7', choices: ['√5', '√7', '√28', '5'], answer: '√5' }
+        ],
+        intermediate: [
+          { instruction: '次の計算をしなさい。', q: '√3×√3', choices: ['3', '√3', '√9', '1'], answer: '3' },
+          { instruction: '次の計算をしなさい。', q: '√3×√6', choices: ['√18', '3√2', '√9', '3'], answer: '3√2' },
+          { instruction: '次の計算をしなさい。', q: '√5×(-√3)', choices: ['-√15', '√15', '-√8', '-√2'], answer: '-√15' },
+          { instruction: '次の計算をしなさい。', q: '√125÷√5', choices: ['√5', '5', '√25', '√20'], answer: '5' },
+          { instruction: '次の計算をしなさい。', q: '√216÷√6', choices: ['6', '√36', '√210', '3√6'], answer: '6' }
+        ],
+        advanced: [
+          { instruction: '次の計算をしなさい。', q: '2√3×√3', choices: ['6', '2√3', '3√3', '2√9'], answer: '6' },
+          { instruction: '次の計算をしなさい。', q: '√6×2√3', choices: ['6√2', '2√18', '2√9', '6√3'], answer: '6√2' },
+          { instruction: '次の計算をしなさい。', q: '√6×(-√3)', choices: ['-3√2', '√18', '-√9', '-√3'], answer: '-3√2' },
+          { instruction: '次の計算をしなさい。', q: '-√125÷√5', choices: ['-5', '5', '-√25', '√5'], answer: '-5' },
+          { instruction: '次の計算をしなさい。', q: '2√6÷√216', choices: [makeFraction('1', '3'), makeFraction('2', '3'), makeFraction('1', '6'), makeFraction('2', '6')], answer: makeFraction('1', '3') }
+        ]
+      },
+      6: {
+        beginner: [
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√8', choices: ['2√2', '√8', '4√2', '2√4'], answer: '2√2' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√12', choices: ['2√3', '√12', '3√4', '4√3'], answer: '2√3' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√18', choices: ['3√2', '√18', '2√9', '9√2'], answer: '3√2' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√20', choices: ['2√5', '√20', '5√4', '4√5'], answer: '2√5' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√27', choices: ['3√3', '√27', '9√3', '3√9'], answer: '3√3' }
+        ],
+        intermediate: [
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√45', choices: ['3√5', '√45', '5√9', '9√5'], answer: '3√5' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√60', choices: ['2√15', '√60', '15√4', '4√15'], answer: '2√15' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√54', choices: ['3√6', '√54', '6√9', '9√6'], answer: '3√6' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√128', choices: ['8√2', '√128', '2√64', '64√2'], answer: '8√2' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√75', choices: ['5√3', '√75', '3√25', '25√3'], answer: '5√3' }
+        ],
+        advanced: [
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√294', choices: ['7√6', '√294', '6√49', '49√6'], answer: '7√6' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√147', choices: ['7√3', '√147', '3√49', '49√3'], answer: '7√3' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√200', choices: ['10√2', '√200', '2√100', '100√2'], answer: '10√2' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√175', choices: ['5√7', '√175', '7√25', '25√7'], answer: '5√7' },
+          { instruction: 'つぎの数をa√bの形に変形しなさい。', q: '√363', choices: ['11√3', '√363', '3√121', '121√3'], answer: '11√3' }
+        ]
+      },
+      7: {
+        beginner: [
+          { instruction: '次の計算をしなさい。', q: '3√2+2√2', choices: ['5√2', '5√4', '√5', '√10'], answer: '5√2' },
+          { instruction: '次の計算をしなさい。', q: '4√3+√3', choices: ['5√3', '5√6', '4√4', '√7'], answer: '5√3' },
+          { instruction: '次の計算をしなさい。', q: '6√5-2√5', choices: ['4√5', '4√10', '8√5', '√5'], answer: '4√5' },
+          { instruction: '次の計算をしなさい。', q: '7√2-3√2', choices: ['4√2', '4√4', '10√2', '√2'], answer: '4√2' },
+          { instruction: '次の計算をしなさい。', q: '2√3+3√3-√3', choices: ['4√3', '5√6', '6√3', '√3'], answer: '4√3' }
+        ],
+        intermediate: [
+          { instruction: '次の計算をしなさい。', q: '√12+√3', choices: ['3√3', '2√3+√3', '√15', '√12+√3'], answer: '3√3' },
+          { instruction: '次の計算をしなさい。', q: '√20-√5', choices: ['√5', '2√5-√5', '√15', '√20-√5'], answer: '√5' },
+          { instruction: '次の計算をしなさい。', q: '√18+2√2', choices: ['5√2', '3√2+2√2', '√20', '√18+2√2'], answer: '5√2' },
+          { instruction: '次の計算をしなさい。', q: '3√8-√2', choices: ['5√2', '6√2-√2', '√6', '3√8-√2'], answer: '5√2' },
+          { instruction: '次の計算をしなさい。', q: '√27-√3', choices: ['2√3', '3√3-√3', '√24', '√27-√3'], answer: '2√3' }
+        ],
+        advanced: [
+          { instruction: '次の計算をしなさい。', q: '√12+√27', choices: ['5√3', '2√3+3√3', '√39', '√12+√27'], answer: '5√3' },
+          { instruction: '次の計算をしなさい。', q: '2√12-4√27', choices: ['-8√3', '4√3-12√3', '8√3', '√12-√27'], answer: '-8√3' },
+          { instruction: '次の計算をしなさい。', q: '√50+√8-√2', choices: ['6√2', '5√2+2√2-√2', '7√2', '√56'], answer: '6√2' },
+          { instruction: '次の計算をしなさい。', q: '3√20-2√45+√5', choices: ['√5', '6√5-6√5+√5', '2√5', '3√20-2√45+√5'], answer: '√5' },
+          { instruction: '次の計算をしなさい。', q: '2√8+√18-√32', choices: ['√2', '4√2+3√2-4√2', '3√2', '2√8+√18-√32'], answer: '3√2' }
+        ]
+      },
+      8: {
+        beginner: [
+          { instruction: '次の計算をしなさい。', q: '√2(√2+1)', choices: ['2+√2', '√2+1', '3+√2', '2√2'], answer: '2+√2' },
+          { instruction: '次の計算をしなさい。', q: '√3(√3+2)', choices: ['3+2√3', '√3+2', '5+√3', '3√3'], answer: '3+2√3' },
+          { instruction: '次の計算をしなさい。', q: '√5(√5-1)', choices: ['5-√5', '√5-1', '4-√5', '√5'], answer: '5-√5' },
+          { instruction: '次の計算をしなさい。', q: '√2(3√2+1)', choices: ['6+√2', '3√2+√2', '5+√2', '√2'], answer: '6+√2' },
+          { instruction: '次の計算をしなさい。', q: '√3(√3-√2)', choices: ['3-√6', '3-√2', '2-√6', '√3'], answer: '3-√6' }
+        ],
+        intermediate: [
+          { instruction: '次の計算をしなさい。', q: '√2(3√2-2)', choices: ['6-2√2', '3√2-2', '5', '√2'], answer: '6-2√2' },
+          { instruction: '次の計算をしなさい。', q: '√5(1+√5)', choices: ['√5+5', '1+√5', '6', '√5+√5'], answer: '√5+5' },
+          { instruction: '次の計算をしなさい。', q: '(√2+1)²', choices: ['3+2√2', '2+1', '4+2√2', '5√2'], answer: '3+2√2' },
+          { instruction: '次の計算をしなさい。', q: '(√3+1)(√3-1)', choices: ['2', '3', '4', '6'], answer: '2' },
+          { instruction: '次の計算をしなさい。', q: '(√5+2)(√5-2)', choices: ['1', '3', '4', '9'], answer: '1' }
+        ],
+        advanced: [
+          { instruction: '次の計算をしなさい。', q: '(√3+2)²', choices: ['7+4√3', '3+4', '9+4√3', '√3+4'], answer: '7+4√3' },
+          { instruction: '次の計算をしなさい。', q: '(2√2-1)²', choices: ['9-4√2', '8-1', '8-4√2', '4-2√2'], answer: '9-4√2' },
+          { instruction: '次の計算をしなさい。', q: '(√6+√2)(√6-√2)', choices: ['4', '6', '8', '6-2'], answer: '4' },
+          { instruction: '次の計算をしなさい。', q: '(2√5+2)(2√5-2)', choices: ['16', '20', '18', '20-4'], answer: '16' },
+          { instruction: '次の計算をしなさい。', q: '(3√2+1)(3√2-1)', choices: ['17', '18', '19', '20'], answer: '17' }
+        ]
+      },
+      9: {
+        beginner: [
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√2'), choices: [makeFraction('√2', '2'), makeFraction('1', '2'), '√2', '2'], answer: makeFraction('√2', '2') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√3'), choices: [makeFraction('√3', '3'), makeFraction('1', '3'), '√3', '3'], answer: makeFraction('√3', '3') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('2', '√5'), choices: [makeFraction('2√5', '5'), makeFraction('2', '5'), '2√5', '5'], answer: makeFraction('2√5', '5') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('3', '√2'), choices: [makeFraction('3√2', '2'), makeFraction('3', '2'), '3√2', '2'], answer: makeFraction('3√2', '2') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√6'), choices: [makeFraction('√6', '6'), makeFraction('1', '6'), '√6', '6'], answer: makeFraction('√6', '6') }
+        ],
+        intermediate: [
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('2', '√2'), choices: [makeFraction('2√2', '2'), '√2', '2√2', '2'], answer: '√2' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('√2', '√3'), choices: [makeFraction('√6', '3'), makeFraction('√2', '3'), '√6', '3'], answer: makeFraction('√6', '3') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('4', '√2'), choices: [makeFraction('4√2', '2'), '2√2', '4√2', '2'], answer: '2√2' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('6', '√3'), choices: [makeFraction('6√3', '3'), '2√3', '6√3', '2'], answer: '2√3' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('3', '√6'), choices: [makeFraction('3√6', '6'), makeFraction('√6', '2'), '3√6', makeFraction('1', '2')], answer: makeFraction('√6', '2') }
+        ],
+        advanced: [
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('8', '√2'), choices: [makeFraction('8√2', '2'), '4√2', '8√2', '4'], answer: '4√2' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('9', '√3'), choices: [makeFraction('9√3', '3'), '3√3', '9√3', '3'], answer: '3√3' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('3√2', '√3'), choices: [makeFraction('3√6', '3'), '√6', '3√6', makeFraction('√6', '2')], answer: '√6' },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('1', '√7+√5'), choices: [makeFraction('√7-√5', '2'), makeFraction('√7-√5', '1'), '√7-√5', makeFraction('1', '2')], answer: makeFraction('√7-√5', '2') },
+          { instruction: '次の式の分母を有理化しなさい。', q: makeFraction('4', '√7-√3'), choices: ['√7+√3', makeFraction('√7+√3', '1'), makeFraction('4(√7+√3)', '4'), '√7-√3'], answer: '√7+√3' }
+        ]
+      }
+    };
+
+    function initializeStages() {
+      const stageGrid = document.getElementById('stage-grid');
+      stageGrid.innerHTML = '';
+
+      stages.forEach((stage, index) => {
+        const btn = document.createElement('button');
+        btn.className = `stage-btn floor${index + 1}`;
+        btn.type = 'button';
+        btn.innerHTML = `<span style="font-size: 18px; margin-bottom: 8px;">${stage.floor}</span><span style="font-size: 12px; opacity: 0.9;">${stage.name}</span>`;
+        btn.addEventListener('click', () => selectStage(index + 1, stage));
+        stageGrid.appendChild(btn);
+      });
+    }
+
+    function selectStage(floor, stage) {
+      currentFloor = floor;
+      currentStage = stage;
+
+      document.getElementById('stage-select').classList.add('hidden');
+      document.getElementById('difficulty-select').classList.remove('hidden');
+      document.getElementById('difficulty-title').textContent = `${stage.floor} ${stage.name}`;
+
+      const warningMsg = document.getElementById('warning-message');
+      if (floor === 5 && stage.hasDifficulty) {
+        warningMsg.textContent = '💡 ヒント：【6F a√bの変形】を先に学ぶことをお勧めします！中級・上級ではこの知識が必要です。';
+        warningMsg.classList.remove('hidden');
+      } else {
+        warningMsg.classList.add('hidden');
+      }
+
+      const container = document.getElementById('difficulty-buttons-container');
+      container.innerHTML = '';
+
+      if (stage.hasDifficulty) {
+        const btn1 = document.createElement('button');
+        btn1.id = 'btn-beginner';
+        btn1.className = 'btn-difficulty btn-beginner';
+        btn1.textContent = '🌿 初級';
+        btn1.addEventListener('click', () => startQuiz('beginner'));
+        container.appendChild(btn1);
+
+        const btn2 = document.createElement('button');
+        btn2.id = 'btn-intermediate';
+        btn2.className = 'btn-difficulty btn-intermediate';
+        btn2.textContent = '🔥 中級';
+        btn2.addEventListener('click', () => startQuiz('intermediate'));
+        container.appendChild(btn2);
+
+        const btn3 = document.createElement('button');
+        btn3.id = 'btn-advanced';
+        btn3.className = 'btn-difficulty btn-advanced';
+        btn3.textContent = '💎 上級';
+        btn3.addEventListener('click', () => startQuiz('advanced'));
+        container.appendChild(btn3);
+      } else {
+        const btn1 = document.createElement('button');
+        btn1.id = 'btn-beginner';
+        btn1.className = 'btn-difficulty btn-beginner';
+        btn1.textContent = '🌿 初級';
+        btn1.addEventListener('click', () => startQuiz('beginner'));
+        container.appendChild(btn1);
+      }
+    }
+
+    document.getElementById('back-btn').addEventListener('click', () => {
+      document.getElementById('difficulty-select').classList.add('hidden');
+      document.getElementById('stage-select').classList.remove('hidden');
+      currentFloor = null;
+      currentStage = null;
+    });
+
+    document.getElementById('back-to-difficulty').addEventListener('click', () => {
+      document.getElementById('question-screen').classList.add('hidden');
+      document.getElementById('difficulty-select').classList.remove('hidden');
+      currentQuestionIndex = 0;
+      isAnswered = false;
+    });
+
+    function startQuiz(difficulty) {
+      currentDifficulty = difficulty;
+      currentProblemSet = problems[currentFloor]?.[difficulty] || [];
+      currentQuestionIndex = 0;
+      isAnswered = false;
+
+      document.getElementById('difficulty-select').classList.add('hidden');
+      document.getElementById('question-screen').classList.remove('hidden');
+
+      const badges = { beginner: '🌿 初級', intermediate: '🔥 中級', advanced: '💎 上級' };
+      document.getElementById('difficulty-badge').textContent = badges[difficulty];
+
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (currentQuestionIndex >= currentProblemSet.length) {
+        showCompletion();
+        return;
+      }
+
+      const problem = currentProblemSet[currentQuestionIndex];
+      document.getElementById('instruction-text').textContent = problem.instruction;
+      document.getElementById('question-text').innerHTML = problem.q;
+      document.getElementById('question-number').textContent = `${currentQuestionIndex + 1} / ${currentProblemSet.length}`;
+
+      const choicesContainer = document.getElementById('choices-container');
+      choicesContainer.innerHTML = '';
+
+      const shuffledChoices = shuffleArray(problem.choices);
+
+      shuffledChoices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = choice;
+        btn.addEventListener('click', () => checkAnswer(choice, problem.answer, btn, problem.choices));
+        choicesContainer.appendChild(btn);
+      });
+
+      document.getElementById('feedback-section').classList.add('hidden');
+      document.getElementById('next-btn').style.display = 'none';
+      isAnswered = false;
+    }
+
+    function checkAnswer(selected, correct, btn, allChoices) {
+      if (isAnswered) return;
+      isAnswered = true;
+
+      const feedbackSection = document.getElementById('feedback-section');
+      const feedback = document.getElementById('feedback');
+      const hintText = document.getElementById('hint-text');
+      const retryBtn = document.getElementById('retry-btn');
+      const choiceButtons = document.querySelectorAll('.choice-btn');
+
+      choiceButtons.forEach(b => b.disabled = true);
+
+      if (selected === correct) {
+        btn.classList.add('correct');
+        feedback.textContent = '🎉 正解！';
+        hintText.textContent = '';
+        feedbackSection.classList.remove('feedback-incorrect');
+        feedbackSection.classList.add('feedback-correct');
+        retryBtn.classList.add('hidden');
+        document.getElementById('next-btn').style.display = 'block';
+      } else if (sameValue(selected, correct)) {
+        // 【ブラッシュアップ】元は √18（＝3√2）や 2√2/2（＝√2）のように「値は同じだけど、まだ簡単にできる形」を
+        //   選んでもただ「不正解」になり、何がいけないのか分からなかった。
+        feedback.textContent = '🤏 おしい！';
+        hintText.textContent = '💡 ' + closeMessage();
+        feedbackSection.classList.remove('feedback-correct');
+        feedbackSection.classList.add('feedback-incorrect');
+        retryBtn.classList.remove('hidden');
+        retryBtn.onclick = () => {
+          isAnswered = false;
+          choiceButtons.forEach(b => b.disabled = false);
+          btn.disabled = true;
+          feedbackSection.classList.add('hidden');
+          retryBtn.classList.add('hidden');
+        };
+      } else {
+        feedback.textContent = '❌ 不正解...';
+        const hintIndex = Math.floor(Math.random() * hints[currentFloor][currentDifficulty].length);
+        hintText.textContent = '💡 ヒント: ' + hints[currentFloor][currentDifficulty][currentQuestionIndex % hints[currentFloor][currentDifficulty].length];
+        feedbackSection.classList.remove('feedback-correct');
+        feedbackSection.classList.add('feedback-incorrect');
+        retryBtn.classList.remove('hidden');
+
+        retryBtn.onclick = () => {
+          isAnswered = false;
+          choiceButtons.forEach(b => b.disabled = false);
+          feedbackSection.classList.add('hidden');
+          retryBtn.classList.add('hidden');
+        };
+      }
+
+      feedbackSection.classList.remove('hidden');
+    }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (document.getElementById('next-btn').style.display === 'none') return;   // 【ブラッシュアップ】
+      currentQuestionIndex++;
+      showQuestion();
+    });
+
+    function showCompletion() {
+      document.getElementById('question-screen').classList.add('hidden');
+      document.getElementById('completion-screen').classList.remove('hidden');
+
+      const messages = completionMessages[currentDifficulty];
+      const texts = completionTexts[currentDifficulty];
+      const msgIndex = Math.floor(Math.random() * messages.length);
+
+      document.getElementById('completion-message').textContent = messages[msgIndex];
+      document.getElementById('completion-text').textContent = texts[msgIndex];
+
+      document.getElementById('completion-btn').onclick = () => {
+        document.getElementById('completion-screen').classList.add('hidden');
+        document.getElementById('difficulty-select').classList.remove('hidden');
+        currentQuestionIndex = 0;
+        isAnswered = false;
+      };
+      // 【ブラッシュアップ】「次へ」のボタンの文字
+      const t = nextTarget();
+      const nb = document.getElementById('next-target-btn');
+      nb.style.display = t ? '' : 'none';
+      if (t) nb.textContent = t.floor === currentFloor
+        ? '次の難易度（' + { intermediate: '🔥 中級', advanced: '💎 上級' }[t.diff] + '）へ ▶'
+        : '次のフロア（' + stages[t.floor - 1].floor + ' ' + stages[t.floor - 1].name + '）へ ▶';
+    }
+
+    // 【ブラッシュアップ】次に挑戦するところ（同じフロアの次の難易度 → なければ次のフロアの初級）
+    function nextTarget() {
+      const order = ['beginner', 'intermediate', 'advanced'];
+      const i = order.indexOf(currentDifficulty);
+      if (currentStage && currentStage.hasDifficulty && i < 2) return { floor: currentFloor, diff: order[i + 1] };
+      if (currentFloor < 9) return { floor: currentFloor + 1, diff: 'beginner' };
+      return null;
+    }
+    function goTarget(floor, diff) {
+      document.getElementById('completion-screen').classList.add('hidden');
+      selectStage(floor, stages[floor - 1]);
+      startQuiz(diff);
+      document.getElementById('app').scrollTop = 0;
+    }
+    function goNextTarget() {
+      const t = nextTarget();
+      if (t) goTarget(t.floor, t.diff);
+    }
+    function backToFloors() {
+      document.getElementById('completion-screen').classList.add('hidden');
+      document.getElementById('stage-select').classList.remove('hidden');
+    }
+
+    // 【ブラッシュアップ】選択肢の値を計算する（「値は同じだけど形がちがう」を見分けるため）
+    function valueOf(s) {
+      let t = String(s).replace(/<div class="fraction"><div class="fraction-numerator">(.*?)<\/div><div class="fraction-denominator">(.*?)<\/div><\/div>/g, '(($1)/($2))');
+      if (/±/.test(t)) return NaN;
+      t = t.replace(/√(\d+)/g, 'Math.sqrt($1)').replace(/×/g, '*').replace(/÷/g, '/').replace(/(\d|\))(?=M|\()/g, '$1*');
+      if (!/^[0-9+\-*/(). Mathsqr]+$/.test(t)) return NaN;
+      try { return Function('return (' + t + ');')(); } catch (e) { return NaN; }
+    }
+    function sameValue(a, b) {
+      const x = valueOf(a), y = valueOf(b);
+      return isFinite(x) && isFinite(y) && Math.abs(x - y) < 1e-9;
+    }
+    function closeMessage() {
+      if (currentFloor === 3) return '値は同じだけど、この問題は「√を使わない形」で答えよう。';
+      if (currentFloor === 6) return '値は同じだけど、a√b の形（√の中をできるだけ小さい数）にしよう。';
+      if (currentFloor === 9) return '値は同じだけど、まだ簡単にできるよ。約分できるところは約分しよう。';
+      return '値は同じだけど、まだ簡単にできるよ。√の中をできるだけ小さくして、計算できるところは計算しよう。';
+    }
+
+    initializeStages();
+
+    if (window.elementSdk) {
+      const defaultConfig = { game_title: '平方根タワー' };
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.getElementById('game-title').textContent = config.game_title || defaultConfig.game_title;
+        },
+        mapToCapabilities: () => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['game_title', config.game_title || defaultConfig.game_title]
+        ])
+      });
+    }
+  </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#game-title": "u-title",
+    ".glass-panel": "u-card",
+    "#difficulty-badge": "u-pill",
+    ".stage-btn": "u-choice",
+    ".btn-difficulty": "u-btn u-btn-blue",
+    ".choice-btn": "u-choice",
+    ".choice-btn.correct": "u-ok",
+    ".retry-btn": "u-btn u-btn-plain",
+    "#next-btn": "u-btn u-btn-blue",
+    ".completion-btn:not(.sub)": "u-btn",
+    ".completion-btn.sub": "u-btn u-btn-plain"
   });
-})();
 </script>
 </body>
 </html>
