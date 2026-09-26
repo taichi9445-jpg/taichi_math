@@ -1,0 +1,2105 @@
+<!doctype html>
+<html lang="ja">
+ <head>
+  <meta charset="UTF-8">
+  <!--
+    数学Ⅱ 11. 面積を求めよう（定積分と面積の関連クイズ）
+    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
+    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+  -->
+  <link rel="stylesheet" href="../../assets/port.css">
+  <script src="../../assets/port.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>定積分と面積の関連クイズ</title>
+  
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .mode-selection {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .mode-selection h2 {
+            font-size: 24px;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .mode-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            border-color: #4299e1;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(66, 153, 225, 0.2);
+        }
+
+        .mode-btn-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn-desc {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4299e1;
+        }
+
+        .question-number {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            padding: 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .question-text.correct-answer {
+            background: #f0fff4;
+            border: 2px solid #48bb78;
+        }
+
+        .question-text.incorrect-answer {
+            background: #fed7d7;
+            border: 2px solid #f56565;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .level-1 {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .level-2 {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .level-3 {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .graph-area {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hint-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(25, 84, 123, 0.3);
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 84, 123, 0.4);
+        }
+
+        .hint-btn:active {
+            transform: translateY(0);
+        }
+
+        .graph-svg {
+            width: 100%;
+            max-width: 400px;
+            height: 280px;
+        }
+
+        .axis {
+            stroke: #2d3748;
+            stroke-width: 2;
+        }
+
+        .axis-label {
+            font-size: 14px;
+            fill: #2d3748;
+            font-weight: 600;
+        }
+
+        .function-curve {
+            fill: none;
+            stroke: #4299e1;
+            stroke-width: 3;
+        }
+
+        .area-fill {
+            fill: rgba(72, 187, 120, 0.3);
+            stroke: #48bb78;
+            stroke-width: 2;
+        }
+
+        .boundary-line {
+            stroke: #e53e3e;
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .choice {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .choice:hover {
+            border-color: #4299e1;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+        }
+
+        .choice.selected {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .choice.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .choice.incorrect {
+            border-color: #f56565;
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .input-mode-container {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .input-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .integral-builder {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            min-height: 80px;
+            justify-content: center;
+        }
+
+        .operator-direct-input {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: #2d3748;
+        }
+
+        .operator-direct-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .operator-direct-input.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .operator-hint {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 5px;
+            white-space: nowrap;
+        }
+
+        .integral-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 0 80px 0 0;
+        }
+
+        .integral-symbol {
+            font-size: 40px;
+            font-weight: bold;
+            color: #2d3748;
+            display: inline-block;
+        }
+
+        .bound-input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .bound-input:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .bound-input.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .bound-upper {
+            position: absolute;
+            top: -10px;
+            right: -75px;
+        }
+
+        .bound-lower {
+            position: absolute;
+            bottom: -10px;
+            right: -75px;
+        }
+
+        .dx-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-left: 5px;
+        }
+
+        .second-integral-section {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .input-hint {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 15px;
+            padding: 12px;
+            background: #edf2f7;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+
+        .fraction-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fraction-divider {
+            width: 140px;
+            height: 3px;
+            background: #2d3748;
+        }
+
+        .fraction-part-input {
+            width: 140px;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .fraction-part-input:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .fraction-part-input.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .feedback.correct {
+            background: #f0fff4;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+
+        .explanation {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #234e52;
+        }
+
+        .explanation h4 {
+            margin-top: 0;
+            color: #2c7a7b;
+        }
+
+        .completion {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+
+        .completion h2 {
+            font-size: 32px;
+            color: #744210;
+            margin-bottom: 20px;
+        }
+
+        .completion p {
+            font-size: 18px;
+            color: #975a16;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .celebration {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+
+        .check-answer-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .check-answer-btn:hover {
+            background: #38a169;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  
+  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
+       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
+       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
+  <link rel="stylesheet" href="../../assets/gas.css">
+   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/theme.css">
+  <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body { padding: 12px; }
+    .container { padding: 24px 20px; }
+    .title { font-size: min(2rem, 6.2vw); white-space: nowrap; margin: 0 0 12px; }
+    .mode-selection h2 { color: var(--u-title-dark); font-size: 1.3rem; }
+    .mode-btn-title { color: var(--u-title); }
+    .mode-btn-desc { color: var(--u-sub); font-weight: 700; }
+    #progress-text { color: var(--u-sub); font-weight: 700; }
+    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; padding: 18px 14px; }
+    .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; font-weight: 800; }
+    .question-text { color: var(--u-ink); font-weight: 800; background: #fff; border: 2px solid var(--u-line); }
+    .question-text.correct-answer { background: var(--u-ok-soft); border-color: var(--u-ok-line); }
+    .question-text.incorrect-answer { background: var(--u-ng-soft); border-color: var(--u-ng-line); }
+    .hint-btn { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
+    .graph-area { border: 3px dashed var(--u-line); border-radius: 16px; min-height: 0; }
+    .graph-svg { height: auto; }
+    .choice { font-size: 1.15rem; font-weight: 700; }
+    .input-mode-container { border: 3px solid var(--u-line); border-radius: 16px; }
+    .input-label { color: var(--u-ink); font-weight: 700; }
+    .integral-builder { background: var(--u-soft-yellow); border-radius: 14px; }
+    .int-group { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+    .dx-label { white-space: nowrap; }
+    .feedback { border-radius: 16px; }
+    .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
+    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
+    .rule-hint { margin-top: 6px; font-size: 0.95rem; color: var(--u-title); font-weight: 700; }
+    .explanation { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; color: var(--u-ink); }
+    .completion { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
+    .completion h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
+    #completion-message { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
+    .final-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); margin-bottom: 6px; }
+    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 16px auto 0; }
+    .result-nav button, .result-nav a.next { padding: 12px; margin: 0; }
+    .result-nav a { color: var(--u-sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 14px 10px; }
+      .question-card { padding: 14px 8px; }
+      .question-text { font-size: 1.05rem; padding: 10px; }
+      .choices { grid-template-columns: 1fr; gap: 8px; }
+      .choice { padding: 14px 8px; font-size: 1.1rem; }
+      .graph-area { padding: 8px; }
+      .input-mode-container { padding: 14px 8px; }
+      .integral-builder { flex-wrap: wrap; justify-content: center; row-gap: 30px; padding: 24px 6px; }
+      .integral-wrapper { margin-right: 58px; }
+      .bound-input { width: 46px; padding: 6px 2px; }
+      .bound-upper, .bound-lower { right: -54px; }
+      .fraction-part-input { width: 110px; }
+      .fraction-divider { width: 110px; }
+    }
+  
+  </style>
+</head>
+ <body class="u-theme">
+  <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
+  <main class="container">
+   <header class="header">
+    <h1 class="title" id="quiz-title">定積分と面積の関連クイズ</h1>
+   </header><!-- Mode Selection Screen -->
+   <div id="mode-selection" class="mode-selection">
+    <h2>モードを選択してください</h2>
+    <div class="mode-buttons">
+     <div class="mode-btn" onclick="startChoiceMode()">
+      <div class="mode-btn-icon">
+       📝
+      </div>
+      <div class="mode-btn-title">
+       選択式モード
+      </div>
+      <div class="mode-btn-desc">
+       選択肢から正しい定積分を選びます（全<span class="choice-count">11</span>問）
+      </div>
+     </div>
+     <div class="mode-btn" onclick="startInputMode()">
+      <div class="mode-btn-icon">
+       ✏️
+      </div>
+      <div class="mode-btn-title">
+       入力式モード
+      </div>
+      <div class="mode-btn-desc">
+       積分範囲を入力します（全5問・段階的）
+      </div>
+     </div><button class="mode-btn" onclick="startFreeInputMode()" style="cursor: pointer; background: white; border: 3px solid #e2e8f0;">
+      <div class="mode-btn-icon">
+       🎯
+      </div>
+      <div class="mode-btn-title">
+       The 問題 答え入力モード
+      </div>
+      <div class="mode-btn-desc">
+       問題から面積の答えを計算して入力します（ランダム生成・全5問）
+      </div></button>
+    </div>
+   </div><!-- Quiz Container -->
+   <div id="quiz-container" class="hidden">
+    <div class="progress">
+     <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <p id="progress-text">問題 1 / 10</p>
+    <div class="question-card">
+     <div class="question-number" id="question-number">
+      問題 1
+     </div>
+     <div class="question-text" id="question-text"></div>
+     <div class="hint-container"><button class="hint-btn" id="hint-btn" onclick="showHint()">💡 ヒント（図を表示）</button>
+     </div>
+     <div class="graph-area hidden" id="graph-area"></div><!-- Choice Mode -->
+     <div id="choice-container" class="hidden">
+      <div class="choices" id="choices"></div>
+     </div><!-- Input Mode -->
+     <div id="input-container" class="hidden">
+      <div class="input-mode-container"><label class="input-label">「+」または「-」を入力して定積分を作成：</label> <!-- Integrals Container -->
+       <div class="integral-builder" id="integral-builder-container"><!-- Integrals will be added here dynamically -->
+       </div>
+      </div>
+     </div><!-- Free Input Mode -->
+     <div id="free-input-container" class="hidden">
+      <div class="input-mode-container"><label class="input-label">面積の値を入力してください：</label>
+       <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; justify-content: center;">
+        <div id="answer-display-area"><input type="text" id="area-answer-integer" class="fraction-part-input" placeholder="答え" oninput="checkFreeInputAutomatic()" style="width: 140px;">
+        </div>
+       </div>
+       <div class="buttons"><button class="btn btn-primary" id="show-answer-btn" onclick="showAnswer()" style="background: #ed8936;">答えを見る</button>
+       </div>
+      </div>
+     </div>
+     <div id="feedback" class="feedback hidden"></div>
+     <div id="explanation" class="explanation hidden"></div>
+     <div class="buttons"><button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display: none;">次の問題へ</button> <button class="btn btn-secondary" id="back-to-mode-btn" onclick="backToModeSelection()">モード選択に戻る</button>
+     </div>
+    </div>
+   </div><!-- Completion Screen -->
+   <div id="completion" class="completion hidden">
+    <div class="celebration">
+     🎉✨🎊
+    </div>
+    <h2 id="completion-title">全問正解おめでとう！</h2>
+    <div id="completion-message"></div>
+    <!-- 【ブラッシュアップ】同じモード・ほかの教材も選べるようにした -->
+    <div class="result-nav">
+     <button class="again" onclick="restartMode()">同じモードでもう一度</button>
+     <button class="plain" onclick="backToModeSelection()">モードをえらび直す</button>
+     <a href="../remake.html">ほかの教材をえらぶ</a>
+    </div>
+   </div>
+  </main>
+  <script>
+        const defaultConfig = {
+            quiz_title: "定積分と面積の関連クイズ",
+            success_message: "素晴らしい！",
+            completion_message: "めっちゃめっちゃ素晴らしい！あなたは定積分と面積の関係を完璧に理解しています！本当にお疲れ様でした！🌟"
+        };
+
+        const choiceQuestions = [
+            {
+                text: "【基本】y = x と x軸、x = 0, x = 2 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "linear_simple",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 3,
+                integralMin: 0, integralMax: 2,
+                choices: [
+                    "∫₀² 2 dx",
+                    "∫₀² x dx",
+                    "∫₀² x² dx",
+                    "∫₀² 1 dx"
+                ],
+                correct: 1,
+                explanation: "y = x と x軸で囲まれた面積は、関数 y = x を積分範囲 [0, 2] で積分します。したがって ∫₀² x dx が正解です。"
+            },
+            {
+                text: "【基本】y = x² と x軸、x = 0, x = 2 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "parabola",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 5,
+                integralMin: 0, integralMax: 2,
+                choices: [
+                    "∫₀² x² dx",
+                    "∫₀² 2x dx",
+                    "∫₀² x dx",
+                    "∫₀² 1 dx"
+                ],
+                correct: 0,
+                explanation: "y = x² と x軸で囲まれた面積は、関数 y = x² を積分範囲 [0, 2] で積分します。したがって ∫₀² x² dx が正解です。"
+            },
+            {
+                text: "【基本】y = x + 1 と x軸、x = 0, x = 2 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "linear1",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 4,
+                integralMin: 0, integralMax: 2,
+                choices: [
+                    "∫₀² x dx",
+                    "∫₀² (x + 1) dx",
+                    "∫₀² 1 dx",
+                    "∫₀² 2x dx"
+                ],
+                correct: 1,
+                explanation: "y = x + 1 と x軸で囲まれた面積は、関数 y = x + 1 を積分範囲 [0, 2] で積分します。したがって ∫₀² (x + 1) dx が正解です。"
+            },
+            {
+                text: "【応用】y = x - 1 と x軸、x = 0, x = 3 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "linear_mixed1",
+                xMin: -1, xMax: 4, yMin: -2, yMax: 3,
+                integralMin: 0, integralMax: 3,
+                choices: [
+                    "∫₀³ (x - 1) dx",
+                    "-∫₀¹ (x - 1) dx + ∫₁³ (x - 1) dx",
+                    "∫₀¹ (x - 1) dx + ∫₁³ (x - 1) dx",
+                    "∫₀¹ (1 - x) dx - ∫₁³ (x - 1) dx"
+                ],
+                correct: 1,
+                explanation: "y = x - 1 は x = 0 から x = 1 で負の値を取るため、この区間では -∫₀¹ (x - 1) dx、x = 1 から x = 3 では正の値なので ∫₁³ (x - 1) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【応用】y = x - 2 と x軸、x = 0, x = 4 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "linear_mixed2",
+                xMin: -1, xMax: 5, yMin: -3, yMax: 3,
+                integralMin: 0, integralMax: 4,
+                choices: [
+                    "∫₀⁴ (x - 2) dx",
+                    "-∫₀² (x - 2) dx + ∫₂⁴ (x - 2) dx",
+                    "∫₀² (x - 2) dx + ∫₂⁴ (x - 2) dx",
+                    "∫₀² (2 - x) dx - ∫₂⁴ (x - 2) dx"
+                ],
+                correct: 1,
+                explanation: "y = x - 2 は x = 0 から x = 2 で負の値を取るため、この区間では -∫₀² (x - 2) dx、x = 2 から x = 4 では正の値なので ∫₂⁴ (x - 2) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【応用】y = x² - 4 と x軸、x = 0, x = 3 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "parabola_mixed1",
+                xMin: -1, xMax: 4, yMin: -5, yMax: 6,
+                integralMin: 0, integralMax: 3,
+                choices: [
+                    "∫₀³ (x² - 4) dx",
+                    "-∫₀² (x² - 4) dx + ∫₂³ (x² - 4) dx",
+                    "∫₀² (x² - 4) dx + ∫₂³ (x² - 4) dx",
+                    "∫₀² (4 - x²) dx - ∫₂³ (x² - 4) dx"
+                ],
+                correct: 1,
+                explanation: "y = x² - 4 は x = 0 から x = 2 で負の値を取るため、この区間では -∫₀² (x² - 4) dx、x = 2 から x = 3 では正の値なので ∫₂³ (x² - 4) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【応用】y = x² - 1 と x軸、x = 0, x = 2 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "parabola2",
+                xMin: -1, xMax: 3, yMin: -2, yMax: 4,
+                integralMin: 0, integralMax: 2,
+                choices: [
+                    "∫₀² (x² - 1) dx",
+                    "-∫₀¹ (x² - 1) dx + ∫₁² (x² - 1) dx",
+                    "∫₀¹ (x² - 1) dx + ∫₁² (x² - 1) dx",
+                    "∫₀¹ (1 - x²) dx - ∫₁² (x² - 1) dx"
+                ],
+                correct: 1,
+                explanation: "y = x² - 1 は x = 0 から x = 1 で負の値を取るため、この区間では -∫₀¹ (x² - 1) dx、x = 1 から x = 2 では正の値なので ∫₁² (x² - 1) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【応用】y = 2x - 4 と x軸、x = 0, x = 3 で囲まれた面積を求める定積分はどれですか？",
+                graphType: "linear_mixed3",
+                xMin: -1, xMax: 4, yMin: -5, yMax: 3,
+                integralMin: 0, integralMax: 3,
+                choices: [
+                    "∫₀³ (2x - 4) dx",
+                    "-∫₀² (2x - 4) dx + ∫₂³ (2x - 4) dx",
+                    "∫₀² (2x - 4) dx + ∫₂³ (2x - 4) dx",
+                    "∫₀² (4 - 2x) dx - ∫₂³ (2x - 4) dx"
+                ],
+                correct: 1,
+                explanation: "y = 2x - 4 は x = 0 から x = 2 で負の値を取るため、この区間では -∫₀² (2x - 4) dx、x = 2 から x = 3 では正の値なので ∫₂³ (2x - 4) dx となります。下側の面積に「-」を付けて、上側の面積と「+」でつなげます。"
+            },
+            {
+                text: "【発展】y = x² と y = x で囲まれた面積を求める定積分はどれですか？",
+                graphType: "between_curves1",
+                xMin: -0.5, xMax: 1.5, yMin: -0.5, yMax: 1.5,
+                integralMin: 0, integralMax: 1,
+                choices: [
+                    "∫₀¹ (x² - x) dx",
+                    "∫₀¹ (x - x²) dx",
+                    "∫₀¹ x² dx - ∫₀¹ x dx",
+                    "∫₀¹ 2x dx"
+                ],
+                correct: 1,
+                explanation: "2つの曲線で囲まれた面積は「上の関数 - 下の関数」を積分します。y = x が上、y = x² が下なので、∫₀¹ (x - x²) dx が正解です。"
+            },
+            {
+                text: "【発展】y = 8 - x² と y = x² で囲まれた面積を求める定積分はどれですか？",
+                graphType: "between_curves2",
+                xMin: -3, xMax: 3, yMin: -1, yMax: 9,
+                integralMin: -2, integralMax: 2,
+                choices: [
+                    "∫₋₂² (8 - 2x²) dx",
+                    "∫₋₂² (8 - x²) dx",
+                    "∫₋₂² (2x² - 8) dx",
+                    "∫₋₂² 8 dx"
+                ],
+                correct: 0,
+                explanation: "y = 8 - x² が上、y = x² が下なので、面積は ∫₋₂² ((8 - x²) - x²) dx = ∫₋₂² (8 - 2x²) dx となります。交点は 8 - x² = x² より x = ±2 です。"
+            },
+            {
+                text: "【発展】y = x + 2 と y = x² で囲まれた面積を求める定積分はどれですか？",
+                graphType: "between_curves_new",
+                xMin: -2, xMax: 3, yMin: -1, yMax: 5,
+                integralMin: -1, integralMax: 2,
+                choices: [
+                    "∫₋₁² (x + 2 - x²) dx",
+                    "∫₋₁² (x² - x - 2) dx",
+                    "∫₋₁² (x + 2) dx + ∫₋₁² x² dx",
+                    "∫₋₁² (3x + 1) dx"
+                ],
+                correct: 0,
+                explanation: "直線 y = x + 2 が放物線 y = x² より上にあるので、面積は ∫₋₁² (x + 2 - x²) dx となります。交点は x = -1, 2 です。"
+            }
+        ];
+
+        const inputQuestions = [
+            {
+                text: "y = x と x軸、x = 0, x = 2 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "linear_simple",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 3,
+                integralMin: 0, integralMax: 2,
+                level: 1,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "2",
+                    function: "x",
+                    operator: "+"
+                },
+                explanation: "y = x と x軸で囲まれた面積は、x軸より上側にあるので、+∫₀² x dx が正解です。上側の面積には「+」を選びます。"
+            },
+            {
+                text: "y = x + 1 と x軸、x = 0, x = 2 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "linear1",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 4,
+                integralMin: 0, integralMax: 2,
+                level: 1,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "2",
+                    function: "x+1",
+                    operator: "+"
+                },
+                explanation: "y = x + 1 と x軸で囲まれた面積は、x軸より上側にあるので、+∫₀² (x + 1) dx が正解です。上側の面積には「+」を選びます。"
+            },
+            {
+                text: "y = x² と x軸、x = 0, x = 2 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "parabola",
+                xMin: -1, xMax: 3, yMin: -1, yMax: 5,
+                integralMin: 0, integralMax: 2,
+                level: 2,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "2",
+                    function: "x²",
+                    operator: "+"
+                },
+                explanation: "y = x² と x軸で囲まれた面積は、x軸より上側にあるので、+∫₀² x² dx が正解です。上側の面積には「+」を選びます。"
+            },
+            {
+                text: "y = 2x と x軸、x = 1, x = 3 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "linear_simple",
+                fn: "2*x",   // 【ブラッシュアップ】y = 2x のグラフ
+                xMin: 0, xMax: 4, yMin: -1, yMax: 7,
+                integralMin: 1, integralMax: 3,
+                level: 2,
+                answer: {
+                    lowerBound: "1",
+                    upperBound: "3",
+                    function: "2x",
+                    operator: "+"
+                },
+                explanation: "y = 2x と x軸で囲まれた面積は、x軸より上側にあるので、+∫₁³ 2x dx が正解です。上側の面積には「+」を選びます。"
+            },
+            {
+                text: "y = x - 1 と x軸、x = 0, x = 3 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "linear_mixed1",
+                xMin: -1, xMax: 4, yMin: -2, yMax: 3,
+                integralMin: 0, integralMax: 3,
+                level: 3,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "1",
+                    function: "x-1",
+                    operator: "-",
+                    secondIntegral: {
+                        operator: "+",
+                        lowerBound: "1",
+                        upperBound: "3",
+                        function: "x-1"
+                    }
+                },
+                explanation: "y = x - 1 は x = 0 から x = 1 で負の値を取るため、この区間では -∫₀¹ (x - 1) dx、x = 1 から x = 3 では正の値なので +∫₁³ (x - 1) dx となります。"
+            },
+            {
+                text: "y = x - 2 と x軸、x = 0, x = 4 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "linear_mixed2",
+                xMin: -1, xMax: 5, yMin: -3, yMax: 3,
+                integralMin: 0, integralMax: 4,
+                level: 3,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "2",
+                    function: "x-2",
+                    operator: "-",
+                    secondIntegral: {
+                        operator: "+",
+                        lowerBound: "2",
+                        upperBound: "4",
+                        function: "x-2"
+                    }
+                },
+                explanation: "y = x - 2 は x = 0 から x = 2 で負の値を取るため、この区間では -∫₀² (x - 2) dx、x = 2 から x = 4 では正の値なので +∫₂⁴ (x - 2) dx となります。"
+            },
+            {
+                text: "y = x² - 1 と x軸、x = 0, x = 2 で囲まれた面積を求める定積分を作ってください。",
+                graphType: "parabola2",
+                xMin: -1, xMax: 3, yMin: -2, yMax: 4,
+                integralMin: 0, integralMax: 2,
+                level: 3,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "1",
+                    function: "x²-1",
+                    operator: "-",
+                    secondIntegral: {
+                        operator: "+",
+                        lowerBound: "1",
+                        upperBound: "2",
+                        function: "x²-1"
+                    }
+                },
+                explanation: "y = x² - 1 は x = 0 から x = 1 で負の値を取るため、この区間では -∫₀¹ (x² - 1) dx、x = 1 から x = 2 では正の値なので +∫₁² (x² - 1) dx となります。"
+            },
+            {
+                text: "y = x と y = x² で囲まれた面積を求める定積分を作ってください。",
+                graphType: "between_curves1",
+                xMin: -0.5, xMax: 1.5, yMin: -0.5, yMax: 1.5,
+                integralMin: 0, integralMax: 1,
+                level: 4,
+                answer: {
+                    lowerBound: "0",
+                    upperBound: "1",
+                    function: "x-x²",
+                    operator: "+"
+                },
+                explanation: "2つの曲線で囲まれた面積は「上の関数 - 下の関数」を積分します。y = x が上、y = x² が下なので、+∫₀¹ (x - x²) dx が正解です。"
+            },
+            {
+                text: "y = 4 と y = x² で囲まれた面積を求める定積分を作ってください。",
+                graphType: "between_curves_4",
+                xMin: -3, xMax: 3, yMin: -1, yMax: 6,
+                integralMin: -2, integralMax: 2,
+                level: 4,
+                answer: {
+                    lowerBound: "-2",
+                    upperBound: "2",
+                    function: "4-x²",
+                    operator: "+"
+                },
+                explanation: "y = 4 が上、y = x² が下なので、面積は +∫₋₂² (4 - x²) dx となります。交点を求めると 4 = x² より x = ±2 です。"
+            },
+            {
+                text: "y = x + 2 と y = x² で囲まれた面積を求める定積分を作ってください。",
+                graphType: "between_curves_new",
+                xMin: -2, xMax: 3, yMin: -1, yMax: 5,
+                integralMin: -1, integralMax: 2,
+                level: 4,
+                answer: {
+                    lowerBound: "-1",
+                    upperBound: "2",
+                    function: "x+2-x²",
+                    operator: "+"
+                },
+                explanation: "直線 y = x + 2 が放物線 y = x² より上にあるので、面積は +∫₋₁² (x + 2 - x²) dx となります。交点は x² = x + 2 より x = -1, 2 です。"
+            }
+        ];
+
+        const freeInputTemplates = {
+            level1: [
+                { func: 'x', displayFunc: 'x', lower: 0, upper: 2, answer: [2, 1], graphType: 'linear_simple', level: 1 },
+                { func: '2*x', displayFunc: '2x', lower: 0, upper: 2, answer: [4, 1], graphType: 'linear_simple', level: 1 },
+                { func: 'x', displayFunc: 'x', lower: 0, upper: 3, answer: [9, 2], graphType: 'linear_simple', level: 1 },
+                { func: '3*x', displayFunc: '3x', lower: 0, upper: 2, answer: [6, 1], graphType: 'linear_simple', level: 1 },
+            ],
+            level2: [
+                { func: 'x**2', displayFunc: 'x²', lower: 0, upper: 2, answer: [8, 3], graphType: 'parabola', level: 2 },
+                { func: 'x**2', displayFunc: 'x²', lower: 0, upper: 3, answer: [9, 1], graphType: 'parabola', level: 2 },
+                { func: 'x+1', displayFunc: 'x+1', lower: 0, upper: 2, answer: [4, 1], graphType: 'linear1', level: 2 },
+                { func: 'x+2', displayFunc: 'x+2', lower: 0, upper: 3, answer: [21, 2], graphType: 'linear1', level: 2 },
+            ],
+            level3: [
+                { func: 'x**2+1', displayFunc: 'x²+1', lower: 0, upper: 2, answer: [14, 3], graphType: 'parabola', level: 3 },
+                { func: '2*x', displayFunc: '2x', lower: 1, upper: 3, answer: [8, 1], graphType: 'linear_simple', level: 3 },
+                { func: 'x**2', displayFunc: 'x²', lower: 1, upper: 3, answer: [26, 3], graphType: 'parabola', level: 3 },
+                { func: 'x+3', displayFunc: 'x+3', lower: 1, upper: 4, answer: [33, 2], graphType: 'linear1', level: 3 },
+            ],
+            level4: [
+                { func: 'x-1', displayFunc: 'x-1', lower: 0, upper: 3, answer: [5, 2], graphType: 'linear_mixed1', level: 4 },
+                { func: 'x-2', displayFunc: 'x-2', lower: 0, upper: 4, answer: [4, 1], graphType: 'linear_mixed2', level: 4 },
+                { func: 'x**2-1', displayFunc: 'x²-1', lower: 0, upper: 2, answer: [2, 1], graphType: 'parabola2', level: 4 },
+                { func: 'x**2-4', displayFunc: 'x²-4', lower: 0, upper: 3, answer: [23, 3], graphType: 'parabola_mixed1', level: 4 },
+            ],
+            level5: [
+                { func: 'between', displayFunc: 'x と x²', lower: 0, upper: 1, answer: [1, 6], graphType: 'between_curves1', level: 5, between: true, func1: 'x', func2: 'x**2' },
+                { func: 'between', displayFunc: '4 と x²', lower: -2, upper: 2, answer: [32, 3], graphType: 'between_curves_4', level: 5, between: true, func1: '4', func2: 'x**2' },
+                { func: 'between', displayFunc: 'x+2 と x²', lower: -1, upper: 2, answer: [9, 2], graphType: 'between_curves_new', level: 5, between: true, func1: 'x+2', func2: 'x**2' },
+            ]
+        };
+
+        function generateFreeInputProblem(level) {
+            const templates = freeInputTemplates[`level${level}`];
+            const template = templates[Math.floor(Math.random() * templates.length)];
+
+            const levelText = level === 1 ? '基本' : level === 2 ? '応用' : level === 3 ? '発展' : level === 4 ? '応用発展' : '最高難度';
+            const levelClass = `level-${level > 3 ? 3 : level}`;
+
+            let problemText, explanation;
+
+            if (template.between) {
+                problemText = `【${levelText}】y = ${template.displayFunc} で囲まれた部分の面積を求めてください。 <span class="level-badge ${levelClass}">レベル${level}・${levelText}</span>`;
+                explanation = `y = ${template.displayFunc} で囲まれた領域を x = ${template.lower} から x = ${template.upper} まで積分します。面積は ${template.answer[0]}/${template.answer[1]} ${template.answer[1] === 1 ? '= ' + template.answer[0] : ''} になります。`;
+            } else {
+                problemText = `【${levelText}】y = ${template.displayFunc} と x軸、x = ${template.lower}, x = ${template.upper} で囲まれた部分の面積を求めてください。 <span class="level-badge ${levelClass}">レベル${level}・${levelText}</span>`;
+                explanation = `y = ${template.displayFunc} を x = ${template.lower} から x = ${template.upper} まで積分します。定積分 ∫${template.lower}^${template.upper} ${template.displayFunc} dx を計算すると、面積は ${template.answer[0]}/${template.answer[1]} ${template.answer[1] === 1 ? '= ' + template.answer[0] : ''} になります。`;
+            }
+
+            return {
+                text: problemText,
+                graphType: template.graphType,
+                fn: template.between ? null : template.func,   // 【ブラッシュアップ】問題の式
+                fn1: template.func1, fn2: template.func2,
+                xMin: template.lower - 1,
+                xMax: template.upper + 1,
+                yMin: level === 4 || level === 5 ? -5 : -1,
+                yMax: 10,
+                integralMin: template.lower,
+                integralMax: template.upper,
+                level: level,
+                answer: {
+                    numerator: template.answer[0],
+                    denominator: template.answer[1]
+                },
+                explanation: explanation
+            };
+        }
+
+        let currentMode = null;
+        let currentQuestions = [];
+        let currentQuestion = 0;
+        let selectedChoice = -1;
+        let answered = false;
+        let selectedOperator1 = null;
+        let selectedOperator2 = null;
+        // 【ブラッシュアップ】まちがえた問題・答えを見た問題、最後に遊んだモード
+        let missedSet = new Set();
+        let lastMode = null;
+        const isTouch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+
+        function restartMode() {
+            ({ choice: startChoiceMode, input: startInputMode, 'free-input': startFreeInputMode })[lastMode || 'choice']();
+        }
+
+        function handleOperatorInput(integralNum) {
+            const operatorInput = document.getElementById(`operator-input-${integralNum}`);
+            const value = operatorInput.value.trim().replace(/＋/g, '+').replace(/[ー－−―‐]/g, '-');   // 【ブラッシュアップ】
+            if (value !== operatorInput.value) operatorInput.value = value;
+
+            if (value === '+' || value === '-') {
+                if (integralNum === 1) {
+                    selectedOperator1 = value;
+                } else {
+                    selectedOperator2 = value;
+                }
+                checkInputsAutomatic();
+            } else if (value !== '') {
+                operatorInput.value = '';
+            }
+        }
+
+        function formatFunctionDisplay(func) {
+            const hasMultipleTerms = func.includes('-') || func.includes('+');
+            if (hasMultipleTerms) {
+                return `(${func})`;
+            }
+            return func;
+        }
+
+        function startChoiceMode() {
+            currentMode = 'choice';
+            currentQuestions = choiceQuestions;
+            currentQuestion = 0;
+            missedSet = new Set();   // 【ブラッシュアップ】
+            document.getElementById('completion').classList.add('hidden');
+            window.scrollTo(0, 0);
+            document.getElementById('mode-selection').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            displayQuestion();
+        }
+
+        function startInputMode() {
+            currentMode = 'input';
+            const level1 = inputQuestions.filter(q => q.level === 1);
+            const level2 = inputQuestions.filter(q => q.level === 2);
+            const level3 = inputQuestions.filter(q => q.level === 3);
+            const level4 = inputQuestions.filter(q => q.level === 4);
+
+            const selected = [
+                ...level1.sort(() => Math.random() - 0.5).slice(0, 1),
+                ...level2.sort(() => Math.random() - 0.5).slice(0, 1),
+                ...level3.sort(() => Math.random() - 0.5).slice(0, 2),
+                ...level4.sort(() => Math.random() - 0.5).slice(0, 1)
+            ];
+
+            currentQuestions = selected;
+            currentQuestion = 0;
+            missedSet = new Set();   // 【ブラッシュアップ】
+            document.getElementById('completion').classList.add('hidden');
+            window.scrollTo(0, 0);
+            document.getElementById('mode-selection').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            displayQuestion();
+        }
+
+        function startFreeInputMode() {
+            currentMode = 'free-input';
+            currentQuestions = [];
+            const usedProblems = new Set();
+
+            function generateUniqueProblem(level) {
+                const templates = freeInputTemplates[`level${level}`];
+                let attempts = 0;
+                let problem;
+                let problemKey;
+
+                do {
+                    const template = templates[Math.floor(Math.random() * templates.length)];
+                    problemKey = `${level}-${template.func}-${template.lower}-${template.upper}`;
+
+                    if (!usedProblems.has(problemKey)) {
+                        problem = generateFreeInputProblem(level);
+                        usedProblems.add(problemKey);
+                        return problem;
+                    }
+                    attempts++;
+                } while (attempts < 20);
+
+                return problem || generateFreeInputProblem(level);
+            }
+
+            currentQuestions.push(generateUniqueProblem(1));
+            currentQuestions.push(generateUniqueProblem(2));
+            currentQuestions.push(generateUniqueProblem(3));
+            currentQuestions.push(generateUniqueProblem(4));
+            currentQuestions.push(generateUniqueProblem(5));
+
+            currentQuestion = 0;
+            missedSet = new Set();   // 【ブラッシュアップ】
+            document.getElementById('completion').classList.add('hidden');
+            window.scrollTo(0, 0);
+            document.getElementById('mode-selection').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            displayQuestion();
+        }
+
+        function backToModeSelection() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('completion').classList.add('hidden');
+            document.getElementById('mode-selection').classList.remove('hidden');
+            currentMode = null;
+            currentQuestions = [];
+            currentQuestion = 0;
+        }
+
+        function shuffleChoices(question) {
+            const correctAnswer = question.choices[question.correct];
+            const shuffled = [...question.choices];
+
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            const newCorrectIndex = shuffled.indexOf(correctAnswer);
+
+            return {
+                choices: shuffled,
+                correct: newCorrectIndex
+            };
+        }
+
+        function formatIntegral(text) {
+            return text.replace(/∫₀²/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">0</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">2</sup></span>')
+                      .replace(/∫₀¹/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">0</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">1</sup></span>')
+                      .replace(/∫₁²/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">1</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">2</sup></span>')
+                      .replace(/∫₀³/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">0</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">3</sup></span>')
+                      .replace(/∫₁³/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">1</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">3</sup></span>')
+                      .replace(/∫₋₁²/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">-1</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">2</sup></span>')
+                      .replace(/∫₋₂²/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">-2</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">2</sup></span>')
+                      .replace(/∫₀⁴/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">0</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">4</sup></span>')
+                      .replace(/∫₂⁴/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">2</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">4</sup></span>')
+                      .replace(/∫₂³/g, '<span style="position: relative; display: inline-block;">∫<sub style="position: absolute; left: 100%; bottom: 0.3em; font-size: 0.7em;">2</sub><sup style="position: absolute; left: 100%; top: -0.1em; font-size: 0.7em;">3</sup></span>')
+                      .replace(/(\d+x)\s+dx/g, '<span style="margin-left: 0.8em;">$1</span> dx')
+                      .replace(/(\d+)\s+dx/g, '<span style="margin-left: 0.8em;">$1 dx</span>')
+                      .replace(/(x²)\s+dx/g, '<span style="margin-left: 0.8em;">$1</span> dx')
+                      .replace(/(\(.*?\))\s+dx/g, '<span style="margin-left: 0.8em;">$1</span> dx')
+                      .replace(/(x)\s+dx/g, '<span style="margin-left: 0.8em;">$1</span> dx');
+        }
+
+        function createGraph(question) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "graph-svg");
+            svg.setAttribute("viewBox", "0 0 400 280");
+
+            const margin = 40;
+            const width = 400 - 2 * margin;
+            const height = 280 - 2 * margin;
+
+            const xScale = width / (question.xMax - question.xMin);
+            const yScale = height / (question.yMax - question.yMin);
+
+            function toSVGX(x) {
+                return margin + (x - question.xMin) * xScale;
+            }
+
+            function toSVGY(y) {
+                return margin + height - (y - question.yMin) * yScale;
+            }
+
+            const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            xAxis.setAttribute("x1", margin);
+            xAxis.setAttribute("y1", toSVGY(0));
+            xAxis.setAttribute("x2", margin + width);
+            xAxis.setAttribute("y2", toSVGY(0));
+            xAxis.setAttribute("class", "axis");
+            svg.appendChild(xAxis);
+
+            const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            yAxis.setAttribute("x1", toSVGX(0));
+            yAxis.setAttribute("y1", margin);
+            yAxis.setAttribute("x2", toSVGX(0));
+            yAxis.setAttribute("y2", margin + height);
+            yAxis.setAttribute("class", "axis");
+            svg.appendChild(yAxis);
+
+            const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            xLabel.setAttribute("x", margin + width - 10);
+            xLabel.setAttribute("y", toSVGY(0) - 10);
+            xLabel.setAttribute("class", "axis-label");
+            xLabel.textContent = "x";
+            svg.appendChild(xLabel);
+
+            const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            yLabel.setAttribute("x", toSVGX(0) + 10);
+            yLabel.setAttribute("y", margin + 15);
+            yLabel.setAttribute("class", "axis-label");
+            yLabel.textContent = "y";
+            svg.appendChild(yLabel);
+
+            const leftBoundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            leftBoundary.setAttribute("x1", toSVGX(question.integralMin));
+            leftBoundary.setAttribute("y1", margin);
+            leftBoundary.setAttribute("x2", toSVGX(question.integralMin));
+            leftBoundary.setAttribute("y2", margin + height);
+            leftBoundary.setAttribute("class", "boundary-line");
+            svg.appendChild(leftBoundary);
+
+            const rightBoundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            rightBoundary.setAttribute("x1", toSVGX(question.integralMax));
+            rightBoundary.setAttribute("y1", margin);
+            rightBoundary.setAttribute("x2", toSVGX(question.integralMax));
+            rightBoundary.setAttribute("y2", margin + height);
+            rightBoundary.setAttribute("class", "boundary-line");
+            svg.appendChild(rightBoundary);
+
+            if (question.graphType === "parabola2" || question.graphType === "linear_mixed1") {
+                const middleBoundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                middleBoundary.setAttribute("x1", toSVGX(1));
+                middleBoundary.setAttribute("y1", margin);
+                middleBoundary.setAttribute("x2", toSVGX(1));
+                middleBoundary.setAttribute("y2", margin + height);
+                middleBoundary.setAttribute("class", "boundary-line");
+                svg.appendChild(middleBoundary);
+            } else if (question.graphType === "linear_mixed2" || question.graphType === "linear_mixed3" || question.graphType === "parabola_mixed1") {
+                const middleBoundary = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                middleBoundary.setAttribute("x1", toSVGX(2));
+                middleBoundary.setAttribute("y1", margin);
+                middleBoundary.setAttribute("x2", toSVGX(2));
+                middleBoundary.setAttribute("y2", margin + height);
+                middleBoundary.setAttribute("class", "boundary-line");
+                svg.appendChild(middleBoundary);
+            }
+
+            function getYValue(x, funcType, isSecond = false) {
+                // 【ブラッシュアップ】問題の式があれば、その式でかく
+                if (question.fn1 && funcType.startsWith('between')) return Function('x', 'return ' + (isSecond ? question.fn2 : question.fn1))(x);
+                if (question.fn && !funcType.startsWith('between')) return Function('x', 'return ' + question.fn)(x);
+                switch (funcType) {
+                    case "linear_simple":
+                        return isSecond ? 2 * x : x;
+                    case "parabola":
+                        return x * x;
+                    case "linear1":
+                        return x + 1;
+                    case "linear_mixed1":
+                        return x - 1;
+                    case "linear_mixed2":
+                        return x - 2;
+                    case "linear_mixed3":
+                        return 2 * x - 4;
+                    case "parabola2":
+                        return x * x - 1;
+                    case "parabola_mixed1":
+                        return x * x - 4;
+                    case "between_curves1":
+                        return isSecond ? x * x : x;
+                    case "between_curves2":
+                        return isSecond ? x * x : 8 - x * x;
+                    case "between_curves_new":
+                        return isSecond ? x * x : x + 2;
+                    case "between_curves_4":
+                        return isSecond ? x * x : 4;
+                    default:
+                        return 0;
+                }
+            }
+
+            if (question.graphType === "parabola2" || question.graphType === "linear_mixed1") {
+                const splitPoint = 1;
+
+                let negAreaData = `M ${toSVGX(question.integralMin)} ${toSVGY(0)}`;
+                for (let i = 0; i <= 50; i++) {
+                    const x = question.integralMin + (splitPoint - question.integralMin) * i / 50;
+                    const y = getYValue(x, question.graphType);
+                    negAreaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                negAreaData += ` L ${toSVGX(splitPoint)} ${toSVGY(0)} Z`;
+
+                const negArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                negArea.setAttribute("d", negAreaData);
+                negArea.setAttribute("class", "area-fill");
+                svg.appendChild(negArea);
+
+                let posAreaData = `M ${toSVGX(splitPoint)} ${toSVGY(0)}`;
+                for (let i = 0; i <= 50; i++) {
+                    const x = splitPoint + (question.integralMax - splitPoint) * i / 50;
+                    const y = getYValue(x, question.graphType);
+                    posAreaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                posAreaData += ` L ${toSVGX(question.integralMax)} ${toSVGY(0)} Z`;
+
+                const posArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                posArea.setAttribute("d", posAreaData);
+                posArea.setAttribute("class", "area-fill");
+                svg.appendChild(posArea);
+
+            } else if (question.graphType === "linear_mixed2" || question.graphType === "linear_mixed3" || question.graphType === "parabola_mixed1") {
+                const splitPoint = 2;
+
+                let negAreaData = `M ${toSVGX(question.integralMin)} ${toSVGY(0)}`;
+                for (let i = 0; i <= 100; i++) {
+                    const x = question.integralMin + (splitPoint - question.integralMin) * i / 100;
+                    const y = getYValue(x, question.graphType);
+                    negAreaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                negAreaData += ` L ${toSVGX(splitPoint)} ${toSVGY(0)} Z`;
+
+                const negArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                negArea.setAttribute("d", negAreaData);
+                negArea.setAttribute("class", "area-fill");
+                svg.appendChild(negArea);
+
+                let posAreaData = `M ${toSVGX(splitPoint)} ${toSVGY(0)}`;
+                for (let i = 0; i <= 100; i++) {
+                    const x = splitPoint + (question.integralMax - splitPoint) * i / 100;
+                    const y = getYValue(x, question.graphType);
+                    posAreaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                posAreaData += ` L ${toSVGX(question.integralMax)} ${toSVGY(0)} Z`;
+
+                const posArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                posArea.setAttribute("d", posAreaData);
+                posArea.setAttribute("class", "area-fill");
+                svg.appendChild(posArea);
+
+            } else if (question.graphType.startsWith("between_curves")) {
+                let areaData = `M ${toSVGX(question.integralMin)}`;
+                const startY = getYValue(question.integralMin, question.graphType, true);
+                areaData += ` ${toSVGY(startY)}`;
+
+                for (let i = 0; i <= 100; i++) {
+                    const x = question.integralMin + (question.integralMax - question.integralMin) * i / 100;
+                    const y = getYValue(x, question.graphType, true);
+                    areaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+
+                for (let i = 100; i >= 0; i--) {
+                    const x = question.integralMin + (question.integralMax - question.integralMin) * i / 100;
+                    const y = getYValue(x, question.graphType, false);
+                    areaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                areaData += " Z";
+
+                const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                area.setAttribute("d", areaData);
+                area.setAttribute("class", "area-fill");
+                svg.appendChild(area);
+
+            } else {
+                let areaData = `M ${toSVGX(question.integralMin)} ${toSVGY(0)}`;
+                for (let i = 0; i <= 100; i++) {
+                    const x = question.integralMin + (question.integralMax - question.integralMin) * i / 100;
+                    const y = getYValue(x, question.graphType);
+                    areaData += ` L ${toSVGX(x)} ${toSVGY(y)}`;
+                }
+                areaData += ` L ${toSVGX(question.integralMax)} ${toSVGY(0)} Z`;
+
+                const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                area.setAttribute("d", areaData);
+                area.setAttribute("class", "area-fill");
+                svg.appendChild(area);
+            }
+
+            const steps = 200;
+            const dx = (question.xMax - question.xMin) / steps;
+            let pathData = "";
+            for (let i = 0; i <= steps; i++) {
+                const x = question.xMin + i * dx;
+                const y = getYValue(x, question.graphType, false);
+                const svgX = toSVGX(x);
+                const svgY = toSVGY(y);
+                pathData += (i === 0 ? `M ${svgX} ${svgY}` : ` L ${svgX} ${svgY}`);
+            }
+
+            const curve = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            curve.setAttribute("d", pathData);
+            curve.setAttribute("class", "function-curve");
+            svg.appendChild(curve);
+
+            if (question.graphType.startsWith("between_curves")) {
+                let pathData2 = "";
+                for (let i = 0; i <= steps; i++) {
+                    const x = question.xMin + i * dx;
+                    const y = getYValue(x, question.graphType, true);
+                    const svgX = toSVGX(x);
+                    const svgY = toSVGY(y);
+                    pathData2 += (i === 0 ? `M ${svgX} ${svgY}` : ` L ${svgX} ${svgY}`);
+                }
+
+                const curve2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                curve2.setAttribute("d", pathData2);
+                curve2.setAttribute("class", "function-curve");
+                curve2.setAttribute("style", "stroke: #e53e3e;");
+                svg.appendChild(curve2);
+            }
+
+            return svg;
+        }
+
+        function checkInputsAutomatic() {
+            if (currentMode !== 'input') return;
+
+            document.getElementById('question-text').classList.remove('correct-answer', 'incorrect-answer');
+
+            const question = currentQuestions[currentQuestion];
+
+            if (!question.answer.secondIntegral) {
+                const lowerBound1 = document.getElementById('lower-bound-1').value.trim();
+                const upperBound1 = document.getElementById('upper-bound-1').value.trim();
+
+                if (lowerBound1 && upperBound1 && selectedOperator1) {
+                    checkInputAnswer();
+                }
+            } else {
+                const lowerBound1 = document.getElementById('lower-bound-1').value.trim();
+                const upperBound1 = document.getElementById('upper-bound-1').value.trim();
+                const lowerBound2 = document.getElementById('lower-bound-2').value.trim();
+                const upperBound2 = document.getElementById('upper-bound-2').value.trim();
+
+                if (lowerBound1 && upperBound1 && lowerBound2 && upperBound2 && selectedOperator1 && selectedOperator2) {
+                    checkInputAnswer();
+                }
+            }
+        }
+
+        function checkIntegralMatch(userInput, correctAnswer) {
+            // 【ブラッシュアップ】全角の数字・マイナスを半角にそろえる
+            const nz = v => String(v).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[ー－−―‐]/g, '-').replace(/\s/g, '');
+            userInput = Object.fromEntries(Object.entries(userInput).map(([k, v]) => [k, nz(v)]));
+            if (!correctAnswer.secondIntegral) {
+                return (
+                    userInput.lowerBound1 === correctAnswer.lowerBound &&
+                    userInput.upperBound1 === correctAnswer.upperBound &&
+                    userInput.operator1 === correctAnswer.operator
+                );
+            }
+
+            const order1Match = (
+                userInput.lowerBound1 === correctAnswer.lowerBound &&
+                userInput.upperBound1 === correctAnswer.upperBound &&
+                userInput.operator1 === correctAnswer.operator &&
+                userInput.lowerBound2 === correctAnswer.secondIntegral.lowerBound &&
+                userInput.upperBound2 === correctAnswer.secondIntegral.upperBound &&
+                userInput.operator2 === correctAnswer.secondIntegral.operator
+            );
+
+            const order2Match = (
+                userInput.lowerBound1 === correctAnswer.secondIntegral.lowerBound &&
+                userInput.upperBound1 === correctAnswer.secondIntegral.upperBound &&
+                userInput.operator1 === correctAnswer.secondIntegral.operator &&
+                userInput.lowerBound2 === correctAnswer.lowerBound &&
+                userInput.upperBound2 === correctAnswer.upperBound &&
+                userInput.operator2 === correctAnswer.operator
+            );
+
+            return order1Match || order2Match;
+        }
+
+        function buildIntegralInputs(question) {
+            const container = document.getElementById('integral-builder-container');
+            container.innerHTML = '';
+
+            selectedOperator1 = null;
+            selectedOperator2 = null;
+
+            const firstIntegralHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <input type="text" id="operator-input-1" class="operator-direct-input" maxlength="1" placeholder="?" oninput="handleOperatorInput(1)">
+                    <span class="operator-hint">+か-を入れるよ</span>
+                </div>
+                <div class="integral-wrapper">
+                    <span class="integral-symbol">∫</span>
+                    <input type="text" id="lower-bound-1" class="bound-input bound-lower" placeholder="下限" oninput="checkInputsAutomatic()">
+                    <input type="text" id="upper-bound-1" class="bound-input bound-upper" placeholder="上限" oninput="checkInputsAutomatic()">
+                </div>
+                <span class="dx-label" id="function-display-1" style="margin-left: 20px;">${formatFunctionDisplay(question.answer.function)}</span>
+                <span class="dx-label">dx</span>
+            `;
+
+            container.innerHTML = firstIntegralHTML;
+
+            if (question.answer.secondIntegral) {
+                const secondIntegralHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; margin-left: 15px;">
+                        <input type="text" id="operator-input-2" class="operator-direct-input" maxlength="1" placeholder="?" oninput="handleOperatorInput(2)">
+                        <span class="operator-hint">+か-を入れるよ</span>
+                    </div>
+                    <div class="integral-wrapper">
+                        <span class="integral-symbol">∫</span>
+                        <input type="text" id="lower-bound-2" class="bound-input bound-lower" placeholder="下限" oninput="checkInputsAutomatic()">
+                        <input type="text" id="upper-bound-2" class="bound-input bound-upper" placeholder="上限" oninput="checkInputsAutomatic()">
+                    </div>
+                    <span class="dx-label" id="function-display-2" style="margin-left: 20px;">${formatFunctionDisplay(question.answer.secondIntegral.function)}</span>
+                    <span class="dx-label">dx</span>
+                `;
+
+                container.innerHTML += secondIntegralHTML;
+            }
+            // 【ブラッシュアップ】
+            const kids = [...container.children];
+            for (let i = 0; i < kids.length; i += 4) {
+                const group = document.createElement('div');
+                group.className = 'int-group';
+                kids.slice(i, i + 4).forEach(k => group.appendChild(k));
+                container.appendChild(group);
+            }
+        }
+
+        function displayQuestion() {
+            const question = currentQuestions[currentQuestion];
+
+            let questionText = question.text;
+            if (currentMode === 'input' && question.level) {
+                const levelClass = `level-${question.level > 3 ? 3 : question.level}`;
+                const levelText = question.level === 1 ? '基本' : question.level === 2 ? '応用' : question.level === 3 ? '発展' : '最高難度';
+                questionText = question.text + ` <span class="level-badge ${levelClass}">レベル${question.level}・${levelText}</span>`;
+            }
+
+            document.getElementById('question-number').textContent = `問題 ${currentQuestion + 1}`;
+            window.scrollTo(0, 0);   // 【ブラッシュアップ】
+            document.getElementById('question-text').innerHTML = questionText;
+            document.getElementById('question-text').classList.remove('correct-answer', 'incorrect-answer');
+            document.getElementById('progress-text').textContent = `問題 ${currentQuestion + 1} / ${currentQuestions.length}`;
+            document.getElementById('progress-bar').style.width = `${(currentQuestion / currentQuestions.length) * 100}%`;
+
+            const graphArea = document.getElementById('graph-area');
+            graphArea.innerHTML = '';
+            graphArea.appendChild(createGraph(question));
+
+            graphArea.classList.add('hidden');
+            document.getElementById('hint-btn').style.display = 'inline-block';
+            document.getElementById('hint-btn').textContent = '💡 ヒント（図を表示）';
+
+            if (currentMode === 'choice') {
+                document.getElementById('choice-container').classList.remove('hidden');
+                document.getElementById('input-container').classList.add('hidden');
+                document.getElementById('free-input-container').classList.add('hidden');
+
+                const shuffled = shuffleChoices(question);
+                const choicesContainer = document.getElementById('choices');
+                choicesContainer.innerHTML = '';
+
+                shuffled.choices.forEach((choice, index) => {
+                    const choiceElement = document.createElement('div');
+                    choiceElement.className = 'choice';
+                    choiceElement.innerHTML = formatIntegral(choice);
+                    choiceElement.onclick = () => selectChoice(index);
+                    choicesContainer.appendChild(choiceElement);
+                });
+
+                currentQuestions[currentQuestion].shuffledCorrect = shuffled.correct;
+
+            } else if (currentMode === 'input') {
+                document.getElementById('choice-container').classList.add('hidden');
+                document.getElementById('free-input-container').classList.add('hidden');
+                document.getElementById('input-container').classList.remove('hidden');
+
+                buildIntegralInputs(question);
+
+                setTimeout(() => {
+                    const firstOperatorInput = document.getElementById('operator-input-1');
+                    if (firstOperatorInput && !isTouch) {   // 【ブラッシュアップ】
+                        firstOperatorInput.focus();
+                    }
+                }, 100);
+
+            } else if (currentMode === 'free-input') {
+                document.getElementById('choice-container').classList.add('hidden');
+                document.getElementById('input-container').classList.add('hidden');
+                document.getElementById('free-input-container').classList.remove('hidden');
+
+                const answerDisplayArea = document.getElementById('answer-display-area');
+                const question = currentQuestions[currentQuestion];
+
+                if (question.answer.denominator === 1) {
+                    answerDisplayArea.innerHTML = '<input type="text" id="area-answer-integer" class="fraction-part-input" placeholder="答え" oninput="checkFreeInputAutomatic()" style="width: 140px;">';
+                } else {
+                    answerDisplayArea.innerHTML = `
+                        <div class="fraction-input-container">
+                            <input type="text" id="area-answer-numerator" class="fraction-part-input" placeholder="分子" oninput="checkFreeInputAutomatic()">
+                            <div class="fraction-divider"></div>
+                            <input type="text" id="area-answer-denominator" class="fraction-part-input" placeholder="分母" oninput="checkFreeInputAutomatic()">
+                        </div>
+                    `;
+                }
+
+                document.getElementById('show-answer-btn').style.display = 'inline-block';
+
+                setTimeout(() => {
+                    const firstInput = question.answer.denominator === 1
+                        ? document.getElementById('area-answer-integer')
+                        : document.getElementById('area-answer-numerator');
+                    if (firstInput && !isTouch) {   // 【ブラッシュアップ】
+                        firstInput.focus();
+                    }
+                }, 150);
+            }
+
+            selectedChoice = -1;
+            answered = false;
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function showHint() {
+            const graphArea = document.getElementById('graph-area');
+            const hintBtn = document.getElementById('hint-btn');
+
+            if (graphArea.classList.contains('hidden')) {
+                graphArea.classList.remove('hidden');
+                hintBtn.textContent = '👁️ 図を隠す';
+            } else {
+                graphArea.classList.add('hidden');
+                hintBtn.textContent = '💡 ヒント（図を表示）';
+            }
+        }
+
+        function selectChoice(index) {
+            if (answered) return;
+
+            selectedChoice = index;
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach(choice => choice.classList.remove('selected'));
+            choices[index].classList.add('selected');
+
+            checkAnswer();
+        }
+
+        function checkInputAnswer() {
+            if (answered) return;
+
+            const question = currentQuestions[currentQuestion];
+            const lowerBound1 = document.getElementById('lower-bound-1').value.trim();
+            const upperBound1 = document.getElementById('upper-bound-1').value.trim();
+
+            if (!lowerBound1 || !upperBound1 || !selectedOperator1) {
+                return;
+            }
+
+            const config = window.elementSdk?.config || defaultConfig;
+            const feedbackElement = document.getElementById('feedback');
+            const explanationElement = document.getElementById('explanation');
+            const questionText = document.getElementById('question-text');
+
+            let isCorrect = false;
+            let userInput = {
+                lowerBound1: lowerBound1,
+                upperBound1: upperBound1,
+                operator1: selectedOperator1
+            };
+
+            if (question.answer.secondIntegral) {
+                const lowerBound2 = document.getElementById('lower-bound-2').value.trim();
+                const upperBound2 = document.getElementById('upper-bound-2').value.trim();
+
+                if (!lowerBound2 || !upperBound2 || !selectedOperator2) {
+                    return;
+                }
+
+                userInput.lowerBound2 = lowerBound2;
+                userInput.upperBound2 = upperBound2;
+                userInput.operator2 = selectedOperator2;
+            }
+
+            isCorrect = checkIntegralMatch(userInput, question.answer);
+
+            if (isCorrect) {
+                answered = true;
+
+                questionText.classList.add('correct-answer');
+                questionText.classList.remove('incorrect-answer');
+
+                const operatorInput1 = document.getElementById('operator-input-1');
+                operatorInput1.classList.add('correct');
+                operatorInput1.disabled = true;
+
+                document.getElementById('lower-bound-1').classList.add('correct');
+                document.getElementById('upper-bound-1').classList.add('correct');
+
+                if (question.answer.secondIntegral) {
+                    const operatorInput2 = document.getElementById('operator-input-2');
+                    operatorInput2.classList.add('correct');
+                    operatorInput2.disabled = true;
+
+                    document.getElementById('lower-bound-2').classList.add('correct');
+                    document.getElementById('upper-bound-2').classList.add('correct');
+                }
+
+                feedbackElement.textContent = `🎉 ${config.success_message || defaultConfig.success_message} 正解です！`;
+                feedbackElement.className = 'feedback correct';
+                feedbackElement.classList.remove('hidden');
+
+                explanationElement.innerHTML = `<h4>解説</h4><p>${question.explanation}</p>`;
+                explanationElement.classList.remove('hidden');
+
+                document.getElementById('next-btn').style.display = 'inline-block';
+            } else {
+                questionText.classList.add('incorrect-answer');
+                questionText.classList.remove('correct-answer');
+
+                // 【ブラッシュアップ】
+                missedSet.add(currentQuestion);
+                feedbackElement.innerHTML = '✗ まだちがうところがあります。<div class="rule-hint">💡 x軸より下の部分は「−」、上の部分は「+」。範囲は x軸との交点で分けよう。ヒントの図も見てみよう。</div>';
+                feedbackElement.className = 'feedback incorrect';
+                explanationElement.classList.add('hidden');
+            }
+        }
+
+        function checkAnswer() {
+            if (selectedChoice === -1 || answered) return;
+
+            const choices = document.querySelectorAll('.choice');
+            const feedbackElement = document.getElementById('feedback');
+            const explanationElement = document.getElementById('explanation');
+            const config = window.elementSdk?.config || defaultConfig;
+            const questionText = document.getElementById('question-text');
+
+            if (selectedChoice === currentQuestions[currentQuestion].shuffledCorrect) {
+                answered = true;
+
+                questionText.classList.add('correct-answer');
+                questionText.classList.remove('incorrect-answer');
+
+                choices[selectedChoice].classList.add('correct');
+                feedbackElement.textContent = `🎉 ${config.success_message || defaultConfig.success_message} 正解です！`;
+                feedbackElement.className = 'feedback correct';
+                feedbackElement.classList.remove('hidden');
+
+                explanationElement.innerHTML = `<h4>解説</h4><p>${currentQuestions[currentQuestion].explanation}</p>`;
+                explanationElement.classList.remove('hidden');
+
+                document.getElementById('next-btn').style.display = 'inline-block';
+            } else {
+                questionText.classList.add('incorrect-answer');
+                questionText.classList.remove('correct-answer');
+
+                // 【ブラッシュアップ】えらんだ選択肢を少しのあいだ赤くし、考え方のヒントを出す
+                const wrongEl = choices[selectedChoice];
+                wrongEl.classList.add('wrong');
+                setTimeout(() => wrongEl.classList.remove('wrong'), 700);
+                missedSet.add(currentQuestion);
+                choices.forEach(choice => choice.classList.remove('selected'));
+                selectedChoice = -1;
+
+                feedbackElement.innerHTML = '✗ ちがいます。<div class="rule-hint">💡 x軸より下にある部分は「−」をつけて面積にするよ。2つのグラフで囲まれた部分は（上の式）−（下の式）。</div>';
+                feedbackElement.className = 'feedback incorrect';
+                explanationElement.classList.add('hidden');
+            }
+        }
+
+        function checkFreeInputAutomatic() {
+            if (answered) return;
+
+            const question = currentQuestions[currentQuestion];
+            const config = window.elementSdk?.config || defaultConfig;
+            const feedbackElement = document.getElementById('feedback');
+            const explanationElement = document.getElementById('explanation');
+            const questionText = document.getElementById('question-text');
+
+            let isCorrect = false;
+
+            if (question.answer.denominator === 1) {
+                const integerInput = document.getElementById('area-answer-integer');
+                if (!integerInput) return;
+
+                const userValue = parseInt(integerInput.value.trim());
+                if (isNaN(userValue)) {
+                    questionText.classList.remove('correct-answer', 'incorrect-answer');
+                    feedbackElement.classList.add('hidden');
+                    explanationElement.classList.add('hidden');
+                    return;
+                }
+
+                isCorrect = userValue === question.answer.numerator;
+
+                if (isCorrect) {
+                    integerInput.classList.add('correct');
+                }
+            } else {
+                const numeratorInput = document.getElementById('area-answer-numerator');
+                const denominatorInput = document.getElementById('area-answer-denominator');
+
+                if (!numeratorInput || !denominatorInput) return;
+
+                const numeratorValue = numeratorInput.value.trim();
+                const denominatorValue = denominatorInput.value.trim();
+
+                if (!numeratorValue || !denominatorValue) {
+                    questionText.classList.remove('correct-answer', 'incorrect-answer');
+                    feedbackElement.classList.add('hidden');
+                    explanationElement.classList.add('hidden');
+                    return;
+                }
+
+                const userNumerator = parseInt(numeratorValue);
+                const userDenominator = parseInt(denominatorValue);
+
+                if (isNaN(userNumerator) || isNaN(userDenominator) || userDenominator === 0) {
+                    questionText.classList.remove('correct-answer', 'incorrect-answer');
+                    feedbackElement.classList.add('hidden');
+                    explanationElement.classList.add('hidden');
+                    return;
+                }
+
+                const userValue = userNumerator / userDenominator;
+                const correctValue = question.answer.numerator / question.answer.denominator;
+
+                isCorrect = Math.abs(userValue - correctValue) < 0.001;
+
+                if (isCorrect) {
+                    numeratorInput.classList.add('correct');
+                    denominatorInput.classList.add('correct');
+                }
+            }
+
+            if (isCorrect) {
+                answered = true;
+
+                questionText.classList.add('correct-answer');
+                questionText.classList.remove('incorrect-answer');
+
+                feedbackElement.textContent = `🎉 ${config.success_message || defaultConfig.success_message} 完璧です！`;
+                feedbackElement.className = 'feedback correct';
+                feedbackElement.classList.remove('hidden');
+
+                explanationElement.innerHTML = `<h4>解説</h4><p>${question.explanation}</p>`;
+                explanationElement.classList.remove('hidden');
+
+                document.getElementById('show-answer-btn').style.display = 'none';
+                document.getElementById('next-btn').style.display = 'inline-block';
+            } else {
+                questionText.classList.add('incorrect-answer');
+                questionText.classList.remove('correct-answer');
+
+                feedbackElement.classList.add('hidden');
+                explanationElement.classList.add('hidden');
+            }
+        }
+
+        function showAnswer() {
+            if (answered) return;
+            missedSet.add(currentQuestion);   // 【ブラッシュアップ】
+
+            const question = currentQuestions[currentQuestion];
+            const feedbackElement = document.getElementById('feedback');
+            const explanationElement = document.getElementById('explanation');
+
+            answered = true;
+
+            if (question.answer.denominator === 1) {
+                const integerInput = document.getElementById('area-answer-integer');
+                if (integerInput) {
+                    integerInput.value = question.answer.numerator;
+                    integerInput.classList.add('correct');
+                    integerInput.disabled = true;
+                }
+            } else {
+                const numeratorInput = document.getElementById('area-answer-numerator');
+                const denominatorInput = document.getElementById('area-answer-denominator');
+                if (numeratorInput && denominatorInput) {
+                    numeratorInput.value = question.answer.numerator;
+                    denominatorInput.value = question.answer.denominator;
+                    numeratorInput.classList.add('correct');
+                    denominatorInput.classList.add('correct');
+                    numeratorInput.disabled = true;
+                    denominatorInput.disabled = true;
+                }
+            }
+
+            const questionText = document.getElementById('question-text');
+            questionText.classList.add('correct-answer');
+            questionText.classList.remove('incorrect-answer');
+
+            feedbackElement.textContent = '📖 答えを表示しました';
+            feedbackElement.className = 'feedback';
+            feedbackElement.style.background = '#fef3c7';
+            feedbackElement.style.color = '#78350f';
+            feedbackElement.style.border = '2px solid #fbbf24';
+            feedbackElement.classList.remove('hidden');
+
+            explanationElement.innerHTML = `<h4>解説</h4><p>${question.explanation}</p>`;
+            explanationElement.classList.remove('hidden');
+
+            document.getElementById('show-answer-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= currentQuestions.length) {
+                showCompletion();
+            } else {
+                displayQuestion();
+            }
+        }
+
+        function showCompletion() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('completion').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+
+            const config = window.elementSdk?.config || defaultConfig;
+            // 【ブラッシュアップ】
+            lastMode = currentMode;
+            const n = currentQuestions.length;
+            const self = n - missedSet.size;
+            document.getElementById('completion-title').textContent = self === n ? '全問正解おめでとう！' : 'おつかれさま！';
+            document.getElementById('completion-message').innerHTML = `<div class="final-score">一発正解 ${self} / ${n} 問</div>` +
+                (self === n ? (config.completion_message || defaultConfig.completion_message) : 'まちがえた問題は、ヒントの図をもう一度見て考えてみよう！');
+            window.scrollTo(0, 0);
+        }
+
+        async function onConfigChange(config) {
+            document.getElementById('quiz-title').textContent = config.quiz_title || defaultConfig.quiz_title;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["quiz_title", config.quiz_title || defaultConfig.quiz_title],
+                ["success_message", config.success_message || defaultConfig.success_message],
+                ["completion_message", config.completion_message || defaultConfig.completion_message]
+            ]);
+        }
+
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+        document.querySelectorAll('.choice-count').forEach(e => e.textContent = choiceQuestions.length);   // 【ブラッシュアップ】
+    </script>
+ <script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".container": "u-card",
+    ".title": "u-title",
+    ".mode-btn": "u-choice",
+    ".hint-btn": "u-btn",
+    ".choice": "u-choice",
+    ".choice.correct": "u-ok",
+    ".choice.wrong": "u-ng",
+    "#next-btn": "u-btn u-btn-blue",
+    "#back-to-mode-btn": "u-btn u-btn-plain",
+    "#show-answer-btn": "u-btn u-btn-plain",
+    ".result-nav .again": "u-btn",
+    ".result-nav .plain": "u-btn u-btn-plain"
+  });
+</script>
+</body>
+</html>
