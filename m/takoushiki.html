@@ -6,7 +6,7 @@
     <!--
       03. 多項式の計算（多項式マスター）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -197,8 +197,35 @@
             font-weight: 900;
         }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    body.u-theme { padding: 12px !important; }
+    #app { padding: 24px 20px; box-sizing: border-box; }
+    #menu { padding: 8px 0 !important; }
+    #menu h1 { margin-bottom: 20px !important; font-size: min(2.4rem, 9vw); white-space: nowrap; }
+    #menu .card h2 { color: var(--u-title) !important; }
+    #menu .card p { color: var(--u-sub) !important; font-weight: 700; }
+    #game .card, #finish .card, #feedback .card { box-shadow: none; border: 3px solid var(--u-line); background: #f8fafc; }
+    #problem-header { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; color: var(--u-ink) !important; }
+    #problem-instruction { color: var(--u-title-dark) !important; }
+    .input-hole { border-color: var(--u-line-dark); border-bottom-color: var(--u-blue); color: var(--u-ink); }
+    .input-hole-sign { border-bottom-color: var(--u-accent); color: var(--u-accent-text); }
+    .step-box { border-color: var(--u-line); }
+    #finish h2 { color: var(--u-accent-text) !important; }
+    #feedback .card { border-color: var(--u-ok-line); background: var(--u-ok-soft); }
+    #feedback h2 { color: var(--u-ok) !important; white-space: nowrap; font-size: min(1.9rem, 6.5vw); }
+    @media (max-width: 640px) {
+      body.u-theme { padding: 8px !important; }
+      #app { padding: 14px 10px; }
+    }
+  
+    </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="u-theme p-4 md:p-8">
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div id="app" class="max-w-3xl mx-auto">
         <!-- メインメニュー -->
@@ -646,5 +673,24 @@
             }
         }
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    "#app": "u-card",
+    "#menu h1": "u-title",
+    "#menu button.card": "u-choice",
+    "#game > div:first-child button": "u-btn u-btn-plain",
+    "#progress": "u-pill",
+    ".choice-btn": "u-choice",
+    ".choice-btn.correct": "u-ok",
+    ".choice-btn.wrong": "u-ng",
+    "#check-btn": "u-btn",
+    "#show-ans-btn": "u-btn u-btn-plain",
+    "#next-trigger-btn": "u-btn u-btn-blue",
+    "#feedback > button": "u-btn u-btn-blue",
+    "#finish button.bg-sky-500": "u-btn",
+    "#finish button.bg-white": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>

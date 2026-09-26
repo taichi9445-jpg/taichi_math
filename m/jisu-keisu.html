@@ -6,7 +6,7 @@
     <!--
       02. 次数と係数（数学RPG：同類項まとめクエスト）
       山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・デザインは先生の版のまま。直した箇所には【ブラッシュアップ】と書いてある。
+      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
     -->
     <link rel="stylesheet" href="../assets/port.css">
     <script src="../assets/port.js"></script>
@@ -76,8 +76,34 @@
         #success-label { white-space: nowrap; }
         .input-help { font-size: .85rem; color: #64748b; text-align: center; margin: -8px 0 10px; }
     </style>
+    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <style>
+    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+
+    .game-container { max-width: 640px; margin: 8px auto 24px; padding: 20px 16px; box-sizing: border-box; }
+    .border-black { border-color: var(--u-line-dark) !important; }
+    .pop-card { border: 3px solid var(--u-line) !important; box-shadow: none !important; border-radius: 24px !important; }
+    #battle-area { background: var(--u-soft-blue) !important; border-bottom: 6px solid var(--u-soft-blue-line) !important; }
+    .pop-card.bg-blue-50 { background: #f8fafc !important; }
+    #screen-start h1 { text-shadow: none !important; }
+    #screen-start h1 span { color: var(--u-sub); }
+    #screen-format h2 { color: var(--u-title-dark); }
+    #question-text { color: var(--u-ink) !important; font-weight: 800; }
+    #question-formula { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a !important; color: var(--u-ink); }
+    #solved-display { background: #fff !important; border-color: var(--u-soft-blue-line) !important; }
+    #success-label { -webkit-text-stroke: 0 !important; color: var(--u-accent) !important; text-shadow: 3px 3px 0 #fff; }
+    #message-box { color: var(--u-ng) !important; }
+    #screen-result h2 { -webkit-text-stroke: 0 !important; color: var(--u-accent-text) !important; white-space: nowrap; font-size: min(2.2rem, 9vw); }
+    #final-stats { border: 4px dashed var(--u-line) !important; box-shadow: none !important; color: var(--u-ink); }
+    @media (max-width: 640px) {
+      .game-container { padding: 14px 10px; }
+    }
+  
+    </style>
 </head>
-<body>
+<body class="u-theme">
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div class="game-container">
         <!-- Start Screen -->
@@ -508,5 +534,24 @@
 
         showStart();
     </script>
+<script>
+  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
+  PortTheme.map({
+    ".game-container": "u-card",
+    "#screen-start h1": "u-title",
+    "#screen-start button": "u-choice",
+    "#screen-format button.py-6": "u-choice",
+    "#screen-game button.rounded-full": "u-btn u-btn-plain",
+    "#game-progress": "u-pill",
+    ".choice-btn": "u-choice",
+    ".choice-btn.is-wrong": "u-ng",
+    "#ans-input": "u-input",
+    "#btn-attack": "u-btn",
+    "#btn-next": "u-btn u-btn-blue",
+    "#screen-result h2": "u-title",
+    "#screen-result .max-w-sm button.bg-orange-400": "u-btn",
+    "#screen-result .max-w-sm button.bg-white": "u-btn u-btn-plain"
+  });
+</script>
 </body>
 </html>
