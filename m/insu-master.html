@@ -124,6 +124,9 @@
     /* 【ブラッシュアップ】問いの文。＋・− のまわりの空きを、問題・選択肢・答えの欄でそろえる */
     .q-instr { text-align: center; font-weight: 700; color: var(--u-soft-yellow-text); margin: 4px 0 0; font-size: 1.05rem; }
     .ans-char.op, .char-span.op { padding: 0 0.12em; }
+    /* 空きを入れた分、スマホでは選択肢の文字を少し小さくして 1 行に収める（360px で確認） */
+    .btn-choice { white-space: nowrap; }
+    @media (max-width: 640px) { #problem.long { font-size: min(2.6rem, 7.4vw); } .btn-choice { font-size: min(1.6rem, 5.2vw) !important; padding-left: 2px !important; padding-right: 2px !important; } }
     #problem, .btn-choice, .btn-tile, #ans-box, #peek-ans { font-family: var(--u-math-font) !important; }
     .btn-tile.tile-del { font-family: var(--u-font) !important; }
   
@@ -382,7 +385,8 @@
     if (qIdx >= 5) { finish(); return; }
     const q = qs[qIdx];
     document.getElementById('problem').innerText = spaced(q.form);
-    document.getElementById('q-instr').style.display = '';   // 【ブラッシュアップ】
+    document.getElementById('q-instr').style.display = '';
+    document.getElementById('problem').classList.toggle('long', q.form.length > 14);   // 長い式（置きかえ）はスマホで小さく   // 【ブラッシュアップ】
     document.getElementById('feedback').innerText = "";
     solved = false;
     document.getElementById('quiz').classList.remove('locked');
@@ -570,6 +574,7 @@
   function submitAns() { check(userAns.join("")); }
   function finish() { 
     document.getElementById('q-instr').style.display = 'none';   // 【ブラッシュアップ】
+    document.getElementById('problem').classList.remove('long');
     document.getElementById('problem').innerText = "🎉 全問クリア！"; 
     document.getElementById('4択-area').style.display="none"; 
     document.getElementById('つなげる-area').style.display="none"; 

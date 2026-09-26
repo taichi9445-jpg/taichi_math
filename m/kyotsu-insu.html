@@ -113,6 +113,9 @@
     /* 【ブラッシュアップ】問いの文。＋・− のまわりの空きを、問題・選択肢・答えの欄でそろえる */
     .q-instr { text-align: center; font-weight: 700; color: var(--u-soft-yellow-text); margin: 4px 0 0; font-size: 1.05rem; }
     .ans-char.op, .char-span.op { padding: 0 0.12em; }
+    /* 空きを入れた分、スマホでは選択肢の文字を少し小さくして 1 行に収める（360px で確認） */
+    #choice-list .nav-card { white-space: nowrap; }
+    @media (max-width: 640px) { #choice-list .nav-card { font-size: min(1.5rem, 5.2vw) !important; padding-left: 2px !important; padding-right: 2px !important; } }
     .problem-box, #choice-list .nav-card, .key, #editor { font-family: var(--u-math-font) !important; }
     .key.key-del { font-family: var(--u-font) !important; }
   
@@ -144,7 +147,7 @@
   <div id="game" class="hidden">
     <div id="q-info" style="text-align:center; color:#546E7A; font-weight:bold;">第 1 問 / 5</div>
     <!-- 【ブラッシュアップ】問いの文（元は式だけだった） -->
-    <div class="q-instr">次の式の共通因数をくくり出して、因数分解しなさい。</div>
+    <div class="q-instr">次の式の共通因数をくくり出しなさい。</div>
     <div class="problem-box" id="problem"></div>
 
     <div id="choice-mode" class="hidden">
