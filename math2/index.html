@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学Ⅱ デジタル教材</title>
+<link rel="stylesheet" href="../assets/base.css">
+<style>
+  .hero {
+    background: linear-gradient(135deg, #2f6fed 0%, #6f4cd8 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: clamp(22px, 5vw, 38px);
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { margin: 0 0 8px; font-size: clamp(23px, 5.5vw, 34px); line-height: 1.3; }
+  .hero p { margin: 0; opacity: .92; font-size: .96em; }
+
+  .notice {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: .9em;
+    color: var(--ink-soft);
+  }
+  .notice b { color: var(--ink); }
+
+  .unit { margin-bottom: 28px; }
+  .unit > h2 {
+    font-size: clamp(17px, 3.2vw, 21px);
+    margin: 0 0 4px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .unit > h2 .count { font-size: .7em; font-weight: 500; color: var(--ink-soft); }
+  .unit > .lead { color: var(--ink-soft); font-size: .9em; margin: 0 0 12px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 5px solid var(--c, var(--brand));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--ink);
+    overflow: hidden;
+    transition: transform .1s ease, box-shadow .15s ease;
+  }
+  a.item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16,24,40,.06), 0 14px 30px rgba(16,24,40,.12);
+  }
+  .item img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    background: #eef2f8;
+    border-bottom: 1px solid var(--line);
+    display: block;
+  }
+  .item .ph {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    aspect-ratio: 16 / 10; padding: 16px;
+    background: linear-gradient(135deg, var(--c) 0%, #6f4cd8 140%);
+    color: #fff; font-weight: 800; font-size: clamp(18px, 3.4vw, 24px); line-height: 1.35;
+    border-bottom: 1px solid var(--line);
+  }
+  .item .body { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
+  .item .no { font-size: .74em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .item .name { font-weight: 700; font-size: 1em; line-height: 1.45; }
+  .item .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .item.off { opacity: .55; cursor: not-allowed; }
+  .item.off img { filter: grayscale(1); }
+
+  .tag.canva { background: #e6f7f5; color: #0b7a6e; }
+  .tag.gas { background: #eaf1ff; color: #1e4fbc; }
+  .tag.login { background: #fff4e0; color: #9a5a00; }
+  .tag.warn { background: #fdeceb; color: #a32a20; }
+
+  .u1 { --c: #2f6fed; }
+  .u2 { --c: #10a05a; }
+  .u3 { --c: #e79b16; }
+  .u4 { --c: #d1477a; }
+
+  .extra {
+    margin-top: 10px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    font-size: .9em;
+    color: var(--ink-soft);
+  }
+  .extra a { color: var(--brand-dark); font-weight: 700; }
+
+  footer { color: var(--ink-soft); font-size: .84em; text-align: center; padding: 20px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>数学Ⅱ デジタル教材</h1>
+    <p>やりたい教材をタップすると、新しいタブで開きます。</p>
+  </div>
+
+  <div class="notice">
+    <b>「学校アカウント」</b>のついた教材は、学校の Google アカウントでログインしていると開けます。
+    ログイン画面が出たら、学校のアカウントでログインしてください。
+  </div>
+
+  <section class="unit">
+    <h2>式の計算等 <span class="count">3教材</span></h2>
+    <p class="lead">3乗の展開・因数分解、分数式、組み立て除法。</p>
+    <div class="grid">
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbw556WswdreGEGyXqLwqCWWPRSQqkEqxn2FsYr4edRxqISVeRfW7XHgz4luNdkY5kgF_g/exec" target="_blank" rel="noopener"><img src="thumbs/01.jpg" alt="" loading="lazy"><span class="body"><span class="no">01</span><span class="name">3乗の展開・因数分解</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbzspzyjwLdMVPA0ybj4pK75VK4vuLGJ_B0B-uzrRHuy0R0yy3eDmEEzQcEYph1kxewK/exec" target="_blank" rel="noopener"><img src="thumbs/02.jpg" alt="" loading="lazy"><span class="body"><span class="no">02</span><span class="name">分数式の計算</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+      <a class="item u1" href="https://script.google.com/a/macros/g.kochinet.ed.jp/s/AKfycbxIY6zW1lbVcSOvXdOtWyYoaKCcgt3kqycgmNT2q5OzyQPg8AVOCsV7Aq-JOfy6PKy3mA/exec" target="_blank" rel="noopener"><img src="thumbs/03.jpg" alt="" loading="lazy"><span class="body"><span class="no">03</span><span class="name">組み立て除法</span><span class="tags"><span class="tag gas">GAS</span><span class="tag login">学校アカウント</span></span></span></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2>微分積分 <span class="count">8教材</span></h2>
+    <p class="lead">微分の計算から、接線・増減表、積分と面積まで。</p>
+    <div class="grid">
+      <a class="item u4" href="https://taichi9445.my.canva.site/dag0oo-a5jm" target="_blank" rel="noopener"><span class="ph">微分の練習　基礎</span><span class="body"><span class="no">04</span><span class="name">微分の練習　基礎</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/untitled-app" target="_blank" rel="noopener"><span class="ph">微分の練習　応用</span><span class="body"><span class="no">05</span><span class="name">微分の練習　応用</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bre149jnxba3jm2z" target="_blank" rel="noopener"><span class="ph">直線の方程式</span><span class="body"><span class="no">06</span><span class="name">直線の方程式</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bre7fg63n0d6d6hr" target="_blank" rel="noopener"><span class="ph">接線の方程式</span><span class="body"><span class="no">07</span><span class="name">接線の方程式</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/brrcs1mnbkd92aad" target="_blank" rel="noopener"><span class="ph">増減表</span><span class="body"><span class="no">08</span><span class="name">増減表</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/brrh3fhkjr7wkwc5" target="_blank" rel="noopener"><span class="ph">不定積分練習</span><span class="body"><span class="no">09</span><span class="name">不定積分練習</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bv7t98xqj060xkn5" target="_blank" rel="noopener"><span class="ph">定積分練習</span><span class="body"><span class="no">10</span><span class="name">定積分練習</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+      <a class="item u4" href="https://taichi9445.my.canva.site/bvt37q385mw3zwxm" target="_blank" rel="noopener"><span class="ph">面積を求めよう</span><span class="body"><span class="no">11</span><span class="name">面積を求めよう</span><span class="tags"><span class="tag canva">Canva</span></span></span></a>
+    </div>
+  </section>
+
+  <div class="extra">
+    数学Ⅰの教材は <a href="../index.html">こちら</a>。
+  </div>
+
+  <footer>数学Ⅱ デジタル教材</footer>
+</div>
+</body>
+</html>
