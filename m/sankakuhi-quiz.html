@@ -5,375 +5,99 @@
   <!--
     25. 三角比の値（三角比クイズ）
     山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
+    問題・画面の流れ・仕掛けは先生の版のまま。このページ専用のデザインで表示する。直した箇所には【ブラッシュアップ】と書いてある。
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>三角比クイズ</title>
+    <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .title {
-            font-size: 2.5em;
-            color: #4a5568;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .level-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .level-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .level-btn.active {
-            background: #4299e1;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
-        }
-
-        .quiz-container {
-            display: none;
-        }
-
-        .quiz-container.active {
-            display: block;
-        }
-
-        .progress {
-            background: #e2e8f0;
-            border-radius: 10px;
-            height: 8px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background: linear-gradient(90deg, #4299e1, #667eea);
-            height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 10px;
-        }
-
-        .question-card {
-            background: #f7fafc;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border-left: 5px solid #4299e1;
-        }
-
-        .question-number {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #4299e1;
-            margin-bottom: 15px;
-        }
-
-        .question-text {
-            font-size: 1.3em;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .triangle-container {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .option {
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-            text-align: center;
-            font-size: 1.1em;
-        }
-
-        .option:hover {
-            border-color: #4299e1;
-            background: #ebf8ff;
-        }
-
-        .option.selected {
-            border-color: #4299e1;
-            background: #4299e1;
-            color: white;
-        }
-
-        .option.correct {
-            border-color: #48bb78;
-            background: #48bb78;
-            color: white;
-        }
-
-        .option.incorrect {
-            border-color: #f56565;
-            background: #f56565;
-            color: white;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: #4299e1;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #3182ce;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            display: none;
-        }
-
-        .feedback.correct {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 2px solid #48bb78;
-        }
-
-        .feedback.incorrect {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 2px solid #f56565;
-        }
-
-        .hint-container {
-            background: #fff5cd;
-            border: 2px solid #f6e05e;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            display: none;
-        }
-
-        .hint-title {
-            font-weight: bold;
-            color: #744210;
-            margin-bottom: 10px;
-        }
-
-        .results {
-            text-align: center;
-            padding: 30px;
-            background: #f0fff4;
-            border-radius: 15px;
-            border: 2px solid #48bb78;
-            display: none;
-        }
-
-        .score {
-            font-size: 2em;
-            font-weight: bold;
-            color: #22543d;
-            margin-bottom: 15px;
-        }
-
-        svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .fraction {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 1.1em;
-            line-height: 1;
-        }
-
-        .numerator {
-            border-bottom: 1px solid #333;
-            padding-bottom: 2px;
-            margin-bottom: 2px;
-        }
-
-        .denominator {
-            padding-top: 2px;
-        }
-
-        .level3-fraction {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 1.1em;
-            line-height: 1;
-        }
-
-        .level3-numerator {
-            border-bottom: 2px solid #333;
-            padding-bottom: 3px;
-            margin-bottom: 3px;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .level3-denominator {
-            padding-top: 3px;
-            min-width: 40px;
-            text-align: center;
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 16px; background: #f5f7fa; color: #1f2328; font: 400 17px/1.7 'BIZ UDPGothic', sans-serif; }
+        button { font: inherit; cursor: pointer; }
+        button:focus-visible, a:focus-visible { outline: 3px solid #1f4e8c; outline-offset: 3px; }
+        .port-back { max-width: 720px; font-size: 13px; font-weight: 400; color: #5b6470; }
+        .container { max-width: 720px; margin: auto; padding: 24px; border: 1px solid #d0d7de; border-top: 4px solid #1f4e8c; border-radius: 8px; background: #fff; }
+        .header { margin-bottom: 16px; }
+        .subject { color: #5b6470; font-size: 12px; }
+        .title { margin: 2px 0 4px; font-size: 22px; line-height: 1.5; }
+        .header p { margin: 0; font-size: 13px; color: #5b6470; }
+        .level-selector { display: flex; border-bottom: 1px solid #d0d7de; margin-bottom: 18px; }
+        .level-btn { flex: 1; min-width: 0; min-height: 44px; padding: 8px 2px; background: transparent; color: #5b6470; border: 0; border-bottom: 3px solid transparent; font-size: 14px; }
+        .level-btn.active { color: #1f4e8c; border-bottom-color: #1f4e8c; font-weight: 700; }
+        .lv-l { display: none; }
+        .quiz-container { display: none; position: relative; }
+        .quiz-container.active { display: block; }
+        .progress { position: absolute; top: 15px; left: 155px; right: 0; height: 4px; overflow: hidden; background: #e8edf2; border-radius: 2px; }
+        .progress-bar { height: 100%; background: #1f4e8c; transition: width .3s; }
+        .question-number { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 13px; color: #5b6470; }
+        .question-badge { padding: 2px 9px; background: #1f4e8c; color: #fff; font-size: 15px; font-weight: 700; border-radius: 2px; }
+        .question-text { font-size: 18px; margin-bottom: 12px; }
+        .angle-name { color: #1f2328; white-space: nowrap; }
+        .triangle-container { margin: 8px 0 18px; }
+        .triangle-container:empty { display: none; }
+        .triangle-container > div { max-width: 360px; margin: auto; }
+        .triangle-container h4 { margin: 0; color: #5b6470; font-size: 13px; font-weight: 400; }
+        svg.tri { width: 100%; max-width: 360px; height: auto; display: block; margin: auto; }
+        .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .option { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 80px; padding: 24px 12px 12px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff; color: #1f2328; font: 400 22px/1.5 'STIX Two Text', serif; }
+        .option::before { position: absolute; top: 5px; left: 9px; color: #5b6470; font: 400 12px/1.5 'BIZ UDPGothic', sans-serif; }
+        .option:nth-child(1)::before { content: 'ア'; }
+        .option:nth-child(2)::before { content: 'イ'; }
+        .option:nth-child(3)::before { content: 'ウ'; }
+        .option:nth-child(4)::before { content: 'エ'; }
+        .option.correct { border-color: #2b8a3e; background: #ebfbee; }
+        .option.incorrect { border-color: #c92a2a; background: #fff5f5; }
+        .option.correct::after, .option.incorrect::after { position: absolute; top: 3px; right: 8px; font: 700 18px/1.5 'BIZ UDPGothic', sans-serif; }
+        .option.correct::after { content: '✓'; color: #2b8a3e; }
+        .option.incorrect::after { content: '×'; color: #c92a2a; }
+        .option:disabled { cursor: default; opacity: 1; }
+        .fig-options .option { padding: 22px 2px 4px; }
+        .fig-options svg { max-width: 220px; }
+        .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+        .btn, .result-nav button { min-height: 44px; padding: 9px 16px; border: 1px solid #1f4e8c; border-radius: 6px; box-shadow: none; font-size: 15px; background: #fff; color: #1f4e8c; }
+        .btn-primary, .result-nav .next { background: #1f4e8c; color: #fff; }
+        .hint-container, .feedback { display: none; margin-top: 18px; padding: 14px; border-left: 4px solid #1f4e8c; background: #f1f6fc; font-size: 16px; overflow-wrap: anywhere; }
+        .hint-title, .explanation-title { display: block; color: #1f4e8c; font-weight: 700; margin-bottom: 6px; }
+        .hint-container svg { margin-top: 12px; background: #fff; border-radius: 4px; }
+        .feedback.correct { border-color: #2b8a3e; background: #ebfbee; color: #2b8a3e; }
+        .feedback.incorrect { border-color: #c92a2a; background: #fff5f5; color: #c92a2a; }
+        .feedback .why { color: #1f2328; margin-top: 12px; }
+        .results { display: none; text-align: center; padding: 28px 12px; border: 1px solid #d0d7de; border-radius: 6px; }
+        .score { color: #1f4e8c; font-size: 22px; font-weight: 700; }
+        .result-nav { display: flex; flex-direction: column; gap: 12px; max-width: 360px; margin: auto; }
+        .result-nav a { color: #1f4e8c; font-size: 15px; }
+        .m { font-family: 'STIX Two Text', serif; font-size: 1.12em; font-weight: 400; font-style: normal; white-space: nowrap; }
+        .m i { font-style: italic; padding-right: .06em; }
+        .option .m { font-size: 1em; }
+        .fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 2px; }
+        .fr-n { border-bottom: 1px solid currentColor; padding: 0 4px 2px; }
+        .fr-d { padding: 2px 4px 0; }
+        .rt { white-space: nowrap; }
+        .rt-in { border-top: 1px solid currentColor; padding: 0 1px; }
+        @media (hover: hover) { .option:not(:disabled):hover { border-color: #1f4e8c; } .btn:hover, .result-nav button:hover { filter: brightness(.94); } }
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .container { padding: 14px 10px; }
+            .header { margin-bottom: 10px; }
+            .title { font-size: 20px; }
+            .header p { font-size: 12px; }
+            .level-btn { font-size: 13px; }
+            .level-selector { margin-bottom: 14px; }
+            .options { gap: 8px; }
+            .hint-container, .feedback { padding: 10px; }
         }
     </style>
-  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    body { padding: 12px; }
-    .container { max-width: 820px; padding: 28px 24px; }
-    .header p { color: var(--u-sub); font-weight: 700; }
-    .title { font-size: min(2.4rem, 8vw); white-space: nowrap; }
-    .level-selector { flex-wrap: wrap; gap: 8px; }
-    .level-btn { padding: 10px 16px; font-size: 1em; }
-    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-radius: 24px; box-shadow: none; }
-    .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; font-weight: 700; }
-    .question-text { color: var(--u-ink); font-weight: 800; }
-    .angle-name { color: #dc2626; font-size: 1.15em; white-space: nowrap; }
-    .triangle-container { margin: 8px 0 14px; }
-    .triangle-container svg, .option svg, .hint-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-    .triangle-container svg { width: 260px; }
-    .triangle-container h4 { color: var(--u-sub); margin: 0 0 4px; }
-    .option { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; font-family: inherit; font-size: 1.35em; }
-    .option:disabled { cursor: default; }
-    .options.fig-options .option { padding: 6px; }
-    .hint-container { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; color: var(--u-title); line-height: 1.9; }
-    .hint-container svg { width: 240px; margin-top: 6px; background: #fff; border-radius: 12px; }
-    .hint-title { color: var(--u-title); }
-    .feedback { border-radius: 16px; line-height: 1.8; }
-    .feedback .why { margin-top: 8px; font-weight: 700; text-align: left; background: #fff; border-radius: 12px; padding: 8px 12px; color: var(--u-ink); }
-    .feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .buttons .btn-secondary:first-child { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
-    .fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 2px; }
-    .fr-n { border-bottom: 2px solid currentColor; padding: 0 4px 1px; }
-    .fr-d { padding: 1px 4px 0; }
-    .rt { white-space: nowrap; }
-    .rt-in { border-top: 2px solid currentColor; padding: 0 1px; margin-left: 1px; }
-    .score { color: var(--u-accent-text); }
-    .results p { color: var(--u-ink); font-weight: 700; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 12px auto 0; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    .result-nav button { padding: 12px; }
-    /* 【ブラッシュアップ】式の書体：文字は斜体、数字・記号は立体（教科書と同じ） */
-    .m { font-family: var(--u-math-font); font-size: 1.12em; font-weight: 700; white-space: nowrap; letter-spacing: 0.01em; }
-    .m i { font-style: italic; padding-right: 0.06em; }
-    /* 【ブラッシュアップ】レベル選択は 1 行の小さいボタンに（スマホでは短い名前）。問題がすぐ見えるように */
-    .header { margin-bottom: 14px; }
-    .level-selector { margin-bottom: 14px; }
-    .lv-s { display: none; }
-    @media (max-width: 640px) {
-      .title { font-size: 1.5rem; margin: 0 0 2px; }
-      .header { margin-bottom: 8px; }
-      .header p { font-size: 0.85rem; margin: 0; }
-      .level-selector { flex-wrap: nowrap; gap: 5px; margin-bottom: 10px; }
-      .level-btn { flex: 1; padding: 6px 2px; font-size: 0.8rem; line-height: 1.25; border-bottom-width: 4px !important; }
-      .lv-l { display: none; }
-      .lv-s { display: inline; }
-      .progress { margin-bottom: 10px; }
-      .question-number { margin-bottom: 8px; }
-      .question-text { margin-bottom: 10px; }
-      body { padding: 8px; }
-      .container { padding: 16px 12px; }
-      .question-card { padding: 16px 10px; }
-      .options { gap: 8px; }
-      .option { padding: 8px; font-size: 1.2em; }
-      .options.fig-options { grid-template-columns: 1fr 1fr; }
-    }
-  
-  </style>
 </head>
-<body class="u-theme">
+<body>
     <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
     <div class="container">
         <div class="header">
-            <h1 class="title">📐 三角比クイズ</h1>
-            <p>数学Ⅰの三角比をマスターしよう！</p>
+            <div class="subject">数学Ⅰ　図形と計量</div>
+            <h1 class="title">三角比の値</h1>
+            <p>直角三角形の辺の比から sin・cos・tan を求めよう</p>
         </div>
 
         <div class="level-selector">
@@ -398,13 +122,13 @@
                 <div class="options" id="options1"></div>
 
                 <div class="buttons">
-                    <button class="btn btn-secondary" onclick="showHint(1)">💡 ヒント</button>
+                    <button class="btn btn-secondary" onclick="showHint(1)">ヒント</button>
                     <button class="btn btn-secondary" id="retryBtn1" onclick="retryQuestion(1)" style="display: none;">もう一度挑戦</button>
                     <button class="btn btn-primary" id="nextBtn1" onclick="nextQuestion(1)" style="display: none;">次の問題へ</button>
                 </div>
 
                 <div class="hint-container" id="hint1">
-                    <div class="hint-title">💡 ヒント</div>
+                    <div class="hint-title">ヒント</div>
                     <div id="hintText1"></div>
                 </div>
 
@@ -438,13 +162,13 @@
                 <div class="options" id="options2"></div>
 
                 <div class="buttons">
-                    <button class="btn btn-secondary" onclick="showHint(2)">💡 ヒント</button>
+                    <button class="btn btn-secondary" onclick="showHint(2)">ヒント</button>
                     <button class="btn btn-secondary" id="retryBtn2" onclick="retryQuestion(2)" style="display: none;">もう一度挑戦</button>
                     <button class="btn btn-primary" id="nextBtn2" onclick="nextQuestion(2)" style="display: none;">次の問題へ</button>
                 </div>
 
                 <div class="hint-container" id="hint2">
-                    <div class="hint-title">💡 ヒント</div>
+                    <div class="hint-title">ヒント</div>
                     <div id="hintText2"></div>
                 </div>
 
@@ -478,13 +202,13 @@
                 <div class="options" id="options3"></div>
 
                 <div class="buttons">
-                    <button class="btn btn-secondary" onclick="showHint(3)">💡 ヒント</button>
+                    <button class="btn btn-secondary" onclick="showHint(3)">ヒント</button>
                     <button class="btn btn-secondary" id="retryBtn3" onclick="retryQuestion(3)" style="display: none;">もう一度挑戦</button>
                     <button class="btn btn-primary" id="nextBtn3" onclick="nextQuestion(3)" style="display: none;">次の問題へ</button>
                 </div>
 
                 <div class="hint-container" id="hint3">
-                    <div class="hint-title">💡 ヒント</div>
+                    <div class="hint-title">ヒント</div>
                     <div id="hintText3"></div>
                 </div>
 
@@ -518,13 +242,13 @@
                 <div class="options" id="options4"></div>
 
                 <div class="buttons">
-                    <button class="btn btn-secondary" onclick="showHint(4)">💡 ヒント</button>
+                    <button class="btn btn-secondary" onclick="showHint(4)">ヒント</button>
                     <button class="btn btn-secondary" id="retryBtn4" onclick="retryQuestion(4)" style="display: none;">もう一度挑戦</button>
                     <button class="btn btn-primary" id="nextBtn4" onclick="nextQuestion(4)" style="display: none;">次の問題へ</button>
                 </div>
 
                 <div class="hint-container" id="hint4">
-                    <div class="hint-title">💡 ヒント</div>
+                    <div class="hint-title">ヒント</div>
                     <div id="hintText4"></div>
                 </div>
 
@@ -586,9 +310,11 @@
         // 頂点 V（左下にしたい角）・R（直角）・T。VR = p、RT = q（数学の座標で V = (0, 0)、R = (p, 0)、T = (p, q)）。
         // o.rot：画面で時計回りに回す角度、o.fx / o.fy：左右・上下の反転（回す前に）、o.names：{V, R, T} の文字、
         // o.sides：{VR, RT, VT} に書く文字、o.mark：角の印をつける頂点（'V' / 'T'）、o.markText：印の横の文字、
-        // o.red：赤くする頂点の文字、o.w / o.h：図の大きさ
+        // o.red / o.w / o.h / o.pad は呼び出しの互換性のため残す。o.fs > 1 は選択肢用。
         function triSVG(o) {
-            const w = o.w || 240, h = o.h || 190, pad = o.pad || 42, fs = o.fs || 1;   // pad：辺の長さの文字が入るすきま、fs：文字の大きさの倍率
+            const compact = (o.fs || 1) > 1;
+            const w = compact ? 220 : 360, h = compact ? 220 : 280;
+            const pad = compact ? 46 : 48, fs = compact ? 24 / 18 : 1;   // pad：辺の長さの文字が入るすきま、fs：文字の大きさの倍率
             const th = -(o.rot || 0) * Math.PI / 180;
             let P = { V: [0, 0], R: [o.p, 0], T: [o.p, o.q] };
             Object.keys(P).forEach(k => {
@@ -607,28 +333,28 @@
             const unit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
             const f = v => v.toFixed(1);
             let out = '<svg class="tri" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" role="img" aria-label="直角三角形">';
-            out += '<polygon points="' + ['V', 'R', 'T'].map(k => f(S[k][0]) + ',' + f(S[k][1])).join(' ') + '" fill="#e0f2fe" stroke="#1e3a5f" stroke-width="2.5" stroke-linejoin="round"/>';
+            out += '<polygon points="' + ['V', 'R', 'T'].map(k => f(S[k][0]) + ',' + f(S[k][1])).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>';
             // 直角の印
-            const u1 = unit(S.R, S.V), u2 = unit(S.R, S.T), m = 11;
-            out += '<path d="M ' + f(S.R[0] + u1[0] * m) + ' ' + f(S.R[1] + u1[1] * m) + ' L ' + f(S.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(S.R[1] + (u1[1] + u2[1]) * m) + ' L ' + f(S.R[0] + u2[0] * m) + ' ' + f(S.R[1] + u2[1] * m) + '" fill="none" stroke="#1e3a5f" stroke-width="1.5"/>';
+            const u1 = unit(S.R, S.V), u2 = unit(S.R, S.T), m = 12;
+            out += '<path d="M ' + f(S.R[0] + u1[0] * m) + ' ' + f(S.R[1] + u1[1] * m) + ' L ' + f(S.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(S.R[1] + (u1[1] + u2[1]) * m) + ' L ' + f(S.R[0] + u2[0] * m) + ' ' + f(S.R[1] + u2[1] * m) + '" fill="none" stroke="#1f2328" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
             // 角の印
             if (o.mark) {
                 const M = S[o.mark], A = S.R, B = S[o.mark === 'V' ? 'T' : 'V'];
                 const a1 = unit(M, A), a2 = unit(M, B), r = 22;
                 const cross = a1[0] * a2[1] - a1[1] * a2[0];
-                out += '<path d="M ' + f(M[0] + a1[0] * r) + ' ' + f(M[1] + a1[1] * r) + ' A ' + r + ' ' + r + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + f(M[0] + a2[0] * r) + ' ' + f(M[1] + a2[1] * r) + '" fill="none" stroke="#ea580c" stroke-width="2.5"/>';
+                out += '<path d="M ' + f(M[0] + a1[0] * r) + ' ' + f(M[1] + a1[1] * r) + ' A ' + r + ' ' + r + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + f(M[0] + a2[0] * r) + ' ' + f(M[1] + a2[1] * r) + '" fill="none" stroke="#d9480f" stroke-width="2" vector-effect="non-scaling-stroke"/>';
                 if (o.markText) {
                     const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
                     const half = Math.acos(Math.max(-1, Math.min(1, a1[0] * a2[0] + a1[1] * a2[1]))) / 2;
-                    const dd = Math.max(40, Math.min(90, 14 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
-                    out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="17" font-weight="bold" font-family="Times New Roman, serif" fill="#ea580c" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
+                    const dd = Math.max(56, Math.min(100, 18 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
+                    out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="18" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
                 }
             }
             // 頂点の文字（重心から外向き）
             ['V', 'R', 'T'].forEach(k => {
                 const d = unit(G, S[k]);
                 const name = o.names[k];
-                out += '<text x="' + f(S[k][0] + d[0] * 17 * fs) + '" y="' + f(S[k][1] + d[1] * 17 * fs) + '" font-size="' + 19 * fs + '" font-weight="bold" font-style="italic" font-family="Times New Roman, serif" text-anchor="middle" dominant-baseline="central" fill="' + (name === o.red ? '#dc2626' : '#1e3a5f') + '">' + name + '</text>';
+                out += '<text x="' + f(S[k][0] + d[0] * 17 * fs) + '" y="' + f(S[k][1] + d[1] * 17 * fs) + '" font-size="' + 18 * fs + '" font-weight="400" font-style="italic" font-family="STIX Two Text, serif" text-anchor="middle" dominant-baseline="central" fill="' + '#1f2328' + '">' + name + '</text>';
             });
             // 辺の長さ（辺の中点から外向き）
             [['VR', 'V', 'R', 'T'], ['RT', 'R', 'T', 'V'], ['VT', 'V', 'T', 'R']].forEach(([key, a, b, c]) => {
@@ -639,12 +365,20 @@
                 if ((S[c][0] - mx) * n[0] + (S[c][1] - my) * n[1] > 0) n = [-n[0], -n[1]];
                 const tw = 11 * fs * String(t).replace(/<[^>]+>/g, '').length;   // 文字のはば（およそ）
                 const dist = 12 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 10 * fs;
-                out += '<text x="' + f(mx + n[0] * dist) + '" y="' + f(my + n[1] * dist) + '" font-size="' + (jpText(t) ? 20 : 22) * fs + '" font-weight="bold"' + (jpText(t) ? '' : ' font-family="Times New Roman, serif"') + ' fill="#dc2626" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
+                const color = { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e' }[t];
+                if (color) out += '<line x1="' + f(S[a][0]) + '" y1="' + f(S[a][1]) + '" x2="' + f(S[b][0]) + '" y2="' + f(S[b][1]) + '" stroke="' + color + '" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>';
+                const root = String(t).match(/√(\d+)$/);
+                out += '<text x="' + f(mx + n[0] * dist) + '" y="' + f(my + n[1] * dist) + '" font-size="' + 18 * fs + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="' + (color || (t === '?' ? '#1f4e8c' : '#1f2328')) + '" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
+                // 上線は SVG の text-decoration に頼らず、数字の上に明示して描く。
+                if (root) {
+                    const x = mx + n[0] * dist, y = my + n[1] * dist;
+                    out += '<line x1="' + f(x + tw / 2 - root[1].length * 11 * fs) + '" y1="' + f(y - 11 * fs) + '" x2="' + f(x + tw / 2) + '" y2="' + f(y - 11 * fs) + '" stroke="#1f2328" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
+                }
             });
             return out + '</svg>';
         }
         function jpText(t) { return /[ぁ-んァ-ヶ一-龥]/.test(String(t)); }   // 日本語をふくむか（図の文字の書体を分ける）
-        function svgRoot(t) { return String(t); }   // 図の中の √ はそのまま（SVG の上線は画面によって下線のように見えるため）
+        function svgRoot(t) { return String(t); }
 
         // ---------- レベル1：三角形の向きをそろえる ----------
         // V：左下にしたい角、R：直角、T：もう 1 つの角。a = VR、b = RT、c = VT。tf：元の図の向き
@@ -827,7 +561,7 @@
             const questions = levelQuestions[level];
             const question = questions[currentQuestion];
             document.getElementById('progress' + level).style.width = (currentQuestion / questions.length * 100) + '%';
-            document.getElementById('questionNum' + level).textContent = '問題 ' + (currentQuestion + 1) + '/' + questions.length;
+            document.getElementById('questionNum' + level).innerHTML = '<span class="question-badge">問' + (currentQuestion + 1) + '</span><span>' + (currentQuestion + 1) + ' / ' + questions.length + '</span>';
             document.getElementById('questionText' + level).innerHTML = question.question;
             document.getElementById('triangleContainer' + level).innerHTML = question.figure || '';
             const box = document.getElementById('options' + level);
@@ -863,14 +597,14 @@
                 buttons[index].classList.add('correct');
                 if (!missedThis) score++;
                 fb.className = 'feedback correct';
-                fb.innerHTML = '正解です！🎉<div class="why">💡 ' + question.exp + '</div>';
+                fb.innerHTML = '正解です！<div class="why"><span class="explanation-title">解説</span>' + question.exp + '</div>';
                 document.getElementById('nextBtn' + level).style.display = 'inline-block';
             } else {
                 missedThis = true;
                 buttons[index].classList.add('incorrect');
                 buttons[index].disabled = true;
                 fb.className = 'feedback incorrect';
-                fb.innerHTML = 'ちがいます。のこりの選択肢からえらび直そう！<div class="why">💡 ' + question.why[orig] + '</div>';
+                fb.innerHTML = 'ちがいます。のこりの選択肢からえらび直そう！<div class="why"><span class="explanation-title">解説</span>' + question.why[orig] + '</div>';
             }
             fb.style.display = 'block';
             fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -947,22 +681,5 @@
         });
 
     </script>
-<script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".title": "u-title",
-    ".level-btn:not(.active)": "u-btn u-btn-plain",
-    ".level-btn.active": "u-btn",
-    ".progress": "u-progress",
-    ".option": "u-choice",
-    ".option.correct": "u-ok",
-    ".option.incorrect": "u-ng",
-    ".buttons .btn-secondary": "u-btn u-btn-plain",
-    ".buttons .btn-primary": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .next": "u-btn u-btn-blue"
-  });
-</script>
 </body>
 </html>
