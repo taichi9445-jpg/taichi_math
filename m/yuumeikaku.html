@@ -321,15 +321,15 @@
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
-  
-  
+
+
   <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
        本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
        同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
-  <link rel="stylesheet" href="../assets/gas.css">
+
    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../assets/theme.css">
+
+
   <style>
     /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
 
@@ -399,15 +399,17 @@
       .choice { padding: 8px; font-size: 1.2em; }
       .controls { align-items: stretch; }
     }
-  
+
   </style>
-</head>
- <body class="u-theme">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet"><style>*{box-sizing:border-box}body{background:#f5f7fa!important;color:#1f2328!important;font:17px/1.7 'BIZ UDPGothic',sans-serif!important;padding:12px!important}.container{max-width:720px!important;margin:auto!important;padding:18px!important;background:white!important;border:1px solid #d0d7de!important;border-top:4px solid #1f4e8c!important;border-radius:8px!important;box-shadow:none!important}.header{background:white!important;color:#1f2328!important;padding:0!important;border:0!important}h1{font-size:22px!important;color:#1f2328!important;text-shadow:none!important}button,.option{border-radius:6px!important;border:1px solid #d0d7de!important;border-bottom:3px solid #b6bfc9!important;box-shadow:none!important;transition:transform .08s!important;min-height:44px}button:not(:disabled):active,.option:not(.used):active{transform:translateY(2px)!important;border-bottom-width:1px!important}button:disabled{transform:none!important}.btn-primary,.nav-button,.show-answer-button{background:#1f4e8c!important;color:white!important;border-bottom-color:#163a69!important}.level-selector{display:flex!important;gap:0!important}.level-btn{flex:1;min-width:0;padding:6px 2px!important;background:white!important;color:#5b6470!important;font-size:13px!important;border:0!important;border-radius:0!important}.level-btn.active{color:#1f4e8c!important;border-bottom:3px solid #1f4e8c!important}.lv-l{display:none!important}.lv-s{display:block!important}.mode-btn{padding:6px 12px!important;font-size:14px!important;background:white!important;color:#1f4e8c!important}.mode-btn.active{background:#edf3fa!important}.choices{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.choice{position:relative;background:white!important;color:#1f2328!important;min-height:80px!important;font-size:22px!important;padding:18px 8px!important}.choice:before{content:attr(data-label);position:absolute;left:8px;top:3px;font-size:12px;color:#5b6470}.choice.correct{background:#ebfbee!important;border-color:#2b8a3e!important}.choice.incorrect{background:#fff5f5!important;border-color:#c92a2a!important}.score{font-size:13px!important;color:#5b6470!important}.problem-text{font-size:18px!important;font-weight:400!important}.problem-area{padding:0!important;background:white!important;border:0!important}.hint-content,.feedback-message,.explanation{font-size:17px!important;text-align:left!important;border:0!important;border-left:4px solid #1f4e8c!important;border-radius:0!important;background:#f1f6fc!important;padding:12px!important}.feedback-correct{background:#ebfbee!important;border-color:#2b8a3e!important}.feedback-incorrect{background:#fff5f5!important;border-color:#c92a2a!important}.tri,.semi{display:block;max-width:100%;height:auto;margin:16px auto}.math-root{vertical-align:-.4em;overflow:visible}.root-term{white-space:nowrap}.fr,.fraction{display:inline-flex!important;flex-direction:column!important;vertical-align:middle!important;align-items:stretch;line-height:1.25!important;text-align:center;margin:0 .15em!important;font-family:'STIX Two Text',serif}.fr>span:first-child,.numerator,.fraction-numerator{border-bottom:1px solid;padding:0 .16em .12em!important}.fr>span:last-child,.denominator,.fraction-denominator{padding:.22em .16em 0!important}.m,.math{font-family:'STIX Two Text',serif}.eq{display:block;margin:10px 0}.press-progress{height:3px;background:#e6edf5}.press-progress span{display:block;height:100%;background:#1f4e8c}.question-badge{background:#1f4e8c;color:white;padding:2px 8px;margin-right:12px}.result-box{background:white!important;border:1px solid #d0d7de!important;border-radius:8px!important;max-width:600px!important}.result-emoji{display:none}.trace{stroke-dasharray:1000;stroke-dashoffset:0;animation:draw 1s ease-out}@keyframes draw{from{stroke-dashoffset:1000}}@media(prefers-reduced-motion:reduce){.trace{animation:none}}@media(min-width:641px){.choices{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+.equation-group{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.wrap-equation{align-items:flex-start!important}.step-line{max-width:100%}.step-line.wrap-equation{flex-direction:column!important;gap:8px!important}.step-line.wrap-equation .equation-group:not(:first-child){margin-left:16px}:root{--u-math-font:'STIX Two Text','BIZ UDPGothic',serif}.m,.mi,.math{font-family:'STIX Two Text','BIZ UDPGothic',serif!important;font-weight:400!important}.fr,.fraction{font-family:'STIX Two Text','BIZ UDPGothic',serif!important}.header{text-align:left!important}.header p{font-size:14px;font-weight:400;color:#5b6470}button{font-family:'BIZ UDPGothic',sans-serif!important;font-weight:400!important}.hint-btn{background:white!important;color:#1f4e8c!important;border-bottom-color:#b6bfc9!important}.score{border:0!important;background:white!important;padding:4px!important}.progress{width:100%!important;text-align:left!important}.feedback-message{animation:none!important;opacity:1!important}.choice .m{font-size:1em!important}.semi{width:360px!important}.tri{width:360px!important}.tri text{font-family:'BIZ UDPGothic',sans-serif}.eq{font-weight:400!important}.hint-content{font-weight:400!important}.problem-text .xv{color:#1f4e8c!important}
+</style></head>
+ <body >
   <a class="port-back" href="../remake.html">← 教材の一覧へ</a>
   <div class="container">
    <header class="header">
-    <h1>三角比練習問題</h1>
-    <p>レベルを選んで三角比の値を求めよう！</p>
+    <small>数学Ⅰ　図形と計量</small><h1>有名角の三角比の値</h1>
+    <p>図で確かめながら三角比を学ぼう</p>
    </header>
    <div class="level-selector"><button class="level-btn active" onclick="selectLevel(0)"><span class="lv-l">レベル0: 有名角の辺の比</span><span class="lv-s">Lv0<br>辺の比</span></button> <button class="level-btn" onclick="selectLevel(1)"><span class="lv-l">レベル1: 鋭角の三角比</span><span class="lv-s">Lv1<br>鋭角</span></button> <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 鈍角・0°・90°・180°</span><span class="lv-s">Lv2<br>鈍角</span></button> <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 全部まぜて</span><span class="lv-s">Lv3<br>まぜる</span></button> <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 180°−<i class="mi">θ</i>・角を求める</span><span class="lv-s">Lv4<br>角<i class="mi">θ</i></span></button>
    </div>
@@ -459,16 +461,27 @@
         }
 
         // ---------- 数式の表示：「1/2」→ 縦の分数、「√3」→ 上に線、「−」は前に ----------
-        function rtHTML(s) { return String(s).replace(/√(\d+)/g, '<span class="rt">√<span class="rt-in">$1</span></span>'); }
-        function mathHTML(s) {
-            return String(s).split(', ').map(part => {
-                let sign = '';
-                if (part[0] === '−') { sign = '− '; part = part.slice(1); }
-                const m = part.match(/^([^/\s]+)\/([^/\s]+)$/);
-                if (m) return sign + '<span class="fraction"><span class="numerator">' + rtHTML(m[1]) + '</span><span class="denominator">' + rtHTML(m[2]) + '</span></span>';
-                return sign + rtHTML(part);
-            }).join(', ');
+        function radicalSVG(digits, o = {}) {
+            const size = o.size || 20, scale = size / 20, width = 16 + String(digits).length * 15;
+            const dimensions = o.diagram
+                ? 'x="' + o.x + '" y="' + o.y + '" width="' + width * scale + '" height="' + 30 * scale + '"'
+                : 'width="' + width / 20 + 'em" height="1.5em"';
+            return '<svg class="math-root" ' + dimensions + ' viewBox="0 0 ' + width + ' 30" role="img" aria-label="√' + digits + '" xmlns="http://www.w3.org/2000/svg">' +
+                '<path d="M1 16 L4 14 L7 23 L13 5 H' + (width - 1) + '" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="miter"/>' +
+                '<text x="14" y="22" font-size="20" font-family="' + (o.diagram ? 'BIZ UDPGothic, sans-serif' : 'STIX Two Text, serif') + '" font-weight="' + (o.diagram ? '700' : '400') + '" fill="currentColor">' + digits + '</text></svg>';
         }
+        function rtHTML(s) {
+            return String(s).replace(/(\d*)√(\d+)/g, (_, coefficient, digits) => '<span class="root-term">' + coefficient + radicalSVG(digits) + '</span>');
+        }
+        function mathHTML(s) {
+            s = String(s);
+            let sign = '';
+            if (s[0] === '−') { sign = '−'; s = s.slice(1); }
+            if (s.includes('/')) { const [n, d] = s.split('/'); return sign + '<span class="fr"><span class="fr-n">' + rtHTML(n) + '</span><span class="fr-d">' + rtHTML(d) + '</span></span>'; }
+            return sign + rtHTML(s);
+        }
+
+        // 問題データはそのままに、表示の段階で表記を整える。
         // 値を数にする（まちがえたときの一言を作るのに使う）
         function valueOf(s) {
             if (s === '定義されない') return NaN;
@@ -478,47 +491,95 @@
         }
 
         // ---------- 直角三角形の図（#25 と同じかき方）：V = 左下の角、R = 直角（右下）、T = 上 ----------
-        function triSVG(o) {
-            const w = o.w || 260, h = o.h || 200, pad = o.pad || 44;
-            const P = { V: [0, 0], R: [o.p, 0], T: [o.p, o.q] };
-            const maxx = o.p, maxy = o.q;
-            const s = Math.min((w - 2 * pad) / maxx, (h - 2 * pad) / maxy);
-            const ox = (w - maxx * s) / 2, oy = (h - maxy * s) / 2;
-            const S = {};
-            Object.keys(P).forEach(k => { S[k] = [ox + P[k][0] * s, oy + (maxy - P[k][1]) * s]; });
+        function triSVG(o) { o={names:{V:'',R:'',T:''},mark:'V',markText:o.deg+'°',...o}; if(o.ask)o.sides={...o.sides,[o.ask]:'x'};
+            const compact = (o.fs || 1) > 1;
+            const w = compact ? 220 : 360, h = compact ? 220 : 280;
+            const pad = compact ? 46 : 48, fs = compact ? 24 / 18 : 1;   // pad：辺の長さの文字が入るすきま、fs：文字の大きさの倍率
+            const th = -(o.rot || 0) * Math.PI / 180;
+            let P = { V: [0, 0], R: [o.p, 0], T: [o.p, o.q] };
+            Object.keys(P).forEach(k => {
+                let [x, y] = P[k];
+                if (o.fx) x = -x;
+                if (o.fy) y = -y;
+                P[k] = [x * Math.cos(th) - y * Math.sin(th), x * Math.sin(th) + y * Math.cos(th)];
+            });
+            const xs = Object.values(P).map(v => v[0]), ys = Object.values(P).map(v => v[1]);
+            const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+            const s = Math.min((w - 2 * pad) / (maxx - minx || 1), (h - 2 * pad) / (maxy - miny || 1));
+            const ox = (w - (maxx - minx) * s) / 2, oy = (h - (maxy - miny) * s) / 2;
+            const S = {};   // 画面の座標（y は下向き）
+            Object.keys(P).forEach(k => { S[k] = [ox + (P[k][0] - minx) * s, oy + (maxy - P[k][1]) * s]; });
+            const G = [(S.V[0] + S.R[0] + S.T[0]) / 3, (S.V[1] + S.R[1] + S.T[1]) / 3];
             const unit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
             const f = v => v.toFixed(1);
             let out = '<svg class="tri" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" role="img" aria-label="直角三角形">';
-            out += '<polygon points="' + ['V', 'R', 'T'].map(k => f(S[k][0]) + ',' + f(S[k][1])).join(' ') + '" fill="#eff6ff" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>';
+            out += '<polygon points="' + ['V', 'R', 'T'].map(k => f(S[k][0]) + ',' + f(S[k][1])).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>';
+            // 直角の印
             const u1 = unit(S.R, S.V), u2 = unit(S.R, S.T), m = 12;
-            out += '<path d="M ' + f(S.R[0] + u1[0] * m) + ' ' + f(S.R[1] + u1[1] * m) + ' L ' + f(S.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(S.R[1] + (u1[1] + u2[1]) * m) + ' L ' + f(S.R[0] + u2[0] * m) + ' ' + f(S.R[1] + u2[1] * m) + '" fill="none" stroke="#475569" stroke-width="2"/>';
-            // 角の印と角度
-            const a1 = unit(S.V, S.R), a2 = unit(S.V, S.T), r = 26;
-            out += '<path d="M ' + f(S.V[0] + a1[0] * r) + ' ' + f(S.V[1] + a1[1] * r) + ' A ' + r + ' ' + r + ' 0 0 0 ' + f(S.V[0] + a2[0] * r) + ' ' + f(S.V[1] + a2[1] * r) + '" fill="none" stroke="#ea580c" stroke-width="2.5"/>';
-            const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
-            const half = Math.acos(a1[0] * a2[0] + a1[1] * a2[1]) / 2;
-            const dd = Math.max(44, Math.min(90, 15 / Math.tan(half)));
-            out += '<text x="' + f(S.V[0] + bis[0] * dd) + '" y="' + f(S.V[1] + bis[1] * dd) + '" font-size="18" font-weight="bold" font-family="Times New Roman, serif" fill="#ea580c" text-anchor="middle" dominant-baseline="central">' + o.deg + '°</text>';
-            // 辺の長さ（辺の中点から外向き）。o.ask の辺は赤い x
+            out += '<path d="M ' + f(S.R[0] + u1[0] * m) + ' ' + f(S.R[1] + u1[1] * m) + ' L ' + f(S.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(S.R[1] + (u1[1] + u2[1]) * m) + ' L ' + f(S.R[0] + u2[0] * m) + ' ' + f(S.R[1] + u2[1] * m) + '" fill="none" stroke="#1f2328" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
+            // 角の印
+            if (o.mark) {
+                const M = S[o.mark], A = S.R, B = S[o.mark === 'V' ? 'T' : 'V'];
+                const a1 = unit(M, A), a2 = unit(M, B), r = 22;
+                const cross = a1[0] * a2[1] - a1[1] * a2[0];
+                out += '<path d="M ' + f(M[0] + a1[0] * r) + ' ' + f(M[1] + a1[1] * r) + ' A ' + r + ' ' + r + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + f(M[0] + a2[0] * r) + ' ' + f(M[1] + a2[1] * r) + '" fill="none" stroke="#d9480f" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+                if (o.markText) {
+                    const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
+                    const half = Math.acos(Math.max(-1, Math.min(1, a1[0] * a2[0] + a1[1] * a2[1]))) / 2;
+                    const dd = compact   // 選択肢の小さい図は文字が大きいので、文字のはばが角の内側に入るところまではなす
+                        ? Math.max(44, Math.min(100 * fs, 0.95 * 20 / Math.tan(half) + 10))
+                        : Math.max(56, Math.min(100, 20 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
+                    out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="' + (compact ? 20 : 18) + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
+                }
+            }
+            // 頂点の文字（重心から外向き）
+            ['V', 'R', 'T'].forEach(k => {
+                const d = unit(G, S[k]);
+                const name = o.names[k];
+                out += '<text x="' + f(S[k][0] + d[0] * 17 * fs) + '" y="' + f(S[k][1] + d[1] * 17 * fs) + '" font-size="' + 18 * fs + '" font-weight="400" font-style="italic" font-family="STIX Two Text, serif" text-anchor="middle" dominant-baseline="central" fill="' + '#1f2328' + '">' + name + '</text>';
+            });
+            // 辺の長さ（辺の中点から外向き）
             [['VR', 'V', 'R', 'T'], ['RT', 'R', 'T', 'V'], ['VT', 'V', 'T', 'R']].forEach(([key, a, b, c]) => {
-                const t = o.ask === key ? 'x' : o.sides[key];
+                let t = o.sides && o.sides[key];
+                if (t === '隣辺' && o.mark === 'V' && key === 'VR' && !o.rot && !o.fx && !o.fy) t = '底辺（隣辺）';
                 if (!t) return;
                 const mx = (S[a][0] + S[b][0]) / 2, my = (S[a][1] + S[b][1]) / 2;
                 let n = unit(S[a], S[b]); n = [-n[1], n[0]];
                 if ((S[c][0] - mx) * n[0] + (S[c][1] - my) * n[1] > 0) n = [-n[0], -n[1]];
-                const tw = 12 * String(t).length;
-                const dist = 13 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 11;
-                out += '<text x="' + f(mx + n[0] * dist) + '" y="' + f(my + n[1] * dist) + '" font-size="23" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="Times New Roman, serif"' +
-                    (o.ask === key ? ' fill="#dc2626" font-style="italic"' : ' fill="#4b2c20"') + '>' + t + '</text>';
+                const tw = 11 * fs * String(t).replace(/<[^>]+>/g, '').length;   // 文字のはば（およそ）
+                const dist = t === '底辺（隣辺）' ? 36 : 12 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 10 * fs;
+                const color = (o.colors && o.colors[key]) || { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e', '底辺（隣辺）': '#2b8a3e' }[t];   // o.colors：辺の長さ（数字）のまま色分けしたいとき
+                if (color) out += '<line x1="' + f(S[a][0]) + '" y1="' + f(S[a][1]) + '" x2="' + f(S[b][0]) + '" y2="' + f(S[b][1]) + '" stroke="' + color + '" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>';
+                const root = String(t).match(/^(\d*)√(\d+)$/);
+                const x = mx + n[0] * dist, y = my + n[1] * dist, size = 18 * fs;
+                if (root) {
+                    const rootWidth = (16 + root[2].length * 15) * size / 20, prefixWidth = root[1].length * size * .6;
+                    const left = x - (rootWidth + prefixWidth) / 2;
+                    if (root[1]) out += '<text x="' + f(left) + '" y="' + f(y + size * .35) + '" font-family="BIZ UDPGothic, sans-serif" font-size="' + size + '" font-weight="700">' + root[1] + '</text>';
+                    out += radicalSVG(root[2], { diagram: true, size, x: left + prefixWidth, y: y - size * .75 });
+                } else {
+                    out += '<text x="' + f(x) + '" y="' + f(y) + '" font-size="' + size + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="' + (color || (t === '?' ? '#1f4e8c' : '#1f2328')) + '" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
+                }
             });
+            if (o.crop) {   // 図のまわりのよけいな余白を、たて・よことも切りつめる（o.crop は選択肢の図で使う）
+                const X = Object.values(S).map(p => p[0]), Y = Object.values(S).map(p => p[1]);
+                const m = pad + 8, x0 = Math.max(0, Math.min(...X) - m), y0 = Math.max(0, Math.min(...Y) - m);
+                const x1 = Math.min(w, Math.max(...X) + m), y1 = Math.min(h, Math.max(...Y) + m);
+                out = out.replace('viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '"', 'viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(x1 - x0) + ' ' + f(y1 - y0) + '" width="' + f(x1 - x0) + '" height="' + f(y1 - y0) + '"');
+            } else if (o.w === 260 && o.h === 220) {
+                const top = Math.max(0, Math.min(...Object.values(S).map(p => p[1])) - 32);
+                const bottom = Math.min(h, Math.max(...Object.values(S).map(p => p[1])) + 36);
+                out = out.replace('viewBox="0 0 ' + w + ' ' + h + '"', 'viewBox="0 ' + f(top) + ' ' + w + ' ' + f(bottom - top) + '"').replace('height="' + h + '"', 'height="' + f(bottom - top) + '"');
+            }
             return out + '</svg>';
         }
 
+function svgRoot(t){return String(t)}
         // ---------- 問題データ ----------
-        // レベル0：有名角の直角三角形の辺の比。sides = 底辺 VR・高さ RT・斜辺 VT の長さ、ask = 求める辺
+        // レベル0：有名角の直角三角形の辺の比。sides = 底辺 VR・対辺 RT・斜辺 VT の長さ、ask = 求める辺
         const RATIO = { 30: ['√3', '1', '2'], 45: ['1', '1', '√2'], 60: ['1', '√3', '2'] };
         const SHAPE = { 30: [Math.sqrt(3), 1], 45: [1, 1], 60: [1, Math.sqrt(3)] };
-        const SIDE_NAME = { VR: '底辺', RT: '高さ', VT: '斜辺' };
+        const SIDE_NAME = { VR: '底辺', RT: '対辺', VT: '斜辺' };
         const L0 = [
             { deg: 30, sides: { VR: '√3', RT: '1', VT: '2' }, ask: 'VT', choices: ['1', '√2', '√3', '2'] },
             { deg: 30, sides: { VR: '√3', RT: '1', VT: '2' }, ask: 'RT', choices: ['1/2', '1', '√3', '2'] },
@@ -608,17 +669,17 @@
                     if (c === ans) return '';
                     const other = Object.keys(d.sides).find(k => k !== d.ask && d.sides[k] === c);
                     if (other) return c + ' は' + SIDE_NAME[other] + 'の長さだよ。x は' + SIDE_NAME[d.ask] + '。';
-                    return d.deg + '° の直角三角形は 底辺 : 高さ : 斜辺 = ' + r + '。' + (d.k ? '比の 1 にあたる長さが ' + d.k + ' だよ。' : '');
+                    return d.deg + '° の直角三角形は 底辺 : 対辺 : 斜辺 = ' + r + '。' + (d.k ? '比の 1 にあたる長さが ' + d.k + ' だよ。' : '');
                 });
                 const [p, q] = SHAPE[d.deg];
                 return {
                     question: '下の図で、' + SIDE_NAME[d.ask] + ' <i class="xv">x</i> の長さは？',
                     figure: triSVG({ deg: d.deg, p, q, sides: d.sides, ask: d.ask }),
                     choices: d.choices, correct: d.choices.indexOf(ans),
-                    exp: d.deg + '° の直角三角形は 底辺 : 高さ : 斜辺 = ' + r + '。' + (d.k ? 'この三角形は各辺が ' + d.k + ' 倍なので、' : '') + 'x = ' + mathHTML(ans),
+                    exp: d.deg + '° の直角三角形は 底辺 : 対辺 : 斜辺 = ' + r + '。' + (d.k ? 'この三角形は各辺が ' + d.k + ' 倍なので、' : '') + 'x = ' + mathHTML(ans),
                     why,
                     hint: '<h4>' + d.deg + '° の直角三角形の辺の比</h4><div class="triangle-diagram">' + triSVG({ deg: d.deg, p, q, sides: { VR: RATIO[d.deg][0], RT: RATIO[d.deg][1], VT: RATIO[d.deg][2] } }) + '</div>' +
-                        '<div class="hint-formula">底辺 : 高さ : 斜辺 = ' + r + '</div>'
+                        '<div class="hint-formula">底辺 : 対辺 : 斜辺 = ' + r + '</div>'
                 };
             }
             if (item.kind === 1 || item.kind === 2) {
@@ -636,9 +697,9 @@
                     return deg + '° の点 P(' + px + ', ' + py + ')、半径 ' + pr + ' で考えよう。';
                 });
                 const acute = deg === 30 || deg === 45 || deg === 60;
-                const part = { sin: [py, pr, 'y', 'r', '高さ', '斜辺'], cos: [px, pr, 'x', 'r', '底辺', '斜辺'], tan: [py, px, 'y', 'x', '高さ', '底辺'] }[fn];
+                const part = { sin: [py, pr, 'y', 'r', '対辺', '斜辺'], cos: [px, pr, 'x', 'r', '底辺', '斜辺'], tan: [py, px, 'y', 'x', '対辺', '底辺'] }[fn];
                 const exp = acute ?
-                    deg + '° の直角三角形（底辺 : 高さ : 斜辺 = ' + RATIO[deg].join(' : ') + '）で、' + fn + ' ' + deg + '° = ' + part[4] + '/' + part[5] + ' = ' + mathHTML(part[0] + '/' + part[1]) + (part[0] + '/' + part[1] !== ans ? ' = ' + mathHTML(ans) : '') :
+                    deg + '° の直角三角形（底辺 : 対辺 : 斜辺 = ' + RATIO[deg].join(' : ') + '）で、' + fn + ' ' + deg + '° = ' + part[4] + '/' + part[5] + ' = ' + mathHTML(part[0] + '/' + part[1]) + (part[0] + '/' + part[1] !== ans ? ' = ' + mathHTML(ans) : '') :
                     (ans === '定義されない' ? 'P(0, 1) なので x = 0。tan 90° = y/x は 0 で割ることになり、定義されない。' :
                         'P(' + px + ', ' + py + ')、r = ' + pr + ' なので、' + fn + ' ' + deg + '° = ' + part[2] + '/' + part[3] + ' = ' + mathHTML(part[0] + '/' + part[1]) + (part[0] + '/' + part[1] !== ans ? ' = ' + mathHTML(ans) : ''));
                 return { question: fn + ' ' + deg + '° の値は？', figure: '', choices, correct: choices.indexOf(ans), exp, why, hint: hintFor(deg) };
@@ -657,7 +718,7 @@
                 const t = RATIO[deg];
                 return `<h4>${deg}° の直角三角形</h4>
                     <div class="triangle-diagram">${triSVG({ deg, p: SHAPE[deg][0], q: SHAPE[deg][1], sides: { VR: t[0], RT: t[1], VT: t[2] } })}</div>
-                    <div class="hint-formula"><span class="f">sin = ${fr('高さ', '斜辺')}</span><span class="f">cos = ${fr('底辺', '斜辺')}</span><span class="f">tan = ${fr('高さ', '底辺')}</span></div>`;
+                    <div class="hint-formula"><span class="f">sin = ${fr('対辺', '斜辺')}</span><span class="f">cos = ${fr('底辺', '斜辺')}</span><span class="f">tan = ${fr('対辺', '底辺')}</span></div>`;
             }
             return `<h4>半径 r の半円の上の点 P で考える（${deg}°）</h4>
                 <div class="triangle-diagram">${hintSemicircle(deg, POINT[deg])}</div>
@@ -732,13 +793,13 @@
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'choice';
-                b.innerHTML = mathHTML(current.choices[orig]);
+                b.innerHTML = mathHTML(current.choices[orig]); b.dataset.label='アイウエ'[index];
                 b.onclick = () => selectChoice(index);
                 box.appendChild(b);
             });
             document.getElementById('hintContent').innerHTML = current.hint;
             document.getElementById('hintContent').style.display = 'none';
-            document.getElementById('hintSection').style.display = 'block';
+            document.getElementById('hintSection').style.display = currentLevel===0?'none':'block';
             const hintBtn = document.querySelector('.hint-btn');
             if (hintBtn) hintBtn.textContent = 'ヒントを見る';
             document.getElementById('retryBtn').style.display = 'none';
@@ -754,13 +815,13 @@
                 buttons[index].classList.add('correct');
                 totalAnswered++;
                 if (!missedThis) correctAnswers++;
-                const praise = ['🎉 正解！', '✨ その調子！', '🌟 大正解！', '👏 正解です！'][Math.floor(Math.random() * 4)];
-                fb.innerHTML = '<div class="feedback-message feedback-correct">' + praise + '<div class="why">💡 ' + current.exp + '</div></div>';
+                const praise = '正解';
+                fb.innerHTML = '<div class="feedback-message feedback-correct">' + praise + '<div class="why"> ' + current.exp + '</div></div>';
             } else {
                 missedThis = true;
                 buttons[index].classList.add('incorrect');
                 buttons[index].disabled = true;
-                fb.innerHTML = '<div class="feedback-message feedback-incorrect">🤔 ちがいます。のこりからえらび直そう！<div class="why">💡 ' + current.why[orig] + '</div></div>';
+                fb.innerHTML = '<div class="feedback-message feedback-incorrect"> もう一度考えよう。<div class="why"> ' + current.why[orig] + '</div></div>';
             }
             updateNextButton();
             updateDisplay();
@@ -788,8 +849,8 @@
             modal.id = 'resultModal';
             modal.innerHTML = `
                 <div class="result-box">
-                    <h2>${perfect ? '🎊 全問一発正解！' : '🎉 レベル' + currentLevel + ' 完了！'}</h2>
-                    ${perfect ? '<div class="result-emoji">🎯💯🎯</div>' : ''}
+                    <h2>${perfect ? ' 全問一発正解！' : ' レベル' + currentLevel + ' 完了！'}</h2>
+                    ${perfect ? '<div class="result-emoji"></div>' : ''}
                     <div class="result-score">一発正解 ${correctAnswers} / ${n} 問</div>
                     <p>${names[currentLevel]}を${perfect ? '完全にマスターしました！' : '練習しました。まちがえた問題をもう一度たしかめよう！'}</p>
                     <div class="result-nav">
@@ -838,7 +899,7 @@
             const nodes = [];
             while (walker.nextNode()) {
                 const n = walker.currentNode, p = n.parentElement;
-                if (!p || p.closest('.m, .no-math, svg, canvas, script, style, textarea, input')) continue;
+                if (!p || p.closest('.m, .root-term, .no-math, svg, canvas, script, style, textarea, input')) continue;
                 if (/[A-Za-z0-9θ]/.test(n.nodeValue)) nodes.push(n);
             }
             nodes.forEach(n => {
@@ -879,26 +940,31 @@
         watchMath(['#problemText', '#choices', '#feedbackMessage', '#hintContent', '#resultModal']);
 
     </script>
- <script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".header h1": "u-title",
-    ".level-btn:not(.active)": "u-btn u-btn-plain",
-    ".level-btn.active": "u-btn",
-    ".mode-btn:not(.active)": "u-btn u-btn-white",
-    ".mode-btn.active": "u-btn u-btn-blue",
-    ".progress": "u-progress",
-    ".choice": "u-choice",
-    ".choice.correct": "u-ok",
-    ".choice.incorrect": "u-ng",
-    ".hint-btn": "u-btn",
-    ".btn-retry": "u-btn",
-    ".btn-primary": "u-btn u-btn-blue",
-    ".result-nav .next": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .mode": "u-btn u-btn-plain"
-  });
-</script>
-</body>
-</html>
+
+<script>function fraction(a,b){return '<span class="fr"><span>'+rtHTML(a)+'</span><span>'+rtHTML(b)+'</span></span>'}
+function notation(html){const box=document.createElement('div');box.innerHTML=html;const walk=document.createTreeWalker(box,NodeFilter.SHOW_TEXT),ns=[];while(walk.nextNode())if(!walk.currentNode.parentElement.closest('svg,.root-term,.fr,.fraction'))ns.push(walk.currentNode);ns.forEach(n=>{const span=document.createElement('span');span.innerHTML=n.textContent.replace(/(−?)(対辺|底辺|斜辺|[xyr]|\d*√\d+|\d+)\/(対辺|底辺|斜辺|[xyr]|\d*√\d+|\d+)|(\d*)√(\d+)/g,(_,s,a,b,c,d)=>a?s+fraction(a,b):c+radicalSVG(d));n.replaceWith(span)});return box.innerHTML}
+function svgLabel(x,y,text,color='#1f2328',width=100){return `<foreignObject x="${x-width/2}" y="${y-15}" width="${width}" height="40"><div xmlns="http://www.w3.org/1999/xhtml" style="text-align:center;color:${color};font:17px 'BIZ UDPGothic';white-space:nowrap">${rtHTML(text)}</div></foreignObject>`}
+function hintSemicircle(deg,pts,extra={}){
+ const R=108,ox=180,oy=175,t=deg*Math.PI/180,px=ox+R*Math.cos(t),py=oy-R*Math.sin(t),axis=[0,90,180].includes(deg),left=deg>90;
+ const line=(a,b,c,d,color='#1f2328',w=2)=>`<path d="M${a} ${b}L${c} ${d}" stroke="${color}" stroke-width="${w}" fill="none"/>`;
+ let s=`<svg class="semi" viewBox="0 0 360 245" role="img" aria-label="${deg}度の半円と点P"><path d="M72 175 A108 108 0 0 1 288 175" fill="none" stroke="#1f2328" stroke-width="2"/>`+line(35,oy,325,oy)+line(ox,208,ox,28)+`<path d="M319 171L325 175L319 179M176 34L180 28L184 34" fill="none" stroke="#1f2328"/>`+svgLabel(327,196,'x',undefined,30)+svgLabel(166,25,'y',undefined,30)+svgLabel(169,199,'O',undefined,30);
+ if(extra.cut==='y')s+=line(55,py,305,py,'#5b6470',1);if(extra.cut==='x')s+=line(px,30,px,205,'#5b6470',1);
+ s+=line(ox,oy,px,py,'#1f4e8c',3);
+ if(!axis){s+=line(ox,oy,px,oy,'#2b8a3e',3)+line(px,oy,px,py,'#c92a2a',3);const sign=left?1:-1;s+=`<path d="M${px+sign*10} 175v-10h${-sign*10}" fill="none" stroke="#1f2328"/>`;s+=svgLabel((px+ox)/2,218,pts[0].replace('−',''),'#2b8a3e',80)+svgLabel(px+(left?-27:27),(py+oy)/2,pts[1],'#c92a2a',65)+svgLabel((px+ox)/2+(left?24:-24),(py+oy)/2-12,pts[2],'#1f4e8c',60);s+=svgLabel(px,195,'H',undefined,25);if(left)s+=`<path d="M156 175A24 24 0 0 1 ${ox+24*Math.cos(t)} ${oy-24*Math.sin(t)}" fill="none" stroke="#d9480f"/>`+svgLabel(ox-45,160,(180-deg)+'°','#d9480f',50);}
+ else s+=svgLabel(220,225,'r = '+pts[2],'#1f4e8c',120);
+ if(deg)s+=`<path d="M214 175 A34 34 0 0 0 ${ox+34*Math.cos(t)} ${oy-34*Math.sin(t)}" fill="none" stroke="#d9480f" stroke-width="2"/>`;
+ s+=svgLabel(230,154,deg+'°','#d9480f',60)+`<circle cx="${px}" cy="${py}" r="4" fill="#1f2328"/>`+svgLabel(px,Math.max(12,py-24),'P('+pts[0]+', '+pts[1]+')',undefined,150);
+ if(extra.mirror){const qx=2*ox-px;s+=line(ox,oy,qx,py,'#1f4e8c',2)+line(qx,py,qx,oy,'#c92a2a',2)+`<circle cx="${qx}" cy="${py}" r="4"/>`+svgLabel(qx,py-23,'Q',undefined,30)+svgLabel(qx,199,(180-deg)+'°',undefined,60);}
+ return s+'</svg>';
+}
+function definitionFigure(){return hintSemicircle(50,['x','y','r']).replaceAll('50°','θ')+'<p class="eq">sin θ = '+fraction('y','r')+'</p><p class="eq">cos θ = '+fraction('x','r')+'</p><p class="eq">tan θ = '+fraction('y','x')+'</p>'}
+function acuteFigure(deg,fn,trace=false){const r=RATIO[deg],p=SHAPE[deg][0],q=SHAPE[deg][1];let s=triSVG({p,q,deg,sides:{VR:r[0],RT:r[1],VT:r[2]},colors:{VR:'#2b8a3e',RT:'#c92a2a',VT:'#1f4e8c'}});if(trace){const scale=Math.min(264/p,184/q),x=(360-p*scale)/2,y=(280-q*scale)/2,V=[x,y+q*scale],T=[x+p*scale,y],B=[T[0],V[1]],seq=fn==='sin'?[V,T,B]:fn==='cos'?[T,V,B]:[V,B,T];const [a,b,c]=seq;const path=`M${a[0]} ${a[1]} Q${(a[0]+b[0])/2-12} ${(a[1]+b[1])/2-12} ${b[0]} ${b[1]} Q${b[0]+12} ${b[1]+12} ${c[0]} ${c[1]}`;s=s.replace(/<\/svg>$/,`<defs><marker id="trace-arrow-${fn}-${deg}" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0L5 2.5L0 5" fill="#8056a1"/></marker></defs><path marker-end="url(#trace-arrow-${fn}-${deg})" class="trace" d="${path}" stroke="#8056a1" stroke-width="3" fill="none" stroke-linecap="round"/><text x="180" y="30" font-size="25" font-style="italic" fill="#8056a1">${fn[0]}</text>${svgLabel((a[0]+b[0])/2,(a[1]+b[1])/2+20,'① →','#8056a1',60)}${svgLabel((b[0]+c[0])/2-20,(b[1]+c[1])/2,'② →','#8056a1',60)}</svg>`)}return s+'<p><span style="color:#1f4e8c">斜辺</span>・<span style="color:#c92a2a">対辺</span>・<span style="color:#2b8a3e">底辺（隣辺）</span></p>'}
+const originalMakeProblem=makeProblem;
+makeProblem=function(item){const p=originalMakeProblem(item);if(item.kind===0){p.hint='';p.why=p.why.map(w=>w?'求める辺の位置と、'+L0[item.i].deg+'° の直角三角形の辺の比を確かめよう。':'');p.exp=notation(p.exp);return p}
+ if(item.kind===1||item.kind===2){const [fn,deg]= (item.kind===1?L1:L2)[item.i], [x,y,r]=POINT[deg],acute=currentLevel===1;
+ p.question=fn+' '+deg+'° の値を求めなさい。';const role={sin:['対辺','斜辺'],cos:['底辺','斜辺'],tan:['対辺','底辺']}[fn],coord={sin:['y','r'],cos:['x','r'],tan:['y','x']}[fn];
+ const fig=acute?acuteFigure(deg,fn):hintSemicircle(deg,POINT[deg]);p.hint=acute?acuteFigure(deg,fn,true)+'<p>①の辺が分母、②の辺が分子。</p>':definitionFigure()+fig+'<p>'+([0,90,180].includes(deg)?(deg===90&&fn==='tan'?'x = 0 で割ることになるね。':'軸の上の点Pの座標を確かめよう。'):'直角三角形の角は '+Math.min(deg,180-deg)+'°。辺の比からPの座標を考えよう。')+'</p>';
+ p.exp=fig+(acute?'<p>'+deg+'° の直角三角形の辺の比を使います。</p>':'<p>'+(![0,90,180].includes(deg)?'直角三角形の角は '+Math.min(deg,180-deg)+'°。OH = '+rtHTML(x.replace('−',''))+'、PH = '+rtHTML(y)+'。<br>':'')+'P('+rtHTML(x)+', '+rtHTML(y)+')、r = '+rtHTML(r)+'</p>')+'<p class="eq">'+fn+' '+deg+'° = '+fraction(...(acute?role:coord))+'</p><p class="eq">= '+mathHTML(VALUES[fn][deg])+'</p>'+(deg>90?'<p>xが負なのでcosとtanは負、yが正なのでsinは正です。</p>':'');p.why=p.why.map(w=>notation(w)+'<p>'+(acute?'①の辺が分母、②の辺が分子になっているか確かめよう。':'Pはy軸の左か右か、xとyの符号を確かめよう。')+'</p>');return p;}
+ const d=L4[item.i],degrees=[150,120,135,30,20,30,135,120,60,90],deg=degrees[item.i];let fig;if(item.i===3||item.i===4){fig=triSVG({p:Math.cos(deg*Math.PI/180),q:Math.sin(deg*Math.PI/180),deg,sides:{VR:'底辺',RT:'対辺',VT:'斜辺'}})+'<p>もう一つの角は '+(90-deg)+'°。この角から見ると対辺と底辺が入れかわります。</p>'}else fig=hintSemicircle(deg,POINT[deg],{mirror:item.i<3||item.i===5,cut:[5,9].includes(item.i)?'y':[6,8].includes(item.i)?'x':''});p.hint=fig+'<p>'+notation(d.hint.replace('tan =','tan θ ='))+'</p>'+(item.i===2?'<p>tan θは直線OPの傾き。右下がりのとき負です。</p>':'');p.exp=fig+d.exp.split('。').reverse().map((t,i)=>'<p class="eq">'+(i?'まとめ：':'')+notation(t)+'</p>').join('');return p;}
+const originalUpdateDisplay=updateDisplay;updateDisplay=function(){originalUpdateDisplay();const n=playList.length,i=Math.min(currentProblemIndex+1,n);document.getElementById('progress').innerHTML='<span class="question-badge">問'+i+'</span>'+i+' / '+n+'<div class="press-progress"><span style="width:'+100*i/n+'%"></span></div>'};restart();
+</script></body></html>
