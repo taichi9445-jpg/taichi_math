@@ -88,6 +88,24 @@
         .question-text, .hint-container, .feedback { word-break: normal; line-break: strict; }
         @supports (word-break: auto-phrase) { .question-text, .hint-container, .feedback { word-break: auto-phrase; } }
         @media (min-width: 641px) { .options:not(.fig-options) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        /* レベル3 後半：カードを辺の □ に入れる */
+        .options.drag-mode { display: block; }
+        .drag-fig { position: relative; max-width: 360px; margin: auto; padding: 0 26px; }   /* 左右のすきま：たての辺の □ がカードからはみ出さないように */
+        .nobr { white-space: nowrap; }
+        .slot { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; width: 58px; height: 44px; padding: 0; border: 2px dashed #1f4e8c; border-radius: 6px; background: #fff; color: #1f2328; font: 400 22px/1 'STIX Two Text', serif; }
+        .slot.filled { border-style: solid; border-width: 1px; }
+        .slot.drop-over { background: #e3edf9; border-style: solid; border-width: 2px; }
+        .slot.ok { border: 2px solid #2b8a3e; background: #ebfbee; }
+        .slot.ng { border: 2px solid #c92a2a; background: #fff5f5; }
+        .drag-note { margin: 0 0 10px; text-align: center; font-size: 14px; color: #5b6470; }
+        .chip-tray { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .chip { display: flex; align-items: center; justify-content: center; min-width: 64px; height: 54px; padding: 0 10px; border: 1px solid #1f4e8c; border-radius: 6px; background: #fff; color: #1f2328; font: 400 24px/1 'STIX Two Text', serif; touch-action: none; user-select: none; -webkit-user-select: none; }
+        .chip.selected { background: #1f4e8c; color: #fff; }
+        .chip:disabled { border-color: #d0d7de; color: #5b6470; cursor: default; }
+        .chip-ghost { position: fixed; z-index: 20; pointer-events: none; margin: 0; background: #fff; box-shadow: 0 4px 12px rgba(31, 35, 40, .18); }
+        .chip .root-term, .slot .root-term { font-size: 1em; }
+        .drag-actions { display: flex; justify-content: center; margin-top: 14px; }
+        .drag-actions .btn:disabled { border-color: #d0d7de; background: #e8edf2; color: #5b6470; cursor: default; }
         @media (hover: hover) { .option:not(:disabled):hover { border-color: #1f4e8c; } .btn:hover, .result-nav button:hover { filter: brightness(.94); } }
         @media (max-width: 640px) {
             body { padding: 8px; }
@@ -95,7 +113,8 @@
             .header { margin-bottom: 10px; }
             .title { font-size: 20px; }
             .header p { font-size: 12px; }
-            .level-btn { font-size: 13px; }
+            .level-btn { font-size: 13px; line-height: 1.3; }
+            .lv-no { display: block; font-size: 11px; }
             .level-selector { margin-bottom: 14px; }
             .options { gap: 8px; }
             .hint-container, .feedback { padding: 10px; }
@@ -112,10 +131,11 @@
         </div>
 
         <div class="level-selector">
-            <button class="level-btn active" onclick="selectLevel(1)"><span class="lv-l">レベル1: 三角形の回転</span><span class="lv-s">Lv1 向き</span></button>
-            <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 三角比の計算</span><span class="lv-s">Lv2 計算</span></button>
-            <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 有名角の値</span><span class="lv-s">Lv3 有名角</span></button>
-            <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 応用問題</span><span class="lv-s">Lv4 応用</span></button>
+            <button class="level-btn active" onclick="selectLevel(1)"><span class="lv-l">レベル1: 三角形の回転</span><span class="lv-s"><span class="lv-no">Lv1</span> 向き</span></button>
+            <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 三角比の計算</span><span class="lv-s"><span class="lv-no">Lv2</span> 計算</span></button>
+            <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 有名角の辺の比</span><span class="lv-s"><span class="lv-no">Lv3</span> 辺の比</span></button>
+            <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 有名角の値</span><span class="lv-s"><span class="lv-no">Lv4</span> 有名角</span></button>
+            <button class="level-btn" onclick="selectLevel(5)"><span class="lv-l">レベル5: 応用問題</span><span class="lv-s"><span class="lv-no">Lv5</span> 応用</span></button>
         </div>
 
         <!-- レベル1 -->
@@ -271,8 +291,48 @@
                 <p>お疲れ様でした！</p>
                 <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
                 <div class="result-nav">
-                    
+                    <button class="next" onclick="goLevel(5); window.scrollTo(0, 0);">次のレベル（レベル5）へ ▶</button>
                     <button class="again" onclick="restartLevel(4)">もう一度挑戦</button>
+                    <a href="../remake.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- レベル5 -->
+        <div id="level5" class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progress5" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum5">問題 1/10</div>
+                <div class="question-text" id="questionText5"></div>
+
+                <div class="triangle-container" id="triangleContainer5"></div>
+
+                <div class="options" id="options5"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(5)">ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn5" onclick="retryQuestion(5)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn5" onclick="nextQuestion(5)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint5">
+                    <div class="hint-title">ヒント</div>
+                    <div id="hintText5"></div>
+                </div>
+
+                <div class="feedback" id="feedback5"></div>
+            </div>
+
+            <div class="results" id="results5">
+                <div class="score" id="score5"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    
+                    <button class="again" onclick="restartLevel(5)">もう一度挑戦</button>
                     <a href="../remake.html">ほかの教材をえらぶ</a>
                 </div>
             </div>
@@ -285,8 +345,9 @@
         //         直角の印・角の印をつけ、文字は回転させずに三角形の外側におく（はみ出し・線との重なりをなくした）
         //   ・レベル1：選択肢は「正しい図」「辺の長さが入れかわった図」「ちがう角が左下の図」など、図形として意味のある 4 つに
         //   ・レベル2：90° − θ の問題（sin C = cos A）を追加。ヒントでは答えの数を出さない
-        //   ・レベル3：有名角の値（元の名前は「応用問題」だった）。出す順をまぜる
-        //   ・レベル4：元は「レベル3のシャッフル」だった。辺の長さを求める・90° − θ・三角比の表などの応用問題に
+        //   ・レベル3：有名角の辺の比（2026-10-27 追加）。前半は正しい図をえらぶ、後半はカードを辺にドラッグして入れる
+        //   ・レベル4：有名角の値（元の名前は「応用問題」だった）。出す順をまぜる
+        //   ・レベル5：元は「レベル3のシャッフル」だった。辺の長さを求める・90° − θ・三角比の表などの応用問題に
         //   ・正解したら理由を一言、まちがえたら「えらんだものが何なのか」を一言。まちがえた選択肢は押せなくなり、そのままえらび直せる
         let currentLevel = 1;
         let currentQuestion = 0;
@@ -330,8 +391,8 @@
         // 問題データはそのままに、表示の段階で表記を整える。
         function baseIsAdjacent(level) {
             if (level === 2) return L2[currentQuestion][4] === 'A';
-            if (level === 3) return true; // 有名角の図はすべて左下の角が基準
-            if (level === 4) return !!L4[currentQuestion].fig;
+            if (level === 4) return true; // 有名角の図はすべて左下の角が基準
+            if (level === 5) return !!L4[currentQuestion].fig;
             return false;
         }
         function formatNotation(root, useBase = false) {
@@ -460,8 +521,10 @@
                 if (o.markText) {
                     const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
                     const half = Math.acos(Math.max(-1, Math.min(1, a1[0] * a2[0] + a1[1] * a2[1]))) / 2;
-                    const dd = Math.max(56, Math.min(100, 20 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
-                    out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="18" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
+                    const dd = compact   // 選択肢の小さい図は文字が大きいので、文字のはばが角の内側に入るところまではなす
+                        ? Math.max(44, Math.min(100 * fs, 0.95 * 20 / Math.tan(half) + 10))
+                        : Math.max(56, Math.min(100, 20 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
+                    out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="' + (compact ? 20 : 18) + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
                 }
             }
             // 頂点の文字（重心から外向き）
@@ -493,7 +556,12 @@
                     out += '<text x="' + f(x) + '" y="' + f(y) + '" font-size="' + size + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="' + (color || (t === '?' ? '#1f4e8c' : '#1f2328')) + '" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
                 }
             });
-            if (o.w === 260 && o.h === 220) {
+            if (o.crop) {   // 図のまわりのよけいな余白を、たて・よことも切りつめる（o.crop は選択肢の図で使う）
+                const X = Object.values(S).map(p => p[0]), Y = Object.values(S).map(p => p[1]);
+                const m = pad + 8, x0 = Math.max(0, Math.min(...X) - m), y0 = Math.max(0, Math.min(...Y) - m);
+                const x1 = Math.min(w, Math.max(...X) + m), y1 = Math.min(h, Math.max(...Y) + m);
+                out = out.replace('viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '"', 'viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(x1 - x0) + ' ' + f(y1 - y0) + '" width="' + f(x1 - x0) + '" height="' + f(y1 - y0) + '"');
+            } else if (o.w === 260 && o.h === 220) {
                 const top = Math.max(0, Math.min(...Object.values(S).map(p => p[1])) - 32);
                 const bottom = Math.min(h, Math.max(...Object.values(S).map(p => p[1])) + 36);
                 out = out.replace('viewBox="0 0 ' + w + ' ' + h + '"', 'viewBox="0 ' + f(top) + ' ' + w + ' ' + f(bottom - top) + '"').replace('height="' + h + '"', 'height="' + f(bottom - top) + '"');
@@ -578,7 +646,181 @@
             };
         }
 
-        // ---------- レベル3：有名角の値 ----------
+        // ---------- レベル3：有名角の辺の比 ----------
+        // 前半は「辺の比が正しい図はどれ？」（4つの図は同じ形・同じ角で、書いてある長さだけがちがう）、
+        // 後半はカードを辺の □ にドラッグして入れる。d.at：角の印をつける頂点（'V' は直角のとなりの下の角、'T' は上の角）、d.tf：回転・反転
+        const RATIO = { 30: ['1', '√3', '2'], 45: ['1', '1', '√2'], 60: ['√3', '1', '2'] };   // 印の角から見た [対辺, 隣辺, 斜辺]
+        function ratioSides(at, [opp, adj, hyp]) { return at === 'V' ? { VR: adj, RT: opp, VT: hyp } : { VR: opp, RT: adj, VT: hyp }; }
+        function ratioTri(d, sides, compact) {
+            const a = (d.at === 'V' ? d.deg : 90 - d.deg) * Math.PI / 180;   // 頂点 V の角
+            return triSVG({ p: Math.cos(a), q: Math.sin(a), ...d.tf, names: { V: '', R: '', T: '' }, sides, mark: d.at, markText: d.deg + '°', ...(compact ? { fs: 1.3, crop: true } : {}) });
+        }
+        const RW = {
+            swap30: '30° と 60° の比が入れかわっているよ。いちばん短い辺（1）は、30° の角と向かい合う辺だよ。',
+            swap60: '30° と 60° の比が入れかわっているよ。60° の角と向かい合う辺は √3、いちばん短い辺（1）は 60° のとなりの辺だよ。',
+            hyp: '斜辺（直角と向かい合う辺）がいちばん長い辺だよ。<span class="nobr">1 : √3 : 2</span> の 2 が斜辺。',
+            hyp45: '斜辺（直角と向かい合う辺）がいちばん長い辺だよ。<span class="nobr">1 : 1 : √2</span> の √2 が斜辺。',
+            is45: '<span class="nobr">1 : 1 : √2</span> は、45° の直角三角形（直角二等辺三角形）の辺の比だよ。',
+            two: '斜辺は 2 ではなく √2 だよ。45° の直角三角形の辺の比は <span class="nobr">1 : 1 : √2</span>。',
+            is3060: '<span class="nobr">1 : √3 : 2</span> は、30°・60° の直角三角形の辺の比だよ。',
+            iso: '45° の直角三角形は直角二等辺三角形。直角をはさむ2辺は同じ長さになるよ。',
+            legs45: '直角をはさむ2辺はどちらも 1、斜辺が √2 だよ。',
+            use2: '2 は斜辺（いちばん長い辺）の長さ。直角をはさむ2辺は 1 と √3 だよ。',
+            diff: '30°・60° の直角三角形は、3つの辺の長さがすべてちがうよ。辺の比は <span class="nobr">1 : √3 : 2</span>。',
+            no2: '√2 は、45° の直角三角形で使う値だよ。30°・60° の直角三角形の辺の比は <span class="nobr">1 : √3 : 2</span>。',
+            no3: '45° の直角三角形では、√3 や 2 は使わないよ。辺の比は <span class="nobr">1 : 1 : √2</span>。'
+        };
+        const RATIO_WRONG = {   // まちがいの図：[対辺, 隣辺, 斜辺] と、そのわけ
+            30: [[['√3', '1', '2'], 'swap30'], [['1', '2', '√3'], 'hyp'], [['1', '1', '√2'], 'is45']],
+            60: [[['1', '√3', '2'], 'swap60'], [['2', '1', '√3'], 'hyp'], [['1', '1', '√2'], 'is45']],
+            45: [[['1', '1', '2'], 'two'], [['1', '√3', '2'], 'is3060'], [['1', '√2', '√3'], 'iso']]
+        };
+        const HINT_3060 = '30°・60°・90° の直角三角形の辺の比は <span class="nobr">1 : √3 : 2</span>。<br>いちばん短い 1 は、30° の角と向かい合う辺。<br>いちばん長い 2 は、斜辺（直角と向かい合う辺）。';
+        const RATIO_HINT = { 30: HINT_3060, 60: HINT_3060, 45: '45°・45°・90° の直角三角形（直角二等辺三角形）の辺の比は <span class="nobr">1 : 1 : √2</span>。<br>いちばん長い √2 は、斜辺（直角と向かい合う辺）。' };
+        const RATIO_EXP = {
+            30: '30° の角と向かい合う辺が、いちばん短い 1。<br>斜辺は 1 の2倍の 2。<br>のこりの辺が √3。<br>辺の比は <span class="nobr">1 : √3 : 2</span>。',
+            60: '60° の角と向かい合う辺が √3。<br>斜辺が 2。<br>60° のとなりの辺が、いちばん短い 1。<br>辺の比は <span class="nobr">1 : √3 : 2</span>。',
+            45: '直角をはさむ2辺が、どちらも 1。<br>斜辺が √2。<br>辺の比は <span class="nobr">1 : 1 : √2</span>。'
+        };
+        const L3A = [{ deg: 30, at: 'V' }, { deg: 60, at: 'V' }, { deg: 45, at: 'V' }, { deg: 30, at: 'T' }, { deg: 60, at: 'T' }, { deg: 30, at: 'V', tf: { fx: true } }];
+        const L3B = [{ deg: 30, at: 'V' }, { deg: 45, at: 'V' }, { deg: 60, at: 'V' }, { deg: 60, at: 'T' }, { deg: 30, at: 'V', tf: { fx: true } }, { deg: 30, at: 'T', tf: { fx: true } }];
+        const CHIPS = ['1', '√2', '√3', '2'];
+        function ratioChoice(d) {
+            const opts = [[RATIO[d.deg], '']].concat(RATIO_WRONG[d.deg]);
+            return {
+                figOpts: true,
+                question: '<span class="angle-name">' + d.deg + '°</span> の角をもつ直角三角形です。<br>辺の長さの比が正しい図はどれですか？',
+                figure: '',
+                options: opts.map(([r]) => ratioTri(d, ratioSides(d.at, r), true)),
+                correct: 0,
+                hint: RATIO_HINT[d.deg], exp: RATIO_EXP[d.deg],
+                why: opts.map(([, k]) => k ? RW[k] : '')
+            };
+        }
+        function ratioDrag(d) {
+            return {
+                type: 'drag', deg: d.deg, at: d.at,
+                question: '<span class="angle-name">' + d.deg + '°</span> の角をもつ直角三角形です。<br>それぞれの辺の □ に、辺の比をあてはめよう。',
+                figure: '<div class="drag-fig">' + ratioTri(d, {}) + ['VR', 'RT', 'VT'].map(k => '<button type="button" class="slot" data-side="' + k + '" aria-label="辺の長さを入れる場所"></button>').join('') + '</div>',
+                answer: ratioSides(d.at, RATIO[d.deg]),
+                options: [], hint: RATIO_HINT[d.deg], exp: RATIO_EXP[d.deg]
+            };
+        }
+        // 入れた長さ g = {VR, RT, VT} のどこがおかしいかを一言で
+        function ratioReason(q, g) {
+            const r = q.at === 'V' ? { opp: g.RT, adj: g.VR, hyp: g.VT } : { opp: g.VR, adj: g.RT, hyp: g.VT };
+            const vals = [r.opp, r.adj, r.hyp];
+            if (q.deg === 45) {
+                if (vals.some(v => v === '√3' || v === '2')) return RW.no3;
+                if (r.hyp !== '√2') return RW.hyp45;
+                return r.opp === r.adj ? RW.legs45 : RW.iso;
+            }
+            if (vals.includes('√2')) return RW.no2;
+            if (r.hyp !== '2') return RW.hyp;
+            if (r.opp === r.adj) return RW.diff;
+            if (r.opp === '2' || r.adj === '2') return RW.use2;
+            return q.deg === 30 ? RW.swap30 : RW.swap60;
+        }
+        function valHTML(v) { return v.includes('√') ? rtHTML(v) : '<span class="m">' + v + '</span>'; }
+        // □ の位置：辺のまん中から外向きに、□ が線にかからないだけはなす（図の大きさが変わるたびに置き直す）
+        function placeSlots(fig) {
+            const svg = fig.querySelector('svg'), poly = svg && svg.querySelector('polygon');
+            if (!poly || !fig.offsetWidth) return;
+            const pts = poly.getAttribute('points').trim().split(/\s+/).map(p => p.split(',').map(Number));
+            const P = { V: pts[0], R: pts[1], T: pts[2] };
+            const vb = svg.viewBox.baseVal, r = svg.getBoundingClientRect(), fr = fig.getBoundingClientRect(), k = r.width / vb.width;
+            const px = ([x, y]) => [r.left - fr.left + (x - vb.x) * k, r.top - fr.top + (y - vb.y) * k];
+            fig.querySelectorAll('.slot').forEach(s => {
+                const [a, b] = s.dataset.side.split(''), c = 'VRT'.replace(a, '').replace(b, '');
+                const A = px(P[a]), B = px(P[b]), C = px(P[c]);
+                const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
+                let n = [-(B[1] - A[1]) / L, (B[0] - A[0]) / L];
+                if ((C[0] - mx) * n[0] + (C[1] - my) * n[1] > 0) n = [-n[0], -n[1]];
+                const w = s.offsetWidth, h = s.offsetHeight, dist = Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * h / 2 + 7;
+                s.style.left = (mx + n[0] * dist - w / 2) + 'px';
+                s.style.top = (my + n[1] * dist - h / 2) + 'px';
+            });
+        }
+        // カードはドラッグでも、「カードを押す → □ を押す」でも入れられる。入っている □ を押すと空にもどる
+        let chipPicked = null;
+        function setupDrag(level, q) {
+            const fig = document.querySelector('#triangleContainer' + level + ' .drag-fig');
+            const box = document.getElementById('options' + level);
+            const slots = [...fig.querySelectorAll('.slot')], chips = [...box.querySelectorAll('.chip')];
+            const check = box.querySelector('.drag-actions .btn');
+            chipPicked = null;
+            const pick = v => { chipPicked = chipPicked === v ? null : v; chips.forEach(c => c.classList.toggle('selected', c.dataset.v === chipPicked)); };
+            const put = (s, v) => {
+                if (isAnswered) return;
+                s.dataset.v = v || '';
+                s.innerHTML = v ? valHTML(v) : '';
+                s.classList.toggle('filled', !!v);
+                s.classList.remove('ok', 'ng');
+                check.disabled = !slots.every(x => x.dataset.v);
+            };
+            slots.forEach(s => s.onclick = () => {
+                if (isAnswered) return;
+                if (chipPicked) { put(s, chipPicked); pick(null); } else if (s.dataset.v) put(s, '');
+            });
+            chips.forEach(c => {
+                c.onclick = e => { if (e.detail === 0 && !isAnswered) pick(c.dataset.v); };   // キーボードで押したとき
+                c.addEventListener('pointerdown', e => {
+                    if (isAnswered || e.button > 0) return;
+                    e.preventDefault();
+                    const sx = e.clientX, sy = e.clientY;
+                    let ghost = null, over = null;
+                    const move = ev => {
+                        if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+                        if (!ghost) { ghost = c.cloneNode(true); ghost.classList.remove('selected'); ghost.classList.add('chip-ghost'); document.body.appendChild(ghost); }
+                        ghost.style.left = (ev.clientX - ghost.offsetWidth / 2) + 'px';
+                        ghost.style.top = (ev.clientY - ghost.offsetHeight / 2) + 'px';
+                        const el = document.elementFromPoint(ev.clientX, ev.clientY), s = el && el.closest('.slot');
+                        const next = s && fig.contains(s) ? s : null;
+                        if (over && over !== next) over.classList.remove('drop-over');
+                        over = next;
+                        if (over) over.classList.add('drop-over');
+                    };
+                    const up = () => {
+                        window.removeEventListener('pointermove', move);
+                        window.removeEventListener('pointerup', up);
+                        window.removeEventListener('pointercancel', up);
+                        if (!ghost) { pick(c.dataset.v); return; }
+                        ghost.remove();
+                        if (over) { over.classList.remove('drop-over'); put(over, c.dataset.v); pick(null); }
+                    };
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', up);
+                    window.addEventListener('pointercancel', up);
+                });
+            });
+            check.onclick = () => checkDrag(level, q, slots, chips, check);
+            placeSlots(fig);
+            if (window.ResizeObserver) new ResizeObserver(() => placeSlots(fig)).observe(fig);
+            else window.addEventListener('resize', () => placeSlots(fig));
+        }
+        function checkDrag(level, q, slots, chips, check) {
+            if (isAnswered) return;
+            const g = {};
+            slots.forEach(s => { g[s.dataset.side] = s.dataset.v; s.classList.add(s.dataset.v === q.answer[s.dataset.side] ? 'ok' : 'ng'); });
+            const fb = document.getElementById('feedback' + level);
+            if (slots.every(s => s.classList.contains('ok'))) {
+                isAnswered = true;
+                if (!missedThis) score++;
+                chips.forEach(c => { c.disabled = true; c.classList.remove('selected'); });
+                check.disabled = true;
+                fb.className = 'feedback correct';
+                fb.innerHTML = '正解です！<div class="why"><span class="explanation-title">解説</span>' + displayContent(q.exp, level, true) + '</div>';
+                document.getElementById('nextBtn' + level).style.display = 'inline-block';
+            } else {
+                missedThis = true;
+                fb.className = 'feedback incorrect';
+                fb.innerHTML = 'ちがいます。<br>赤い枠の辺を<span class="keep-word">直してみよう！</span><div class="why"><span class="explanation-title">解説</span>' + displayContent(ratioReason(q, g), level, true) + '</div>';
+            }
+            fb.style.display = 'block';
+            fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+
+        // ---------- レベル4：有名角の値（データの名前は L3 のまま） ----------
         const VAL = { sin: { 30: '1/2', 45: '1/√2', 60: '√3/2' }, cos: { 30: '√3/2', 45: '1/√2', 60: '1/2' }, tan: { 30: '1/√3', 45: '1', 60: '√3' } };
         const L3 = [
             ['sin', 30, ['1/2', '1/√2', '√3/2', '1']], ['cos', 30, ['1/2', '1/√2', '√3/2', '1']], ['tan', 30, ['1/√3', '1/√2', '√3/2', '√3']],
@@ -607,7 +849,7 @@
             };
         }
 
-        // ---------- レベル4：応用問題 ----------
+        // ---------- レベル5：応用問題（データの名前は L4 のまま） ----------
         // fig：三角形 { deg（左下の角）, sides：{VR, RT, VT} } を triSVG でかく。names は A（左下）・C（直角）・B（上）
         const L4 = [
             { q: '∠C = 90°、∠A = 30°、AB = 10 の直角三角形 ABC で、BC の長さは？', fig: { deg: 30, sides: { VT: '10', RT: '?' } },
@@ -653,7 +895,8 @@
         function buildLevel(level) {
             if (level === 1) return L1.map(level1Question);
             if (level === 2) return L2.map(level2Question);
-            if (level === 3) return shuffleArray(L3).map(level3Question);
+            if (level === 3) return L3A.map(ratioChoice).concat(L3B.map(ratioDrag));
+            if (level === 4) return shuffleArray(L3).map(level3Question);
             return L4.map(level4Question);
         }
         const HINT4 = [
@@ -689,7 +932,16 @@
             document.getElementById('triangleContainer' + level).innerHTML = question.figure || '';
             const box = document.getElementById('options' + level);
             box.innerHTML = '';
-            box.classList.toggle('fig-options', level === 1);
+            box.classList.toggle('fig-options', level === 1 || !!question.figOpts);
+            box.classList.toggle('drag-mode', question.type === 'drag');
+            missedThis = false;
+            isAnswered = false;
+            if (question.type === 'drag') {
+                box.innerHTML = '<p class="drag-note">下のカードを、図の □ までドラッグしよう。<br>（カードを押してから □ を押しても入るよ）</p>' +
+                    '<div class="chip-tray">' + CHIPS.map(v => '<button type="button" class="chip" data-v="' + v + '">' + valHTML(v) + '</button>').join('') + '</div>' +
+                    '<div class="drag-actions"><button type="button" class="btn btn-primary" disabled>答え合わせ</button></div>';
+                setupDrag(level, question);
+            }
             order = question.options.map((_, i) => i);
             for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
             missedThis = false;
@@ -702,7 +954,7 @@
                 b.onclick = () => selectOption(level, index);
                 box.appendChild(b);
             });
-            const hint = question.hint || (level === 4 ? HINT4[currentQuestion] : '');
+            const hint = question.hint || (level === 5 ? HINT4[currentQuestion] : '');
             document.getElementById('hintText' + level).innerHTML = displayContent(hint, level, true);
             document.getElementById('nextBtn' + level).style.display = 'none';
             document.getElementById('retryBtn' + level).style.display = 'none';
