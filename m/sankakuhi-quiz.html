@@ -638,7 +638,10 @@
                 options: opts.map(mathHTML),
                 correct: opts.indexOf(ans),
                 hint: fn + ' ' + ang + ' = ' + mathHTML(NAME[fn][0] + '/' + NAME[fn][1]) + '。角' + ang + 'から見て、向かい合う辺が「対辺」、角' + ang + 'ととなり合う斜辺でない辺が「隣辺」だよ。どの辺がどれかな？' +
-                    '<br>' + triSVG({ p: a, q: b, names: { V: 'A', R: 'B', T: 'C' }, sides: ang === 'A' ? { VR: '隣辺', RT: '対辺', VT: '斜辺' } : { VR: '対辺', RT: '隣辺', VT: '斜辺' }, red: ang, mark: ang === 'A' ? 'V' : 'T', w: 240, h: 190 }),
+                    '<br>' + triSVG({ p: a, q: b, names: { V: 'A', R: 'B', T: 'C' }, sides: ang === 'A' ? { VR: '隣辺', RT: '対辺', VT: '斜辺' } : { VR: '対辺', RT: '隣辺', VT: '斜辺' }, red: ang, mark: ang === 'A' ? 'V' : 'T', w: 240, h: 190 }) +
+                    // 角 C のときは、向きを変えて角 C を左下にした図もそえる（C が左下・直角 B が右下・A が上）
+                    (ang === 'C' ? '<br>向きを変えて、角Cを左下、直角を右下にすると、こうなるよ。<br>' +
+                        triSVG({ p: b, q: a, names: { V: 'C', R: 'B', T: 'A' }, sides: { VR: '隣辺', RT: '対辺', VT: '斜辺' }, mark: 'V', w: 240, h: 190 }) : ''),
                 exp: fn + ' ' + ang + ' = ' + NAME[fn][0] + '/' + NAME[fn][1] + ' = ' + pick[0][0] + '/' + pick[1][0] + ' = ' + mathHTML(pick[0][1] + '/' + pick[1][1]) +
                     (ans !== pick[0][1] + '/' + pick[1][1] ? ' = ' + mathHTML(ans) + '（約分）' : '') +
                     (ang === 'C' ? '<br>C = 90° − A なので、' + fn + ' C = ' + { sin: 'cos', cos: 'sin', tan: '1/tan' }[fn] + ' A になっているね。' : ''),
