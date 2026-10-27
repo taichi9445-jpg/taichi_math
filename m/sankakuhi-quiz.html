@@ -484,7 +484,7 @@
         // ---------- 直角三角形の図 ----------
         // 頂点 V（左下にしたい角）・R（直角）・T。VR = p、RT = q（数学の座標で V = (0, 0)、R = (p, 0)、T = (p, q)）。
         // o.rot：画面で時計回りに回す角度、o.fx / o.fy：左右・上下の反転（回す前に）、o.names：{V, R, T} の文字、
-        // o.sides：{VR, RT, VT} に書く文字、o.mark：角の印をつける頂点（'V' / 'T'）、o.markText：印の横の文字、
+        // o.sides：{VR, RT, VT} に書く文字（o.colors：{VR, RT, VT} の色。数字の辺も色分けする）、o.mark：角の印をつける頂点（'V' / 'T'）、o.markText：印の横の文字、
         // o.red / o.w / o.h / o.pad は呼び出しの互換性のため残す。o.fs > 1 は選択肢用。
         function triSVG(o) {
             const compact = (o.fs || 1) > 1;
@@ -543,7 +543,7 @@
                 if ((S[c][0] - mx) * n[0] + (S[c][1] - my) * n[1] > 0) n = [-n[0], -n[1]];
                 const tw = 11 * fs * String(t).replace(/<[^>]+>/g, '').length;   // 文字のはば（およそ）
                 const dist = t === '底辺（隣辺）' ? 36 : 12 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 10 * fs;
-                const color = { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e', '底辺（隣辺）': '#2b8a3e' }[t];
+                const color = (o.colors && o.colors[key]) || { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e', '底辺（隣辺）': '#2b8a3e' }[t];   // o.colors：辺の長さ（数字）のまま色分けしたいとき
                 if (color) out += '<line x1="' + f(S[a][0]) + '" y1="' + f(S[a][1]) + '" x2="' + f(S[b][0]) + '" y2="' + f(S[b][1]) + '" stroke="' + color + '" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>';
                 const root = String(t).match(/^(\d*)√(\d+)$/);
                 const x = mx + n[0] * dist, y = my + n[1] * dist, size = 18 * fs;
@@ -639,9 +639,9 @@
                 correct: opts.indexOf(ans),
                 hint: fn + ' ' + ang + ' = ' + mathHTML(NAME[fn][0] + '/' + NAME[fn][1]) + '。角' + ang + 'から見て、向かい合う辺が「対辺」、角' + ang + 'ととなり合う斜辺でない辺が「隣辺」だよ。どの辺がどれかな？' +
                     '<br>' + triSVG({ p: a, q: b, names: { V: 'A', R: 'B', T: 'C' }, sides: ang === 'A' ? { VR: '隣辺', RT: '対辺', VT: '斜辺' } : { VR: '対辺', RT: '隣辺', VT: '斜辺' }, red: ang, mark: ang === 'A' ? 'V' : 'T', w: 240, h: 190 }) +
-                    // 角 C のときは、向きを変えて角 C を左下にした図もそえる（C が左下・直角 B が右下・A が上）
-                    (ang === 'C' ? '<br>向きを変えて、角Cを左下、直角を右下にすると、こうなるよ。<br>' +
-                        triSVG({ p: b, q: a, names: { V: 'C', R: 'B', T: 'A' }, sides: { VR: '隣辺', RT: '対辺', VT: '斜辺' }, mark: 'V', w: 240, h: 190 }) : ''),
+                    // 角 C のときは、問題の図（辺の長さつき）の向きを変えて角 C を左下にした図もそえる（C が左下・直角 B が右下・A が上）
+                    (ang === 'C' ? '<br>問題の図の向きを変えて、角Cを左下、直角を右下にすると、こうなるよ。<br>' +
+                        triSVG({ p: b, q: a, names: { V: 'C', R: 'B', T: 'A' }, sides: { VR: b, RT: a, VT: c }, colors: { VR: '#2b8a3e', RT: '#c92a2a', VT: '#1f4e8c' }, mark: 'V', w: 240, h: 190 }) : ''),
                 exp: fn + ' ' + ang + ' = ' + NAME[fn][0] + '/' + NAME[fn][1] + ' = ' + pick[0][0] + '/' + pick[1][0] + ' = ' + mathHTML(pick[0][1] + '/' + pick[1][1]) +
                     (ans !== pick[0][1] + '/' + pick[1][1] ? ' = ' + mathHTML(ans) + '（約分）' : '') +
                     (ang === 'C' ? '<br>C = 90° − A なので、' + fn + ' C = ' + { sin: 'cos', cos: 'sin', tan: '1/tan' }[fn] + ' A になっているね。' : ''),
