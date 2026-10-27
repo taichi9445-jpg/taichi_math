@@ -59,9 +59,9 @@
         .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
         .btn, .result-nav button { min-height: 44px; padding: 9px 16px; border: 1px solid #1f4e8c; border-radius: 6px; box-shadow: none; font-size: 15px; background: #fff; color: #1f4e8c; }
         .btn-primary, .result-nav .next { background: #1f4e8c; color: #fff; }
-        .hint-container, .feedback { display: none; margin-top: 18px; padding: 14px; border-left: 4px solid #1f4e8c; background: #f1f6fc; font-size: 16px; overflow-wrap: anywhere; }
+        .hint-container, .feedback { display: none; margin-top: 18px; padding: 14px; border-left: 4px solid #1f4e8c; background: #f1f6fc; font-size: 16px; overflow-wrap: normal; }
         .hint-title, .explanation-title { display: block; color: #1f4e8c; font-weight: 700; margin-bottom: 6px; }
-        .hint-container svg { margin-top: 12px; background: #fff; border-radius: 4px; }
+        .hint-container svg.tri { margin-top: 12px; background: #fff; border-radius: 4px; }
         .feedback.correct { border-color: #2b8a3e; background: #ebfbee; color: #2b8a3e; }
         .feedback.incorrect { border-color: #c92a2a; background: #fff5f5; color: #c92a2a; }
         .feedback .why { color: #1f2328; margin-top: 12px; }
@@ -71,12 +71,23 @@
         .result-nav a { color: #1f4e8c; font-size: 15px; }
         .m { font-family: 'STIX Two Text', serif; font-size: 1.12em; font-weight: 400; font-style: normal; white-space: nowrap; }
         .m i { font-style: italic; padding-right: .06em; }
-        .option .m { font-size: 1em; }
+        .option .m, .option .root-term { font-size: 1em; }
         .fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 2px; }
         .fr-n { border-bottom: 1px solid currentColor; padding: 0 4px 2px; }
         .fr-d { padding: 2px 4px 0; }
-        .rt { white-space: nowrap; }
-        .rt-in { border-top: 1px solid currentColor; padding: 0 1px; }
+        .math-root { display: inline-block; vertical-align: -.4em; overflow: visible; }
+        .root-term { font-size: 1.12em; display: inline-block; white-space: nowrap; font-family: 'STIX Two Text', serif; font-weight: 400; }
+        .fr { margin: .18em .1em; line-height: 1.25; align-items: stretch; text-align: center; }
+        .fr-n { padding: 0 .18em .15em; }
+        .fr-d { padding: .22em .18em 0; }
+        .fr .math-root { vertical-align: -.4em; }
+        .notation-paragraph { margin: .45em 0; }
+        .equation-line { display: flex; align-items: center; flex-wrap: wrap; gap: .25em; margin: .25em 0; min-height: 1.8em; }
+        .equation-line > .eq-part { display: inline-block; }
+        .keep-word { white-space: nowrap; }
+        .question-text, .hint-container, .feedback { word-break: normal; line-break: strict; }
+        @supports (word-break: auto-phrase) { .question-text, .hint-container, .feedback { word-break: auto-phrase; } }
+        @media (min-width: 641px) { .options:not(.fig-options) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         @media (hover: hover) { .option:not(:disabled):hover { border-color: #1f4e8c; } .btn:hover, .result-nav button:hover { filter: brightness(.94); } }
         @media (max-width: 640px) {
             body { padding: 8px; }
@@ -295,13 +306,116 @@
         }
 
         // ---------- 数式の表示（分数は縦、√ は上に線） ----------
-        function rtHTML(s) { return String(s).replace(/√(\d+)/g, '<span class="rt">√<span class="rt-in">$1</span></span>'); }
-        function mathHTML(s) {   // "√3/2" → 縦の分数。"−" はそのまま前に
+        // 根号と上線は一筆の SVG パス。本文と図で同じ座標・描画を使う。
+        function radicalSVG(digits, o = {}) {
+            const size = o.size || 20, scale = size / 20, width = 16 + String(digits).length * 15;
+            const dimensions = o.diagram
+                ? 'x="' + o.x + '" y="' + o.y + '" width="' + width * scale + '" height="' + 30 * scale + '"'
+                : 'width="' + width / 20 + 'em" height="1.5em"';
+            return '<svg class="math-root" ' + dimensions + ' viewBox="0 0 ' + width + ' 30" role="img" aria-label="√' + digits + '" xmlns="http://www.w3.org/2000/svg">' +
+                '<path d="M1 16 L4 14 L7 23 L13 5 H' + (width - 1) + '" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="miter"/>' +
+                '<text x="14" y="22" font-size="20" font-family="' + (o.diagram ? 'BIZ UDPGothic, sans-serif' : 'STIX Two Text, serif') + '" font-weight="' + (o.diagram ? '700' : '400') + '" fill="currentColor">' + digits + '</text></svg>';
+        }
+        function rtHTML(s) {
+            return String(s).replace(/(\d*)√(\d+)/g, (_, coefficient, digits) => '<span class="root-term">' + coefficient + radicalSVG(digits) + '</span>');
+        }
+        function mathHTML(s) {
             s = String(s);
             let sign = '';
             if (s[0] === '−') { sign = '−'; s = s.slice(1); }
             if (s.includes('/')) { const [n, d] = s.split('/'); return sign + '<span class="fr"><span class="fr-n">' + rtHTML(n) + '</span><span class="fr-d">' + rtHTML(d) + '</span></span>'; }
             return sign + rtHTML(s);
+        }
+
+        // 問題データはそのままに、表示の段階で表記を整える。
+        function baseIsAdjacent(level) {
+            if (level === 2) return L2[currentQuestion][4] === 'A';
+            if (level === 3) return true; // 有名角の図はすべて左下の角が基準
+            if (level === 4) return !!L4[currentQuestion].fig;
+            return false;
+        }
+        function formatNotation(root, useBase = false) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+            while (walker.nextNode()) {
+                const n = walker.currentNode;
+                if (n.parentElement && !n.parentElement.closest('svg, .root-term, .keep-word')) nodes.push(n);
+            }
+            const atom = '(?:底辺（隣辺）|対辺|隣辺|底辺|斜辺|高さ|（はなれた距離）|[ABC]{1,2}|(?:sin|cos|tan)\\s*(?:[A-Zθ]|[0-9]+°)?|[0-9]*√[0-9]+|[0-9]+)';
+            const fraction = new RegExp(atom + '/' + atom, 'g');
+            nodes.forEach(n => {
+                let text = n.nodeValue;
+                if (useBase) text = text.replace(/(?<!底辺（)隣辺/g, '底辺（隣辺）');
+                // すでに縦の分数である部分には、重ねて分数を作らない。
+                const pattern = n.parentElement.closest('.fr') ? /(?:\d*)√\d+/g : new RegExp(fraction.source + '|(?:\\d*)√\\d+', 'g');
+                const fragment = document.createDocumentFragment(); let last = 0;
+                for (const match of text.matchAll(pattern)) {
+                    fragment.append(document.createTextNode(text.slice(last, match.index)));
+                    const template = document.createElement('template'); template.innerHTML = mathHTML(match[0]);
+                    fragment.append(template.content); last = match.index + match[0].length;
+                }
+                fragment.append(document.createTextNode(text.slice(last))); n.replaceWith(fragment);
+            });
+            // Safari でも語尾だけが次行に残らないよう、短いまとまりを保護する。
+            const words = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), runs = [];
+            while (words.nextNode()) if (!words.currentNode.parentElement?.closest('svg, .keep-word')) runs.push(words.currentNode);
+            runs.forEach(n => {
+                const parts = n.nodeValue.split(/(えらび直そう！|どれですか？|いくつですか？|思い出そう。|考えよう。)/);
+                if (parts.length === 1) return;
+                const fragment = document.createDocumentFragment();
+                parts.forEach((part, i) => { if (i % 2) { const span = document.createElement('span'); span.className = 'keep-word'; span.textContent = part; fragment.append(span); } else fragment.append(document.createTextNode(part)); });
+                n.replaceWith(fragment);
+            });
+        }
+        function displayContent(html, level, separateLines = false) {
+            const box = document.createElement('div'); box.innerHTML = html;
+            formatNotation(box, baseIsAdjacent(level));
+            if (!separateLines) return box.innerHTML;
+            // 分数・根号は一つの部品として保ち、文と等式のつながりだけを改行する。
+            const paragraphs = [[]];
+            Array.from(box.childNodes).forEach(node => {
+                if (node.nodeName === 'BR') { paragraphs.push([]); return; }
+                if (node.nodeType !== Node.TEXT_NODE) { paragraphs.at(-1).push(node); return; }
+                node.textContent.split(/(。|なので、|だから、|で、)/).forEach(part => {
+                    if (!part) return;
+                    paragraphs.at(-1).push(document.createTextNode(part));
+                    if (['。', 'で、', 'なので、', 'だから、'].includes(part)) paragraphs.push([]);
+                });
+            });
+            box.replaceChildren();
+            paragraphs.forEach(nodes => {
+                if (!nodes.length) return;
+                const paragraph = document.createElement('div'); paragraph.className = 'notation-paragraph'; paragraph.append(...nodes);
+                const beforeEquals = paragraph.textContent.split('=')[0];
+                const equation = paragraph.textContent.includes('=') && /^(?:[A-Za-z0-9θ（(]|高さ)/.test(beforeEquals.trim()) && !/[はがをの]/.test(beforeEquals);
+                if (equation) {
+                    const steps = [[]];
+                    Array.from(paragraph.childNodes).forEach(n => {
+                        if (n.nodeType !== Node.TEXT_NODE) { steps.at(-1).push(n); return; }
+                        n.textContent.split(/(=)/).forEach(part => { if (part === '=') steps.push([]); else if (part) steps.at(-1).push(document.createTextNode(part)); });
+                    });
+                    paragraph.replaceChildren();
+                    steps.forEach((step, i) => {
+                        if (i === 0) return;
+                        const line = document.createElement('div'); line.className = 'equation-line';
+                        if (i === 1) { const left = document.createElement('span'); left.className = 'eq-part'; left.append(...steps[0]); line.append(left); }
+                        line.append(document.createTextNode(' = '));
+                        const right = document.createElement('span'); right.className = 'eq-part';
+                        const note = document.createElement('div'); note.className = 'equation-note';
+                        let inNote = false;
+                        step.forEach(node => {
+                            if (!inNote && node.nodeType === Node.TEXT_NODE) {
+                                const match = node.textContent.match(/(なので、|だから、|になっているね。|になるよ。|だよ。|を使おう。|（約分）)/);
+                                if (match) { right.append(document.createTextNode(node.textContent.slice(0, match.index))); note.append(document.createTextNode(node.textContent.slice(match.index))); inNote = true; return; }
+                            }
+                            (inNote ? note : right).append(node);
+                        });
+                        line.append(right); paragraph.append(line);
+                        if (note.textContent) paragraph.append(note);
+                    });
+                }
+                box.append(paragraph);
+            });
+            return box.innerHTML;
         }
         function gcd(a, b) { return b ? gcd(b, a % b) : a; }
         function ratio(n, d) { const g = gcd(n, d); return (n / g) + '/' + (d / g); }
@@ -346,7 +460,7 @@
                 if (o.markText) {
                     const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]);
                     const half = Math.acos(Math.max(-1, Math.min(1, a1[0] * a2[0] + a1[1] * a2[1]))) / 2;
-                    const dd = Math.max(56, Math.min(100, 18 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
+                    const dd = Math.max(56, Math.min(100, 20 / Math.tan(half)));   // 小さい角でも文字が角の内側に入るように
                     out += '<text x="' + f(M[0] + bis[0] * dd) + '" y="' + f(M[1] + bis[1] * dd) + '" font-size="18" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + o.markText + '</text>';
                 }
             }
@@ -358,23 +472,32 @@
             });
             // 辺の長さ（辺の中点から外向き）
             [['VR', 'V', 'R', 'T'], ['RT', 'R', 'T', 'V'], ['VT', 'V', 'T', 'R']].forEach(([key, a, b, c]) => {
-                const t = o.sides && o.sides[key];
+                let t = o.sides && o.sides[key];
+                if (t === '隣辺' && o.mark === 'V' && key === 'VR' && !o.rot && !o.fx && !o.fy) t = '底辺（隣辺）';
                 if (!t) return;
                 const mx = (S[a][0] + S[b][0]) / 2, my = (S[a][1] + S[b][1]) / 2;
                 let n = unit(S[a], S[b]); n = [-n[1], n[0]];
                 if ((S[c][0] - mx) * n[0] + (S[c][1] - my) * n[1] > 0) n = [-n[0], -n[1]];
                 const tw = 11 * fs * String(t).replace(/<[^>]+>/g, '').length;   // 文字のはば（およそ）
-                const dist = 12 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 10 * fs;
-                const color = { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e' }[t];
+                const dist = t === '底辺（隣辺）' ? 36 : 12 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 10 * fs;
+                const color = { '斜辺': '#1f4e8c', '対辺': '#c92a2a', '隣辺': '#2b8a3e', '底辺（隣辺）': '#2b8a3e' }[t];
                 if (color) out += '<line x1="' + f(S[a][0]) + '" y1="' + f(S[a][1]) + '" x2="' + f(S[b][0]) + '" y2="' + f(S[b][1]) + '" stroke="' + color + '" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>';
-                const root = String(t).match(/√(\d+)$/);
-                out += '<text x="' + f(mx + n[0] * dist) + '" y="' + f(my + n[1] * dist) + '" font-size="' + 18 * fs + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="' + (color || (t === '?' ? '#1f4e8c' : '#1f2328')) + '" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
-                // 上線は SVG の text-decoration に頼らず、数字の上に明示して描く。
+                const root = String(t).match(/^(\d*)√(\d+)$/);
+                const x = mx + n[0] * dist, y = my + n[1] * dist, size = 18 * fs;
                 if (root) {
-                    const x = mx + n[0] * dist, y = my + n[1] * dist;
-                    out += '<line x1="' + f(x + tw / 2 - root[1].length * 11 * fs) + '" y1="' + f(y - 11 * fs) + '" x2="' + f(x + tw / 2) + '" y2="' + f(y - 11 * fs) + '" stroke="#1f2328" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
+                    const rootWidth = (15 + root[2].length * 12) * size / 20, prefixWidth = root[1].length * size * .6;
+                    const left = x - (rootWidth + prefixWidth) / 2;
+                    if (root[1]) out += '<text x="' + f(left) + '" y="' + f(y + size * .35) + '" font-family="BIZ UDPGothic, sans-serif" font-size="' + size + '" font-weight="700">' + root[1] + '</text>';
+                    out += radicalSVG(root[2], { diagram: true, size, x: left + prefixWidth, y: y - size * .75 });
+                } else {
+                    out += '<text x="' + f(x) + '" y="' + f(y) + '" font-size="' + size + '" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="' + (color || (t === '?' ? '#1f4e8c' : '#1f2328')) + '" text-anchor="middle" dominant-baseline="central">' + svgRoot(t) + '</text>';
                 }
             });
+            if (o.w === 260 && o.h === 220) {
+                const top = Math.max(0, Math.min(...Object.values(S).map(p => p[1])) - 32);
+                const bottom = Math.min(h, Math.max(...Object.values(S).map(p => p[1])) + 36);
+                out = out.replace('viewBox="0 0 ' + w + ' ' + h + '"', 'viewBox="0 ' + f(top) + ' ' + w + ' ' + f(bottom - top) + '"').replace('height="' + h + '"', 'height="' + f(bottom - top) + '"');
+            }
             return out + '</svg>';
         }
         function jpText(t) { return /[ぁ-んァ-ヶ一-龥]/.test(String(t)); }   // 日本語をふくむか（図の文字の書体を分ける）
@@ -562,7 +685,7 @@
             const question = questions[currentQuestion];
             document.getElementById('progress' + level).style.width = (currentQuestion / questions.length * 100) + '%';
             document.getElementById('questionNum' + level).innerHTML = '<span class="question-badge">問' + (currentQuestion + 1) + '</span><span>' + (currentQuestion + 1) + ' / ' + questions.length + '</span>';
-            document.getElementById('questionText' + level).innerHTML = question.question;
+            document.getElementById('questionText' + level).innerHTML = displayContent(question.question, level);
             document.getElementById('triangleContainer' + level).innerHTML = question.figure || '';
             const box = document.getElementById('options' + level);
             box.innerHTML = '';
@@ -580,7 +703,7 @@
                 box.appendChild(b);
             });
             const hint = question.hint || (level === 4 ? HINT4[currentQuestion] : '');
-            document.getElementById('hintText' + level).innerHTML = hint;
+            document.getElementById('hintText' + level).innerHTML = displayContent(hint, level, true);
             document.getElementById('nextBtn' + level).style.display = 'none';
             document.getElementById('retryBtn' + level).style.display = 'none';
             document.getElementById('feedback' + level).style.display = 'none';
@@ -597,14 +720,14 @@
                 buttons[index].classList.add('correct');
                 if (!missedThis) score++;
                 fb.className = 'feedback correct';
-                fb.innerHTML = '正解です！<div class="why"><span class="explanation-title">解説</span>' + question.exp + '</div>';
+                fb.innerHTML = '正解です！<div class="why"><span class="explanation-title">解説</span>' + displayContent(question.exp, level, true) + '</div>';
                 document.getElementById('nextBtn' + level).style.display = 'inline-block';
             } else {
                 missedThis = true;
                 buttons[index].classList.add('incorrect');
                 buttons[index].disabled = true;
                 fb.className = 'feedback incorrect';
-                fb.innerHTML = 'ちがいます。のこりの選択肢からえらび直そう！<div class="why"><span class="explanation-title">解説</span>' + question.why[orig] + '</div>';
+                fb.innerHTML = 'ちがいます。<br>のこりの選択肢から<span class="keep-word">えらび直そう！</span><div class="why"><span class="explanation-title">解説</span>' + displayContent(question.why[orig], level, true) + '</div>';
             }
             fb.style.display = 'block';
             fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -638,7 +761,7 @@
             const nodes = [];
             while (walker.nextNode()) {
                 const n = walker.currentNode, p = n.parentElement;
-                if (!p || p.closest('.m, .no-math, svg, canvas, script, style, textarea, input')) continue;
+                if (!p || p.closest('.m, .no-math, .root-term, svg, canvas, script, style, textarea, input')) continue;
                 if (/[A-Za-z0-9θ]/.test(n.nodeValue)) nodes.push(n);
             }
             nodes.forEach(n => {
