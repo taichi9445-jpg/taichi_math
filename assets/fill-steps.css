@@ -129,3 +129,17 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
   .fs-cards{max-height:calc(100vh - 120px)}
   .fs-q.has-fig{grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:16px}
 }
+
+/* 種類は下線、解答の状態は地色。正解・答えを見た状態でも種類の線を残す。 */
+.fs-tab.fs-group-0{--fs-group:#527fa3;--fs-tint:#f0f6fb}
+.fs-tab.fs-group-1{--fs-group:#8056a1;--fs-tint:#f7f1fb}
+.fs-tab.fs-group-2{--fs-group:#a35c45;--fs-tint:#fbf2ee}
+.fs-tab.fs-group-3{--fs-group:#477e7b;--fs-tint:#eff8f7}
+.fs-tab[class*="fs-group-"]{border-bottom-color:var(--fs-group)!important}
+.fs-tab[class*="fs-group-"]:not(.cur):not(.done):not(.shown){background:var(--fs-tint)}
+.fs-tab.fs-group-start{margin-left:6px}
+@media(max-width:640px){
+  .fs-tabs{gap:4px}
+  .fs-tab{min-width:30px;padding:0 5px}
+  .fs-tab.fs-group-start{margin-left:4px}
+}

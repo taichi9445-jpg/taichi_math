@@ -286,6 +286,6 @@ function hintFig(p, row) {
   return p.deg < 90 ? HintFig.trace(p.deg, 'sin') : HintFig.semi(p.deg);
 }
 
-FillSteps.mount({ el: "#app", problems, hint, hintFig, top: formulaBox });
+FillSteps.mount({ tabGroup: (p,i) => ({id:i<3?0:i<5?1:i<7?2:3,label:i<3?'基本':i<5?'有理化':i<7?'鈍角':'鈍角＋有理化'}), el: "#app", problems, hint, hintFig, top: formulaBox });
 </script>
 </body></html>

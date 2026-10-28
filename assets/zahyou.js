@@ -225,6 +225,7 @@ function mountZahyou(app, angles, key, o = {}) {
   let api = null;
   api = FillSteps.mount({
     el: app, problems, hint, hintFig,
+    tabGroup: p => ({id:key === 'basic' && p.deg > 90 ? 1 : 0,label:key === 'basic' ? (p.deg < 90 ? '鋭角' : '鈍角') : '同じ種類の角'}),
     after: (root, p, st) => { afterRender(root, p, st); if (api && o.onDone && api.state().every(s => s.done || s.shown)) o.onDone(); },
     tabLabel: p => p.deg + '°', tabPrefix: '', badge: p => p.deg + '°',
     tabsBefore: o.menuBtn || '', finalExtra: o.finalExtra

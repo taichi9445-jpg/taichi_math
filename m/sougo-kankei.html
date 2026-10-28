@@ -214,6 +214,6 @@ function wrong(p, b, v) {
 // 公式の行（sin²A + cos²A = 1 と tan A = sin A/cos A）は、背景の色を変えて「公式」としるす（先生の要望）
 problems.forEach(p => [0, 7].forEach(i => { p.rows[i] = '!' + p.rows[i]; }));
 
-FillSteps.mount({ el: '#app', problems, hint, hintFig, wrong });
+FillSteps.mount({ tabGroup: (p,i) => ({id:i<3?0:i<5?1:2,label:i<3?'基本':i<5?'鈍角・√の簡単化':'有理化まで'}), el: '#app', problems, hint, hintFig, wrong });
 </script>
 </body></html>

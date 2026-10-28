@@ -5,6 +5,7 @@
    使い方：
      FillSteps.mount({ el: '#app', problems: [...], hint: (p,row)=>'…', hintFig: (p,row)=>'<svg…>' });
 
+   tabGroup: (p, i) => ({ id: 0, label: "基本" }) で問題のまとまりを色分け（0〜3）。
    問題 1 つのデータ：
      { q: '問題文', fig: '図のSVG（なくてよい）', rows: [ '1行目', '2行目', … ],
        cards: [ 'カード', ['ダミー', 'まちがえたときの一言'], … ], ans: '答え' }
@@ -117,14 +118,35 @@
 
   function rowObj(r) { return typeof r === 'string' ? { t: r } : r; }
 
+  // 表示・alts用の番号は分子からのまま。移動順だけ分母を先にする。
+  function blankVisitOrder(src, start) {
+    var next = start;
+    function walk(s) {
+      var order = [];
+      for (var i = 0; i < s.length;) {
+        if (s[i] === '[') {
+          order.push(next++); i = s.indexOf(']', i) + 1;
+        } else if (s[i] === '{') {
+          var end = closing(s, i, '{', '}'), parts = splitTop(s.slice(i + 1, end), '|');
+          var numerator = walk(parts[0]), denominator = walk(parts[1] || '');
+          order = order.concat(denominator, numerator); i = end + 1;
+        } else { i++; }
+      }
+      return order;
+    }
+    return walk(src);
+  }
+
   function prepare(p) {
     p.rows = p.rows.map(rowObj);
     p.blanks = [];
+    p.blankOrder = [];
     p.rows.forEach(function (row, ri) {
       row.prose = row.t[0] === '#';
       row.formula = row.t[0] === '!';
       row.src = bigParens(row.prose || row.formula ? row.t.slice(1) : row.t);
       row.blanks = [];
+      p.blankOrder = p.blankOrder.concat(blankVisitOrder(row.src, p.blanks.length));
       parse(row.src, { blank: function (spec) {
         var sp = spec.split('@'), b = { a: sp[0], g: sp[1] || null, row: ri, i: p.blanks.length };
         p.blanks.push(b); row.blanks.push(b.i); return '';
@@ -143,7 +165,7 @@
     if (wide.addEventListener) wide.addEventListener('change', function () { render(); });
 
     function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0 }; }
-    function firstEmpty(p, st) { for (var i = 0; i < p.blanks.length; i++) if (st.fill[i] === undefined) return i; return null; }
+    function firstEmpty(p, st) { for (var n = 0; n < p.blankOrder.length; n++) { var i = p.blankOrder[n]; if (st.fill[i] === undefined) return i; } return null; }
     function rowDone(p, st, ri) { return p.rows[ri].blanks.every(function (b) { return st.fill[b] !== undefined; }); }
 
     // その空欄に、そのカードを入れてよいか（@ のついた空欄は、同じ組の中で入れかえてよい）
@@ -164,7 +186,11 @@
       });
       return pool.indexOf(v) >= 0;
     }
-    function needCount(p, v) { return p.blanks.filter(function (b) { return b.a === v; }).length; }
+    function needCount(p, v) {
+      // 単位円の座標と三角比で同じカードを使う別解も、最後まで使える回数を確保。
+      var sets = [p.blanks.map(function (b) { return b.a; })].concat(p.alts || []);
+      return Math.max.apply(null, sets.map(function (set) { return set.filter(function (a) { return a === v; }).length; }));
+    }
     function usedCount(p, st, v) { var n = 0; for (var k in st.fill) if (st.fill[k] === v) n++; return n; }
     function isOff(p, st, v) { var need = needCount(p, v); return need > 0 && usedCount(p, st, v) >= need; }
 
@@ -224,9 +250,14 @@
       });
       if (sec) rows += '</ol></li>';
 
+      var groupInfo = P.map(function (p, i) {
+        var g = o.tabGroup ? o.tabGroup(p, i) : null;
+        return g === null || g === undefined ? null : typeof g === 'object' ? g : { id: g, label: 'グループ ' + (Number(g) + 1) };
+      });
       var tabs = P.map(function (_, i) {
-        var s = S[i];
-        return '<button type="button" class="fs-tab' + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '" data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (o.tabLabel ? o.tabLabel(P[i], i) : (i + 1)) + '</button>';
+        var s = S[i], g = groupInfo[i], groupClass = g ? ' fs-group-' + (Math.abs(Number(g.id) || 0) % 4) + (i && groupInfo[i - 1] && groupInfo[i - 1].id !== g.id ? ' fs-group-start' : '') : '';
+        var groupTitle = g ? ' title="' + esc(g.label) + '"' : '';
+        return '<button type="button" class="fs-tab' + groupClass + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '"' + groupTitle + ' data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (o.tabLabel ? o.tabLabel(P[i], i) : (i + 1)) + '</button>';
       }).join('');
 
       var few = o.fewCards !== false && !wide.matches && !all && st.active !== null ? fewCards(p, st, st.active) : null;
