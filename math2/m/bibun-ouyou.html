@@ -1,1156 +1,1679 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-  <!--
-    数学Ⅱ 05. 微分の練習 応用（微分クイズチャレンジ）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../../assets/port.css">
-  <script src="../../assets/port.js"></script>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微分クイズチャレンジ</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>微分の練習 応用</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100%;
-            color: #333;
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 10px;
+        background: #f5f7fa;
+        color: #1f2328;
+        font:
+          17px/1.7 "BIZ UDPGothic",
+          sans-serif;
+      }
+      .port-back {
+        display: block;
+        max-width: 1120px;
+        margin: 0 auto 8px;
+        color: #5b6470;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: auto;
+        background: white;
+        border: 1px solid #d0d7de;
+        border-top: 4px solid #1f4e8c;
+        border-radius: 8px;
+        padding: 14px;
+      }
+      .head {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .head small {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+      h2 {
+        font-size: 19px;
+      }
+      h3 {
+        font-size: 17px;
+      }
+      #menu > p {
+        font-size: 14px;
+      }
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .menu-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        text-align: left;
+        min-height: 135px;
+        padding: 12px !important;
+      }
+      .menu-card svg {
+        width: 70px;
+        height: 42px;
+      }
+      .menu-card small {
+        font-size: 12px;
+        color: #5b6470;
+        line-height: 1.7;
+      }
+      .menu-card b {
+        font-size: 16px;
+      }
+      .toolbar button {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 6px 0 12px;
+        font-size: 13px;
+        color: #5b6470;
+      }
+      button {
+        font:
+          15px "BIZ UDPGothic",
+          sans-serif;
+        min-height: 44px;
+        padding: 8px 14px;
+        border: 1px solid #c5d3e4;
+        border-bottom: 3px solid #b6bfc9;
+        border-radius: 6px;
+        background: white;
+        color: #1f4e8c;
+        cursor: pointer;
+        transition: transform 0.08s;
+      }
+      button:not(:disabled):active {
+        transform: translateY(2px);
+        border-bottom-width: 1px;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+      .primary {
+        background: #1f4e8c;
+        color: white;
+        border-color: #1f4e8c;
+        border-bottom-color: #163a69;
+      }
+      .question-no {
+        background: #1f4e8c;
+        color: white;
+        padding: 2px 8px;
+      }
+      .problem {
+        font-size: 23px;
+        margin: 16px 0 8px;
+      }
+      .ask {
+        font-size: 17px;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+      }
+      .choice {
+        position: relative;
+        min-height: 76px;
+        font-size: 22px;
+        padding: 22px 8px 12px;
+        color: #1f2328;
+      }
+      .choice::before {
+        content: attr(data-label);
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font: 12px "BIZ UDPGothic";
+        color: #5b6470;
+      }
+      .choice.correct {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .choice.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .feedback,
+      .hint-box,
+      .explain-box {
+        padding: 12px;
+        border-left: 4px solid #1f4e8c;
+        background: #f1f6fc;
+        margin-top: 12px;
+        font-size: 16px;
+      }
+      .feedback.correct,
+      .explain-box.ok {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .feedback.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .hint-tag {
+        display: block;
+        font-size: 13px;
+        color: #1f4e8c;
+        margin-bottom: 4px;
+      }
+      .formula {
+        background: #f5f0ff;
+        border-left: 3px solid #9366d5;
+        padding: 8px;
+        margin: 8px 0;
+      }
+      .formula b {
+        font: 12px "BIZ UDPGothic";
+        color: #6e40c9;
+        margin-right: 10px;
+      }
+      .controls,
+      .result-nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .result-nav a {
+        font-size: 14px;
+        color: #1f4e8c;
+        padding: 10px;
+      }
+      .result-score {
+        font-size: 24px;
+        color: #1f4e8c;
+      }
+      .m {
+        font-family: "STIX Two Text", serif;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+      .m i {
+        font-style: italic;
+      }
+      sup {
+        font-size: 0.72em;
+        line-height: 0;
+        vertical-align: 0.55em;
+      }
+      .fraction {
+        display: inline-flex;
+        flex-direction: column;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 1.15;
+        margin: 0 0.1em;
+        font-family: "STIX Two Text";
+        font-weight: 400;
+      }
+      .numerator {
+        border-bottom: 1px solid;
+        padding: 0 0.15em 0.1em;
+      }
+      .denominator {
+        padding: 0.12em 0.15em 0;
+      }
+      .equation {
+        font-size: 19px;
+        margin: 8px 0;
+        line-height: 1.9;
+      }
+      .eqpart {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .explain-title {
+        margin-bottom: 8px;
+        font-size: 17px;
+      }
+      .input-section {
+        margin: 16px 0;
+      }
+      input {
+        font: 21px "STIX Two Text";
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid #9db6d6;
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .input-tools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 8px 0;
+      }
+      .input-tools button {
+        min-width: 42px;
+        padding: 6px;
+      }
+      .input-feedback {
+        font-size: 15px;
+        margin-top: 8px;
+        color: #a61e1e;
+      }
+      .input-help {
+        font-size: 14px;
+        margin-top: 12px;
+      }
+      .review-item {
+        border-top: 1px solid #d0d7de;
+        padding: 14px 0;
+      }
+      .review-item svg {
+        display: block;
+        width: 300px;
+        max-width: 100%;
+        margin: 12px auto;
+      }
+      .review-item summary {
+        cursor: pointer;
+        color: #1f4e8c;
+      }
+      .formula .m {
+        font-size: 18px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .progress-track {
+        height: 3px;
+        background: #e6edf5;
+        margin: 10px 0;
+      }
+      .progress-track span {
+        display: block;
+        height: 3px;
+        background: #1f4e8c;
+      }
+      .level-label {
+        font-size: 14px;
+        color: #8056a1;
+      }
+      .keyboard-note {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      .math-fit {
+        max-width: 100%;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .wrap {
+          max-width: 1120px;
+          padding: 20px;
         }
-
-        html, body {
-            height: 100%;
+        .quiz-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 370px;
+          gap: 24px;
+          align-items: start;
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+        .answer-panel {
+          position: sticky;
+          top: 12px;
         }
-
-        .header {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .choices {
+          margin-top: 0;
         }
-
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .menu-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-
-        .mode-selection {
-            padding: 40px;
-            text-align: center;
+        .menu-grid.modes {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
         }
-
-        .mode-btn {
-            display: inline-block;
-            margin: 15px;
-            padding: 20px 40px;
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-
-        .quiz-container {
-            padding: 40px;
-            display: none;
-        }
-
-        .timer-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(45deg, #ffecd2, #fcb69f);
-            border-radius: 15px;
-        }
-
-        .timer {
-            font-size: 2em;
-            font-weight: bold;
-            color: #e74c3c;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .progress {
-            font-size: 1.2em;
-            color: #2c3e50;
-            font-weight: bold;
-        }
-
-        .question-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .question {
-            font-size: 1.5em;
-            margin-bottom: 25px;
-            text-align: center;
-            color: #2c3e50;
-        }
-
-        .fraction {
-            display: inline-block;
-            text-align: center;
-            vertical-align: middle;
-            margin: 0 3px;
-        }
-
-        .fraction .numerator {
-            display: block;
-            border-bottom: 1px solid #333;
-            padding-bottom: 2px;
-        }
-
-        .fraction .denominator {
-            display: block;
-            padding-top: 2px;
-        }
-
-        .options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .option {
-            padding: 20px;
-            background: white;
-            border: 3px solid #e9ecef;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            font-size: 1.1em;
-        }
-
-        .option:hover {
-            border-color: #4ecdc4;
-            background: #f0fdfc;
-            transform: translateY(-2px);
-        }
-
-        .option.selected {
-            border-color: #2ecc71;
-            background: #d5f4e6;
-        }
-
-        .option.correct {
-            border-color: #27ae60;
-            background: #d5f4e6;
-            animation: correctPulse 0.6s ease;
-        }
-
-        .option.incorrect {
-            border-color: #e74c3c;
-            background: #fadbd8;
-            animation: incorrectShake 0.6s ease;
-        }
-
-        @keyframes correctPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes incorrectShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .next-btn {
-            display: none;
-            margin: 30px auto 0;
-            padding: 15px 40px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .next-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .results {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .score {
-            font-size: 3em;
-            color: #27ae60;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .time-display {
-            font-size: 1.5em;
-            color: #e74c3c;
-            margin-bottom: 30px;
-        }
-
-        .restart-btn {
-            padding: 15px 30px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .restart-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .mode-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .hell-mode {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
-            animation: hellPulse 2s infinite;
-        }
-
-        @keyframes hellPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 65, 108, 0.5); }
-            50% { box-shadow: 0 0 30px rgba(255, 65, 108, 0.8); }
-        }
-
-        .back-to-menu-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-to-menu-btn:hover {
-            background: rgba(0,0,0,0.9);
-            transform: translateY(-2px);
-        }
-
-        .input-section {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        #answerInput {
-            width: 80%;
-            max-width: 400px;
-            padding: 15px;
-            font-size: 1.2em;
-            border: 3px solid #e9ecef;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            text-align: center;
-            ime-mode: disabled;
-        }
-
-        #answerInput:focus {
-            outline: none;
-            border-color: #4ecdc4;
-            box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
-        }
-
-        .submit-btn {
-            padding: 15px 30px;
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .submit-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .input-feedback {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            min-height: 20px;
-        }
-
-        .input-feedback.correct {
-            background: #d5f4e6;
-            color: #27ae60;
-            border: 2px solid #27ae60;
-        }
-
-        .input-feedback.incorrect {
-            background: #fadbd8;
-            color: #e74c3c;
-            border: 2px solid #e74c3c;
-        }
+      }
     </style>
-  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    html, body { height: auto; }
-    body { padding: 12px; }
-    .container { overflow: visible; padding: 20px 16px; }
-    .header { background: none; color: var(--u-ink); padding: 4px 4px 0; }
-    .header h1 { font-size: min(2.2rem, 6vw); white-space: nowrap; text-shadow: none; margin: 0 0 6px; }
-    .header p { color: var(--u-sub); font-weight: 700; }
-    .mode-selection { padding: 12px 4px; }
-    .mode-selection h2 { color: var(--u-title-dark); font-size: 1.2rem; }
-    .mode-btn { display: block; width: 100%; max-width: 440px; margin: 12px auto; padding: 16px 20px; font-size: 1.15em; box-sizing: border-box; }
-    .mode-btn small { color: var(--u-sub); font-weight: 700; }
-    .mode-btn.hell-mode { background: var(--u-ng-soft) !important; border-color: var(--u-ng-line) !important; color: var(--u-ng) !important; animation: none; }
-    .quiz-container { padding: 12px 4px; }
-    .mode-indicator, .back-to-menu-btn { position: static; display: inline-block; margin: 0 6px 10px 0; }
-    .mode-indicator { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); }
-    .mode-indicator.hell-mode { background: var(--u-ng-soft) !important; color: var(--u-ng); animation: none; }
-    .timer-section { background: var(--u-soft-yellow); border: 3px dashed #fde68a; padding: 10px 16px; margin-bottom: 16px; }
-    .timer { color: var(--u-accent-text); text-shadow: none; font-size: 1.4em; }
-    .progress { color: var(--u-ink); }
-    .question-card { background: #f8fafc; border: 3px solid var(--u-line); box-shadow: none; border-radius: 24px; margin-bottom: 12px; }
-    .question { color: var(--u-ink); font-weight: 800; font-size: 1.3em; }
-    .option { font-size: 1.25em; font-weight: 700; width: 100%; }
-    /* 【ブラッシュアップ】式の中の文字は斜体・数字は立体、書体は数式用（日本語はふつうの書体） */
-    .m { font-family: var(--u-math-font); font-size: 1.08em; }
-    .m i { font-style: italic; padding-right: 0.04em; }
-
-    .option:disabled { cursor: default; }
-    .option.incorrect { animation: none; }
-    .fraction { font-size: 0.85em; line-height: 1.15; }
-    .fraction .numerator { border-bottom-color: currentColor; }
-    .answer-line { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .answer-label { font-size: 1.2em; font-weight: 700; color: var(--u-ink); white-space: nowrap; }
-    #answerInput { margin-bottom: 0; }
-    .input-feedback { border-radius: 14px; margin: 10px 0; }
-    .input-feedback:empty { display: none; }
-    .input-feedback.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .input-feedback.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .input-feedback.shown { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); }
-    .input-help { margin: 12px 0 0; font-size: 0.9em; color: var(--u-sub); line-height: 1.6; text-align: left; }
-    .input-help summary { cursor: pointer; font-weight: 700; }
-    .rule-hint { margin-top: 8px; color: var(--u-title); font-size: 0.95rem; font-weight: 700; }
-    .hint-box { margin-top: 12px; background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); color: var(--u-title); border-radius: 16px; padding: 10px 14px; font-weight: 700; line-height: 1.9; text-align: left; }
-    .hint-tag { display: inline-block; background: #fff; border-radius: 999px; padding: 0 10px; margin-right: 6px; font-size: 0.85em; }
-    .hint-row { text-align: center; margin-top: 14px; }
-    .hint-button { padding: 8px 18px !important; font-size: 0.95rem; border-radius: 999px !important; }
-    .explain-box { margin-top: 14px; background: #fff; border: 3px dashed var(--u-line); color: var(--u-ink); border-radius: 16px; padding: 12px 14px; font-weight: 700; line-height: 1.9; text-align: left; }
-    .explain-box.ok { background: var(--u-ok-soft); border: 3px solid var(--u-ok-line); }
-    .explain-title { font-size: 1.15em; margin-bottom: 4px; }
-    .next-btn { margin-top: 16px; }
-    .results h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
-    .score { color: var(--u-title); text-shadow: none; font-size: 2.2em; font-weight: 800; }
-    .time-display { color: var(--u-sub); font-weight: 700; }
-    #encouragementText { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 18px auto 0; }
-    .result-nav button { margin: 0; padding: 12px; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    @media (max-width: 640px) {
-      body { padding: 8px; }
-      .container { padding: 14px 10px; }
-      .question-card { padding: 16px 10px; }
-      .question { font-size: 1.1em; margin-bottom: 14px; }
-      .options { gap: 8px; }
-      .option { padding: 12px 6px; font-size: 1.1em; }
-      .timer { font-size: 1.2em; }
-      .timer-section { padding: 8px 14px; margin-bottom: 10px; }
-      #answerInput { width: 100%; box-sizing: border-box; }
-      .submit-btn { margin: 6px 4px !important; }
-    }
-  
-  </style>
-</head>
-<body class="u-theme">
+  </head>
+  <body>
     <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-    <div class="container">
-        <div class="header">
-            <h1>🧮 微分クイズチャレンジ 🚀</h1>
-            <p>単項式・多項式の微分をマスターしよう！</p>
+    <main class="wrap">
+      <header class="head">
+        <small>数学Ⅱ　微分・積分</small>
+        <h1>微分の練習 応用</h1>
+      </header>
+      <section id="menu">
+        <p>モードを選んで始めよう。</p>
+        <div id="menuGrid" class="menu-grid modes"></div>
+      </section>
+      <section id="quiz" hidden>
+        <div class="toolbar">
+          <span class="question-no" id="status"></span><span id="timer"></span
+          ><button onclick="menu()">選び直す</button
+          ><button onclick="start(ADVANCED ? mode : lev)">
+            もう一度やり直す
+          </button>
         </div>
-
-        <div class="mode-selection" id="modeSelection">
-            <h2>チャレンジモードを選択してください</h2>
-            <button class="mode-btn" onclick="startQuiz('normal')">
-                📚 通常モード<br>
-                <small>10問ランダム出題（やさしい問題から順に）</small>
-            </button>
-            <button class="mode-btn" onclick="startQuiz('hundred')">
-                💯 全問連続モード<br>
-                <small>全<span class="pool-count">80</span>問に連続チャレンジ</small>
-            </button>
-            <button class="mode-btn hell-mode" onclick="startQuiz('hell')">
-                👹 超鬼連チャンモード<br>
-                <small>全<span class="pool-count">80</span>問・1問でも間違えたら終了</small>
-            </button>
-            <button class="mode-btn" onclick="startQuiz('input')" style="background: linear-gradient(45deg, #a8e6cf, #88d8a3);">
-                ✏️ 入力モード<br>
-                <small>10問・答えを直接入力<br>※整数係数の問題のみ</small>
-            </button>
-        </div>
-
-        <div class="quiz-container" id="quizContainer">
-            <div class="mode-indicator" id="modeIndicator"></div>
-            <button class="back-to-menu-btn" onclick="showModeSelection()">← メニューに戻る</button>
-            <div class="timer-section">
-                <div class="timer" id="timer">00:00</div>
-                <div class="progress" id="progress">問題 1/10</div>
+        <div class="progress-track"><span id="bar"></span></div>
+        <div class="quiz-grid">
+          <div>
+            <div id="question" class="ask"></div>
+            <div id="hints"></div>
+            <div id="feedback" aria-live="polite" hidden></div>
+          </div>
+          <div class="answer-panel">
+            <div id="choices" class="choices"></div>
+            <div id="inputSection" class="input-section" hidden>
+              <label for="answerInput">答えの式</label
+              ><input
+                id="answerInput"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              />
+              <div class="input-tools">
+                <button onclick="insertText('x')">x</button
+                ><button onclick="insertText('²')">²</button
+                ><button onclick="insertText('³')">³</button
+                ><button onclick="insertText('−')">−</button
+                ><button onclick="insertText('+')">+</button>
+              </div>
+              <button id="submit" class="primary" onclick="submit()">
+                答え合わせ
+              </button>
+              <div
+                id="inputFeedback"
+                class="input-feedback"
+                aria-live="polite"
+              ></div>
+              <details class="input-help">
+                <summary>入力のしかた</summary>
+                2x² は 2x^2 でも入力できます。空白は入っていてもかまいません。
+              </details>
             </div>
-
-            <div class="question-card">
-                <div class="question" id="question"></div>
-                <div class="options" id="options"></div>
-                <!-- 【ブラッシュアップ】答えのまちがい・ヒントが、入力欄のすぐ下に出るように並べかえた（元は説明の下で、スマホでは画面の外だった） -->
-                <div class="input-section" id="inputSection" style="display: none;">
-                    <div class="answer-line"><span class="answer-label" id="answerLabel">f'(x) =</span>
-                    <input type="text" id="answerInput" placeholder="例：-x^2 + 2x" autocomplete="off" autocapitalize="off" spellcheck="false" /></div>
-                    <div class="input-feedback" id="inputFeedback"></div>
-                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">回答する</button>
-                    <button class="submit-btn" id="showAnswerBtn" onclick="showAnswer()" style="background: linear-gradient(45deg, #f39c12, #e67e22); margin-left: 10px;">答えを見る</button>
-                    <details class="input-help">
-                        <summary>📱 入力のしかた</summary>
-                        • 指数：x^2 または x**2（ハット記号は英数字キーボードの6の上）<br>
-                        • マイナス：- （ひらがなキーボードの「ー」でもOK）<br>
-                        • 例：2x + 1, -3x^2 + 5x, 0（「f'(x) =」は書いても書かなくてもOK）
-                    </details>
-                </div>
-                <div id="hintArea"></div>
-                <div id="explainArea"></div>
-                <div class="hint-row" id="hintRow"><button class="hint-button" id="hintBtn" onclick="showNextHint()">💡 ヒント（方針）を見る</button></div>
-                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">次の問題へ →</button>
+            <div id="help" class="controls">
+              <button onclick="hints()">ヒント</button
+              ><button onclick="reveal()">答えを見る</button>
             </div>
+            <button id="next" class="primary" onclick="advance()" hidden>
+              次の問題へ
+            </button>
+          </div>
         </div>
-
-        <div class="results" id="results">
-            <h2>🎉 お疲れさまでした！</h2>
-            <div class="score" id="finalScore"></div>
-            <div class="time-display" id="finalTime"></div>
-            <div id="encouragementText"></div>
-            <!-- 【ブラッシュアップ】ほかの教材も選べるようにした -->
-            <div class="result-nav">
-                <button class="restart-btn again" onclick="restartSameMode()">同じモードで再挑戦</button>
-                <button class="restart-btn plain" onclick="showModeSelection()">モードをえらび直す</button>
-                <a href="../index.html">ほかの教材をえらぶ</a>
-            </div>
-        </div>
-    </div>
-
+      </section>
+      <section id="result" hidden></section>
+    </main>
     <script>
-        // 問題プール（【ブラッシュアップ】元の 80 問に、展開・f'(a)・係数を決める問題を足した）
-        const problemPool = [
-            // 単項式（基本）
-            {q: "f(x) = x", options: ["1", "x", "0", "2x"], correct: 0},
-            {q: "f(x) = 2x", options: ["2", "x", "2x", "0"], correct: 0},
-            {q: "f(x) = 3x", options: ["3", "3x", "1", "0"], correct: 0},
-            {q: "f(x) = 5x", options: ["5", "x", "5x", "1"], correct: 0},
-            {q: "f(x) = x²", options: ["2x", "x", "x²", "2"], correct: 0},
-            {q: "f(x) = x³", options: ["3x²", "x²", "3x", "x³"], correct: 0},
-            {q: "f(x) = x⁴", options: ["4x³", "x³", "4x", "x⁴"], correct: 0},
-            {q: "f(x) = x⁵", options: ["5x⁴", "x⁴", "5x", "x⁵"], correct: 0},
-            {q: "f(x) = 2x²", options: ["4x", "2x", "x²", "2"], correct: 0},
-            {q: "f(x) = 3x²", options: ["6x", "3x", "x²", "3"], correct: 0},
+      const ADVANCED = true;
+      const problemPool = [
+        // 単項式（基本）
+        { q: "f(x) = x", options: ["1", "x", "0", "2x"], correct: 0 },
+        { q: "f(x) = 2x", options: ["2", "x", "2x", "0"], correct: 0 },
+        { q: "f(x) = 3x", options: ["3", "3x", "1", "0"], correct: 0 },
+        { q: "f(x) = 5x", options: ["5", "x", "5x", "1"], correct: 0 },
+        { q: "f(x) = x²", options: ["2x", "x", "x²", "2"], correct: 0 },
+        { q: "f(x) = x³", options: ["3x²", "x²", "3x", "x³"], correct: 0 },
+        { q: "f(x) = x⁴", options: ["4x³", "x³", "4x", "x⁴"], correct: 0 },
+        { q: "f(x) = x⁵", options: ["5x⁴", "x⁴", "5x", "x⁵"], correct: 0 },
+        { q: "f(x) = 2x²", options: ["4x", "2x", "x²", "2"], correct: 0 },
+        { q: "f(x) = 3x²", options: ["6x", "3x", "x²", "3"], correct: 0 },
 
-            // 単項式（係数あり）
-            {q: "f(x) = 4x³", options: ["12x²", "4x²", "3x²", "12x"], correct: 0},
-            {q: "f(x) = 6x²", options: ["12x", "6x", "2x", "12"], correct: 0},
-            {q: "f(x) = -x", options: ["-1", "1", "-x", "x"], correct: 0},
-            {q: "f(x) = -2x", options: ["-2", "2", "-2x", "2x"], correct: 0},
-            {q: "f(x) = -x²", options: ["-2x", "2x", "-x", "x"], correct: 0},
-            {q: "f(x) = -3x²", options: ["-6x", "6x", "-3x", "3x"], correct: 0},
-            {q: "f(x) = 7x", options: ["7", "1", "7x", "x"], correct: 0},
-            {q: "f(x) = 8x³", options: ["24x²", "8x²", "3x²", "24x"], correct: 0},
-            {q: "f(x) = 9x⁴", options: ["36x³", "9x³", "4x³", "36x"], correct: 0},
-            {q: "f(x) = 10x", options: ["10", "1", "10x", "x"], correct: 0},
+        // 単項式（係数あり）
+        { q: "f(x) = 4x³", options: ["12x²", "4x²", "3x²", "12x"], correct: 0 },
+        { q: "f(x) = 6x²", options: ["12x", "6x", "2x", "12"], correct: 0 },
+        { q: "f(x) = -x", options: ["-1", "1", "-x", "x"], correct: 0 },
+        { q: "f(x) = -2x", options: ["-2", "2", "-2x", "2x"], correct: 0 },
+        { q: "f(x) = -x²", options: ["-2x", "2x", "-x", "x"], correct: 0 },
+        { q: "f(x) = -3x²", options: ["-6x", "6x", "-3x", "3x"], correct: 0 },
+        { q: "f(x) = 7x", options: ["7", "1", "7x", "x"], correct: 0 },
+        { q: "f(x) = 8x³", options: ["24x²", "8x²", "3x²", "24x"], correct: 0 },
+        { q: "f(x) = 9x⁴", options: ["36x³", "9x³", "4x³", "36x"], correct: 0 },
+        { q: "f(x) = 10x", options: ["10", "1", "10x", "x"], correct: 0 },
 
-            // 分数係数
-            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "1", "x", "2"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²", options: ["<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", "2x", "x"], correct: 0},
+        // 分数係数
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x",
+          options: [
+            "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "1",
+            "x",
+            "2",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²",
+          options: [
+            "<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x",
+            "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x",
+            "2x",
+            "x",
+          ],
+          correct: 0,
+        },
 
-            {q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²", options: ["<span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x", "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x", "2x", "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>8</span></span>x"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x³", options: ["<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x²", "3x²", "x²"], correct: 0},
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²",
+          options: [
+            "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x",
+            "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x",
+            "2x",
+            "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>8</span></span>x",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x³",
+          options: [
+            "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x²",
+            "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>4</span></span>x²",
+            "3x²",
+            "x²",
+          ],
+          correct: 0,
+        },
 
-            // 多項式（2項）
-            {q: "f(x) = x² + x", options: ["2x + 1", "x + 1", "2x", "x²"], correct: 0},
-            {q: "f(x) = x² - x", options: ["2x - 1", "x - 1", "2x", "x²"], correct: 0},
-            {q: "f(x) = 2x² + 3x", options: ["4x + 3", "2x + 3", "4x", "2x"], correct: 0},
-            {q: "f(x) = 3x² - 2x", options: ["6x - 2", "3x - 2", "6x", "3x"], correct: 0},
-            {q: "f(x) = x³ + x²", options: ["3x² + 2x", "x² + x", "3x²", "x²"], correct: 0},
-            {q: "f(x) = x³ - x²", options: ["3x² - 2x", "x² - x", "3x²", "x²"], correct: 0},
+        // 多項式（2項）
+        {
+          q: "f(x) = x² + x",
+          options: ["2x + 1", "x + 1", "2x", "x²"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x² - x",
+          options: ["2x - 1", "x - 1", "2x", "x²"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 2x² + 3x",
+          options: ["4x + 3", "2x + 3", "4x", "2x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 3x² - 2x",
+          options: ["6x - 2", "3x - 2", "6x", "3x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ + x²",
+          options: ["3x² + 2x", "x² + x", "3x²", "x²"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ - x²",
+          options: ["3x² - 2x", "x² - x", "3x²", "x²"],
+          correct: 0,
+        },
 
-            // 多項式（3項）
-            {q: "f(x) = x² + 2x + 1", options: ["2x + 2", "x + 2", "2x + 1", "x + 1"], correct: 0},
-            {q: "f(x) = x² - 3x + 2", options: ["2x - 3", "x - 3", "2x + 2", "x - 1"], correct: 0},
-            {q: "f(x) = 2x² + x - 1", options: ["4x + 1", "2x + 1", "4x - 1", "2x - 1"], correct: 0},
-            {q: "f(x) = x³ + x² + x", options: ["3x² + 2x + 1", "x² + x + 1", "3x² + x", "x² + 2x"], correct: 0},
-            {q: "f(x) = x³ - 2x² + 3x", options: ["3x² - 4x + 3", "x² - 2x + 3", "3x² + 3", "x² - 4x"], correct: 0},
+        // 多項式（3項）
+        {
+          q: "f(x) = x² + 2x + 1",
+          options: ["2x + 2", "x + 2", "2x + 1", "x + 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x² - 3x + 2",
+          options: ["2x - 3", "x - 3", "2x + 2", "x - 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 2x² + x - 1",
+          options: ["4x + 1", "2x + 1", "4x - 1", "2x - 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ + x² + x",
+          options: ["3x² + 2x + 1", "x² + x + 1", "3x² + x", "x² + 2x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ - 2x² + 3x",
+          options: ["3x² - 4x + 3", "x² - 2x + 3", "3x² + 3", "x² - 4x"],
+          correct: 0,
+        },
 
-            // 定数項あり
-            {q: "f(x) = x + 5", options: ["1", "5", "x", "0"], correct: 0},
-            {q: "f(x) = x² + 7", options: ["2x", "7", "x", "2x + 7"], correct: 0},
-            {q: "f(x) = 3x - 4", options: ["3", "-4", "3x", "-1"], correct: 0},
-            {q: "f(x) = 2x² + 5x - 3", options: ["4x + 5", "2x + 5", "4x - 3", "2x - 3"], correct: 0},
+        // 定数項あり
+        { q: "f(x) = x + 5", options: ["1", "5", "x", "0"], correct: 0 },
+        { q: "f(x) = x² + 7", options: ["2x", "7", "x", "2x + 7"], correct: 0 },
+        { q: "f(x) = 3x - 4", options: ["3", "-4", "3x", "-1"], correct: 0 },
+        {
+          q: "f(x) = 2x² + 5x - 3",
+          options: ["4x + 5", "2x + 5", "4x - 3", "2x - 3"],
+          correct: 0,
+        },
 
-            // 高次項
-            {q: "f(x) = x⁶", options: ["6x⁵", "x⁵", "6x", "x⁶"], correct: 0},
-            {q: "f(x) = 2x⁵", options: ["10x⁴", "2x⁴", "5x⁴", "10x"], correct: 0},
-            {q: "f(x) = x⁷", options: ["7x⁶", "x⁶", "7x", "x⁷"], correct: 0},
-            {q: "f(x) = 3x⁴", options: ["12x³", "3x³", "4x³", "12x"], correct: 0},
+        // 高次項
+        { q: "f(x) = x⁶", options: ["6x⁵", "x⁵", "6x", "x⁶"], correct: 0 },
+        { q: "f(x) = 2x⁵", options: ["10x⁴", "2x⁴", "5x⁴", "10x"], correct: 0 },
+        { q: "f(x) = x⁷", options: ["7x⁶", "x⁶", "7x", "x⁷"], correct: 0 },
+        { q: "f(x) = 3x⁴", options: ["12x³", "3x³", "4x³", "12x"], correct: 0 },
 
-            // 負の係数
-            {q: "f(x) = -x² + 2x", options: ["-2x + 2", "x + 2", "-2x", "2x"], correct: 0},
-            {q: "f(x) = -2x³ + x", options: ["-6x² + 1", "-2x² + 1", "-6x²", "2x² + 1"], correct: 0},
-            {q: "f(x) = -x + 3", options: ["-1", "3", "-x", "1"], correct: 0},
-            {q: "f(x) = -3x² - 2x", options: ["-6x - 2", "3x - 2", "-6x", "-3x"], correct: 0},
+        // 負の係数
+        {
+          q: "f(x) = -x² + 2x",
+          options: ["-2x + 2", "x + 2", "-2x", "2x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = -2x³ + x",
+          options: ["-6x² + 1", "-2x² + 1", "-6x²", "2x² + 1"],
+          correct: 0,
+        },
+        { q: "f(x) = -x + 3", options: ["-1", "3", "-x", "1"], correct: 0 },
+        {
+          q: "f(x) = -3x² - 2x",
+          options: ["-6x - 2", "3x - 2", "-6x", "-3x"],
+          correct: 0,
+        },
 
-            // 分数係数の多項式
-            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x² + x", options: ["x + 1", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x + 1", "x", "2x + 1"], correct: 0},
-            {q: "f(x) = x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", options: ["2x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>", "x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>", "2x", "x"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x³ - x", options: ["2x² - 1", "<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x² - 1", "2x²", "x² - 1"], correct: 0},
+        // 分数係数の多項式
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x² + x",
+          options: [
+            "x + 1",
+            "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x + 1",
+            "x",
+            "2x + 1",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x",
+          options: [
+            "2x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>",
+            "x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>",
+            "2x",
+            "x",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x³ - x",
+          options: [
+            "2x² - 1",
+            "<span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x² - 1",
+            "2x²",
+            "x² - 1",
+          ],
+          correct: 0,
+        },
 
-            // 複雑な多項式
-            {q: "f(x) = x⁴ + 2x³ - x²", options: ["4x³ + 6x² - 2x", "x³ + 2x² - x", "4x³ - 2x", "x³ + 6x²"], correct: 0},
-            {q: "f(x) = 2x⁴ - 3x² + 1", options: ["8x³ - 6x", "2x³ - 3x", "8x³", "2x³ - 6x"], correct: 0},
-            {q: "f(x) = x⁵ - x³ + x", options: ["5x⁴ - 3x² + 1", "x⁴ - x² + 1", "5x⁴ + 1", "x⁴ - 3x²"], correct: 0},
+        // 複雑な多項式
+        {
+          q: "f(x) = x⁴ + 2x³ - x²",
+          options: ["4x³ + 6x² - 2x", "x³ + 2x² - x", "4x³ - 2x", "x³ + 6x²"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 2x⁴ - 3x² + 1",
+          options: ["8x³ - 6x", "2x³ - 3x", "8x³", "2x³ - 6x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x⁵ - x³ + x",
+          options: ["5x⁴ - 3x² + 1", "x⁴ - x² + 1", "5x⁴ + 1", "x⁴ - 3x²"],
+          correct: 0,
+        },
 
-            // 特殊なケース
-            {q: "f(x) = 0", options: ["0", "1", "x", "-1"], correct: 0},
-            {q: "f(x) = 10", options: ["0", "10", "1", "x"], correct: 0},
-            {q: "f(x) = -5", options: ["0", "-5", "5", "-1"], correct: 0},
+        // 特殊なケース
+        { q: "f(x) = 0", options: ["0", "1", "x", "-1"], correct: 0 },
+        { q: "f(x) = 10", options: ["0", "10", "1", "x"], correct: 0 },
+        { q: "f(x) = -5", options: ["0", "-5", "5", "-1"], correct: 0 },
 
-            // より複雑な問題
-            {q: "f(x) = 3x⁵ + 2x⁴ - x³ + 4x", options: ["15x⁴ + 8x³ - 3x² + 4", "3x⁴ + 2x³ - x² + 4", "15x⁴ - 3x² + 4", "3x⁴ + 8x³ - x²"], correct: 0},
-            {q: "f(x) = x⁶ - 2x⁴ + 3x² - 1", options: ["6x⁵ - 8x³ + 6x", "x⁵ - 2x³ + 3x", "6x⁵ + 6x", "x⁵ - 8x³ + 3x"], correct: 0},
-            {q: "f(x) = 4x³ + 5x² - 6x + 2", options: ["12x² + 10x - 6", "4x² + 5x - 6", "12x² - 6", "4x² + 10x - 6"], correct: 0},
+        // より複雑な問題
+        {
+          q: "f(x) = 3x⁵ + 2x⁴ - x³ + 4x",
+          options: [
+            "15x⁴ + 8x³ - 3x² + 4",
+            "3x⁴ + 2x³ - x² + 4",
+            "15x⁴ - 3x² + 4",
+            "3x⁴ + 8x³ - x²",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x⁶ - 2x⁴ + 3x² - 1",
+          options: [
+            "6x⁵ - 8x³ + 6x",
+            "x⁵ - 2x³ + 3x",
+            "6x⁵ + 6x",
+            "x⁵ - 8x³ + 3x",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 4x³ + 5x² - 6x + 2",
+          options: [
+            "12x² + 10x - 6",
+            "4x² + 5x - 6",
+            "12x² - 6",
+            "4x² + 10x - 6",
+          ],
+          correct: 0,
+        },
 
-            // 分数係数の複雑な問題
-            {q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x⁴ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²", options: ["2x³ + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x³ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x", "2x³", "x³ + x"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x³ - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x²", "3x² - 1"], correct: 0},
+        // 分数係数の複雑な問題
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x⁴ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x²",
+          options: [
+            "2x³ + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x",
+            "<span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x³ + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>3</span></span>x",
+            "2x³",
+            "x³ + x",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x³ - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x",
+          options: [
+            "<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "<span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² - <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "<span class='fraction'><span class='numerator'>9</span><span class='denominator'>4</span></span>x²",
+            "3x² - 1",
+          ],
+          correct: 0,
+        },
 
-            // 追加の基本問題
-            {q: "f(x) = 12x", options: ["12", "1", "12x", "0"], correct: 0},
-            {q: "f(x) = x⁸", options: ["8x⁷", "x⁷", "8x", "x⁸"], correct: 0},
-            {q: "f(x) = 5x⁴", options: ["20x³", "5x³", "4x³", "20x"], correct: 0},
-            {q: "f(x) = -4x²", options: ["-8x", "4x", "-4x", "8x"], correct: 0},
-            {q: "f(x) = 6x² + 4x", options: ["12x + 4", "6x + 4", "12x", "6x"], correct: 0},
-            {q: "f(x) = x³ + 3x² + 3x + 1", options: ["3x² + 6x + 3", "x² + 3x + 3", "3x² + 3", "x² + 6x + 1"], correct: 0},
-            {q: "f(x) = 2x⁵ - 4x³ + x", options: ["10x⁴ - 12x² + 1", "2x⁴ - 4x² + 1", "10x⁴ + 1", "2x⁴ - 12x²"], correct: 0},
-            {q: "f(x) = -x³ + 2x² - 3x + 4", options: ["-3x² + 4x - 3", "x² + 2x - 3", "-3x² - 3", "x² + 4x - 3"], correct: 0},
+        // 追加の基本問題
+        { q: "f(x) = 12x", options: ["12", "1", "12x", "0"], correct: 0 },
+        { q: "f(x) = x⁸", options: ["8x⁷", "x⁷", "8x", "x⁸"], correct: 0 },
+        { q: "f(x) = 5x⁴", options: ["20x³", "5x³", "4x³", "20x"], correct: 0 },
+        { q: "f(x) = -4x²", options: ["-8x", "4x", "-4x", "8x"], correct: 0 },
+        {
+          q: "f(x) = 6x² + 4x",
+          options: ["12x + 4", "6x + 4", "12x", "6x"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ + 3x² + 3x + 1",
+          options: ["3x² + 6x + 3", "x² + 3x + 3", "3x² + 3", "x² + 6x + 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 2x⁵ - 4x³ + x",
+          options: [
+            "10x⁴ - 12x² + 1",
+            "2x⁴ - 4x² + 1",
+            "10x⁴ + 1",
+            "2x⁴ - 12x²",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = -x³ + 2x² - 3x + 4",
+          options: ["-3x² + 4x - 3", "x² + 2x - 3", "-3x² - 3", "x² + 4x - 3"],
+          correct: 0,
+        },
 
-            // 最後の問題群
-            {q: "f(x) = 7x³ + x² - 5x + 10", options: ["21x² + 2x - 5", "7x² + x - 5", "21x² - 5", "7x² + 2x - 5"], correct: 0},
-            {q: "f(x) = x⁴ - 4x³ + 6x² - 4x + 1", options: ["4x³ - 12x² + 12x - 4", "x³ - 4x² + 6x - 4", "4x³ + 12x - 4", "x³ - 12x² + 6x"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x² + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x", options: ["<span class='fraction'><span class='numerator'>5</span><span class='denominator'>3</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>", "<span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>", "<span class='fraction'><span class='numerator'>10</span><span class='denominator'>6</span></span>x", "5x + 2"], correct: 0},
-            {q: "f(x) = 8x⁶ - 3x⁴ + 2x² - 7", options: ["48x⁵ - 12x³ + 4x", "8x⁵ - 3x³ + 2x", "48x⁵ + 4x", "8x⁵ - 12x³ + 2x"], correct: 0},
-            {q: "f(x) = x⁹", options: ["9x⁸", "x⁸", "9x", "x⁹"], correct: 0},
-            {q: "f(x) = 15x² - 10x + 25", options: ["30x - 10", "15x - 10", "30x + 25", "30x + 15"], correct: 0},
-            {q: "f(x) = -6x⁴ + 8x² - 2", options: ["-24x³ + 16x", "6x³ + 8x", "-24x³ - 2", "-6x³ + 16x"], correct: 0},
-            {q: "f(x) = x¹⁰", options: ["10x⁹", "x⁹", "10x", "x¹⁰"], correct: 0},
-            {q: "f(x) = <span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x³ - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x", options: ["<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>", "7x² - 3x + 1"], correct: 0},
-            {q: "f(x) = 100x - 50", options: ["100", "50", "100x", "-50"], correct: 0},
-            {q: "f(x) = x⁷ + x⁵ + x³ + x", options: ["7x⁶ + 5x⁴ + 3x² + 1", "x⁶ + x⁴ + x² + 1", "7x⁶ + 3x² + 1", "x⁶ + 5x⁴ + x²"], correct: 0},
+        // 最後の問題群
+        {
+          q: "f(x) = 7x³ + x² - 5x + 10",
+          options: ["21x² + 2x - 5", "7x² + x - 5", "21x² - 5", "7x² + 2x - 5"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x⁴ - 4x³ + 6x² - 4x + 1",
+          options: [
+            "4x³ - 12x² + 12x - 4",
+            "x³ - 4x² + 6x - 4",
+            "4x³ + 12x - 4",
+            "x³ - 12x² + 6x",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x² + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>x",
+          options: [
+            "<span class='fraction'><span class='numerator'>5</span><span class='denominator'>3</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>",
+            "<span class='fraction'><span class='numerator'>5</span><span class='denominator'>6</span></span>x + <span class='fraction'><span class='numerator'>2</span><span class='denominator'>3</span></span>",
+            "<span class='fraction'><span class='numerator'>10</span><span class='denominator'>6</span></span>x",
+            "5x + 2",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 8x⁶ - 3x⁴ + 2x² - 7",
+          options: [
+            "48x⁵ - 12x³ + 4x",
+            "8x⁵ - 3x³ + 2x",
+            "48x⁵ + 4x",
+            "8x⁵ - 12x³ + 2x",
+          ],
+          correct: 0,
+        },
+        { q: "f(x) = x⁹", options: ["9x⁸", "x⁸", "9x", "x⁹"], correct: 0 },
+        {
+          q: "f(x) = 15x² - 10x + 25",
+          options: ["30x - 10", "15x - 10", "30x + 25", "30x + 15"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = -6x⁴ + 8x² - 2",
+          options: ["-24x³ + 16x", "6x³ + 8x", "-24x³ - 2", "-6x³ + 16x"],
+          correct: 0,
+        },
+        { q: "f(x) = x¹⁰", options: ["10x⁹", "x⁹", "10x", "x¹⁰"], correct: 0 },
+        {
+          q: "f(x) = <span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x³ - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>x",
+          options: [
+            "<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>2</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "<span class='fraction'><span class='numerator'>7</span><span class='denominator'>8</span></span>x² - <span class='fraction'><span class='numerator'>3</span><span class='denominator'>4</span></span>x + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "<span class='fraction'><span class='numerator'>21</span><span class='denominator'>8</span></span>x² + <span class='fraction'><span class='numerator'>1</span><span class='denominator'>2</span></span>",
+            "7x² - 3x + 1",
+          ],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 100x - 50",
+          options: ["100", "50", "100x", "-50"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x⁷ + x⁵ + x³ + x",
+          options: [
+            "7x⁶ + 5x⁴ + 3x² + 1",
+            "x⁶ + x⁴ + x² + 1",
+            "7x⁶ + 3x² + 1",
+            "x⁶ + 5x⁴ + x²",
+          ],
+          correct: 0,
+        },
 
-            // 【ブラッシュアップ】展開してから微分
-            {q: "f(x) = (x + 2)(x - 3)", f: [[1, 2], [-1, 1], [-6, 0]], options: ["2x - 1", "1", "2x - 6", "2x + 1"], correct: 0},
-            {q: "f(x) = x(x + 4)", f: [[1, 2], [4, 1]], options: ["2x + 4", "2x", "x + 4", "2x + 8"], correct: 0},
-            {q: "f(x) = (2x + 1)²", f: [[4, 2], [4, 1], [1, 0]], options: ["8x + 4", "4x + 2", "4x + 4", "8x + 1"], correct: 0},
-            {q: "f(x) = (x - 1)³", f: [[1, 3], [-3, 2], [3, 1], [-1, 0]], options: ["3x² - 6x + 3", "3x² - 3", "3x² + 6x + 3", "x² - 2x + 1"], correct: 0},
+        // 【ブラッシュアップ】展開してから微分
+        {
+          q: "f(x) = (x + 2)(x - 3)",
+          f: [
+            [1, 2],
+            [-1, 1],
+            [-6, 0],
+          ],
+          options: ["2x - 1", "1", "2x - 6", "2x + 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x(x + 4)",
+          f: [
+            [1, 2],
+            [4, 1],
+          ],
+          options: ["2x + 4", "2x", "x + 4", "2x + 8"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = (2x + 1)²",
+          f: [
+            [4, 2],
+            [4, 1],
+            [1, 0],
+          ],
+          options: ["8x + 4", "4x + 2", "4x + 4", "8x + 1"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = (x - 1)³",
+          f: [
+            [1, 3],
+            [-3, 2],
+            [3, 1],
+            [-1, 0],
+          ],
+          options: ["3x² - 6x + 3", "3x² - 3", "3x² + 6x + 3", "x² - 2x + 1"],
+          correct: 0,
+        },
 
-            // 【ブラッシュアップ】f'(a) の値
-            {q: "f(x) = x³ + 2x²", at: -1, options: ["-1", "1", "7", "-5"], correct: 0},
-            {q: "f(x) = 2x² - 3x + 1", at: 2, options: ["5", "3", "11", "8"], correct: 0},
-            {q: "f(x) = x³ - 4x + 2", at: 1, options: ["-1", "-2", "7", "3"], correct: 0},
+        // 【ブラッシュアップ】f'(a) の値
+        {
+          q: "f(x) = x³ + 2x²",
+          at: -1,
+          options: ["-1", "1", "7", "-5"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = 2x² - 3x + 1",
+          at: 2,
+          options: ["5", "3", "11", "8"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = x³ - 4x + 2",
+          at: 1,
+          options: ["-1", "-2", "7", "3"],
+          correct: 0,
+        },
 
-            // 【ブラッシュアップ】係数を決める
-            {q: "f(x) = x² + ax", custom: true, lead: "f(x) = x² + ax（a は定数）で f'(1) = 5 のとき、a の値を求めなさい。",
-             plan: "f'(x) を a を使って表し、x = 1 を代入した式が 5 になる、という方程式を作ろう。",
-             mid: "f'(x) = 2x + a なので f'(1) = 2 + a。2 + a = 5",
-             options: ["3", "5", "4", "7"], correct: 0},
-            {q: "f(x) = ax² + 3x", custom: true, lead: "f(x) = ax² + 3x（a は定数）で f'(2) = 11 のとき、a の値を求めなさい。",
-             plan: "f'(x) を a を使って表し、x = 2 を代入した式が 11 になる、という方程式を作ろう。",
-             mid: "f'(x) = 2ax + 3 なので f'(2) = 4a + 3。4a + 3 = 11",
-             options: ["2", "1", "4", "8"], correct: 0}
-        ];
+        // 【ブラッシュアップ】係数を決める
+        {
+          q: "f(x) = x² + ax",
+          custom: true,
+          lead: "f(x) = x² + ax（a は定数）で f'(1) = 5 のとき、a の値を求めなさい。",
+          plan: "f'(x) を a を使って表し、x = 1 を代入した式が 5 になる、という方程式を作ろう。",
+          mid: "f'(x) = 2x + a なので f'(1) = 2 + a。2 + a = 5",
+          options: ["3", "5", "4", "7"],
+          correct: 0,
+        },
+        {
+          q: "f(x) = ax² + 3x",
+          custom: true,
+          lead: "f(x) = ax² + 3x（a は定数）で f'(2) = 11 のとき、a の値を求めなさい。",
+          plan: "f'(x) を a を使って表し、x = 2 を代入した式が 11 になる、という方程式を作ろう。",
+          mid: "f'(x) = 2ax + 3 なので f'(2) = 4a + 3。4a + 3 = 11",
+          options: ["2", "1", "4", "8"],
+          correct: 0,
+        },
+      ];
 
-        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・f など）は斜体、数字は立体、書体は問題の式と同じ数式用。
-        //   選択肢・ヒント・解説の中の英数字のまとまりを <span class="m"> で包み、文字を <i> にする（日本語はふつうの書体のまま）
-        const MATH_RUN = /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*[A-Za-z0-9][A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*/g;
-        function mathify(root) {
-            if (!root) return;
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-            const nodes = [];
-            while (walker.nextNode()) {
-                const n = walker.currentNode, p = n.parentElement;
-                if (!p || p.closest('.m, .hint-tag, .no-math, script, style, .katex')) continue;
-                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
-            }
-            nodes.forEach(n => {
-                const s = n.nodeValue, frag = document.createDocumentFragment();
-                let last = 0;
-                s.replace(MATH_RUN, (run, at) => {
-                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
-                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
-                    const span = document.createElement('span');
-                    span.className = 'm';
-                    text.split(/([A-Za-z]+)/).forEach((part, k) => {
-                        if (!part) return;
-                        if (k % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
-                        else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
-                    });
-                    frag.appendChild(span);
-                    last = at + lead + text.length;
-                    return run;
-                });
-                frag.appendChild(document.createTextNode(s.slice(last)));
-                n.parentNode.replaceChild(frag, n);
-            });
+      const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
+      const R = (v) => {
+        let [p, q] = Array.isArray(v) ? v : [v, 1];
+        if (q < 0) {
+          p = -p;
+          q = -q;
         }
-        // 画面が書きかわるたびに、指定した場所の式を整える
-        function watchMath(selectors) {
-            let queued = false;
-            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
-            run();
-            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
-                .observe(document.body, { childList: true, subtree: true, characterData: true });
+        const g = gcd(p, q) || 1;
+        return [p / g, q / g];
+      };
+      const rmul = (a, b) => R([a[0] * b[0], a[1] * b[1]]);
+      const radd = (a, b) => R([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
+      const MINUS = "−";
+      const SUPS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+      const sup = (n) =>
+        String(n)
+          .split("")
+          .map((d) => SUPS[d])
+          .join("");
+      const frac = (p, q) =>
+        `<span class='fraction'><span class='numerator'>${p}</span><span class='denominator'>${q}</span></span>`;
+      const absR = (r) =>
+        r[1] === 1 ? String(Math.abs(r[0])) : frac(Math.abs(r[0]), r[1]);
+      const numTxt = (r) => (r[0] < 0 ? MINUS : "") + absR(r);
+      const xpow = (n) => (n === 0 ? "" : n === 1 ? "x" : "x" + sup(n));
+      function readPoly(s) {
+        let t = String(s)
+          .replace(/^f\(x\)\s*=\s*/, "")
+          .replace(
+            /<span class='fraction'><span class='numerator'>(\d+)<\/span><span class='denominator'>(\d+)<\/span><\/span>/g,
+            "[$1/$2]",
+          )
+          .replace(/\s+/g, "")
+          .replace(/[−ー－]/g, "-")
+          .replace(
+            /[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,
+            (m) => "^" + [...m].map((c) => SUPS.indexOf(c)).join(""),
+          );
+        if (/[^0-9x^+\-\[\]\/]/.test(t)) return null;
+        const re = /([+-]?)(\[\d+\/\d+\]|\d*)(x(?:\^(\d+))?)?/y;
+        const out = [];
+        let pos = 0;
+        while (pos < t.length) {
+          re.lastIndex = pos;
+          const m = re.exec(t);
+          if (!m || (!m[2] && !m[3])) return null;
+          let c = m[2]
+            ? m[2][0] === "["
+              ? m[2].slice(1, -1).split("/").map(Number)
+              : [Number(m[2]), 1]
+            : [1, 1];
+          if (m[1] === "-") c = [-c[0], c[1]];
+          out.push([R(c), m[3] ? (m[4] ? Number(m[4]) : 1) : 0]);
+          pos += m[0].length;
         }
-        let currentMode = '';
-        let currentQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let startTime = 0;
-        let timerInterval = null;
-        let totalQuestions = 0;
-        // 【ブラッシュアップ】この問題のヒントの段階（0：なし 1：方針 2：途中式 3：答え）・答え終わったか・
-        //   超鬼モードで終わったか・遊びの回（古いタイマーの取り消し用）
-        let stage = 0;
-        let done = false;
-        let hellFailed = false;
-        let runId = 0;
-        let order = [];
-
-        // ---- 【ブラッシュアップ】式を読み取って、正解・途中式を計算する道具 ----
-        //   問題文（分数は <span class='fraction'> で書かれている）を [係数, 次数] の並びにする。係数は [分子, 分母]
-        const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
-        const R = (v) => { let [p, q] = Array.isArray(v) ? v : [v, 1]; if (q < 0) { p = -p; q = -q; } const g = gcd(p, q) || 1; return [p / g, q / g]; };
-        const rmul = (a, b) => R([a[0] * b[0], a[1] * b[1]]);
-        const radd = (a, b) => R([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
-        const MINUS = '−';
-        const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-        const sup = (n) => String(n).split('').map(d => SUPS[d]).join('');
-        const frac = (p, q) => `<span class='fraction'><span class='numerator'>${p}</span><span class='denominator'>${q}</span></span>`;
-        const absR = (r) => (r[1] === 1 ? String(Math.abs(r[0])) : frac(Math.abs(r[0]), r[1]));
-        const numTxt = (r) => (r[0] < 0 ? MINUS : '') + absR(r);
-        const xpow = (n) => (n === 0 ? '' : n === 1 ? 'x' : 'x' + sup(n));
-        function readPoly(s) {
-            let t = String(s).replace(/^f\(x\)\s*=\s*/, '')
-                .replace(/<span class='fraction'><span class='numerator'>(\d+)<\/span><span class='denominator'>(\d+)<\/span><\/span>/g, '[$1/$2]')
-                .replace(/\s+/g, '').replace(/[−ー－]/g, '-')
-                .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, m => '^' + [...m].map(c => SUPS.indexOf(c)).join(''));
-            if (/[^0-9x^+\-\[\]\/]/.test(t)) return null;
-            const re = /([+-]?)(\[\d+\/\d+\]|\d*)(x(?:\^(\d+))?)?/y;
-            const out = [];
-            let pos = 0;
-            while (pos < t.length) {
-                re.lastIndex = pos;
-                const m = re.exec(t);
-                if (!m || (!m[2] && !m[3])) return null;
-                let c = m[2] ? (m[2][0] === '[' ? m[2].slice(1, -1).split('/').map(Number) : [Number(m[2]), 1]) : [1, 1];
-                if (m[1] === '-') c = [-c[0], c[1]];
-                out.push([R(c), m[3] ? (m[4] ? Number(m[4]) : 1) : 0]);
-                pos += m[0].length;
-            }
-            return out;
-        }
-        function norm(terms) {
-            const m = {};
-            terms.forEach(([c, n]) => { m[n] = radd(m[n] || [0, 1], R(c)); });
-            return Object.keys(m).map(Number).filter(n => m[n][0] !== 0).sort((a, b) => b - a).map(n => [m[n], n]);
-        }
-        function termTxt(c, n, first) {
-            const sign = c[0] < 0 ? (first ? MINUS : ` ${MINUS} `) : (first ? '' : ' + ');
-            const b = (n > 0 && Math.abs(c[0]) === 1 && c[1] === 1) ? xpow(n) : absR(c) + xpow(n);
-            return sign + b;
-        }
-        const polyTxt = (terms) => { const t = norm(terms); return t.length ? t.map(([c, n], i) => termTxt(c, n, i === 0)).join('') : '0'; };
-        const deriv = (terms) => norm(terms).filter(([, n]) => n > 0).map(([c, n]) => [rmul(c, [n, 1]), n - 1]);
-        const valueAt = (terms, a) => norm(terms).reduce((s, [c, n]) => radd(s, rmul(c, [Math.pow(a, n), 1])), [0, 1]);
-        function termDeriv(c, n) {   // (kxⁿ)' = k·n xⁿ⁻¹
-            if (n === 0) return '0';
-            if (n === 1) return numTxt(c);
-            const k = (Math.abs(c[0]) === 1 && c[1] === 1) ? (c[0] < 0 ? MINUS : '') : numTxt(c) + '·';
-            return `${k}${n}${xpow(n - 1)}`;
-        }
-        // 元の問題文のマイナス（-）を、数式らしいマイナス（−）にして見せる
-        const pretty = (s) => String(s).replace(/(^|[\s(>])-(?=[\dx<(])/g, '$1' + MINUS);
-
-        // 問題ごとの 方針・途中式・正解の式
-        function info(q) {
-            if (q._info) return q._info;
-            if (q.custom) return (q._info = { plan: q.plan, mid: q.mid, lead: q.lead, ans: q.options[q.correct] });
-            const f = q.f || readPoly(q.q);
-            const t = norm(f), d = deriv(f);
-            let mid = q.f ? `展開すると f(x) = ${polyTxt(f)}。` : '';
-            if (t.length === 1) mid += `f'(x) = (${termTxt(t[0][0], t[0][1], true)})' = ${termDeriv(t[0][0], t[0][1])}`;
-            else {
-                mid += "f'(x) = " + t.map(([c, n], i) => (i === 0 ? (c[0] < 0 ? MINUS : '') : (c[0] < 0 ? ` ${MINUS} ` : ' + ')) + `(${termTxt([Math.abs(c[0]), c[1]], n, true)})'`).join('') +
-                    ' = ' + (t.filter(([, n]) => n > 0).map(([c, n], i) => (i === 0 ? '' : (c[0] < 0 ? ` ${MINUS} ` : ' + ')) + termDeriv([i === 0 ? c[0] : Math.abs(c[0]), c[1]], n)).join('') || '0');
-            }
-            let plan, lead, value = null;
-            if (q.at !== undefined) {
-                const a = q.at, A = a < 0 ? `(${MINUS}${-a})` : String(a);
-                if (!mid.endsWith(polyTxt(d))) mid += ` = ${polyTxt(d)}`;
-                mid += ` なので、f'(${numTxt([a, 1])}) = ` + d.map(([c, n], i) => {
-                    const sign = c[0] < 0 ? (i === 0 ? MINUS : ` ${MINUS} `) : (i === 0 ? '' : ' + ');
-                    return sign + (n === 0 ? absR(c) : `${absR(c)}·${A}${n > 1 ? sup(n) : ''}`);
-                }).join('');
-                value = valueAt(d, a);
-                plan = "まず f'(x) を求めてから、x の値を代入しよう。f(a) ではなく f'(a) だよ。";
-                lead = `${pretty(q.q)} のとき、f'(${numTxt([a, 1])}) の値を求めなさい。`;
-            } else {
-                plan = q.f ? 'かっこのままでは微分できない。まず展開して、1 つの項ずつ微分しよう。'
-                    : "1 つの項ずつ (kxⁿ)' = k·n xⁿ⁻¹。係数が分数でも同じで、かけたあと約分しよう。定数の項は微分すると 0。";
-                lead = `次の関数を微分して、f'(x) を求めなさい。<br><br>${pretty(q.q)}`;
-            }
-            return (q._info = { plan, mid, lead, d, value, ans: value ? numTxt(value) : polyTxt(d) });
-        }
-        // 難しさの目安（通常・入力モードでは、やさしい順に並べて出す）
-        function level(q) {
-            if (q.custom) return 9;
-            if (q.at !== undefined) return 8;
-            if (q.f) return 7;
-            const t = readPoly(q.q) || [];
-            const frac = /fraction/.test(q.q) ? 3 : 0;
-            const neg = t.some(([c]) => c[0] < 0) ? 1 : 0;
-            const deg = Math.max(0, ...t.map(([, n]) => n));
-            return frac + t.length + neg + (deg >= 4 ? 1 : 0);
-        }
-
-        function showModeSelection() {
-            runId++;
-            document.getElementById('modeSelection').style.display = 'block';
-            document.getElementById('quizContainer').style.display = 'none';
-            document.getElementById('results').style.display = 'none';
-            clearInterval(timerInterval);
-        }
-
-        function startQuiz(mode) {
-            currentMode = mode;
-            currentQuestionIndex = 0;
-            score = 0;
-            hellFailed = false;
-            runId++;
-            window.scrollTo(0, 0);
-
-            const names = { normal: '📚 通常モード', input: '✏️ 入力モード', hundred: '💯 全問連続モード', hell: '👹 超鬼連チャンモード' };
-            if (mode === 'normal' || mode === 'input') {
-                currentQuestions = getRandomQuestions(10);
-            } else {
-                currentQuestions = [...problemPool];
-                shuffleArray(currentQuestions);
-            }
-            totalQuestions = currentQuestions.length;
-            document.getElementById('modeIndicator').textContent = names[mode];
-            document.getElementById('modeIndicator').className = 'mode-indicator' + (mode === 'hell' ? ' hell-mode' : '');
-
-            document.getElementById('modeSelection').style.display = 'none';
-            document.getElementById('quizContainer').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-
-            clearInterval(timerInterval);
-            startTime = Date.now();
-            startTimer();
-            showQuestion();
-        }
-
-        // 【ブラッシュアップ】
-        //   ・元は「f(x) = 10」を探す書き方だったため、f(x) = 10x や f(x) = 100x - 50 まで「定数の問題」にまざっていた
-        //   ・10 問を、やさしい順に並べて出す（元は完全にランダムで、1 問目から難しい問題が出ることがあった）
-        //   ・入力モードは、分数の係数と「係数を決める問題」をのぞく
-        const isConstant = (p) => /^f\(x\) = -?\d+$/.test(p.q);
-        function getRandomQuestions(count) {
-            let pool = problemPool;
-            if (currentMode === 'input') {
-                pool = problemPool.filter(p => !p.custom && !/fraction|\//.test(p.q) && !/fraction|\//.test(p.options[p.correct]));
-            }
-            const constants = pool.filter(isConstant);
-            const others = shuffleArray([...pool.filter(p => !isConstant(p))]);
-            const picked = [constants[Math.floor(Math.random() * constants.length)], ...others.slice(0, count - 1)];
-            return picked.map((p, i) => [level(p) + Math.random() * 0.5, p]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-                const minutes = Math.floor(elapsed / 60000);
-                const seconds = Math.floor((elapsed % 60000) / 1000);
-                document.getElementById('timer').textContent =
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        function showQuestion() {
-            const question = currentQuestions[currentQuestionIndex];
-            const I = info(question);
-            document.getElementById('question').innerHTML = I.lead;
-            document.getElementById('progress').textContent = `問題 ${currentQuestionIndex + 1}/${totalQuestions}`;
-            stage = 0;
-            done = false;
-            document.getElementById('hintArea').innerHTML = '';
-            document.getElementById('explainArea').innerHTML = '';
-            document.getElementById('hintRow').style.display = '';
-            document.getElementById('hintBtn').textContent = '💡 ヒント（方針）を見る';
-            document.getElementById('nextBtn').style.display = 'none';
-
-            const optionsContainer = document.getElementById('options');
-            const inputSection = document.getElementById('inputSection');
-            if (currentMode === 'input') {
-                optionsContainer.style.display = 'none';
-                inputSection.style.display = 'block';
-                const answerInput = document.getElementById('answerInput');
-                answerInput.value = '';
-                answerInput.disabled = false;
-                document.getElementById('submitBtn').disabled = false;
-                document.getElementById('showAnswerBtn').disabled = false;
-                const fb = document.getElementById('inputFeedback');
-                fb.innerHTML = '';
-                fb.className = 'input-feedback';
-                document.getElementById('answerLabel').textContent = question.at !== undefined ? `f'(${question.at < 0 ? MINUS + (-question.at) : question.at}) =` : "f'(x) =";
-                answerInput.focus();
-            } else {
-                optionsContainer.style.display = 'grid';
-                inputSection.style.display = 'none';
-                optionsContainer.innerHTML = '';
-                order = shuffleArray(question.options.map((_, i) => i));
-                order.forEach((o, index) => {
-                    const optionDiv = document.createElement('button');
-                    optionDiv.className = 'option';
-                    optionDiv.innerHTML = pretty(question.options[o]);
-                    optionDiv.onclick = () => selectAnswer(index, optionDiv);
-                    optionsContainer.appendChild(optionDiv);
-                });
-            }
-        }
-
-        // 【ブラッシュアップ】ヒントは 方針 → 途中式 → 答え の順。まちがえるたびに 1 段すすむ
-        function renderHints() {
-            const I = info(currentQuestions[currentQuestionIndex]);
-            let html = '';
-            if (stage >= 1) html += `<div class="hint-box"><span class="hint-tag">💡 方針</span>${I.plan}</div>`;
-            if (stage >= 2) html += `<div class="hint-box"><span class="hint-tag">✏️ 途中式</span>${I.mid}</div>`;
-            document.getElementById('hintArea').innerHTML = html;
-            document.getElementById('hintBtn').textContent = stage === 0 ? '💡 ヒント（方針）を見る' : stage === 1 ? '✏️ 途中式を見る' : '👀 答えを見る';
-        }
-        function showNextHint() {
-            if (done) return;
-            stage++;
-            if (stage >= 3) { finishQuestion(false); return; }
-            renderHints();
-        }
-
-        // 正解したとき・答えを見たとき：答えと解説を出して、次へ
-        function finishQuestion(correct) {
-            done = true;
-            const question = currentQuestions[currentQuestionIndex];
-            const I = info(question);
-            if (correct && stage === 0) score++;
-            document.querySelectorAll('#options .option').forEach((b, i) => {
-                b.disabled = true;
-                if (order[i] === question.correct) b.classList.add('correct');
-            });
-            if (currentMode === 'input') {
-                document.getElementById('answerInput').disabled = true;
-                document.getElementById('submitBtn').disabled = true;
-                document.getElementById('showAnswerBtn').disabled = true;
-                const fb = document.getElementById('inputFeedback');
-                fb.innerHTML = correct ? '⭕ 正解です！' : '👀 答えを見ました';
-                fb.className = 'input-feedback ' + (correct ? 'correct' : 'shown');
-            }
-            document.getElementById('hintArea').innerHTML = '';
-            document.getElementById('hintRow').style.display = 'none';
-            const label = question.custom ? 'a = ' : question.at !== undefined ? `f'(${numTxt([question.at, 1])}) = ` : "f'(x) = ";
-            const tail = question.custom ? ` より a = ${I.ans}` : (I.mid.endsWith(I.ans) ? '' : ` = ${I.ans}`);
-            document.getElementById('explainArea').innerHTML =
-                `<div class="explain-box ${correct ? 'ok' : ''}"><div class="explain-title">${correct ? '⭕ 正解！' : '👀 答え'}　${label}${pretty(I.ans)}</div>${I.mid}${tail}</div>`;
-            document.getElementById('nextBtn').style.display = 'block';
-        }
-
-        function selectAnswer(answerIndex, optionElement) {
-            if (done) return;
-            const question = currentQuestions[currentQuestionIndex];
-            if (order[answerIndex] === question.correct) {
-                optionElement.classList.add('correct');
-                finishQuestion(true);
-                return;
-            }
-            optionElement.classList.add('incorrect');
-            optionElement.disabled = true;
-
-            // 超鬼連チャンモードでは、正しい答えを見せてから終了
-            if (currentMode === 'hell') {
-                hellFailed = true;
-                done = true;
-                document.querySelectorAll('#options .option').forEach((b, i) => { b.disabled = true; if (order[i] === question.correct) b.classList.add('correct'); });
-                const myRun = runId;
-                setTimeout(() => { if (myRun === runId) endQuiz(); }, 2000);
-                return;
-            }
-            stage++;
-            if (stage >= 3) { finishQuestion(false); return; }
-            renderHints();
-        }
-
-        function nextQuestion() {
-            if (!done) return;
-            currentQuestionIndex++;
-            if (currentQuestionIndex >= currentQuestions.length) endQuiz();
-            else { showQuestion(); window.scrollTo(0, 0); }
-        }
-
-        function endQuiz() {
-            clearInterval(timerInterval);
-            const totalTime = Date.now() - startTime;
-            const minutes = Math.floor(totalTime / 60000);
-            const seconds = Math.floor((totalTime % 60000) / 1000);
-
-            document.getElementById('quizContainer').style.display = 'none';
-            document.getElementById('results').style.display = 'block';
-
-            const answered = hellFailed ? currentQuestionIndex + 1 : currentQuestionIndex;
-            document.getElementById('finalScore').textContent = `${score}/${answered}問 一発正解`;
-            document.getElementById('finalTime').textContent = `所要時間: ${minutes}分${seconds}秒`;
-
-            let message = '';
-            const percentage = answered ? (score / answered) * 100 : 0;
-            if (hellFailed) message = `😈 超鬼連チャンモード終了！<br>${answered}問目で力尽きました...<br>再挑戦して完全制覇を目指そう！`;
-            else if (percentage === 100) message = '🏆 完璧です！微分マスターですね！';
-            else if (percentage >= 80) message = '🌟 素晴らしい成績です！';
-            else if (percentage >= 60) message = '👍 良い調子です！もう少し練習すれば完璧！';
-            else message = '📚 「微分の練習 基礎」で、レベルごとに復習してみよう！';
-            document.getElementById('encouragementText').innerHTML = message;
-            window.scrollTo(0, 0);
-        }
-
-        // 【ブラッシュアップ】入力した式を { 次数: 係数 } に分ける（整数の係数だけ）。読めないときは null
-        //   先頭の「f'(x) =」「y' =」「f'(2) =」はあってもなくてもよい
-        function parsePoly(s) {
-            let t = String(s).replace(/<[^>]*>/g, '').replace(/\s+/g, '').toLowerCase()
-                .replace(/[’′‘]/g, "'").replace(/＝/g, '=').replace(/（/g, '(').replace(/）/g, ')')
-                .replace(/\*\*/g, '^').replace(/[ー－−―]/g, '-').replace(/＋/g, '+').replace(/＾/g, '^').replace(/ｘ/g, 'x')
-                .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
-                .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, m => '^' + [...m].map(c => SUPS.indexOf(c)).join(''))
-                .replace(/\*/g, '');
-            t = t.replace(/^(f'\([^)]*\)|y')=/, '');
-            if (!t || /[^0-9x^+\-]/.test(t)) return null;
-            const re = /([+-]?)(\d*)(x(?:\^(\d+))?)?/y;
-            const poly = {};
-            let pos = 0;
-            while (pos < t.length) {
-                re.lastIndex = pos;
-                const m = re.exec(t);
-                if (!m || (!m[2] && !m[3]) || (pos > 0 && !m[1])) return null;
-                const deg = m[3] ? (m[4] ? parseInt(m[4], 10) : 1) : 0;
-                poly[deg] = (poly[deg] || 0) + (m[1] === '-' ? -1 : 1) * (m[2] ? parseInt(m[2], 10) : 1);
-                pos += m[0].length;
-            }
-            return poly;
-        }
-        function samePoly(a, b) {
-            const p = parsePoly(a), q = parsePoly(b);
-            if (!p || !q) return false;
-            const keys = new Set([...Object.keys(p), ...Object.keys(q)]);
-            for (const k of keys) if ((p[k] || 0) !== (q[k] || 0)) return false;
-            return true;
-        }
-
-        function submitAnswer() {
-            if (done) return;
-            const answerInput = document.getElementById('answerInput');
-            const fb = document.getElementById('inputFeedback');
-            const userAnswer = answerInput.value.trim();
-            if (!userAnswer) {
-                fb.textContent = '答えを入力してください';
-                fb.className = 'input-feedback incorrect';
-                return;
-            }
-            const question = currentQuestions[currentQuestionIndex];
-            if (samePoly(userAnswer, question.options[question.correct])) { finishQuestion(true); return; }
-            // 【ブラッシュアップ】式として読めないときは書き方を、読めたときは 方針 → 途中式 → 答え の順にヒントを出す。
-            //   元はヒントが 1.5 秒で消え、スマホでは画面の外に出ていた。次に答えるまで、入力欄のすぐ下に残す
-            if (!parsePoly(userAnswer)) {
-                fb.innerHTML = '式として読み取れませんでした。<div class="rule-hint">例：3x^2 - 4x + 1　（x² は x^2 と入力）</div>';
-                fb.className = 'input-feedback incorrect';
-                return;
-            }
-            stage++;
-            if (stage >= 3) { finishQuestion(false); return; }
-            fb.innerHTML = `❌ ちがうよ。下の${stage === 1 ? '方針' : '途中式'}を見て、もう一度入力しよう。`;
-            fb.className = 'input-feedback incorrect';
-            renderHints();
-            answerInput.focus();
-        }
-
-        function showAnswer() {
-            if (done) return;
-            stage = 3;
-            finishQuestion(false);
-            const question = currentQuestions[currentQuestionIndex];
-            document.getElementById('answerInput').value = question.options[question.correct].replace(/<[^>]*>/g, '');
-        }
-
-        // Enterキーで回答送信・次の問題へ
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && currentMode === 'input') {
-                    const answerInput = document.getElementById('answerInput');
-                    const submitBtn = document.getElementById('submitBtn');
-                    const nextBtn = document.getElementById('nextBtn');
-
-                    if (document.activeElement === answerInput && !submitBtn.disabled) {
-                        // 回答入力中の場合
-                        submitAnswer();
-                    } else if (nextBtn.style.display === 'block') {
-                        // 次の問題ボタンが表示されている場合
-                        nextQuestion();
-                    }
-                }
-            });
-
-            // 入力フィールドのリアルタイム全角→半角変換
-            document.addEventListener('input', function(e) {
-                if (e.target.id === 'answerInput') {
-                    const input = e.target;
-                    const cursorPosition = input.selectionStart;
-                    const originalValue = input.value;
-
-                    // 全角文字を半角に変換
-                    let convertedValue = originalValue
-                        // 全角数字を半角に変換
-                        .replace(/０/g, '0').replace(/１/g, '1').replace(/２/g, '2')
-                        .replace(/３/g, '3').replace(/４/g, '4').replace(/５/g, '5')
-                        .replace(/６/g, '6').replace(/７/g, '7').replace(/８/g, '8')
-                        .replace(/９/g, '9')
-                        // 全角英字を半角に変換
-                        .replace(/ａ/g, 'a').replace(/ｂ/g, 'b').replace(/ｃ/g, 'c')
-                        .replace(/ｄ/g, 'd').replace(/ｅ/g, 'e').replace(/ｆ/g, 'f')
-                        .replace(/ｇ/g, 'g').replace(/ｈ/g, 'h').replace(/ｉ/g, 'i')
-                        .replace(/ｊ/g, 'j').replace(/ｋ/g, 'k').replace(/ｌ/g, 'l')
-                        .replace(/ｍ/g, 'm').replace(/ｎ/g, 'n').replace(/ｏ/g, 'o')
-                        .replace(/ｐ/g, 'p').replace(/ｑ/g, 'q').replace(/ｒ/g, 'r')
-                        .replace(/ｓ/g, 's').replace(/ｔ/g, 't').replace(/ｕ/g, 'u')
-                        .replace(/ｖ/g, 'v').replace(/ｗ/g, 'w').replace(/ｘ/g, 'x')
-                        .replace(/ｙ/g, 'y').replace(/ｚ/g, 'z')
-                        // 全角記号を半角に変換
-                        .replace(/＋/g, '+').replace(/－/g, '-').replace(/ー/g, '-')
-                        .replace(/＊/g, '*').replace(/／/g, '/').replace(/＾/g, '^')
-                        .replace(/（/g, '(').replace(/）/g, ')').replace(/　/g, ' ');
-
-                    if (convertedValue !== originalValue) {
-                        input.value = convertedValue;
-                        // カーソル位置を維持
-                        input.setSelectionRange(cursorPosition, cursorPosition);
-                    }
-                }
-            });
+        return out;
+      }
+      function norm(terms) {
+        const m = {};
+        terms.forEach(([c, n]) => {
+          m[n] = radd(m[n] || [0, 1], R(c));
         });
+        return Object.keys(m)
+          .map(Number)
+          .filter((n) => m[n][0] !== 0)
+          .sort((a, b) => b - a)
+          .map((n) => [m[n], n]);
+      }
+      function termTxt(c, n, first) {
+        const sign =
+          c[0] < 0 ? (first ? MINUS : ` ${MINUS} `) : first ? "" : " + ";
+        const b =
+          n > 0 && Math.abs(c[0]) === 1 && c[1] === 1
+            ? xpow(n)
+            : absR(c) + xpow(n);
+        return sign + b;
+      }
+      const polyTxt = (terms) => {
+        const t = norm(terms);
+        return t.length
+          ? t.map(([c, n], i) => termTxt(c, n, i === 0)).join("")
+          : "0";
+      };
+      const deriv = (terms) =>
+        norm(terms)
+          .filter(([, n]) => n > 0)
+          .map(([c, n]) => [rmul(c, [n, 1]), n - 1]);
+      const valueAt = (terms, a) =>
+        norm(terms).reduce(
+          (s, [c, n]) => radd(s, rmul(c, [Math.pow(a, n), 1])),
+          [0, 1],
+        );
+      function termDeriv(c, n) {
+        // (kxⁿ)' = k·n xⁿ⁻¹
+        if (n === 0) return "0";
+        if (n === 1) return numTxt(c);
+        const k =
+          Math.abs(c[0]) === 1 && c[1] === 1
+            ? c[0] < 0
+              ? MINUS
+              : ""
+            : numTxt(c) + "·";
+        return `${k}${n}${xpow(n - 1)}`;
+      }
+      // 元の問題文のマイナス（-）を、数式らしいマイナス（−）にして見せる
+      const pretty = (s) =>
+        String(s).replace(/(^|[\s(>])-(?=[\dx<(])/g, "$1" + MINUS);
 
-        function restartSameMode() {
-            startQuiz(currentMode);
+      // 問題ごとの 方針・途中式・正解の式
+      function info(q) {
+        if (q._info) return q._info;
+        if (q.custom)
+          return (q._info = {
+            plan: q.plan,
+            mid: q.mid,
+            lead: q.lead,
+            ans: q.options[q.correct],
+          });
+        const f = q.f || readPoly(q.q);
+        const t = norm(f),
+          d = deriv(f);
+        let mid = q.f ? `展開すると f(x) = ${polyTxt(f)}。` : "";
+        if (t.length === 0) mid += "f'(x) = 0";
+        else if (t.length === 1)
+          mid += `f'(x) = (${termTxt(t[0][0], t[0][1], true)})' = ${termDeriv(t[0][0], t[0][1])}`;
+        else {
+          mid +=
+            "f'(x) = " +
+            t
+              .map(
+                ([c, n], i) =>
+                  (i === 0
+                    ? c[0] < 0
+                      ? MINUS
+                      : ""
+                    : c[0] < 0
+                      ? ` ${MINUS} `
+                      : " + ") +
+                  `(${termTxt([Math.abs(c[0]), c[1]], n, true)})'`,
+              )
+              .join("") +
+            " = " +
+            (t
+              .filter(([, n]) => n > 0)
+              .map(
+                ([c, n], i) =>
+                  (i === 0 ? "" : c[0] < 0 ? ` ${MINUS} ` : " + ") +
+                  termDeriv([i === 0 ? c[0] : Math.abs(c[0]), c[1]], n),
+              )
+              .join("") || "0");
         }
+        let plan,
+          lead,
+          value = null;
+        if (q.at !== undefined) {
+          const a = q.at,
+            A = a < 0 ? `(${MINUS}${-a})` : String(a);
+          if (!mid.endsWith(polyTxt(d))) mid += ` = ${polyTxt(d)}`;
+          mid +=
+            ` なので、f'(${numTxt([a, 1])}) = ` +
+            d
+              .map(([c, n], i) => {
+                const sign =
+                  c[0] < 0
+                    ? i === 0
+                      ? MINUS
+                      : ` ${MINUS} `
+                    : i === 0
+                      ? ""
+                      : " + ";
+                return (
+                  sign +
+                  (n === 0 ? absR(c) : `${absR(c)}·${A}${n > 1 ? sup(n) : ""}`)
+                );
+              })
+              .join("");
+          value = valueAt(d, a);
+          plan =
+            "まず f'(x) を求めてから、x の値を代入しよう。f(a) ではなく f'(a) だよ。";
+          lead = `${pretty(q.q)} のとき、f'(${numTxt([a, 1])}) の値を求めなさい。`;
+        } else {
+          plan = q.f
+            ? "まず展開して、1 つの項ずつ微分しよう。"
+            : "1 つの項ずつ (kxⁿ)' = k·n xⁿ⁻¹。係数が分数でも同じで、かけたあと約分しよう。定数の項は微分すると 0。";
+          lead = `次の関数を微分して、f'(x) を求めなさい。<br><br>${pretty(q.q)}`;
+        }
+        return (q._info = {
+          plan,
+          mid,
+          lead,
+          d,
+          value,
+          ans: value ? numTxt(value) : polyTxt(d),
+        });
+      }
+      // 難しさの目安（通常・入力モードでは、やさしい順に並べて出す）
+      function level(q) {
+        if (q.custom) return 9;
+        if (q.at !== undefined) return 8;
+        if (q.f) return 7;
+        const t = readPoly(q.q) || [];
+        const frac = /fraction/.test(q.q) ? 3 : 0;
+        const neg = t.some(([c]) => c[0] < 0) ? 1 : 0;
+        const deg = Math.max(0, ...t.map(([, n]) => n));
+        return frac + t.length + neg + (deg >= 4 ? 1 : 0);
+      }
 
-        // 初期表示
-        document.querySelectorAll('.pool-count').forEach(e => e.textContent = problemPool.length);   // 【ブラッシュアップ】
-        showModeSelection();
-        watchMath(['#question', '#options', '#hintArea', '#explainArea', '#answerLabel', '#inputFeedback']);   // 【ブラッシュアップ】
+      const isConstant = (p) => /^f\(x\) = -?\d+$/.test(p.q);
+      function getRandomQuestions(count) {
+        let pool = problemPool;
+        if (currentMode === "input") {
+          pool = problemPool.filter(
+            (p) =>
+              !p.custom &&
+              !/fraction|\//.test(p.q) &&
+              !/fraction|\//.test(p.options[p.correct]),
+          );
+        }
+        const constants = pool.filter(isConstant);
+        const others = shuffleArray([...pool.filter((p) => !isConstant(p))]);
+        const picked = [
+          constants[Math.floor(Math.random() * constants.length)],
+          ...others.slice(0, count - 1),
+        ];
+        return picked
+          .map((p, i) => [level(p) + Math.random() * 0.5, p])
+          .sort((a, b) => a[0] - b[0])
+          .map((x) => x[1]);
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function parsePoly(s) {
+        let t = String(s)
+          .replace(/<[^>]*>/g, "")
+          .replace(/\s+/g, "")
+          .toLowerCase()
+          .replace(/[’′‘]/g, "'")
+          .replace(/＝/g, "=")
+          .replace(/（/g, "(")
+          .replace(/）/g, ")")
+          .replace(/\*\*/g, "^")
+          .replace(/[ー－−―]/g, "-")
+          .replace(/＋/g, "+")
+          .replace(/＾/g, "^")
+          .replace(/ｘ/g, "x")
+          .replace(/[０-９]/g, (c) =>
+            String.fromCharCode(c.charCodeAt(0) - 0xfee0),
+          )
+          .replace(
+            /[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,
+            (m) => "^" + [...m].map((c) => SUPS.indexOf(c)).join(""),
+          )
+          .replace(/\*/g, "");
+        t = t.replace(/^(f'\([^)]*\)|y')=/, "");
+        if (!t || /[^0-9x^+\-]/.test(t)) return null;
+        const re = /([+-]?)(\d*)(x(?:\^(\d+))?)?/y;
+        const poly = {};
+        let pos = 0;
+        while (pos < t.length) {
+          re.lastIndex = pos;
+          const m = re.exec(t);
+          if (!m || (!m[2] && !m[3]) || (pos > 0 && !m[1])) return null;
+          const deg = m[3] ? (m[4] ? parseInt(m[4], 10) : 1) : 0;
+          poly[deg] =
+            (poly[deg] || 0) +
+            (m[1] === "-" ? -1 : 1) * (m[2] ? parseInt(m[2], 10) : 1);
+          pos += m[0].length;
+        }
+        return poly;
+      }
+      function samePoly(a, b) {
+        const p = parsePoly(a),
+          q = parsePoly(b);
+        if (!p || !q) return false;
+        const keys = new Set([...Object.keys(p), ...Object.keys(q)]);
+        for (const k of keys) if ((p[k] || 0) !== (q[k] || 0)) return false;
+        return true;
+      }
+
+      let currentMode = "normal";
+      // 数式のHTMLは、文字だけ斜体・数字は立体。式の行と日本語の説明を分ける。
+      function mathHTML(html) {
+        return String(html)
+          .split(/(<[^>]+>)/g)
+          .map((part, i) =>
+            i % 2
+              ? part
+              : part.replace(
+                  /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()+−=×÷·.,^\- ]+/g,
+                  (run) => {
+                    if (!/[A-Za-z0-9ⁿ]/.test(run)) return run;
+                    let text = run
+                      .replace(/'/g, "′")
+                      .replace(/-/g, "−")
+                      .replace(/\^(\d+)/g, (_, n) => "<sup>" + n + "</sup>");
+                    text = text.replace(
+                      /[ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g,
+                      (x) =>
+                        "<sup>" +
+                        [...x]
+                          .map((c) =>
+                            c === "ⁿ"
+                              ? "n"
+                              : c === "⁻"
+                                ? "−"
+                                : "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c),
+                          )
+                          .join("") +
+                        "</sup>",
+                    );
+                    text = text
+                      .split(/(<[^>]+>)/g)
+                      .map((x, j) =>
+                        j % 2
+                          ? x
+                          : x.replace(/[A-Za-z]+/g, (letters) =>
+                              ["sin", "cos", "tan", "log"].includes(letters)
+                                ? letters
+                                : "<i>" + letters + "</i>",
+                            ),
+                      )
+                      .join("");
+                    return '<span class="m">' + text + "</span>";
+                  },
+                ),
+          )
+          .join("");
+      }
+      function stepsHTML(mid) {
+        return String(mid)
+          .replace(/<br\s*\/?\s*>/g, "。")
+          .split(/(?:。| なので、?| なので | より )/)
+          .filter(Boolean)
+          .map((line) => {
+            const parts = line.split(" = ");
+            return (
+              '<div class="equation">' +
+              parts
+                .map(
+                  (s, i) =>
+                    '<span class="eqpart">' +
+                    (i ? " = " : "") +
+                    mathHTML(s) +
+                    "</span>",
+                )
+                .join("<wbr>") +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+      function formulaHTML() {
+        return (
+          '<div class="formula"><b>公式</b>' +
+          mathHTML("(kxⁿ)′ = k·n xⁿ⁻¹") +
+          "<br><small>" +
+          mathHTML("n") +
+          " は正の整数。定数の微分は " +
+          mathHTML("0") +
+          "</small></div>"
+        );
+      }
+      function fitMath() {
+        document
+          .querySelectorAll(".problem,.choice,.eqpart,.ask")
+          .forEach((e) => {
+            e.style.fontSize = "";
+            const max = e.classList.contains("eqpart")
+              ? e.parentElement.clientWidth
+              : e.clientWidth;
+            let size = parseFloat(getComputedStyle(e).fontSize);
+            while (e.scrollWidth > max + 1 && size > 15) {
+              size -= 0.5;
+              e.style.fontSize = size + "px";
+            }
+          });
+      }
+      function menuIcon(kind) {
+        const paths = [
+          "M10 36L60 6",
+          "M10 8Q35 60 62 8",
+          "M10 35C24 35 30 5 40 9S55 33 66 10",
+          "M10 32L27 20L42 22L65 5",
+          "M12 30Q34 3 60 25",
+        ];
+        return (
+          '<svg viewBox="0 0 76 44" aria-hidden="true"><path d="M5 35H72M16 40V3" fill="none" stroke="#b6bfc9"/><path d="' +
+          paths[kind % paths.length] +
+          '" fill="none" stroke="#1f4e8c" stroke-width="2.5"/></svg>'
+        );
+      }
+      window.addEventListener("resize", fitMath);
+      // 出題内容は元の教材を保持。表示と進行をここでまとめる。
+      const $ = (id) => document.getElementById(id);
+      let mode = "normal",
+        lev = 1,
+        questions = [],
+        index = 0,
+        score = 0,
+        stage = 0,
+        done = false,
+        options = [],
+        wrong = [],
+        started = 0,
+        timer;
+      const modeNames = {
+        normal: "通常モード",
+        input: "入力モード",
+        hundred: "全問連続モード",
+        hell: "超鬼連チャンモード",
+      };
+      function shuffled(a) {
+        return a
+          .map((x) => [Math.random(), x])
+          .sort((a, b) => a[0] - b[0])
+          .map((x) => x[1]);
+      }
+      function timed() {
+        return ADVANCED && (mode === "hundred" || mode === "hell");
+      }
+      function menu() {
+        clearInterval(timer);
+        $("menu").hidden = false;
+        $("quiz").hidden = true;
+        $("result").hidden = true;
+      }
+      function start(value) {
+        clearInterval(timer);
+        if (ADVANCED) {
+          mode = value;
+          currentMode = value;
+          questions = timed() ? shuffled(problemPool) : getRandomQuestions(10);
+        } else {
+          lev = value;
+          questions = shuffled(LEVELS[lev - 1].problems);
+        }
+        index = score = 0;
+        wrong = [];
+        started = Date.now();
+        $("timer").textContent = timed() ? "0分0秒" : "";
+        $("menu").hidden = true;
+        $("result").hidden = true;
+        $("quiz").hidden = false;
+        timer = setInterval(() => {
+          $("timer").textContent = timed() ? elapsed() : "";
+        }, 250);
+        load();
+        window.scrollTo(0, 0);
+      }
+      function elapsed() {
+        const s = Math.floor((Date.now() - started) / 1000);
+        return Math.floor(s / 60) + "分" + (s % 60) + "秒";
+      }
+      function details() {
+        const q = questions[index];
+        if (ADVANCED) {
+          const i = info(q);
+          return {
+            lead: i.lead,
+            plan: i.plan,
+            mid: i.mid,
+            answer: i.ans,
+            opts: q.options.map((text, n) => ({ text, ok: n === q.correct })),
+          };
+        }
+        const b = build(lev, q);
+        return {
+          lead:
+            '<div>次の関数について求めなさい。</div><div class="problem">f(x) = ' +
+            b.fTxt +
+            "</div>" +
+            b.ask,
+          ...b,
+        };
+      }
+      function load() {
+        stage = 0;
+        done = false;
+        const d = details();
+        $("status").textContent =
+          (ADVANCED ? modeNames[mode] : "レベル " + lev) +
+          "　" +
+          (index + 1) +
+          " / " +
+          questions.length;
+        $("bar").style.width = (index / questions.length) * 100 + "%";
+        $("question").innerHTML = mathHTML(d.lead.replace(/<br><br>/g, "<br>"));
+        $("hints").innerHTML = "";
+        $("feedback").hidden = true;
+        $("next").hidden = true;
+        $("help").hidden = timed();
+        $("inputSection").hidden = !(ADVANCED && mode === "input");
+        $("choices").hidden = ADVANCED && mode === "input";
+        $("answerInput").value = "";
+        $("inputFeedback").textContent = "";
+        $("submit").disabled = false;
+        $("answerInput").disabled = false;
+        options = shuffled(d.opts);
+        $("choices").innerHTML = options
+          .map(
+            (o, n) =>
+              '<button class="choice" data-label="' +
+              ["ア", "イ", "ウ", "エ"][n] +
+              '" onclick="choose(' +
+              n +
+              ')">' +
+              mathHTML(o.text) +
+              "</button>",
+          )
+          .join("");
+        fitMath();
+      }
+      function hints() {
+        if (done) return;
+        stage++;
+        if (stage >= 3) {
+          finish(false);
+          return;
+        }
+        const d = details();
+        $("hints").innerHTML =
+          '<div class="hint-box"><span class="hint-tag">' +
+          (stage === 1 ? "考え方" : "途中式") +
+          "</span>" +
+          formulaHTML() +
+          (stage === 1 ? mathHTML(d.plan) : stepsHTML(d.mid)) +
+          "</div>";
+        fitMath();
+      }
+      function choose(n) {
+        if (done) return;
+        const ok = options[n].ok;
+        if (timed()) {
+          if (ok) score++;
+          else
+            wrong.push({
+              q: questions[index],
+              number: index + 1,
+              chosen: options[n].text,
+            });
+          if (!ok && mode === "hell") {
+            results();
+            return;
+          }
+          advance();
+          return;
+        }
+        if (ok) {
+          finish(true);
+          return;
+        }
+        $("choices").children[n].classList.add("incorrect");
+        $("choices").children[n].disabled = true;
+        hints();
+      }
+      function submit() {
+        if (done) return;
+        const v = $("answerInput").value.trim();
+        if (!v) {
+          $("inputFeedback").textContent = "答えを入力してください。";
+          return;
+        }
+        if (!parsePoly(v)) {
+          $("inputFeedback").textContent =
+            "式を読み取れません。例：2x² + 3（2x^2 + 3 でも入力できます）";
+          return;
+        }
+        if (samePoly(v, questions[index].options[questions[index].correct]))
+          finish(true);
+        else {
+          $("inputFeedback").textContent =
+            "もう一度、下のヒントを見て考えよう。";
+          hints();
+        }
+      }
+      function reveal() {
+        if (!done) {
+          stage = 3;
+          finish(false);
+        }
+      }
+      function finish(ok) {
+        done = true;
+        if (ok && stage === 0) score++;
+        const d = details();
+        $("feedback").hidden = false;
+        $("feedback").className = "feedback " + (ok ? "correct" : "");
+        $("feedback").innerHTML =
+          "<strong>" +
+          (ok ? "正解" : "答えを確認しよう") +
+          '</strong><div class="problem">' +
+          mathHTML(d.answer || d.ans) +
+          "</div>" +
+          stepsHTML(d.mid);
+        $("hints").innerHTML = "";
+        $("help").hidden = true;
+        $("next").hidden = false;
+        $("next").textContent =
+          index + 1 === questions.length ? "結果を見る" : "次の問題へ";
+        $("submit").disabled = true;
+        $("answerInput").disabled = true;
+        [...$("choices").children].forEach((e, n) => {
+          e.disabled = true;
+          if (options[n].ok) e.classList.add("correct");
+        });
+        fitMath();
+      }
+      function advance() {
+        index++;
+        if (index >= questions.length) results();
+        else {
+          load();
+          window.scrollTo(0, 0);
+        }
+      }
+      function results() {
+        clearInterval(timer);
+        $("quiz").hidden = true;
+        $("result").hidden = false;
+        const attempted = timed()
+          ? Math.min(index + 1, questions.length)
+          : questions.length;
+        $("result").innerHTML =
+          '<h2>学習の結果</h2><p class="result-score">' +
+          score +
+          " / " +
+          (mode === "hell" && ADVANCED ? attempted : questions.length) +
+          " 問</p><p>" +
+          (timed()
+            ? "記録：" +
+              elapsed() +
+              (mode === "hell" && wrong.length ? "（不正解で終了）" : "")
+            : "ヒントを使わずに正解した問題の数です。") +
+          '</p><div class="result-nav"><button class="primary" onclick="start(ADVANCED?mode:lev)">もう一度</button>' +
+          (!ADVANCED && lev < 5
+            ? '<button onclick="start(lev+1)">次のレベルへ</button>'
+            : "") +
+          '<button onclick="menu()">' +
+          (ADVANCED ? "モード" : "レベル") +
+          'を選ぶ</button><a href="../index.html">ほかの教材へ</a></div>' +
+          (wrong.length
+            ? "<h3>間違えた問題を見直そう</h3>" +
+              wrong
+                .map(
+                  (w, n) =>
+                    '<div class="review-item"><details><summary>問題 ' +
+                    w.number +
+                    "：" +
+                    mathHTML(w.q.q) +
+                    "</summary><p>選んだ答え：" +
+                    mathHTML(w.chosen) +
+                    "</p><p>正しい答え：" +
+                    mathHTML(info(w.q).ans) +
+                    "</p>" +
+                    stepsHTML(info(w.q).mid) +
+                    graph(w.q) +
+                    "</details></div>",
+                )
+                .join("")
+            : "");
+        window.scrollTo(0, 0);
+        fitMath();
+      }
+      function graph(q) {
+        let f = q.f || readPoly(q.q);
+        if (q.custom)
+          f = q.q.includes("ax²")
+            ? [
+                [2, 2],
+                [3, 1],
+              ]
+            : [
+                [1, 2],
+                [3, 1],
+              ];
+        const a = q.at ?? (q.custom ? (q.q.includes("ax²") ? 2 : 1) : 0);
+        const val = (x) =>
+          f.reduce(
+            (s, [c, n]) => s + (Array.isArray(c) ? c[0] / c[1] : c) * x ** n,
+            0,
+          );
+        const slope = f.reduce(
+          (s, [c, n]) =>
+            s +
+            (n ? (Array.isArray(c) ? c[0] / c[1] : c) * n * a ** (n - 1) : 0),
+          0,
+        );
+        const xs = Array.from({ length: 101 }, (_, i) => a - 2 + i / 25),
+          ys = xs.map(val),
+          ts = xs.map((x) => val(a) + slope * (x - a));
+        const lo = Math.min(0, ...ys, ...ts) - 1,
+          hi = Math.max(0, ...ys, ...ts) + 1;
+        const X = (x) => 25 + (x - a + 2) * 62.5,
+          Y = (y) => 170 - ((y - lo) / (hi - lo)) * 150;
+        const path = (v) =>
+          v
+            .map(
+              (y, i) =>
+                (i ? "L" : "M") + X(xs[i]).toFixed(2) + " " + Y(y).toFixed(2),
+            )
+            .join(" ");
+        return (
+          '<svg viewBox="0 0 300 200" role="img" aria-label="関数と接線のグラフ"><path d="M25 ' +
+          Y(0) +
+          "H275" +
+          (a - 2 <= 0 && a + 2 >= 0 ? "M" + X(0) + " 20V170" : "") +
+          '" stroke="#aaa" fill="none"/><path d="' +
+          path(ys) +
+          '" stroke="#1f4e8c" stroke-width="2" fill="none"/><path d="' +
+          path(ts) +
+          '" stroke="#d9480f" stroke-width="2" fill="none"/><circle cx="' +
+          X(a) +
+          '" cy="' +
+          Y(val(a)) +
+          '" r="3" fill="#d9480f"/><text x="25" y="190" font-size="12">' +
+          (a - 2) +
+          '</text><text x="265" y="190" font-size="12">' +
+          (a + 2) +
+          "</text></svg><small>紺：関数のグラフ　橙：" +
+          mathHTML("x = " + a) +
+          " の接線（接点 " +
+          mathHTML("(" + a + ", " + numTxt(valueAt(f, a)) + ")") +
+          "）</small>"
+        );
+      }
+      function insertText(s) {
+        const e = $("answerInput");
+        e.setRangeText(s, e.selectionStart, e.selectionEnd, "end");
+        e.focus();
+      }
+      $("answerInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (done) advance();
+          else submit();
+        }
+      });
+      $("menuGrid").innerHTML = ADVANCED
+        ? Object.entries(modeNames)
+            .map(
+              ([key, name], i) =>
+                '<button class="menu-card" onclick="start(\'' +
+                key +
+                "')\">" +
+                menuIcon(i) +
+                "<b>" +
+                name +
+                "</b><small>" +
+                [
+                  "10問・選択式",
+                  "10問・式を入力",
+                  "全" + problemPool.length + "問・時間を計測",
+                  "全" + problemPool.length + "問・1回の間違いで終了",
+                ][i] +
+                "</small></button>",
+            )
+            .join("")
+        : LEVELS.map(
+            (l, i) =>
+              '<button class="menu-card" onclick="start(' +
+              (i + 1) +
+              ')">' +
+              menuIcon(i) +
+              "<b>レベル " +
+              (i + 1) +
+              "</b><span>" +
+              [
+                "べきの微分",
+                "係数のある式",
+                "分数の係数",
+                "多項式",
+                "展開・微分係数",
+              ][i] +
+              "</span><small>" +
+              l.problems.length +
+              "問</small></button>",
+          ).join("");
+      menu();
     </script>
-<script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".header h1": "u-title",
-    ".mode-btn": "u-choice",
-    ".back-to-menu-btn": "u-btn u-btn-plain",
-    ".option": "u-choice",
-    ".option.correct": "u-ok",
-    ".option.incorrect": "u-ng",
-    ".next-btn": "u-btn u-btn-blue",
-    ".hint-button": "u-btn u-btn-plain",
-    "#answerInput": "u-input",
-    "#submitBtn": "u-btn",
-    "#showAnswerBtn": "u-btn u-btn-plain",
-    ".result-nav .again": "u-btn",
-    ".result-nav .plain": "u-btn u-btn-plain"
-  });
-</script>
-</body>
+  </body>
 </html>
