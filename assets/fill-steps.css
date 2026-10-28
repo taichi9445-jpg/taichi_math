@@ -50,9 +50,10 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
 .fs-row.prose .fs-no{background:none}
 .fs-eq{flex:1;min-width:0;white-space:nowrap;font-size:20px;line-height:2}
 .fs-g{display:inline-block;white-space:nowrap}
-.fs-eqs{margin:0 .35em}
+.fs-eqs{margin:0 .28em}
 .fs-eq.wrap .fs-g{display:block}
-.fs-eq.wrap .fs-g+.fs-g{padding-left:1.1em}
+.fs-eq.wrap .fs-g:nth-child(-n+2){display:inline-block}
+.fs-eq.wrap .fs-g:nth-child(n+3){padding-left:1.1em}
 .fs-prose{flex:1;min-width:0;font-size:16px;line-height:1.9;color:#1f4e8c;background:#eef4fb;border-radius:4px;padding:2px 10px}
 .fs-prose .fs-m{font-size:18px}
 

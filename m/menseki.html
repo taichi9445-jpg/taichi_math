@@ -1,1483 +1,290 @@
-<!doctype html>
-<html lang="ja">
- <head>
-  <meta charset="UTF-8">
-  <!--
-    28. 面積の計算（三角形の面積 穴埋め問題）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../assets/port.css">
-  <script src="../assets/port.js"></script>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>三角形の面積 穴埋め問題</title>
-  
-  <style>
-    body {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      height: 100%;
-      overflow: auto;
-    }
-
-    .container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      background: white;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      margin: 0;
-      color: #667eea;
-      font-size: 28px;
-    }
-
-    .instruction {
-      margin: 5px 0 0 0;
-      color: #666;
-      font-size: 14px;
-    }
-
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .problem-view {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      padding: 30px;
-      overflow-y: auto;
-    }
-
-    .problem-view.active {
-      display: flex;
-    }
-
-    .problem-header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .problem-title {
-      font-size: 32px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .problem-content {
-      display: flex;
-      flex-direction: row;
-      gap: 40px;
-      max-width: 1400px;
-      margin: 0 auto;
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      position: relative;
-      align-items: flex-start;
-    }
-
-    .triangle-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-      border: 3px dashed rgba(102, 126, 234, 0.4);
-      flex-shrink: 0;
-      width: 450px;
-    }
-
-    .triangle-diagram {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    svg {
-      width: 100%;
-      height: auto;
-      min-height: 200px;
-    }
-
-    .work-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .formula-lines {
-      margin-bottom: 20px;
-    }
-
-    .formula-line {
-      margin-bottom: 10px;
-      font-size: 20px;
-      line-height: 45px;
-    }
-
-    .formula-line:first-child {
-      margin-top: 0;
-    }
-
-    .drop-zone {
-      display: inline-block;
-      min-width: 90px;
-      height: 45px;
-      border: 2px dashed #667eea;
-      border-radius: 8px;
-      background: white;
-      vertical-align: middle;
-      text-align: center;
-      line-height: 41px;
-      margin: 0 5px;
-      position: relative;
-      font-size: 18px;
-      transition: all 0.3s;
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .drop-zone:hover {
-      border-color: #5568d3;
-      background: #f0f4ff;
-    }
-
-    .fraction {
-      display: inline-flex;
-      flex-direction: column;
-      vertical-align: middle;
-      text-align: center;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .fraction-numerator {
-      border-bottom: 1px solid #333;
-      padding-bottom: 2px;
-    }
-
-    .fraction-denominator {
-      padding-top: 2px;
-    }
-
-    .drop-zone.filled {
-      border-style: solid;
-      background: #e0e7ff;
-    }
-
-    .drop-zone.correct {
-      border-color: #10b981;
-      background: #d1fae5;
-      animation: correctPulse 0.5s;
-    }
-
-    .drop-zone.incorrect {
-      border-color: #ef4444;
-      background: #fee2e2;
-      animation: shake 0.5s;
-    }
-
-    @keyframes correctPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-
-    .choices-container {
-      margin-top: 10px;
-      padding: 20px;
-      background: #f8f9ff;
-      border-radius: 15px;
-      border: 2px solid #e0e7ff;
-    }
-
-    .choices-label {
-      font-weight: bold;
-      margin-bottom: 15px;
-      color: #667eea;
-      font-size: 16px;
-    }
-
-    .choices {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .choice {
-      padding: 12px 24px;
-      background: #667eea;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      user-select: none;
-      font-size: 18px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: all 0.2s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .choice:hover {
-      background: #5568d3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .choice.dragging {
-      opacity: 0.5;
-    }
-
-    .choice.selected {
-      outline: 4px solid #fbbf24;
-      transform: scale(1.1);
-      background: #5568d3;
-    }
-
-    .buttons-container {
-      display: flex;
-      gap: 15px;
-      margin-top: 10px;
-      justify-content: center;
-    }
-
-    .answer-button {
-      padding: 12px 30px;
-      background: #f59e0b;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .answer-button:hover {
-      background: #d97706;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .answer-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .answer-overlay.show {
-      display: flex;
-    }
-
-    .answer-content {
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      max-width: 600px;
-      max-height: 80%;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .answer-content h2 {
-      color: #667eea;
-      margin-top: 0;
-    }
-
-    .answer-content .formula-line {
-      font-size: 20px;
-      margin: 15px 0;
-      color: #333;
-    }
-
-    .close-button {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      font-size: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .close-button:hover {
-      background: #dc2626;
-      transform: scale(1.1);
-    }
-
-    .navigation {
-      background: white;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    }
-
-    .nav-button {
-      padding: 12px 30px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .nav-button:hover:not(:disabled) {
-      background: #5568d3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    .nav-button:disabled {
-      background: #cbd5e1;
-      cursor: not-allowed;
-    }
-
-    .progress {
-      font-size: 18px;
-      font-weight: bold;
-      color: #667eea;
-    }
-
-    .status-message {
-      text-align: center;
-      margin-top: 10px;
-      padding: 15px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 18px;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .status-message.correct {
-      background: #d1fae5;
-      color: #065f46;
-      border: 2px solid #10b981;
-    }
-
-    .status-message.partial {
-      background: #fef3c7;
-      color: #92400e;
-      border: 2px solid #f59e0b;
-    }
-
-    .status-message.empty {
-      background: transparent;
-    }
-  </style>
-  <style>@view-transition { navigation: auto; }</style>
-  
-  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
-       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
-       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
-  <link rel="stylesheet" href="../assets/gas.css">
-   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    html, body { height: auto !important; }
-    body { padding: 12px; }
-    .container { height: auto; max-width: 1000px; margin: 0 auto; padding: 20px 18px; box-sizing: border-box; }
-    .header { background: none; box-shadow: none; padding: 4px 0 10px; }
-    h1 { font-size: min(1.9rem, 6.4vw); white-space: nowrap; }
-    .instruction { color: var(--u-sub); font-weight: 700; }
-    .main-content, .problem-view { overflow: visible; }
-    .problem-view { padding: 0; }
-    .problem-header { margin-bottom: 10px; }
-    .problem-title { display: inline-block; color: var(--u-soft-yellow-text); background: var(--u-soft-yellow); text-shadow: none; font-size: 1.1rem; padding: 4px 18px; border-radius: 999px; }
-    .problem-content { background: #f8fafc; border: 3px solid var(--u-line); box-shadow: none; border-radius: 24px; padding: 24px; gap: 24px; width: 100%; box-sizing: border-box; }
-    .triangle-section { background: #fff; box-shadow: none; border: 3px dashed var(--u-line); border-radius: 16px; justify-content: center; width: 380px; box-sizing: border-box; }
-    .triangle-diagram svg { min-height: 0; max-height: 260px; }
-    .formula-line { color: var(--u-ink); font-weight: 700; }
-    .formula-line > div[style] { margin-left: 0 !important; color: var(--u-sub) !important; line-height: 1.4; }
-    .drop-zone { border-color: var(--u-line-dark); border-radius: 10px; }
-    .drop-zone.filled { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); }
-    .drop-zone.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
-    .drop-zone.incorrect { background: var(--u-ng-soft); border-color: var(--u-ng-line); color: var(--u-ng); }
-    .fraction-numerator { border-bottom-color: currentColor; }
-    .choices-container { background: #fff; border: 3px solid var(--u-line); border-radius: 16px; }
-    .choices-label { color: var(--u-sub); }
-    .choice { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; font-weight: 700; padding: 10px 18px; }
-    .choice:hover { background: var(--u-blue-dark); }
-    .choice.selected { background: var(--u-accent); border-bottom-color: var(--u-accent-dark); outline: none; }
-    .choice.used { opacity: 0.35; background: #94a3b8; border-bottom-color: #64748b; cursor: not-allowed; transform: none; }
-    .status-message { border-radius: 16px; }
-    .status-message.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .status-message.partial { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); border: 2px dashed #fde68a; }
-    .navigation { background: none; box-shadow: none; padding: 16px 0 0; border-top: 3px solid var(--u-line); margin-top: 16px; gap: 8px; }
-    .progress { color: var(--u-sub); white-space: nowrap; }
-    .answer-overlay { padding: 16px; box-sizing: border-box; background: rgba(75, 44, 32, 0.55); }
-    .answer-content { border: 8px solid var(--u-frame); border-radius: 32px; max-height: 85vh; box-sizing: border-box; padding: 28px 22px; width: 100%; }
-    .answer-content h2 { color: var(--u-title); }
-    .answer-content .formula-line { color: var(--u-ink); line-height: 2; }
-    .result-overlay { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 2000; padding: 16px; overflow-y: auto; box-sizing: border-box; }
-    .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
-    .result-emoji { font-size: 2.6em; }
-    .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 4px 0 8px; }
-    .result-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); white-space: nowrap; margin-bottom: 8px; }
-    .result-box p { color: var(--u-ink); font-weight: 700; line-height: 1.7; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-    .result-nav button { padding: 12px; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    /* 【ブラッシュアップ】公式カード・問題文・計算してかいた図 */
-    .formula-card { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; padding: 10px 14px; margin: 0 0 12px; color: var(--u-title); font-weight: 700; text-align: center; }
-    .formula-card-title { font-size: 13px; color: var(--u-sub); }
-    .formula-card-main { font-size: 18px; margin: 2px 0; }
-    .formula-card-sub { font-size: 13px; color: var(--u-ink); line-height: 2; }
-    .formula-card .fraction { font-size: 0.85em; }
-    .problem-statement { margin: 8px auto 0; max-width: 760px; color: var(--u-ink); font-weight: 700; font-size: 17px; line-height: 1.6; }
-    .tri-svg { font-family: var(--u-font); }
-    .tri-body { fill: #dbeafe; stroke: #3b82f6; stroke-width: 3; stroke-linejoin: round; }
-    .tri-arc { fill: none; stroke: #ef4444; stroke-width: 2.5; }
-    .tri-ang { fill: #ef4444; font-size: 18px; font-weight: 800; }
-    .tri-side { fill: var(--u-ink); font-size: 20px; font-weight: 800; }
-    .tri-vtx { fill: #1e40af; font-size: 25px; font-weight: 800; font-family: var(--u-math-font); font-style: italic; }   /* 【ブラッシュアップ】頂点の文字は斜体 */
-    .tri-side, .tri-ang { font-family: var(--u-math-font); }
-    .tri-side { font-size: 22px; }
-    .tri-ang, .tri-side, .tri-vtx { paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
-    @media (max-width: 760px) {
-      /* 【ブラッシュアップ】スマホ：図を上に固定し、式と同時に見えるようにする。選択肢は小さくして下に固定 */
-      .formula-card { padding: 6px 8px; margin-bottom: 8px; }
-      .formula-card-main { font-size: 14px; }
-      .formula-card-sub { font-size: 11.5px; line-height: 1.9; }
-      .problem-statement { font-size: 15px; text-align: left; }
-      .triangle-section { position: sticky; top: 0; z-index: 4; padding: 2px 4px; border-width: 2px; }
-      .triangle-diagram svg { max-height: 132px; }
-      .choices-label { display: none; }
-      .choices-container { padding: 8px !important; }
-      .choices { gap: 6px !important; }
-      .choice { padding: 4px 9px !important; font-size: 15px !important; min-width: 34px; text-align: center; }
-      .choice .fraction { font-size: 13px; }
-    }
-    @media (max-width: 760px) {
-      body { padding: 8px; }
-      .container { padding: 14px 10px; }
-      .problem-content { flex-direction: column; padding: 12px 10px; gap: 12px; }
-      .triangle-section { padding: 8px; width: 100%; box-sizing: border-box; }
-      .formula-line { font-size: 17px; line-height: 44px; }
-      .drop-zone { min-width: 60px; }
-      .choices-container { position: sticky; bottom: 0; z-index: 5; padding: 10px; box-shadow: 0 -6px 14px rgba(0, 0, 0, 0.08); }
-      .problem-view.solved .choices-container { display: none; }
-      .choices-label { font-size: 13px; margin-bottom: 8px; }
-      .choices { gap: 8px; }
-      .choice { padding: 8px 14px; font-size: 17px; }
-      .nav-button { padding: 10px 14px; }
-    }
-    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
-    .mf { font-family: var(--u-math-font); font-style: normal; }
-    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
-  
-  </style>
-</head>
- <body class="u-theme">
-  <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-  <div class="container">
-   <header class="header">
-    <h1 id="title">三角形の面積 穴埋め問題</h1>
-    <p class="instruction" id="instruction">選択肢をタップまたはドラッグして式を完成させましょう</p>
-   </header>
-   <main class="main-content">
-    <!-- 【ブラッシュアップ】公式カード（元は公式がどこにも出ていなかった） -->
-    <div class="formula-card">
-     <div class="formula-card-title">三角形の面積</div>
-     <div class="formula-card-main">S = <span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span> × (2辺) × sin（その2辺にはさまれた角）</div>
-     <div class="formula-card-sub">S = <span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span><i>bc</i> sin A = <span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span><i>ca</i> sin B = <span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span><i>ab</i> sin C　／　鈍角のときは sin(180° − θ) = sin θ を使う</div>
-    </div><!-- 問題1 -->
-    <div class="problem-view active" data-problem="1">
-     <div class="problem-header">
-      <div class="problem-title">問題 1</div>
-      <p class="problem-statement">△ABC において、CA＝6、CB＝8、C＝30° のとき、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="48,160.5" data-p="348,160.5" data-q="242.9,48"><polygon points="48,160.5 348,160.5 242.9,48" class="tri-body" /><path d="M 82,160.5 A 34,34 0 0,0 77.4,143.5" class="tri-arc" /><text x="102.1" y="146" class="tri-ang" text-anchor="middle" dominant-baseline="central">30°</text><text x="198" y="178.5" class="tri-side" text-anchor="middle" dominant-baseline="central">8</text><text x="135.2" y="86.6" class="tri-side" text-anchor="middle" dominant-baseline="central">6</text><text x="28.5" y="164.9" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text><text x="367.3" y="165.9" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="250.3" y="29.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="8|6"></span> × <span class="drop-zone" data-answer="8|6"></span> × sin <span class="drop-zone" data-answer="30°"></span></div>
-        <div class="formula-line">sin 30° = <span class="drop-zone" data-answer="1/2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="24"></span> × <span class="drop-zone" data-answer="1/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="12"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">30°</div>
-         <div class="choice" draggable="true">8</div>
-         <div class="choice" draggable="true">48</div>
-         <div class="choice" draggable="true">24</div>
-         <div class="choice" draggable="true">6</div>
-         <div class="choice" draggable="true">60°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">12</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(1)">答えを見る</button></div>
-       <div class="status-message empty" data-status="1"></div>
-      </div>
-     </div>
-    </div><!-- 問題2 -->
-    <div class="problem-view" data-problem="2">
-     <div class="problem-header">
-      <div class="problem-title">問題 2</div>
-      <p class="problem-statement">△ABC において、AB＝10、BC＝12、B＝60° のとき、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="48,238" data-p="311.3,238" data-q="157.7,48"><polygon points="48,238 311.3,238 157.7,48" class="tri-body" /><path d="M 82,238 A 34,34 0 0,0 65,208.6" class="tri-arc" /><text x="96.5" y="210" class="tri-ang" text-anchor="middle" dominant-baseline="central">60°</text><text x="179.6" y="256" class="tri-side" text-anchor="middle" dominant-baseline="central">12</text><text x="81.8" y="130.9" class="tri-side" text-anchor="middle" dominant-baseline="central">10</text><text x="30.2" y="247.1" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="329.5" y="246.3" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text><text x="155.4" y="28.1" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="10|12"></span> × <span class="drop-zone" data-answer="10|12"></span> × sin <span class="drop-zone" data-answer="60°"></span></div>
-        <div class="formula-line">sin 60° = <span class="drop-zone" data-answer="√3/2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="60"></span> × <span class="drop-zone" data-answer="√3/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="30√3"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">10</div>
-         <div class="choice" draggable="true">60√3</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">30√3</div>
-         <div class="choice" draggable="true">60</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">60°</div>
-         <div class="choice" draggable="true">120</div>
-         <div class="choice" draggable="true">12</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(2)">答えを見る</button></div>
-       <div class="status-message empty" data-status="2"></div>
-      </div>
-     </div>
-    </div><!-- 問題3 -->
-    <div class="problem-view" data-problem="3">
-     <div class="problem-header">
-      <div class="problem-title">問題 3</div>
-      <p class="problem-statement">△ABC において、AB＝10√2、CA＝7、A＝30° のとき、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="48,122.2" data-p="348,122.2" data-q="176.6,48"><polygon points="48,122.2 348,122.2 176.6,48" class="tri-body" /><path d="M 82,122.2 A 34,34 0 0,0 77.4,105.2" class="tri-arc" /><text x="102.1" y="107.8" class="tri-ang" text-anchor="middle" dominant-baseline="central">30°</text><text x="198" y="140.2" class="tri-side" text-anchor="middle" dominant-baseline="central">10√2</text><text x="102.1" y="67.4" class="tri-side" text-anchor="middle" dominant-baseline="central">7</text><text x="28.3" y="125.7" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="367.8" y="125.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="171.1" y="28.8" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="7|10√2"></span> × <span class="drop-zone" data-answer="7|10√2"></span> × sin <span class="drop-zone" data-answer="30°"></span></div>
-        <div class="formula-line">sin 30° = <span class="drop-zone" data-answer="1/2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="35√2"></span> × <span class="drop-zone" data-answer="1/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="35√2/2"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">70√2</div>
-         <div class="choice" draggable="true">7</div>
-         <div class="choice" draggable="true">35√2</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">35√2</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">45°</div>
-         <div class="choice" draggable="true">30°</div>
-         <div class="choice" draggable="true">10√2</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(3)">答えを見る</button></div>
-       <div class="status-message empty" data-status="3"></div>
-      </div>
-     </div>
-    </div><!-- 問題4 -->
-    <div class="problem-view" data-problem="4">
-     <div class="problem-header">
-      <div class="problem-title">問題 4</div>
-      <p class="problem-statement">△ABC において、AB＝8、CA＝6、A＝45° のとき、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="348,207.1" data-p="48,207.1" data-q="188.9,48"><polygon points="348,207.1 48,207.1 188.9,48" class="tri-body" /><path d="M 314,207.1 A 34,34 0 0,1 324,183.1" class="tri-arc" /><text x="296.3" y="185.7" class="tri-ang" text-anchor="middle" dominant-baseline="central">45°</text><text x="198" y="225.1" class="tri-side" text-anchor="middle" dominant-baseline="central">8</text><text x="282.9" y="113.1" class="tri-side" text-anchor="middle" dominant-baseline="central">6</text><text x="366.9" y="213.6" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="29.2" y="213.9" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="187.8" y="28" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="8|6"></span> × <span class="drop-zone" data-answer="8|6"></span> × sin <span class="drop-zone" data-answer="45°"></span></div>
-        <div class="formula-line">sin 45° = <span class="drop-zone" data-answer="1/√2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="24"></span> × <span class="drop-zone" data-answer="1/√2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="24/√2"></span></div>
-        <div class="formula-line">分母を有理化すると　S = <span class="drop-zone" data-answer="24√2/2"></span></div>
-        <div class="formula-line">約分すると　S = <span class="drop-zone" data-answer="12√2"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">45°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">24√2</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">24</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">24√2</div>
-         <div class="choice" draggable="true">6√2</div>
-         <div class="choice" draggable="true">8</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">24</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">12√2</div>
-         <div class="choice" draggable="true">6</div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(4)">答えを見る</button></div>
-       <div class="status-message empty" data-status="4"></div>
-      </div>
-     </div>
-    </div><!-- 問題5 -->
-    <div class="problem-view" data-problem="5">
-     <div class="problem-header">
-      <div class="problem-title">問題 5</div>
-      <p class="problem-statement">△ABC において、AB＝12、BC＝7、B＝45° のとき、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="48,171.7" data-p="348,171.7" data-q="171.7,48"><polygon points="48,171.7 348,171.7 171.7,48" class="tri-body" /><path d="M 82,171.7 A 34,34 0 0,0 72,147.7" class="tri-arc" /><text x="99.7" y="150.3" class="tri-ang" text-anchor="middle" dominant-baseline="central">45°</text><text x="198" y="189.7" class="tri-side" text-anchor="middle" dominant-baseline="central">12</text><text x="95.5" y="95.5" class="tri-side" text-anchor="middle" dominant-baseline="central">7</text><text x="28.8" y="177.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="367.4" y="176.8" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="167.6" y="28.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="12|7"></span> × <span class="drop-zone" data-answer="12|7"></span> × sin <span class="drop-zone" data-answer="45°"></span></div>
-        <div class="formula-line">sin 45° = <span class="drop-zone" data-answer="1/√2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="42"></span> × <span class="drop-zone" data-answer="1/√2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="42/√2"></span></div>
-        <div class="formula-line">分母を有理化すると　S = <span class="drop-zone" data-answer="42√2/2"></span></div>
-        <div class="formula-line">約分すると　S = <span class="drop-zone" data-answer="21√2"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">42</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">42√2</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">84</div>
-         <div class="choice" draggable="true">12</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">42</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">7</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">45°</div>
-         <div class="choice" draggable="true">21√2</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">42√2</div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(5)">答えを見る</button></div>
-       <div class="status-message empty" data-status="5"></div>
-      </div>
-     </div>
-    </div><!-- 問題6 -->
-    <div class="problem-view" data-problem="6">
-     <div class="problem-header">
-      <div class="problem-title">問題 6</div>
-      <p class="problem-statement">△ABC において、AB＝8、CA＝5、A＝120° のとき、面積 S を求めよ。（鈍角）</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="119.4,171.7" data-p="348,171.7" data-q="48,48"><polygon points="119.4,171.7 348,171.7 48,48" class="tri-body" /><path d="M 153.4,171.7 A 34,34 0 0,0 102.4,142.3" class="tri-arc" /><text x="144.4" y="128.4" class="tri-ang" text-anchor="middle" dominant-baseline="central">120°</text><text x="233.7" y="189.7" class="tri-side" text-anchor="middle" dominant-baseline="central">8</text><text x="66.8" y="119.6" class="tri-side" text-anchor="middle" dominant-baseline="central">5</text><text x="103.7" y="184.1" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="367.5" y="176.3" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="31.4" y="36.9" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="5|8"></span> × <span class="drop-zone" data-answer="5|8"></span> × sin <span class="drop-zone" data-answer="120°"></span></div>
-        <div class="formula-line">sin 120° = sin(180° − <span class="drop-zone" data-answer="60°"></span>) = <span class="drop-zone" data-answer="√3/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="20"></span> × <span class="drop-zone" data-answer="√3/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="10√3"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">120°</div>
-         <div class="choice" draggable="true">20</div>
-         <div class="choice" draggable="true">8</div>
-         <div class="choice" draggable="true">60°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">−√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">30°</div>
-         <div class="choice" draggable="true">20√3</div>
-         <div class="choice" draggable="true">5</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">10√3</div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(6)">答えを見る</button></div>
-       <div class="status-message empty" data-status="6"></div>
-      </div>
-     </div>
-    </div><!-- 問題7 -->
-    <div class="problem-view" data-problem="7">
-     <div class="problem-header">
-      <div class="problem-title">問題 7</div>
-      <p class="problem-statement">△ABC において、AB＝6、BC＝4、B＝135° のとき、面積 S を求めよ。（鈍角）</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="251.9,144.1" data-p="48,144.1" data-q="348,48"><polygon points="251.9,144.1 48,144.1 348,48" class="tri-body" /><path d="M 217.9,144.1 A 34,34 0 0,1 275.9,120.1" class="tri-arc" /><text x="232.8" y="97.9" class="tri-ang" text-anchor="middle" dominant-baseline="central">135°</text><text x="149.9" y="162.1" class="tri-side" text-anchor="middle" dominant-baseline="central">6</text><text x="314.4" y="110.5" class="tri-side" text-anchor="middle" dominant-baseline="central">4</text><text x="266.8" y="157.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="28.4" y="147.9" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="366" y="39.3" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="6|4"></span> × <span class="drop-zone" data-answer="6|4"></span> × sin <span class="drop-zone" data-answer="135°"></span></div>
-        <div class="formula-line">sin 135° = sin(180° − <span class="drop-zone" data-answer="45°"></span>) = <span class="drop-zone" data-answer="1/√2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="12"></span> × <span class="drop-zone" data-answer="1/√2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="12/√2"></span></div>
-        <div class="formula-line">分母を有理化すると　S = <span class="drop-zone" data-answer="12√2/2"></span></div>
-        <div class="formula-line">約分すると　S = <span class="drop-zone" data-answer="6√2"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">24</div>
-         <div class="choice" draggable="true">45°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">12√2</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">12√2</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">−1</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">√2</span></span></div>
-         <div class="choice" draggable="true">4</div>
-         <div class="choice" draggable="true">6√2</div>
-         <div class="choice" draggable="true">135°</div>
-         <div class="choice" draggable="true">12</div>
-         <div class="choice" draggable="true">6</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">12</span><span class="fraction-denominator">√2</span></span></div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(7)">答えを見る</button></div>
-       <div class="status-message empty" data-status="7"></div>
-      </div>
-     </div>
-    </div><!-- 問題8 -->
-    <div class="problem-view" data-problem="8">
-     <div class="problem-header">
-      <div class="problem-title">問題 8</div>
-      <p class="problem-statement">△ABC において、BC＝6、CA＝10、C＝150° のとき、面積 S を求めよ。（鈍角）</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="150.6,107.2" data-p="348,107.2" data-q="48,48"><polygon points="150.6,107.2 348,107.2 48,48" class="tri-body" /><path d="M 184.6,107.2 A 34,34 0 0,0 121.1,90.2" class="tri-arc" /><text x="163.5" y="58.9" class="tri-ang" text-anchor="middle" dominant-baseline="central">150°</text><text x="249.3" y="125.2" class="tri-side" text-anchor="middle" dominant-baseline="central">10</text><text x="89.1" y="95.3" class="tri-side" text-anchor="middle" dominant-baseline="central">6</text><text x="133.6" y="117.8" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text><text x="367.9" y="109.6" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="28.8" y="42.4" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="6|10"></span> × <span class="drop-zone" data-answer="6|10"></span> × sin <span class="drop-zone" data-answer="150°"></span></div>
-        <div class="formula-line">sin 150° = sin(180° − <span class="drop-zone" data-answer="30°"></span>) = <span class="drop-zone" data-answer="1/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="30"></span> × <span class="drop-zone" data-answer="1/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="15"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">6</div>
-         <div class="choice" draggable="true">10</div>
-         <div class="choice" draggable="true">30°</div>
-         <div class="choice" draggable="true">150°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">15</div>
-         <div class="choice" draggable="true">60</div>
-         <div class="choice" draggable="true">15√3</div>
-         <div class="choice" draggable="true">30</div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(8)">答えを見る</button></div>
-       <div class="status-message empty" data-status="8"></div>
-      </div>
-     </div>
-    </div><!-- 問題9 -->
-    <div class="problem-view" data-problem="9">
-     <div class="problem-header">
-      <div class="problem-title">問題 9</div>
-      <p class="problem-statement">【チャレンジ】△ABC において、AB＝8、BC＝7、CA＝5 のとき、余弦定理で A を求めてから、面積 S を求めよ。</p>
-     </div>
-     <div class="problem-content">
-      <div class="triangle-section">
-       <div class="triangle-diagram"><svg viewBox="0 0 396 286" class="tri-svg" data-v="48,210.4" data-p="348,210.4" data-q="141.8,48"><polygon points="48,210.4 348,210.4 141.8,48" class="tri-body" /><path d="M 82,210.4 A 34,34 0 0,0 65,180.9" class="tri-arc" /><text x="96.5" y="182.4" class="tri-ang" text-anchor="middle" dominant-baseline="central">?</text><text x="198" y="228.4" class="tri-side" text-anchor="middle" dominant-baseline="central">8</text><text x="78" y="119.4" class="tri-side" text-anchor="middle" dominant-baseline="central">5</text><text x="257.6" y="113.1" class="tri-side" text-anchor="middle" dominant-baseline="central">7</text><text x="29.5" y="218" class="tri-vtx" text-anchor="middle" dominant-baseline="central">A</text><text x="367" y="216.5" class="tri-vtx" text-anchor="middle" dominant-baseline="central">B</text><text x="135.2" y="29.1" class="tri-vtx" text-anchor="middle" dominant-baseline="central">C</text></svg></div>
-      </div>
-      <div class="work-section">
-       <div class="formula-lines">
-        <div class="formula-line" data-order="any">cos A = <span class="fraction"><span class="fraction-numerator">5² + 8² − 7²</span><span class="fraction-denominator">2 × 5 × 8</span></span> = <span class="drop-zone" data-answer="40"></span> ÷ <span class="drop-zone" data-answer="80"></span></div>
-        <div class="formula-line">cos A = <span class="drop-zone" data-answer="1/2"></span> より　A = <span class="drop-zone" data-answer="60°"></span></div>
-        <div class="formula-line" data-order="any">S = <span class="drop-zone" data-answer="1/2"></span> × <span class="drop-zone" data-answer="5|8"></span> × <span class="drop-zone" data-answer="5|8"></span> × sin <span class="drop-zone" data-answer="60°"></span></div>
-        <div class="formula-line">sin 60° = <span class="drop-zone" data-answer="√3/2"></span> より</div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="20"></span> × <span class="drop-zone" data-answer="√3/2"></span></div>
-        <div class="formula-line">S = <span class="drop-zone" data-answer="10√3"></span></div>
-       </div>
-       <div class="choices-container">
-        <div class="choices-label">選択肢（タップまたはドラッグして使ってください）</div>
-        <div class="choices">
-         <div class="choice" draggable="true">80</div>
-         <div class="choice" draggable="true">20√3</div>
-         <div class="choice" draggable="true">120°</div>
-         <div class="choice" draggable="true">8</div>
-         <div class="choice" draggable="true">7</div>
-         <div class="choice" draggable="true">10√3</div>
-         <div class="choice" draggable="true">5</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">1</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">40</div>
-         <div class="choice" draggable="true">60°</div>
-         <div class="choice" draggable="true"><span class="fraction"><span class="fraction-numerator">√3</span><span class="fraction-denominator">2</span></span></div>
-         <div class="choice" draggable="true">20</div>
-        </div>
-       </div>
-       <div class="buttons-container"><button class="answer-button" onclick="showAnswer(9)">答えを見る</button></div>
-       <div class="status-message empty" data-status="9"></div>
-      </div>
-     </div>
-    </div>
-   </main>
-   <nav class="navigation"><button class="nav-button" onclick="previousProblem()" id="prevBtn" disabled>前の問題</button>
-    <div class="progress" id="progress">
-     問題 1 / 9
-    </div><button class="nav-button" onclick="nextProblem()" id="nextBtn">次の問題</button>
-   </nav>
-  </div><!-- 答え表示オーバーレイ -->
-  <div class="answer-overlay" id="answerOverlay">
-   <div class="answer-content"><button class="close-button" onclick="closeAnswer()">×</button>
-    <h2>答え</h2>
-    <div id="answerText"></div>
-   </div>
-  </div>
-  <script>
-    const defaultConfig = {
-      title_text: "三角形の面積 穴埋め問題",
-      instruction_text: "選択肢をタップまたはドラッグして式を完成させましょう"
-    };
-
-    let currentProblem = 1;
-    let draggedElement = null;
-    let selectedChoice = null;
-    // 【ブラッシュアップ】正解した問題・答えを見た問題
-    let solved = {};
-    let shownAnswer = {};
-
-    // 【ブラッシュアップ】問題の番号の一覧（問題を足したので 5 問決め打ちをやめた）
-    const PROBLEM_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-    const answers = {
-      1: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 8 × 6 × sin 30°",
-        "sin 30° = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> より",
-        "S = 24 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 12"
-      ],
-      2: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 10 × 12 × sin 60°",
-        "sin 60° = <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span> より",
-        "S = 60 × <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 30√3"
-      ],
-      3: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 7 × 10√2 × sin 30°",
-        "sin 30° = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> より",
-        "S = 35√2 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">35√2</span><span class=\"fraction-denominator\">2</span></span>"
-      ],
-      4: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 8 × 6 × sin 45°",
-        "sin 45° = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span> より",
-        "S = 24 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span>",
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">24</span><span class=\"fraction-denominator\">√2</span></span>",
-        "分母を有理化すると　S = <span class=\"fraction\"><span class=\"fraction-numerator\">24√2</span><span class=\"fraction-denominator\">2</span></span>",
-        "約分すると　S = 12√2"
-      ],
-      5: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 12 × 7 × sin 45°",
-        "sin 45° = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span> より",
-        "S = 42 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span>",
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">42</span><span class=\"fraction-denominator\">√2</span></span>",
-        "分母を有理化すると　S = <span class=\"fraction\"><span class=\"fraction-numerator\">42√2</span><span class=\"fraction-denominator\">2</span></span>",
-        "約分すると　S = 21√2"
-      ],
-      6: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 5 × 8 × sin 120°",
-        "sin 120° = sin(180° − 60°) = <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 20 × <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 10√3"
-      ],
-      7: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 6 × 4 × sin 135°",
-        "sin 135° = sin(180° − 45°) = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span>",
-        "S = 12 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">√2</span></span>",
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">12</span><span class=\"fraction-denominator\">√2</span></span>",
-        "分母を有理化すると　S = <span class=\"fraction\"><span class=\"fraction-numerator\">12√2</span><span class=\"fraction-denominator\">2</span></span>",
-        "約分すると　S = 6√2"
-      ],
-      8: [
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 6 × 10 × sin 150°",
-        "sin 150° = sin(180° − 30°) = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 30 × <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 15"
-      ],
-      9: [
-        "cos A = <span class=\"fraction\"><span class=\"fraction-numerator\">5² + 8² − 7²</span><span class=\"fraction-denominator\">2 × 5 × 8</span></span> = 40 ÷ 80",
-        "cos A = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> より　A = 60°",
-        "S = <span class=\"fraction\"><span class=\"fraction-numerator\">1</span><span class=\"fraction-denominator\">2</span></span> × 5 × 8 × sin 60°",
-        "sin 60° = <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span> より",
-        "S = 20 × <span class=\"fraction\"><span class=\"fraction-numerator\">√3</span><span class=\"fraction-denominator\">2</span></span>",
-        "S = 10√3"
-      ]
-    };
-
-    // 正規化関数：複数のHTMLと数字列を統一
-    function normalizeAnswer(text) {
-      const temp = document.createElement('div');
-      temp.innerHTML = text;
-      let normalized = temp.textContent.trim().replace(/\s+/g, '');
-      normalized = normalized.replace(/÷/g, '/');
-
-      // 分数表記を統一（分子/分母の形式に）
-      // HTMLの分数構造から「分子/分母」形式に変換
-      const hasNumerator = temp.querySelector('.fraction-numerator');
-      const hasDenominator = temp.querySelector('.fraction-denominator');
-      if (hasNumerator && hasDenominator) {
-        const numerator = hasNumerator.textContent.trim();
-        const denominator = hasDenominator.textContent.trim();
-        normalized = numerator + '/' + denominator;
-      }
-
-      return normalized;
-    }
-
-    // 各問題の最大使用回数を定義
-    const maxUsagePerChoice = {
-      1: {"6":1,"8":1,"12":1,"24":1,"1/2":3,"30°":1},
-      2: {"10":1,"12":1,"60":1,"1/2":1,"60°":1,"√3/2":2,"30√3":1},
-      3: {"7":1,"1/2":3,"10√2":1,"30°":1,"35√2":1,"35√2/2":1},
-      4: {"6":1,"8":1,"24":1,"1/2":1,"45°":1,"1/√2":2,"24/√2":1,"24√2/2":1,"12√2":1},
-      5: {"7":1,"12":1,"42":1,"1/2":1,"45°":1,"1/√2":2,"42/√2":1,"42√2/2":1,"21√2":1},
-      6: {"5":1,"8":1,"20":1,"1/2":1,"120°":1,"60°":1,"√3/2":2,"10√3":1},
-      7: {"4":1,"6":1,"12":1,"1/2":1,"135°":1,"45°":1,"1/√2":2,"12/√2":1,"12√2/2":1,"6√2":1},
-      8: {"6":1,"10":1,"15":1,"30":1,"1/2":3,"150°":1,"30°":1},
-      9: {"5":1,"8":1,"20":1,"40":1,"80":1,"1/2":2,"60°":2,"√3/2":2,"10√3":1}
-    };
-
-    // 選択肢の使用状況を更新
-    function updateChoiceUsage(problemNum) {
-      const problemView = document.querySelector(`[data-problem="${problemNum}"]`);
-      const dropZones = problemView.querySelectorAll('.drop-zone');
-      const choices = problemView.querySelectorAll('.choice');
-
-      const usageCount = {};
-      dropZones.forEach(zone => {
-        if (zone.classList.contains('filled')) {
-          const answer = normalizeAnswer(zone.innerHTML);
-          usageCount[answer] = (usageCount[answer] || 0) + 1;
-        }
-      });
-
-      const maxUsage = maxUsagePerChoice[problemNum];
-
-      choices.forEach(choice => {
-        const choiceText = normalizeAnswer(choice.innerHTML);
-        const count = usageCount[choiceText] || 0;
-        const max = maxUsage[choiceText] || 1;
-
-        choice.classList.toggle('used', count >= max);   // 【ブラッシュアップ】
-      });
-    }
-
-    // 自動正答判定
-    function checkAnswerAuto(problemNum) {
-      const problemView = document.querySelector(`[data-problem="${problemNum}"]`);
-      const lines = problemView.querySelectorAll('.formula-line');
-      const statusMessage = problemView.querySelector(`[data-status="${problemNum}"]`);
-
-      let allCorrect = true;
-      let allFilled = true;
-      let anyFilled = false;
-
-      lines.forEach(line => {
-        const dropZones = line.querySelectorAll('.drop-zone');
-        const isAnyOrder = false;   // 【ブラッシュアップ】1 つずつ判定する（同じ数の 2 回使いは下で調べる）
-
-        if (isAnyOrder && dropZones.length > 1) {
-          const userAnswers = [];
-          const zones = [];
-
-          dropZones.forEach(zone => {
-            const userAnswer = normalizeAnswer(zone.innerHTML);
-            zones.push(zone);
-            userAnswers.push(userAnswer);
-
-            if (userAnswer === '') {
-              allFilled = false;
-            } else {
-              anyFilled = true;
-            }
-          });
-
-          if (userAnswers.every(a => a !== '')) {
-            const uniqueAnswers = new Set(userAnswers);
-            if (uniqueAnswers.size !== userAnswers.length) {
-              zones.forEach(zone => {
-                zone.classList.add('incorrect');
-                zone.classList.remove('correct');
-              });
-              allCorrect = false;
-
-              setTimeout(() => {
-                zones.forEach(zone => {
-                  if (zone.classList.contains('incorrect')) {
-                    zone.innerHTML = '';
-                    zone.classList.remove('filled', 'correct', 'incorrect');
-                  }
-                });
-                updateChoiceUsage(problemNum);
-                checkAnswerAuto(problemNum);
-              }, 500);
-            } else {
-              let lineCorrect = true;
-              zones.forEach((zone, idx) => {
-                const userAnswer = userAnswers[idx];
-                const possibleAnswers = zone.dataset.answer.split('|').map(a => normalizeAnswer(a));
-
-                if (possibleAnswers.includes(userAnswer)) {
-                  zone.classList.add('correct');
-                  zone.classList.remove('incorrect');
-                } else {
-                  zone.classList.add('incorrect');
-                  zone.classList.remove('correct');
-                  lineCorrect = false;
-                }
-              });
-
-              if (!lineCorrect) {
-                allCorrect = false;
-                setTimeout(() => {
-                  zones.forEach(zone => {
-                    if (zone.classList.contains('incorrect')) {
-                      zone.innerHTML = '';
-                      zone.classList.remove('filled', 'correct', 'incorrect');
-                    }
-                  });
-                  updateChoiceUsage(problemNum);
-                  checkAnswerAuto(problemNum);
-                }, 500);
-              }
-            }
-          }
-        } else {
-          dropZones.forEach(zone => {
-            const userAnswer = normalizeAnswer(zone.innerHTML);
-            const possibleAnswers = zone.dataset.answer.split('|').map(a => normalizeAnswer(a));
-
-            if (userAnswer === '') {
-              allFilled = false;
-              zone.classList.remove('correct', 'incorrect');
-            } else {
-              anyFilled = true;
-              // 【ブラッシュアップ】同じ欄のグループで、先に同じ数が入っていたらまちがい
-              const dup = zone.dataset.answer.includes('|') && Array.from(dropZones).some(z => z !== zone &&
-                z.dataset.answer === zone.dataset.answer && normalizeAnswer(z.innerHTML) === userAnswer &&
-                Number(z.dataset.t || 0) < Number(zone.dataset.t || 0));
-              if (possibleAnswers.includes(userAnswer) && !dup) {
-                zone.classList.add('correct');
-                zone.classList.remove('incorrect');
-              } else {
-                zone.classList.add('incorrect');
-                zone.classList.remove('correct');
-                allCorrect = false;
-
-                setTimeout(() => {
-                  if (zone.classList.contains('incorrect')) {
-                    zone.innerHTML = '';
-                    zone.classList.remove('filled', 'correct', 'incorrect');
-                    updateChoiceUsage(problemNum);
-                    checkAnswerAuto(problemNum);
-                  }
-                }, 500);
-              }
-            }
-          });
-        }
-      });
-
-      if (!anyFilled) {
-        statusMessage.className = 'status-message empty';
-        statusMessage.innerHTML = '';
-      } else if (allFilled && allCorrect) {
-        statusMessage.className = 'status-message correct';
-        statusMessage.innerHTML = '🎉 完璧です！素晴らしい！全部正解しました！！';
-        // 【ブラッシュアップ】正解したら空欄を固定する（元は正解のあとも空欄を消せた）
-        if (!solved[problemNum]) {
-          solved[problemNum] = true;
-          problemView.classList.add('solved');
-          checkAllProblemsCompleted();
-        }
-      } else if (anyFilled) {
-        statusMessage.className = 'status-message partial';
-        statusMessage.innerHTML = '解答中...';
-      }
-    }
-
-    // ドラッグ開始
-    document.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('choice')) {
-        draggedElement = e.target;
-        e.target.classList.add('dragging');
-      }
-    });
-
-    // ドラッグ終了
-    document.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('choice')) {
-        e.target.classList.remove('dragging');
-      }
-    });
-
-    // ドロップゾーン上を通過
-    document.addEventListener('dragover', (ev) => {
-      const e = { target: (ev.target.closest && ev.target.closest('.drop-zone')) || ev.target, preventDefault: () => ev.preventDefault() };   // 【ブラッシュアップ】
-      if (e.target.classList.contains('drop-zone')) {
-        e.preventDefault();
-      }
-    });
-
-    // ドロップ
-    document.addEventListener('drop', (ev) => {
-      const e = { target: (ev.target.closest && ev.target.closest('.drop-zone')) || ev.target, preventDefault: () => ev.preventDefault() };   // 【ブラッシュアップ】
-      if (e.target.classList.contains('drop-zone') && draggedElement && !solved[currentProblem] && !draggedElement.classList.contains('used')) {
-        e.preventDefault();
-        e.target.dataset.t = Date.now();
-        e.target.innerHTML = draggedElement.innerHTML;
-        e.target.classList.add('filled');
-        e.target.classList.remove('correct', 'incorrect');
-
-        updateChoiceUsage(currentProblem);
-        checkAnswerAuto(currentProblem);
-      }
-    });
-
-    // タップ/クリック操作（選択肢→穴の順番）
-    document.addEventListener('click', (ev) => {
-      const e = { target: (ev.target.closest && ev.target.closest('.drop-zone')) || ev.target };   // 【ブラッシュアップ】
-      // 選択肢をクリック/タップ
-      if (e.target.closest('.choice')) {
-        const choice = e.target.closest('.choice');
-        if (choice.classList.contains('used')) return;   // 【ブラッシュアップ】使い切った選択肢は選べない
-
-        // 前の選択を解除
-        if (selectedChoice) {
-          selectedChoice.classList.remove('selected');
-        }
-
-        // 新しい選択肢を選択状態にする
-        selectedChoice = choice;
-        selectedChoice.classList.add('selected');
-      }
-      // ドロップゾーンをクリック/タップ
-      else if (e.target.classList.contains('drop-zone') && !solved[currentProblem]) {   // 【ブラッシュアップ】正解した問題は変えられない
-        // 選択肢が選ばれている場合は入力
-        if (selectedChoice) {
-          e.target.dataset.t = Date.now();
-          e.target.innerHTML = selectedChoice.innerHTML;
-          e.target.classList.add('filled');
-          e.target.classList.remove('correct', 'incorrect');
-
-          // 選択を解除
-          selectedChoice.classList.remove('selected');
-          selectedChoice = null;
-
-          updateChoiceUsage(currentProblem);
-          checkAnswerAuto(currentProblem);
-        }
-        // 選択肢が選ばれていない場合、入力済みなら削除
-        else if (e.target.classList.contains('filled') && !e.target.classList.contains('correct')) {   // 【ブラッシュアップ】
-          e.target.innerHTML = '';
-          e.target.classList.remove('filled', 'correct', 'incorrect');
-
-          updateChoiceUsage(currentProblem);
-          checkAnswerAuto(currentProblem);
-        }
-      }
-      // 他の場所をクリックした場合は選択解除
-      else {
-        if (selectedChoice) {
-          selectedChoice.classList.remove('selected');
-          selectedChoice = null;
-        }
-      }
-    });
-
-    // 全問題完了チェック
-    function checkAllProblemsCompleted() {
-      const allCompleted = PROBLEM_IDS.every(num => {   // 【ブラッシュアップ】
-        const problemView = document.querySelector(`[data-problem="${num}"]`);
-        const statusMessage = problemView.querySelector(`[data-status="${num}"]`);
-        return statusMessage.classList.contains('correct');
-      });
-
-      if (allCompleted) {
-        setTimeout(showResult, 600);   // 【ブラッシュアップ】
-        return;
-        setTimeout(() => {
-          const overlay = document.createElement('div');
-          overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(102, 126, 234, 0.95); display: flex; align-items: center; justify-content: center; z-index: 2000;';
-
-          const message = document.createElement('div');
-          message.style.cssText = 'background: white; padding: 60px; border-radius: 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);';
-          message.innerHTML = '<div style="font-size: 72px; margin-bottom: 20px;">🎊🎉🎊</div><div style="font-size: 36px; font-weight: bold; color: #667eea; margin-bottom: 15px;">おめでとうございます！</div><div style="font-size: 24px; color: #333;">全問題クリアしました！</div><div style="font-size: 20px; color: #666; margin-top: 15px;">本当に素晴らしいです！完璧です！！</div><button onclick="this.parentElement.parentElement.remove()" style="margin-top: 30px; padding: 15px 40px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer;">閉じる</button>';
-
-          overlay.appendChild(message);
-          document.body.appendChild(overlay);
-        }, 500);
-      }
-    }
-
-    // 【ブラッシュアップ】結果：自力で解けた数・まだの問題・最初から・ほかの教材
-    function showResult() {
-      const ids = PROBLEM_IDS.slice();
-      const self = ids.filter(n => solved[n] && !shownAnswer[n]).length;
-      const rest = ids.filter(n => !solved[n]);
-      const shown = ids.filter(n => shownAnswer[n]);
-      const perfect = self === ids.length;
-      let message;
-      if (perfect) message = '全問題クリア！本当に素晴らしいです！<br>S = ½ab sin C を使いこなせましたね！';
-      else if (rest.length) message = 'まだ解いていない問題があります：問題 ' + rest.join('、');
-      else message = '答えを見た問題（問題 ' + shown.join('、') + '）は、もう一度自分で解いてみよう！';
-      const overlay = document.createElement('div');
-      overlay.className = 'result-overlay';
-      overlay.id = 'resultOverlay';
-      overlay.innerHTML = `
-        <div class="result-box">
-          <div class="result-emoji">${perfect ? '🎊🎉🎊' : (rest.length ? '📝' : '👍')}</div>
-          <h2>${perfect ? 'おめでとう！' : (rest.length ? 'とちゅうの記録' : 'おつかれさま！')}</h2>
-          <div class="result-score">自力で正解 ${self} / ${ids.length} 問</div>
-          <p>${message}</p>
-          <div class="result-nav">
-            ${rest.length ? `<button class="next" onclick="closeResult(); showProblem(${rest[0]});">問題 ${rest[0]} を解く ▶</button>` : ''}
-            <button class="again" onclick="closeResult(); restartAll();">最初からもう一度</button>
-            <button class="plain" onclick="closeResult()">閉じる</button>
-            <a href="../index.html">ほかの教材をえらぶ</a>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
-
-    function closeResult() {
-      const overlay = document.getElementById('resultOverlay');
-      if (overlay) overlay.remove();
-    }
-
-    function restartAll() {
-      document.querySelectorAll('.drop-zone').forEach(z => { z.innerHTML = ''; z.classList.remove('filled', 'correct', 'incorrect'); });
-      document.querySelectorAll('.status-message').forEach(s => { s.className = 'status-message empty'; s.innerHTML = ''; });
-      document.querySelectorAll('.problem-view').forEach(v => v.classList.remove('solved'));
-      solved = {};
-      shownAnswer = {};
-      PROBLEM_IDS.forEach(updateChoiceUsage);
-      showProblem(1);
-      window.scrollTo(0, 0);
-    }
-
-    // 【ブラッシュアップ】図：元は大きな枠のすみに小さくかかれていた。図の部分だけを大きく見せる
-    function cropDiagram(num) {
-      const svg = document.querySelector(`[data-problem="${num}"] .triangle-diagram svg`);
-      if (!svg || svg.dataset.cropped) return;
-      const b = svg.getBBox();
-      if (!b.width) return;
-      svg.setAttribute('viewBox', `${b.x - 20} ${b.y - 16} ${b.width + 40} ${b.height + 32}`);
-      svg.style.maxWidth = '320px';
-      svg.dataset.cropped = '1';
-    }
-
-    // 答えを表示
-    function showAnswer(problemNum) {
-      if (!solved[problemNum]) shownAnswer[problemNum] = true;   // 【ブラッシュアップ】正解する前に答えを見たか
-      const answerLines = answers[problemNum];
-      const answerText = document.getElementById('answerText');
-
-      let html = '';
-      answerLines.forEach(line => {
-        html += `<div class="formula-line">${line}</div>`;
-      });
-
-      answerText.innerHTML = html;
-      document.getElementById('answerOverlay').classList.add('show');
-    }
-
-    // 答えを閉じる
-    function closeAnswer() {
-      document.getElementById('answerOverlay').classList.remove('show');
-    }
-
-    // 問題切り替え
-    function showProblem(num) {
-      document.querySelectorAll('.problem-view').forEach(view => {
-        view.classList.remove('active');
-      });
-
-      document.querySelector(`[data-problem="${num}"]`).classList.add('active');
-      currentProblem = num;
-      cropDiagram(num);   // 【ブラッシュアップ】
-      window.scrollTo(0, 0);
-
-      // 選択状態をリセット
-      if (selectedChoice) {
-        selectedChoice.classList.remove('selected');
-        selectedChoice = null;
-      }
-
-      updateChoiceUsage(num);
-
-      document.getElementById('progress').textContent = `問題 ${num} / ${PROBLEM_IDS.length}`;
-      document.getElementById('prevBtn').disabled = (num === 1);
-      // 【ブラッシュアップ】最後の問題では「結果を見る」（元は押せなくなった）
-      document.getElementById('nextBtn').disabled = false;
-      document.getElementById('nextBtn').textContent = num === PROBLEM_IDS.length ? '結果を見る' : '次の問題';
-    }
-
-    function previousProblem() {
-      if (currentProblem > 1) {
-        showProblem(currentProblem - 1);
-      }
-    }
-
-    function nextProblem() {
-      if (currentProblem < PROBLEM_IDS.length) {
-        showProblem(currentProblem + 1);
-      } else {
-        showResult();   // 【ブラッシュアップ】
-      }
-    }
-
-    async function onConfigChange(config) {
-      const titleElement = document.getElementById('title');
-      const instructionElement = document.getElementById('instruction');
-
-      titleElement.textContent = config.title_text || defaultConfig.title_text;
-      instructionElement.textContent = config.instruction_text || defaultConfig.instruction_text;
-    }
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig: defaultConfig,
-        onConfigChange: onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ["title_text", config.title_text || defaultConfig.title_text],
-          ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
-        ])
-      });
-    }
-
-    cropDiagram(1);   // 【ブラッシュアップ】
-  </script>
- <script>
-  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
-  (function () {
-    const SCOPE = '.formula-card, .problem-statement, .formula-line, .choice, #answerText';   // 数式として書きかえる場所
-    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
-    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
-    function wrapRun(s) {
-      const span = document.createElement('span');
-      span.className = 'mf';
-      s.split(/(sin|cos|tan)/).forEach((part, i) => {
-        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
-        part.split(/([A-Za-zθ])/).forEach((q, j) => {
-          if (!q) return;
-          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
-          else span.appendChild(document.createTextNode(q));
-        });
-      });
-      return span;
-    }
-    function run() {
-      document.querySelectorAll(SCOPE).forEach(el => {
-        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-        const list = [];
-        while (w.nextNode()) list.push(w.currentNode);
-        list.forEach(n => {
-          const p = n.parentElement;
-          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
-          const t = n.nodeValue;
-          if (!/[0-9A-Za-zθ√]/.test(t)) return;
-          const frag = document.createDocumentFragment();
-          let last = 0, m;
-          RUN.lastIndex = 0;
-          while ((m = RUN.exec(t))) {
-            if (!m[0].length) { RUN.lastIndex++; continue; }
-            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
-            frag.appendChild(wrapRun(m[0]));
-            last = m.index + m[0].length;
-          }
-          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
-          n.parentNode.replaceChild(frag, n);
-        });
-      });
-    }
-    let pending = false;
-    new MutationObserver(() => {
-      if (pending) return;
-      pending = true;
-      setTimeout(() => { pending = false; run(); }, 0);
-    }).observe(document.body, { childList: true, subtree: true, characterData: true });
-    run();
-  })();
-</script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>面積の計算</title>
+<!--
+  28. 面積の計算（三角形の面積の穴うめ）
+  2026-10-28 先生の確認を受けて作り直し（Claude Code）。27「相互関係の計算」と同じ仕組み（assets/fill-steps.js）。
+  ・上に公式 S = ½bc sin A と「2つの辺・はさまれた角」。ほかの形の公式や鈍角の説明は使わないので消した。
+  ・どの問題も「公式 → 代入 → ½×辺×辺 → sin の値 → かける → 分数 → 約分（有理化）」の同じ形。空欄を少しずつ増やす。
+  ・問1 はカードを左上から順に使う。問2 からは間にダミーをはさむ。全8問。
+  ・図は数値どおりの形。2つの辺は紺、はさまれた角はオレンジ。
+-->
+<link rel="stylesheet" href="../assets/port.css">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fill-steps.css">
+<style>
+.ms-formula{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:6px 12px;background:#f4f8fd;border:1px solid #d6e2f0;border-radius:8px}
+.ms-formula svg{flex:none;width:112px;height:auto}
+.ms-formula .f{font-size:21px;line-height:1.5}
+.ms-formula .w{font-size:14px;line-height:1.6;color:#1f2328}
+.nw{white-space:nowrap}
+.ms-formula .bl{color:#1f4e8c;font-weight:700}
+.ms-formula .or{color:#d9480f;font-weight:700}
+.ms-formula .f .bl i,.ms-formula .f .or i{font-weight:400}
+.fs-fig svg{max-height:175px;width:auto;max-width:100%}
+@media (min-width:900px) and (orientation:landscape){.fs-fig svg{max-height:200px}}
+</style>
+</head><body>
+<a class="port-back" href="../index.html">← 教材の一覧へ</a>
+<main class="fs-wrap">
+  <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>面積の計算</h1></header>
+  <div id="app"></div>
+</main>
+<script src="../assets/fill-steps.js"></script>
 <script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    "h1": "u-title",
-    ".answer-button": "u-btn u-btn-plain",
-    ".nav-button": "u-btn u-btn-blue",
-    ".result-nav .next": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .plain": "u-btn u-btn-plain"
-  });
+const BLUE = '#1f4e8c', ORANGE = '#d9480f';
+
+// 図の中の数（√ は記号の右上から横線が中の数字にかぶさる。外と中の数字は同じ書体・大きさ）
+function svgNum(x, y, s, color, fs = 17) {
+  const m = String(s).match(/^(\d*)√(\d+)$/), cw = fs * 0.56;
+  if (!m) return `<text x="${x}" y="${y}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${s}</text>`;
+  const cwid = m[1].length * cw, dwid = m[2].length * cw, w = cwid + fs * 0.75 + dwid + 2, x0 = x - w / 2, x1 = x0 + cwid + 1;
+  return `<text x="${x0}" y="${y}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[1]}</text>` +
+    `<path d="M${x1} ${y - fs * 0.3}L${x1 + fs * 0.18} ${y - fs * 0.4}L${x1 + fs * 0.4} ${y + 1}L${x1 + fs * 0.7} ${y - fs * 0.92}H${x1 + fs * 0.75 + dwid + 2}" fill="none" stroke="${color}" stroke-width="1.4" stroke-linejoin="round"/>` +
+    `<text x="${x1 + fs * 0.75}" y="${y}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[2]}</text>`;
+}
+const numVal = s => { const m = String(s).match(/^(\d*)√(\d+)$/); return m ? (+m[1] || 1) * Math.sqrt(+m[2]) : +s; };
+
+// 問題の図：角 V を左下に置き、V→P を横、V→Q を角 deg の向きに。数値どおりの形。
+function triFig(V, P, Q, lp, lq, deg) {
+  const t = deg * Math.PI / 180, a = numVal(lp), b = numVal(lq);
+  const raw = [[0, 0], [a, 0], [b * Math.cos(t), -b * Math.sin(t)]];
+  const xs = raw.map(p => p[0]), ys = raw.map(p => p[1]);
+  const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+  const s = Math.min(270 / w, 130 / h), pad = 34;
+  const pts = raw.map(([x, y]) => [pad + (x - Math.min(...xs)) * s, pad + (y - Math.min(...ys)) * s]);
+  const W = w * s + pad * 2, H = h * s + pad * 2;
+  const [v, p, q] = pts, cx = (v[0] + p[0] + q[0]) / 3, cy = (v[1] + p[1] + q[1]) / 3;
+  const pt = (o, ang, r) => [o[0] + r * Math.cos(ang), o[1] - r * Math.sin(ang)];
+  // 辺の長さ：辺のまん中から、残りの頂点と反対側へ
+  const sideLabel = (A, B, other, txt) => {
+    const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+    let nx = -(B[1] - A[1]), ny = B[0] - A[0]; const L = Math.hypot(nx, ny); nx /= L; ny /= L;
+    if ((other[0] - mx) * nx + (other[1] - my) * ny > 0) { nx = -nx; ny = -ny; }
+    const d = 14 + (Math.abs(nx) > 0.5 ? 8 + String(txt).length * 3 : 0);
+    return svgNum(mx + nx * d, my + ny * d + (ny > 0 ? 12 : 6) - (Math.abs(nx) > 0.5 ? 6 : 0), txt, BLUE);
+  };
+  const vName = (o, n) => {
+    let dx = o[0] - cx, dy = o[1] - cy; const L = Math.hypot(dx, dy); dx /= L; dy /= L;
+    return `<text x="${o[0] + dx * 17}" y="${o[1] + dy * 17 + 7}" text-anchor="middle" font-family="STIX Two Text, serif" font-style="italic" font-size="20" fill="#1f2328">${n}</text>`;
+  };
+  const r = deg >= 135 ? 14 : deg > 90 ? 18 : 24, a1 = pt(v, 0, r), a2 = pt(v, t, r);
+  // 角度の文字：二等分線の上で、弧の外側・どの辺にもかからない、いちばん近い場所
+  const afs = deg >= 135 ? 14 : 16, lw = (String(deg).length + 0.8) * afs * 0.6 + 6, lh = afs - 1;
+  const clear = (x, y) => {
+    const segs = [[v, p], [v, q], [p, q]];
+    for (const [A, B] of segs) for (let k = 0; k <= 40; k++) {
+      const sx = A[0] + (B[0] - A[0]) * k / 40, sy = A[1] + (B[1] - A[1]) * k / 40;
+      if (Math.abs(sx - x) < lw / 2 + 3 && Math.abs(sy - y) < lh / 2 + 3) return false;
+    }
+    const nx = Math.max(x - lw / 2, Math.min(v[0], x + lw / 2)), ny = Math.max(y - lh / 2, Math.min(v[1], y + lh / 2));
+    return Math.hypot(nx - v[0], ny - v[1]) > r + 1;
+  };
+  let al = pt(v, t / 2, 42);
+  // 二等分線の上を優先し、入らないときは角の中で少し横にずらす（150° のような平たい三角形）
+  search: for (let d = r + 4; d < 160; d += 1) for (const k of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78, 0.15, 0.85]) {
+    const c = pt(v, t * k, d); if (clear(c[0], c[1])) { al = c; break search; }
+  }
+  return `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" width="${W.toFixed(0)}" role="img" aria-label="三角形${V}${P}${Q}">
+    <polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="#eef4fb"/>
+    <path d="M${v[0]} ${v[1]}L${a1[0]} ${a1[1]}A${r} ${r} 0 0 0 ${a2[0]} ${a2[1]}Z" fill="#ffe3d1"/>
+    <path d="M${a1[0]} ${a1[1]}A${r} ${r} 0 0 0 ${a2[0]} ${a2[1]}" fill="none" stroke="${ORANGE}" stroke-width="2"/>
+    <path d="M${p[0]} ${p[1]}L${q[0]} ${q[1]}" stroke="#1f2328" stroke-width="2"/>
+    <path d="M${p[0]} ${p[1]}L${v[0]} ${v[1]}L${q[0]} ${q[1]}" fill="none" stroke="${BLUE}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+    <text x="${al[0]}" y="${al[1] + afs * 0.36}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${afs}" fill="${ORANGE}">${deg}°</text>
+    ${sideLabel(v, p, q, lp)}${sideLabel(v, q, p, lq)}${vName(v, V)}${vName(p, P)}${vName(q, Q)}</svg>`;
+}
+
+// 上の公式の箱
+const formulaFig = `<svg viewBox="0 0 150 96" aria-hidden="true">
+  <polygon points="22,76 132,76 96,16" fill="#eef4fb"/>
+  <path d="M22 76L38 76A16 16 0 0 0 35.7 67.8Z" fill="#ffe3d1"/>
+  <path d="M132 76L96 16" stroke="#1f2328" stroke-width="1.8"/>
+  <path d="M132 76L22 76L96 16" fill="none" stroke="${BLUE}" stroke-width="3.2" stroke-linejoin="round"/>
+  <g font-family="STIX Two Text, serif" font-style="italic" font-size="17">
+    <text x="10" y="90" fill="#1f2328">A</text><text x="136" y="90" fill="#1f2328">B</text><text x="96" y="12" text-anchor="middle" fill="#1f2328">C</text>
+    <text x="50" y="40" fill="${BLUE}" font-weight="700">b</text><text x="74" y="93" fill="${BLUE}" font-weight="700">c</text>
+    <text x="41" y="72" fill="${ORANGE}" font-size="14">A</text>
+  </g></svg>`;
+function formulaBox() {
+  return `<div class="ms-formula">${formulaFig}<div>
+    <div class="f">${FillSteps.md('S = {1|2}')}<span class="fs-m"><span class="bl"><i>b</i><i>c</i></span> sin <span class="or"><i>A</i></span></span></div>
+    <div class="w"><span class="bl nw">2つの辺</span> と、<span class="or nw">その2辺にはさまれた角</span></div></div></div>`;
+}
+
+const problems = [
+  { // 問1：空欄は少なめ。カードは左上から順に使う。
+    q: '△ABC において、CA = 6、CB = 8、C = 30° のとき、面積 S を求めよ。',
+    fig: triFig('C', 'B', 'A', '8', '6', 30), ang: 'C', deg: 30,
+    rows: [
+      'S = {1|2} × CA × CB × sin C',
+      'S = {1|2} × [6@s] × [8@s] × sin 30°',
+      'S = [24] × sin 30°',
+      '#sin 30° = [1/2] より',
+      'S = 24 × {1|2}',
+      'S = {24|2}',
+      'S = [12]'
+    ],
+    cards: ['6', '8', '24', '1/2', '12',
+      ['48', '{1|2} をかけるのを忘れずに。{1|2} × 6 × 8 は？'],
+      ['√3/2', 'sin 30° の値は？ 30°・60°・90° の直角三角形で考えよう。'],
+      ['60°', '6 と 8 の辺にはさまれた角は C ＝ 30° です。']],
+    ans: 'S = 12'
+  },
+  { // 問2
+    q: '△ABC において、AB = 10、BC = 12、B = 60° のとき、面積 S を求めよ。',
+    fig: triFig('B', 'C', 'A', '12', '10', 60), ang: 'B', deg: 60,
+    rows: [
+      'S = {1|2} × AB × BC × [sin B]',
+      'S = {1|2} × [10@s] × [12@s] × sin 60°',
+      'S = [60] × sin 60°',
+      '#sin 60° = [√3/2] より',
+      'S = 60 × {√3|2}',
+      'S = [60√3/2]',
+      'S = [30√3]'
+    ],
+    cards: [['sin A', '辺 AB と BC にはさまれた角は、角 B です。'], 'sin B', '10', '12',
+      ['120', '{1|2} をかけるのを忘れずに。{1|2} × 10 × 12 は？'], '60',
+      ['1/2', 'sin 60° の値は？ 30°・60°・90° の直角三角形で考えよう。'], '√3/2', '60√3/2',
+      ['15√3', '{60√3|2} は、60 ÷ 2 を計算します。'], '30√3'],
+    ans: 'S = 30√3'
+  },
+  { // 問3
+    q: '△ABC において、AB = 10√2、CA = 7、A = 30° のとき、面積 S を求めよ。',
+    fig: triFig('A', 'B', 'C', '10√2', '7', 30), ang: 'A', deg: 30,
+    rows: [
+      'S = {1|2} × [AB@n] × [CA@n] × [sin A]',
+      'S = {1|2} × [10√2@s] × [7@s] × sin 30°',
+      'S = [35√2] × sin 30°',
+      '#sin 30° = [1/2] より',
+      'S = 35√2 × {1|2}',
+      'S = [35√2/2]'
+    ],
+    cards: ['AB', ['BC', '角 A をはさむ2つの辺は、A につながっている辺です。'], 'CA', 'sin A', '10√2', '7',
+      ['70√2', '{1|2} をかけるのを忘れずに。'], '35√2', '1/2',
+      ['√3/2', 'sin 30° の値は？ 30°・60°・90° の直角三角形で考えよう。'], '35√2/2'],
+    ans: 'S = {35√2|2}'
+  },
+  { // 問4：分母の有理化が入る
+    q: '△ABC において、AB = 8、CA = 6、A = 45° のとき、面積 S を求めよ。',
+    fig: triFig('A', 'B', 'C', '8', '6', 45), ang: 'A', deg: 45,
+    rows: [
+      'S = {1|2} × [AB@n] × [CA@n] × [sin A]',
+      'S = {1|2} × [8@s] × [6@s] × [sin 45°]',
+      'S = [24] × sin 45°',
+      '#sin 45° = [1/√2] より',
+      'S = 24 × [1/√2]',
+      'S = [24/√2]',
+      '#分母を有理化して',
+      'S = {24 × [√2]|√2 × [√2]}',
+      'S = [24√2/2]',
+      'S = [12√2]'
+    ],
+    cards: ['AB', 'CA', ['sin C', '辺 AB と CA にはさまれた角は、角 A です。'], 'sin A', '8', '6', 'sin 45°',
+      ['48', '{1|2} をかけるのを忘れずに。'], '24', '1/√2',
+      ['√3/2', 'sin 45° の値は？ 45°・45°・90° の直角三角形で考えよう。'], '24/√2', '√2', '24√2/2',
+      ['6√2', '{24√2|2} は、24 ÷ 2 を計算します。'], '12√2'],
+    ans: 'S = 12√2'
+  },
+  { // 問5
+    q: '△ABC において、AB = 12、BC = 7、B = 45° のとき、面積 S を求めよ。',
+    fig: triFig('B', 'A', 'C', '12', '7', 45), ang: 'B', deg: 45,
+    rows: [
+      'S = [1/2] × [AB@n] × [BC@n] × [sin B]',
+      'S = {1|2} × [12@s] × [7@s] × [sin 45°]',
+      'S = [42] × [sin 45°]',
+      '#sin 45° = [1/√2] より',
+      'S = [42] × [1/√2]',
+      'S = [42/√2]',
+      '#分母を有理化して',
+      'S = {42 × [√2]|[√2] × [√2]}',
+      'S = [42√2/2]',
+      'S = [21√2]'
+    ],
+    cards: ['1/2', ['CA', '角 B をはさむ2つの辺は、B につながっている辺です。'], 'AB', 'BC', 'sin B', '12', '7',
+      ['sin 90°', 'はさまれた角は B ＝ 45° です。'], 'sin 45°', '42', '1/√2', '42/√2',
+      ['√7', '分母と同じ √2 をかけます。'], '√2', '42√2/2', '21√2'],
+    ans: 'S = 21√2'
+  },
+  { // 問6：鈍角
+    q: '△ABC において、AB = 8、CA = 5、A = 120° のとき、面積 S を求めよ。',
+    fig: triFig('A', 'B', 'C', '8', '5', 120), ang: 'A', deg: 120,
+    rows: [
+      'S = [1/2] × [AB@n] × [CA@n] × [sin A]',
+      'S = {1|2} × [8@s] × [5@s] × [sin 120°]',
+      'S = [20] × sin 120°',
+      '#sin 120° = [√3/2] より',
+      'S = 20 × [√3/2]',
+      'S = [20√3/2]',
+      'S = [10√3]'
+    ],
+    cards: ['1/2', 'AB', 'CA', ['sin B', '辺 AB と CA にはさまれた角は、角 A です。'], 'sin A', '8', '5', 'sin 120°',
+      ['40', '{1|2} をかけるのを忘れずに。'], '20',
+      ['−√3/2', '0° から 180° の角の sin は、正の数です。'], '√3/2', '20√3/2', '10√3'],
+    ans: 'S = 10√3'
+  },
+  { // 問7：鈍角
+    q: '△ABC において、BC = 6、CA = 10、C = 150° のとき、面積 S を求めよ。',
+    fig: triFig('C', 'A', 'B', '10', '6', 150), ang: 'C', deg: 150,
+    rows: [
+      'S = [1/2] × [BC@n] × [CA@n] × [sin C]',
+      'S = [1/2] × [6@s] × [10@s] × [sin 150°]',
+      'S = [30] × [sin 150°]',
+      '#[sin 150°] = [1/2] より',
+      'S = [30] × [1/2]',
+      'S = [30/2]',
+      'S = [15]'
+    ],
+    cards: ['1/2', 'BC', ['AB', '角 C をはさむ2つの辺は、C につながっている辺です。'], 'CA', 'sin C', '6', '10',
+      ['sin 30°', 'はさまれた角は C ＝ 150° です。'], 'sin 150°', '30',
+      ['√3/2', 'sin 150° の値は？ 半径 2 の半円の上の点で考えよう。'], '30/2', '15'],
+    ans: 'S = 15'
+  },
+  { // 問8：鈍角＋有理化（すべて空欄）
+    q: '△ABC において、AB = 6、BC = 4、B = 135° のとき、面積 S を求めよ。',
+    fig: triFig('B', 'A', 'C', '6', '4', 135), ang: 'B', deg: 135,
+    rows: [
+      'S = [1/2] × [AB@n] × [BC@n] × [sin B]',
+      'S = [1/2] × [6@s] × [4@s] × [sin 135°]',
+      'S = [12] × [sin 135°]',
+      '#[sin 135°] = [1/√2] より',
+      'S = [12] × [1/√2]',
+      'S = [12/√2]',
+      '#分母を有理化して',
+      'S = {12 × [√2]|[√2] × [√2]}',
+      'S = [12√2/2]',
+      'S = [6√2]'
+    ],
+    cards: ['1/2', 'AB', 'BC', ['sin A', '辺 AB と BC にはさまれた角は、角 B です。'], 'sin B', '6', '4', 'sin 135°',
+      ['24', '{1|2} をかけるのを忘れずに。'], '12', ['−1/√2', '0° から 180° の角の sin は、正の数です。'], '1/√2', '12/√2', '√2',
+      '12√2/2', ['3√2', '{12√2|2} は、12 ÷ 2 を計算します。'], '6√2'],
+    ans: 'S = 6√2'
+  }
+];
+
+// ヒント（行の位置で決まる。0〜5 行目はどの問題も同じ）
+const SIN_HINT = {
+  30: '30°・60°・90° の直角三角形の辺の比は 1 : 2 : √3。sin = {対辺|斜辺} です。',
+  60: '30°・60°・90° の直角三角形の辺の比は 1 : 2 : √3。sin = {対辺|斜辺} です。',
+  45: '45°・45°・90° の直角三角形の辺の比は 1 : 1 : √2。sin = {対辺|斜辺} です。',
+  120: '120° は、半径 2 の半円の上の点 P(−1, √3) で考えよう。sin = {y|r} です。',
+  135: '135° は、半径 √2 の半円の上の点 P(−1, 1) で考えよう。sin = {y|r} です。',
+  150: '150° は、半径 2 の半円の上の点 P(−√3, 1) で考えよう。sin = {y|r} です。'
+};
+function hint(p, row) {
+  const i = p.rows.indexOf(row), n = p.rows.length;
+  if (i === 0) return '角 ' + p.ang + ' をはさむ2つの辺と、sin ' + p.ang + ' を使います。';
+  if (i === 1) return '辺の長さと、角 ' + p.ang + ' の大きさを代入します。';
+  if (i === 2) return '{1|2} × ○ × ○ を先に計算します。';
+  if (i === 3) return SIN_HINT[p.deg];
+  if (i === 4) return 'sin ' + p.deg + '° の値を代入します。';
+  if (i === 5) return 'かけ算をして、1つの分数にまとめます。';
+  if (n === 7 && i === 6) return '約分します。';
+  if (i === 7) return '分母と分子に同じ √2 をかけて、分母の √ をなくします。';
+  if (i === 8) return '√2 × √2 = 2 です。';
+  if (i === 9) return '約分します。';
+  return '';
+}
+
+FillSteps.mount({ el: "#app", problems, hint, top: formulaBox });
 </script>
-</body>
-</html>
+</body></html>

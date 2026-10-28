@@ -292,11 +292,16 @@
       });
     }
 
-    // 式が横に入りきらないときだけ「＝」の前で改行する
+    // 式が横に入りきらないとき：まず少し小さくする → それでも入らなければ「＝」の前で改行 → さらに小さく
     function layout() {
       root.querySelectorAll('.fs-eq').forEach(function (e) {
-        e.classList.remove('wrap');
-        if (e.scrollWidth > e.clientWidth + 1) e.classList.add('wrap');
+        e.classList.remove('wrap'); e.style.fontSize = '';
+        var base = parseFloat(getComputedStyle(e).fontSize), size = base;
+        var over = function () { return e.scrollWidth > e.clientWidth + 1; };
+        while (over() && size > base * 0.78) { size -= 1; e.style.fontSize = size + 'px'; }
+        if (!over()) return;
+        e.style.fontSize = ''; size = base; e.classList.add('wrap');
+        while (over() && size > base * 0.72) { size -= 1; e.style.fontSize = size + 'px'; }
       });
     }
 
