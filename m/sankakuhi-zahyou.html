@@ -1,1866 +1,368 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <!--
-    30. 三角比（座標）（動径と座標を使って三角比を求める）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../assets/port.css">
-  <script src="../assets/port.js"></script>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>三角比：動径と座標</title>
-  
-  <style>
-    body {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      width: 100%;
-      min-height: 100%;
-    }
-
-    .container {
-      width: 100%;
-      padding: 8px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: #ffffff;
-      font-size: 24px;
-      margin-bottom: 2px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #e0e7ff;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-
-    .mode-selection-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 80%;
-      padding: 20px;
-    }
-
-    .mode-cards {
-      display: flex;
-      gap: 30px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .mode-card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 40px 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      min-width: 250px;
-    }
-
-    .mode-card.main-mode {
-      min-width: 320px;
-      padding: 50px 40px;
-    }
-
-    .mode-card.sub-mode {
-      min-width: 200px;
-      padding: 30px 20px;
-      opacity: 0.85;
-    }
-
-    .mode-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      opacity: 1;
-    }
-
-    .mode-card-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-
-    .mode-card.main-mode .mode-card-icon {
-      font-size: 80px;
-      margin-bottom: 25px;
-    }
-
-    .mode-card.sub-mode .mode-card-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-
-    .mode-card h2 {
-      color: #667eea;
-      font-size: 24px;
-      margin-bottom: 15px;
-    }
-
-    .mode-card.main-mode h2 {
-      font-size: 28px;
-      margin-bottom: 18px;
-    }
-
-    .mode-card.sub-mode h2 {
-      font-size: 20px;
-      margin-bottom: 12px;
-    }
-
-    .mode-card p {
-      color: #6b7280;
-      font-size: 16px;
-      margin-bottom: 25px;
-      line-height: 1.6;
-    }
-
-    .mode-card.main-mode p {
-      font-size: 18px;
-      margin-bottom: 30px;
-    }
-
-    .mode-card.sub-mode p {
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-
-    .start-btn {
-      background: #667eea;
-      color: #ffffff;
-      border: none;
-      padding: 12px 40px;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .mode-card.main-mode .start-btn {
-      padding: 15px 50px;
-      font-size: 20px;
-    }
-
-    .mode-card.sub-mode .start-btn {
-      padding: 10px 30px;
-      font-size: 16px;
-    }
-
-    .start-btn:hover {
-      background: #5568d3;
-      transform: scale(1.05);
-    }
-
-    .back-btn {
-      background: #ffffff;
-      color: #667eea;
-      border: 2px solid #667eea;
-      padding: 8px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .back-btn:hover {
-      background: #e0e7ff;
-      transform: translateY(-2px);
-    }
-
-    .problem-selector {
-      display: flex;
-      gap: 5px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-
-    .angle-btn {
-      background: #ffffff;
-      border: 2px solid transparent;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      color: #667eea;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .angle-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-    }
-
-    .angle-btn.active {
-      border-color: #fbbf24;
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .angle-btn.completed {
-      background: #d1fae5;
-      border-color: #10b981;
-      color: #065f46;
-    }
-
-    .main-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto;
-      gap: 8px;
-      margin-bottom: 8px;
-      padding: 0;
-    }
-
-    @media (max-width: 968px) {
-      .main-content {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-      }
-    }
-
-    .canvas-card {
-      grid-column: 1;
-      grid-row: 1 / 3;
-    }
-
-    .coord-card {
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    .trig-card {
-      grid-column: 2;
-      grid-row: 2;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 6px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    .canvas-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2px;
-    }
-
-    canvas {
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      background: #f9fafb;
-      max-width: 100%;
-      height: auto;
-    }
-
-    .coord-drop-zone {
-      min-width: 65px;
-      height: 38px;
-      border: 2px dashed #9ca3af;
-      border-radius: 5px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: #ffffff;
-      transition: all 0.3s ease;
-      padding: 0 8px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #1f2937;
-    }
-
-    .coord-drop-zone.filled {
-      border-style: solid;
-      border-color: #3b82f6;
-      background: #dbeafe;
-    }
-
-    .coord-drop-zone.dragging-over {
-      border-color: #667eea;
-      background: #e0e7ff;
-      transform: scale(1.05);
-    }
-
-    .question-section {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #374151;
-      margin-bottom: 6px;
-      padding-bottom: 4px;
-      border-bottom: 2px solid #667eea;
-    }
-
-    .fill-blank {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
-      font-size: 16px;
-      color: #1f2937;
-      justify-content: center;
-    }
-
-    .drop-zone {
-      min-width: 75px;
-      height: 38px;
-      border: 2px dashed #9ca3af;
-      border-radius: 5px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: #f3f4f6;
-      transition: all 0.3s ease;
-      padding: 0 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .drop-zone.filled {
-      border-style: solid;
-      border-color: #10b981;
-      background: #d1fae5;
-    }
-
-    .drop-zone.correct {
-      border-style: solid;
-      border-color: #10b981;
-      background: #d1fae5;
-      border-width: 3px;
-    }
-
-    .drop-zone.incorrect {
-      border-style: solid;
-      border-color: #ef4444;
-      background: #fee2e2;
-      border-width: 3px;
-    }
-
-    .drop-zone.dragging-over {
-      border-color: #667eea;
-      background: #e0e7ff;
-      transform: scale(1.05);
-    }
-
-    .drop-zone.selected-target {
-      border-color: #fbbf24;
-      background: #fef3c7;
-      transform: scale(1.05);
-    }
-
-    .choices {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 6px;
-      justify-content: center;
-    }
-
-    .choice {
-      background: #667eea;
-      color: #ffffff;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      user-select: none;
-    }
-
-    .choice:hover {
-      background: #5568d3;
-      transform: scale(1.05);
-    }
-
-    .choice.selected-choice {
-      background: #fbbf24;
-      color: #000000;
-      transform: scale(1.1);
-      border: 3px solid #f59e0b;
-    }
-
-    .trig-section {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
-    }
-
-    .trig-question {
-      margin-bottom: 6px;
-    }
-
-    .trig-label {
-      font-size: 16px;
-      font-weight: bold;
-      color: #374151;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-
-    .trig-options {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .trig-option {
-      background: #f3f4f6;
-      border: 2px solid #d1d5db;
-      padding: 10px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 17px;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 60px;
-    }
-
-    .trig-option:hover {
-      border-color: #667eea;
-      background: #e0e7ff;
-    }
-
-    .trig-option.selected {
-      background: #10b981;
-      color: #ffffff;
-      border-color: #10b981;
-    }
-
-    .trig-option.correct {
-      background: #10b981;
-      color: #ffffff;
-      border-color: #10b981;
-      border-width: 3px;
-    }
-
-    .trig-option.incorrect {
-      background: #ef4444;
-      color: #ffffff;
-      border-color: #ef4444;
-      border-width: 3px;
-    }
-
-    .fraction {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      vertical-align: middle;
-      line-height: 1;
-    }
-
-    .fraction-numerator {
-      border-bottom: 1px solid currentColor;
-      padding-bottom: 2px;
-      font-size: 16px;
-    }
-
-    .fraction-denominator {
-      padding-top: 2px;
-      font-size: 16px;
-    }
-
-    .result {
-      margin-top: 6px;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .result.correct {
-      background: #d1fae5;
-      color: #065f46;
-      border: 2px solid #10b981;
-    }
-
-    .result.incorrect {
-      background: #fee2e2;
-      color: #991b1b;
-      border: 2px solid #ef4444;
-    }
-  </style>
-  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    body { padding: 12px; box-sizing: border-box; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 20px 16px; box-sizing: border-box; }
-    #mode-selection-screen h1 { color: var(--u-title) !important; font-size: min(2rem, 7vw) !important; margin: 0 0 6px !important; }
-    #mode-selection-screen > p { color: var(--u-sub) !important; font-weight: 700; margin-bottom: 18px !important; }
-    .mode-selection-screen { padding: 8px 0; }
-    .mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; }
-    .mode-card { min-width: 0 !important; padding: 18px 14px !important; box-sizing: border-box; opacity: 1 !important; }
-    .mode-card-icon { font-size: 44px !important; margin-bottom: 6px !important; }
-    .mode-card h2 { color: var(--u-title) !important; font-size: 1.35rem !important; margin: 0 0 6px !important; }
-    .mode-card p { color: var(--u-sub) !important; font-weight: 700; font-size: 1rem !important; margin: 0 0 12px !important; }
-    .mode-done { color: var(--u-ok); font-weight: 800; margin-top: 8px; }
-    #title { color: var(--u-title); font-size: min(2rem, 7vw); white-space: nowrap; margin: 0 0 4px; }
-    .subtitle { color: var(--u-sub); font-weight: 700; font-size: 15px; }
-    .problem-selector { gap: 6px; margin-bottom: 12px; }
-    .angle-btn { border-radius: 999px; border: 3px solid var(--u-line); background: #fff; color: var(--u-ink); padding: 6px 14px; font-size: 16px; }
-    .angle-btn.active { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
-    .angle-btn.completed { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
-    .card { box-shadow: none; border: 3px solid var(--u-line); border-radius: 20px; padding: 12px; }
-    canvas { border-color: var(--u-line); border-radius: 14px; background: #fff; }
-    .section-title { color: var(--u-title-dark); border-bottom-color: var(--u-frame); border-bottom-width: 3px; }
-    .fill-blank { color: var(--u-ink); font-weight: 700; flex-wrap: wrap; }
-    .coord-hint { background: var(--u-soft-blue); color: var(--u-title); border: 2px solid var(--u-soft-blue-line); border-radius: 12px; padding: 8px 10px; font-size: 13px; font-weight: 700; line-height: 1.6; margin: 6px 0; }
-    .drop-zone { background: #fff; border-radius: 10px; }
-    .choice { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; padding: 8px 16px; font-size: 18px; min-width: 40px; text-align: center; }
-    .choice.selected-choice { background: var(--u-accent); color: #fff; border: none; border-bottom: 4px solid var(--u-accent-dark); }
-    .trig-label { color: var(--u-ink); }
-    .trig-option { background: #fff; border: 3px solid var(--u-line); border-radius: 12px; font-weight: 700; color: var(--u-ink); min-width: 56px; padding: 8px 12px; box-sizing: border-box; }
-    .trig-option.selected { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); color: var(--u-ink); }
-    .trig-option.correct { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
-    .trig-option.incorrect { background: var(--u-ng-soft); border-color: var(--u-ng-line); color: var(--u-ng); }
-    .result { border-radius: 14px; font-size: 15px; }
-    .result.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .result.incorrect { background: var(--u-ng-soft); color: var(--u-ng); border: 3px solid var(--u-ng-line); }
-    .result.info { background: var(--u-soft-blue); color: var(--u-title); border: 2px solid var(--u-soft-blue-line); }
-    .result .next-angle { margin-top: 8px; padding: 10px 18px; }
-    .result-overlay { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 2000; padding: 16px; overflow-y: auto; box-sizing: border-box; }
-    .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
-    .result-emoji { font-size: 2.6em; }
-    .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 4px 0 8px; }
-    .result-score { font-size: 1.3em; font-weight: 800; color: var(--u-title); margin-bottom: 8px; }
-    .result-box p { color: var(--u-ink); font-weight: 700; line-height: 1.7; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-    .result-nav button { padding: 12px; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    /* 【ブラッシュアップ】メニューの分け方・図の上の θ・式の空欄・θ を求める画面 */
-    .mode-group-title { font-weight: 800; color: var(--u-title-dark); margin: 12px 0 8px; font-size: 1.05rem; width: 100%; }
-    .mode-group-title.m2 { color: #7c3aed; margin-top: 22px; }
-    .mode-note { color: var(--u-sub) !important; font-weight: 700; margin-top: 16px; text-align: center; }
-    .mode-note a { color: #b45309; }
-    .theta-now { text-align: center; font-weight: 800; color: var(--u-title-dark); font-size: 18px; margin: 0 0 4px; }
-    .theta-now .m2 { font-size: 12px; color: #7c3aed; }
-    .chip-guide { font-size: 12px; color: var(--u-sub); font-weight: 700; text-align: center; margin-top: 4px; }
-    .step-note { font-size: 13px; color: var(--u-sub); font-weight: 700; margin: 0 0 6px; line-height: 1.6; text-align: center; }
-    .letter-chips { margin: 0 0 8px !important; }
-    .letter-chips .choice { font-family: 'Times New Roman', serif; font-style: italic; font-size: 24px; min-width: 52px; padding: 4px 14px; }
-    .trig-label { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 18px; }
-    .lfrac { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
-    .lfrac .lbar { width: 100%; min-width: 50px; border-top: 2px solid currentColor; }
-    .lfrac .drop-zone { min-width: 46px; height: 34px; font-family: 'Times New Roman', serif; font-style: italic; font-size: 20px; }
-    .tsub { display: inline-flex; align-items: center; gap: 4px; color: var(--u-title); }
-    .tsub small { font-size: 12px; color: var(--u-sub); }
-    .drop-zone.given { background: var(--u-soft-yellow) !important; border-color: #fde68a !important; color: var(--u-soft-yellow-text) !important; }
-    .reverse-panel { margin-bottom: 8px; }
-    .rev-q { text-align: center; font-size: 22px; font-weight: 800; color: var(--u-ink); margin: 6px 0; }
-    .rev-q small { font-size: 14px; color: var(--u-sub); }
-    .rev-label { text-align: center; font-weight: 800; color: var(--u-ink); margin: 8px 0 6px; }
-    .rev-angles { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-    .rev-angle { border: 3px solid var(--u-line); background: #fff; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 16px; color: var(--u-ink); cursor: pointer; font-family: inherit; }
-    .rev-angle.on { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
-    .rev-angle.ok { background: var(--u-ok-soft); border-color: var(--u-ok-line); color: var(--u-ok); }
-    .rev-check-wrap { text-align: center; }
-    .rev-check { margin-top: 10px; padding: 10px 26px; }
-    #rev-result { margin-top: 8px; }
-    /* 元はせまい画面でも図の枠が 2 列目の左に押しこまれ、図がつぶれて見えなかった */
-    @media (max-width: 968px) {
-      .canvas-card, .coord-card, .trig-card { grid-column: auto; grid-row: auto; }
-      /* 【ブラッシュアップ】図を上に固定して、答える欄と同時に見えるようにする */
-      .canvas-card { position: sticky; top: 0; z-index: 5; padding: 4px !important; }
-      .canvas-card canvas { max-height: 190px; width: auto; }
-      .theta-now { font-size: 15px; margin: 0; }
-      /* x・y・r のカードと座標のカードは、そのカードの中では画面の下に固定（上までもどらなくてよいように） */
-      .trig-section { display: flex; flex-direction: column; }
-      .letter-chips { order: 99; position: sticky; bottom: 0; z-index: 4; background: #fff; padding: 6px 0 4px; margin: 6px 0 0 !important; box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.06); }
-      .step-note { font-size: 12px; }
-    }
-    @media (max-width: 640px) {
-      body { padding: 8px; }
-      .fill-blank { gap: 4px; }
-      .drop-zone { min-width: 58px; padding: 0 6px; }
-      .container { padding: 14px 8px; }
-      .card { padding: 8px; }
-      .trig-option { padding: 4px 5px; min-width: 44px; font-size: 15px; }
-      .trig-options { gap: 3px; }
-      .lfrac .drop-zone { min-width: 44px; }
-      .rev-angle { padding: 5px 9px; font-size: 15px; }
-    }
-    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
-    .mf { font-family: var(--u-math-font); font-style: normal; }
-    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
-  
-  </style>
-</head>
-<body class="u-theme">
-  <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-  <div class="container">
-    <div id="mode-selection-screen" class="mode-selection-screen">
-      <h1 style="color: #ffffff; font-size: 32px; margin-bottom: 20px; text-align: center;">三角比の問題</h1>
-      <p style="color: #e0e7ff; font-size: 18px; margin-bottom: 40px; text-align: center;">モードを選択してください</p>
-
-      <!-- 【ブラッシュアップ】数学Ⅰ（0°〜180°）と数学Ⅱ（一般角）を分け、モードを 2 つ追加 -->
-      <div class="mode-group-title">数学Ⅰ（0° ≦ θ ≦ 180°・半円で考える）</div>
-      <div class="mode-cards">
-        <div class="mode-card main-mode" data-mode="basic">
-          <div class="mode-card-icon">📐</div>
-          <h2>基本モード</h2>
-          <p>30°, 45°, 60°<br>120°, 135°, 150°</p>
-          <button class="start-btn">スタート</button>
-        </div>
-
-        <div class="mode-card main-mode" data-mode="intermediate">
-          <div class="mode-card-icon">⭐</div>
-          <h2>ちょい発展モード</h2>
-          <p>0°, 90°, 180°<br>（P が軸の上）</p>
-          <button class="start-btn">スタート</button>
-        </div>
-
-        <div class="mode-card main-mode" data-mode="free">
-          <div class="mode-card-icon">🧭</div>
-          <h2>r が 2 でない点</h2>
-          <p>P(−3, 3√3) などから<br>r・三角比・θ を求める</p>
-          <button class="start-btn">スタート</button>
-        </div>
-
-        <div class="mode-card main-mode" data-mode="reverse">
-          <div class="mode-card-icon">🔁</div>
-          <h2>θ を求める</h2>
-          <p>sin θ = ½ などから<br>θ をすべて見つける</p>
-          <button class="start-btn">スタート</button>
-        </div>
-      </div>
-
-      <div class="mode-group-title m2">数学Ⅱ（一般角・円で考える）の予習</div>
-      <div class="mode-cards">
-        <div class="mode-card sub-mode" data-mode="advanced">
-          <div class="mode-card-icon">🚀</div>
-          <h2>超発展モード</h2>
-          <p>210°, 225°, 240°<br>300°, 315°, 330°</p>
-          <button class="start-btn">スタート</button>
-        </div>
-
-        <div class="mode-card sub-mode" data-mode="superadvanced">
-          <div class="mode-card-icon">🌟</div>
-          <h2>超超発展モード</h2>
-          <p>270°, 360°</p>
-          <button class="start-btn">スタート</button>
-        </div>
-      </div>
-      <p class="mode-note">三角比の値をすばやく言えるようにする練習は <a href="sankakuhi-value.html">31. 三角比の値</a> へ</p>
-    </div>
-
-    <div id="problem-screen" style="display: none;">
-      <h1 id="title">三角比の問題</h1>
-      <p class="subtitle" id="subtitle">動径と座標を使って三角比を求めよう</p>
-
-      <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-        <button id="back-to-menu" class="back-btn">メニューに戻る</button>
-      </div>
-
-      <div class="problem-selector" id="problem-selector">
-        <button class="angle-btn active" data-angle="30">30度</button>
-        <button class="angle-btn" data-angle="45">45度</button>
-        <button class="angle-btn" data-angle="60">60度</button>
-        <button class="angle-btn" data-angle="120">120度</button>
-        <button class="angle-btn" data-angle="135">135度</button>
-        <button class="angle-btn" data-angle="150">150度</button>
-      </div>
-
-<!-- 【ブラッシュアップ】θ を求める（逆向き）の画面 -->
-      <div id="reverse-panel" class="card reverse-panel" style="display: none;">
-        <div class="section-title">三角比の値から θ を求めよう</div>
-        <div class="rev-q" id="rev-q"></div>
-        <div class="coord-hint" id="rev-hint"></div>
-        <div class="canvas-container"><canvas id="rev-canvas" width="600" height="400"></canvas></div>
-        <div class="rev-label">あてはまる θ をすべてえらんで「こたえ合わせ」</div>
-        <div class="rev-angles" id="rev-angles"></div>
-        <div class="rev-check-wrap"><button class="rev-check" onclick="checkReverse()">こたえ合わせ</button></div>
-        <div class="result" id="rev-result" style="display: none;"></div>
-      </div>
-
-      <div class="main-content">
-      <div class="card canvas-card">
-        <div class="theta-now" id="theta-now"></div>
-        <div class="canvas-container">
-          <canvas id="canvas" width="600" height="400"></canvas>
-        </div>
-      </div>
-
-      <div class="card coord-card">
-        <div class="question-section">
-          <div class="section-title">座標と動径を求めよう</div>
-
-          <div class="fill-blank">
-            点P の座標: ( <span class="drop-zone" id="coord-x"></span> , <span class="drop-zone" id="coord-y"></span> )
-          </div>
-
-          <div class="fill-blank">
-            OP の長さ r（半径）= <span class="drop-zone" id="radius"></span>
-          </div>
-          <!-- 【ブラッシュアップ】考え方のヒント（モードごと） -->
-          <div class="coord-hint" id="coord-hint"></div>
-
-          <div class="choices" id="coord-choices"></div>
-          <div class="chip-guide">カードをタップしてから、空欄をタップ（ドラッグでもOK）</div>
-        </div>
-      </div>
-
-      <div class="card trig-card">
-        <div class="trig-section">
-          <div class="section-title">三角比を求めよう</div>
-          <!-- 【ブラッシュアップ】① 式を x・y・r で作る → ② 数を入れた分数が出る → ③ 値をえらぶ -->
-          <p class="step-note">① x・y・r のカードで式を作る（カード → 空欄の順にタップ）<br>② 出てきた分数を見て、値をえらぶ</p>
-          <div class="choices letter-chips" id="letter-chips"></div>
-
-          <div class="trig-question">
-            <div class="trig-label">sin θ = <span class="lfrac"><span class="drop-zone lz" id="sin-num"></span><span class="lbar"></span><span class="drop-zone lz" id="sin-den"></span></span><span class="tsub" id="sin-sub"></span> =</div>
-            <div class="trig-options" id="sin-options"></div>
-          </div>
-
-          <div class="trig-question">
-            <div class="trig-label">cos θ = <span class="lfrac"><span class="drop-zone lz" id="cos-num"></span><span class="lbar"></span><span class="drop-zone lz" id="cos-den"></span></span><span class="tsub" id="cos-sub"></span> =</div>
-            <div class="trig-options" id="cos-options"></div>
-          </div>
-
-          <div class="trig-question">
-            <div class="trig-label">tan θ = <span class="lfrac"><span class="drop-zone lz" id="tan-num"></span><span class="lbar"></span><span class="drop-zone lz" id="tan-den"></span></span><span class="tsub" id="tan-sub"></span> =</div>
-            <div class="trig-options" id="tan-options"></div>
-          </div>
-
-          <div class="trig-question" id="theta-q" style="display: none;">
-            <div class="trig-label">θ =</div>
-            <div class="trig-options" id="theta-options"></div>
-          </div>
-
-          <div class="result" id="result" style="display: none;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const defaultConfig = {
-      title_text: "三角比の問題",
-      instruction_text: "動径と座標を使って三角比を求めよう"
-    };
-
-    const problems = {
-      0: {
-        x: '1', y: '0', r: '1',
-        sin: '0', cos: '1', tan: '0',
-        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
-        trigChoices: [
-          {display: '√2', value: '√2'},
-          {display: '0', value: '0'},
-          {display: '1/2', value: '1/2'},
-          {display: '1', value: '1'},
-          {display: '-1', value: '-1'},
-          {display: '定義なし', value: 'undefined'}
-        ]
-      },
-      90: {
-        x: '0', y: '1', r: '1',
-        sin: '1', cos: '0', tan: '定義なし',
-        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
-        trigChoices: [
-          {display: '1/2', value: '1/2'},
-          {display: '定義なし', value: '定義なし'},
-          {display: '0', value: '0'},
-          {display: '√2', value: '√2'},
-          {display: '1', value: '1'},
-          {display: '-1', value: '-1'}
-        ]
-      },
-      180: {
-        x: '-1', y: '0', r: '1',
-        sin: '0', cos: '-1', tan: '0',
-        coordChoices: ['0', '1', '-1', '2', '√2', '√3'],
-        trigChoices: [
-          {display: '1/2', value: '1/2'},
-          {display: '0', value: '0'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '1', value: '1'},
-          {display: '定義なし', value: '定義なし'},
-          {display: '-1', value: '-1'}
-        ]
-      },
-      270: {
-        x: '0', y: '-1', r: '1',
-        sin: '-1', cos: '0', tan: '定義なし',
-        coordChoices: ['0', '1', '-1', '2', '-2', '√3'],
-        trigChoices: [
-          {display: '1/2', value: '1/2'},
-          {display: '0', value: '0'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '定義なし', value: '定義なし'},
-          {display: '1', value: '1'},
-          {display: '-1', value: '-1'}
-        ]
-      },
-      360: {
-        x: '1', y: '0', r: '1',
-        sin: '0', cos: '1', tan: '0',
-        coordChoices: ['0', '1', '2', '-1', '√2', '√3'],
-        trigChoices: [
-          {display: '-1', value: '-1'},
-          {display: '√2', value: '√2'},
-          {display: '0', value: '0'},
-          {display: '定義なし', value: '定義なし'},
-          {display: '1/2', value: '1/2'},
-          {display: '1', value: '1'}
-        ]
-      },
-      30: {
-        x: '√3', y: '1', r: '2',
-        sin: '1/2', cos: '√3/2', tan: '1/√3',
-        coordChoices: ['√3', '√2', '1', '2', '-1', '3'],
-        trigChoices: [
-          {display: '√3', value: '√3'},
-          {display: '1/√3', value: '1/√3'},
-          {display: '2', value: '2'},
-          {display: '1/2', value: '1/2'},
-          {display: '1', value: '1'},
-          {display: '√3/2', value: '√3/2'}
-        ]
-      },
-      45: {
-        x: '1', y: '1', r: '√2',
-        sin: '1/√2', cos: '1/√2', tan: '1',
-        coordChoices: ['√2', '1', '2', '-1', '√3', '0'],
-        trigChoices: [
-          {display: '√3/2', value: '√3/2'},
-          {display: '1', value: '1'},
-          {display: '1/2', value: '1/2'},
-          {display: '1/√3', value: '1/√3'},
-          {display: '1/√2', value: '1/√2'},
-          {display: '√2', value: '√2'}
-        ]
-      },
-      60: {
-        x: '1', y: '√3', r: '2',
-        sin: '√3/2', cos: '1/2', tan: '√3',
-        coordChoices: ['√3', '√2', '1', '2', '-√3', '3'],
-        trigChoices: [
-          {display: '1', value: '1'},
-          {display: '√3', value: '√3'},
-          {display: '1/√3', value: '1/√3'},
-          {display: '√3/2', value: '√3/2'},
-          {display: '3/2', value: '3/2'},
-          {display: '1/2', value: '1/2'}
-        ]
-      },
-      120: {
-        x: '-1', y: '√3', r: '2',
-        sin: '√3/2', cos: '-1/2', tan: '-√3',
-        coordChoices: ['√3', '1', '2', '-1', '-√3', '0'],
-        trigChoices: [
-          {display: '√3', value: '√3'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '-√3/2', value: '-√3/2'},
-          {display: '1/2', value: '1/2'},
-          {display: '√3/2', value: '√3/2'},
-          {display: '-√3', value: '-√3'}
-        ]
-      },
-      135: {
-        x: '-1', y: '1', r: '√2',
-        sin: '1/√2', cos: '-1/√2', tan: '-1',
-        coordChoices: ['√2', '1', '2', '-1', '-√2', '0'],
-        trigChoices: [
-          {display: '1', value: '1'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '-1', value: '-1'},
-          {display: '1/2', value: '1/2'},
-          {display: '-1/√2', value: '-1/√2'},
-          {display: '1/√2', value: '1/√2'}
-        ]
-      },
-      150: {
-        x: '-√3', y: '1', r: '2',
-        sin: '1/2', cos: '-√3/2', tan: '-1/√3',
-        coordChoices: ['√3', '-√3', '1', '2', '-1', '3'],
-        trigChoices: [
-          {display: '1/√3', value: '1/√3'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '-1/√3', value: '-1/√3'},
-          {display: '1/2', value: '1/2'},
-          {display: '√3/2', value: '√3/2'},
-          {display: '-√3/2', value: '-√3/2'}
-        ]
-      },
-      210: {
-        x: '-√3', y: '-1', r: '2',
-        sin: '-1/2', cos: '-√3/2', tan: '1/√3',
-        coordChoices: ['-√3', '√3', '-1', '2', '1', '0'],
-        trigChoices: [
-          {display: '√3/2', value: '√3/2'},
-          {display: '1/√3', value: '1/√3'},
-          {display: '-1/√3', value: '-1/√3'},
-          {display: '1/2', value: '1/2'},
-          {display: '-√3/2', value: '-√3/2'},
-          {display: '-1/2', value: '-1/2'}
-        ]
-      },
-      225: {
-        x: '-1', y: '-1', r: '√2',
-        sin: '-1/√2', cos: '-1/√2', tan: '1',
-        coordChoices: ['-1', '1', '√2', '2', '-√2', '0'],
-        trigChoices: [
-          {display: '1/2', value: '1/2'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '-1/√2', value: '-1/√2'},
-          {display: '1', value: '1'},
-          {display: '-1', value: '-1'},
-          {display: '1/√2', value: '1/√2'}
-        ]
-      },
-      240: {
-        x: '-1', y: '-√3', r: '2',
-        sin: '-√3/2', cos: '-1/2', tan: '√3',
-        coordChoices: ['-1', '1', '-√3', '√3', '2', '0'],
-        trigChoices: [
-          {display: '1/2', value: '1/2'},
-          {display: '√3', value: '√3'},
-          {display: '-√3', value: '-√3'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '√3/2', value: '√3/2'},
-          {display: '-√3/2', value: '-√3/2'}
-        ]
-      },
-      300: {
-        x: '1', y: '-√3', r: '2',
-        sin: '-√3/2', cos: '1/2', tan: '-√3',
-        coordChoices: ['1', '-1', '-√3', '√3', '2', '0'],
-        trigChoices: [
-          {display: '√3', value: '√3'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '-√3', value: '-√3'},
-          {display: '√3/2', value: '√3/2'},
-          {display: '1/2', value: '1/2'},
-          {display: '-√3/2', value: '-√3/2'}
-        ]
-      },
-      315: {
-        x: '1', y: '-1', r: '√2',
-        sin: '-1/√2', cos: '1/√2', tan: '-1',
-        coordChoices: ['1', '-1', '√2', '-√2', '2', '0'],
-        trigChoices: [
-          {display: '1', value: '1'},
-          {display: '1/2', value: '1/2'},
-          {display: '-1', value: '-1'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '1/√2', value: '1/√2'},
-          {display: '-1/√2', value: '-1/√2'}
-        ]
-      },
-      330: {
-        x: '√3', y: '-1', r: '2',
-        sin: '-1/2', cos: '√3/2', tan: '-1/√3',
-        coordChoices: ['√3', '-√3', '-1', '1', '2', '0'],
-        trigChoices: [
-          {display: '1/√3', value: '1/√3'},
-          {display: '-√3/2', value: '-√3/2'},
-          {display: '1/2', value: '1/2'},
-          {display: '-1/√3', value: '-1/√3'},
-          {display: '-1/2', value: '-1/2'},
-          {display: '√3/2', value: '√3/2'}
-        ]
-      }
-    };
-
-    let currentMode = null;
-    let currentAngle = null;
-    let userAnswers = {
-      coordX: null,
-      coordY: null,
-      radius: null,
-      sin: null,
-      cos: null,
-      tan: null
-    };
-
-    let completedAnglesBasic = new Set();
-    let completedAnglesIntermediate = new Set();
-    let completedAnglesAdvanced = new Set();
-    let completedAnglesSuperadvanced = new Set();
-    let draggedElement = null;
-    let selectedChoice = null;
-    // 【ブラッシュアップ】この角度を解きおえたか・まちがえた角度・追加したモードの記録
-    let solvedNow = false;
-    let missedAngles = new Set();
-    let completedAnglesFree = new Set();
-    let completedAnglesReverse = new Set();
-
-    const modeAngles = {
-      basic: [30, 45, 60, 120, 135, 150],
-      intermediate: [0, 90, 180],
-      advanced: [210, 225, 240, 300, 315, 330],
-      superadvanced: [270, 360],
-      free: [120, 45, 150],          // 【ブラッシュアップ】r が 2 でない点（θ は答えるので、ボタンには「点1」などと書く）
-      reverse: [1, 2, 3, 4, 5, 6]    // 【ブラッシュアップ】θ を求める（問題の番号）
-    };
-
-        // 【ブラッシュアップ】図：教科書と同じかき方にする（元は目盛り・半円・θ がなく、r が 1 でも 2 でも同じ長さだった）
-    const SEMI_MODES = ['basic', 'intermediate', 'free', 'reverse'];   // 数学Ⅰ（半円で考える）
-    const pretty = v => String(v).replace(/^-/, '−');                  // 表示だけ「−」にする
-    function figGeom(mode) {
-      return SEMI_MODES.includes(mode) ? { cx: 300, cy: 322, R: 215, semi: true } : { cx: 300, cy: 200, R: 150, semi: false };
-    }
-    function label(ctx, text, x, y, color, align, size) {
-      // 【ブラッシュアップ】文字（x, y, O, P, r, θ）は斜体、数字・記号はまっすぐ（数式の書体）に分けてかく
-      size = Math.round((size || 24) * 1.1);
-      const parts = String(text).match(/[A-Za-zθ]|[^A-Za-zθ]+/g) || [];
-      const fontOf = p => (/^[A-Za-zθ]$/.test(p) ? 'italic ' : '') + 'bold ' + size + 'px "Times New Roman", serif';
-      const ws = parts.map(p => { ctx.font = fontOf(p); return ctx.measureText(p).width; });
-      const w = ws.reduce((a, b) => a + b, 0);
-      align = align || 'center';
-      let left = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
-      left = Math.min(Math.max(left, 4), 596 - w);
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-      [true, false].forEach(back => {
-        let l = left;
-        parts.forEach((p, i) => {
-          ctx.font = fontOf(p);
-          if (back) { ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.strokeText(p, l, y); }
-          else { ctx.fillStyle = color || '#334155'; ctx.fillText(p, l, y); }
-          l += ws[i];
-        });
-      });
-    }
-    function arrowLine(ctx, x1, y1, x2, y2) {
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-      const a = Math.atan2(y2 - y1, x2 - x1);
-      ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - 14 * Math.cos(a - 0.4), y2 - 14 * Math.sin(a - 0.4));
-      ctx.lineTo(x2 - 14 * Math.cos(a + 0.4), y2 - 14 * Math.sin(a + 0.4));
-      ctx.closePath(); ctx.fill();
-    }
-    // 座標軸（矢印）・原点 O・半円（円）・目盛り（半径 r）
-    function drawBase(ctx, g, rText) {
-      ctx.clearRect(0, 0, 600, 400);
-      ctx.setLineDash([7, 6]); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R, g.semi ? Math.PI : 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
-      arrowLine(ctx, 30, g.cy, 582, g.cy);
-      arrowLine(ctx, g.cx, 394, g.cx, 10);
-      label(ctx, 'x', 580, g.cy + 24, '#64748b', 'right', 24);
-      label(ctx, 'y', g.cx + 22, 20, '#64748b', 'center', 24);
-      label(ctx, 'O', g.cx - 18, g.cy + 22, '#64748b', 'center', 22);
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
-      [g.cx + g.R, g.cx - g.R].forEach(x => { ctx.beginPath(); ctx.moveTo(x, g.cy - 7); ctx.lineTo(x, g.cy + 7); ctx.stroke(); });
-      ctx.beginPath(); ctx.moveTo(g.cx - 7, g.cy - g.R); ctx.lineTo(g.cx + 7, g.cy - g.R); ctx.stroke();
-      const neg = rText === 'r' ? '−r' : '−' + rText;
-      label(ctx, rText, g.cx + g.R, g.cy + 24, '#64748b', 'center', 22);
-      label(ctx, neg, g.cx - g.R, g.cy + 24, '#64748b', 'center', 22);
-      label(ctx, rText, g.cx - 14, g.cy - g.R - 4, '#64748b', 'right', 22);
-      if (!g.semi) {
-        ctx.beginPath(); ctx.moveTo(g.cx - 7, g.cy + g.R); ctx.lineTo(g.cx + 7, g.cy + g.R); ctx.stroke();
-        label(ctx, neg, g.cx - 14, g.cy + g.R + 4, '#64748b', 'right', 22);
-      }
-    }
-    // 動径 OP・θ・直角三角形・答えが合った数
-    function drawFigure(deg, done) {
-      const ctx = document.getElementById('canvas').getContext('2d');
-      const g = figGeom(currentMode);
-      const P0 = curProblem() || {};
-      const rOk = userAnswers.radius === P0.r;
-      drawBase(ctx, g, rOk ? pretty(P0.r) : 'r');
-      const t = deg * Math.PI / 180;
-      const px = g.cx + g.R * Math.cos(t), py = g.cy - g.R * Math.sin(t);
-      const onAxis = Math.abs(Math.sin(t)) < 1e-9 || Math.abs(Math.cos(t)) < 1e-9;
-      if (done && !onAxis) {
-        // 直角三角形 OHP（H は P から x 軸にひいた垂線の足）
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.12)';
-        ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(px, g.cy); ctx.lineTo(px, py); ctx.closePath(); ctx.fill();
-        ctx.setLineDash([6, 5]); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, g.cy); ctx.stroke(); ctx.setLineDash([]);
-        const sx = px > g.cx ? -1 : 1, sy = py < g.cy ? -1 : 1;
-        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(px + sx * 13, g.cy); ctx.lineTo(px + sx * 13, g.cy + sy * 13); ctx.lineTo(px, g.cy + sy * 13); ctx.stroke();
-        // 直角三角形の O の角（θ が 90° をこえるとき。「r が 2 でない点」では θ を求めるので書かない）
-        const d = ((deg % 360) + 360) % 360;
-        const ref = d <= 90 ? d : d <= 180 ? 180 - d : d <= 270 ? d - 180 : 360 - d;
-        if (Math.abs(ref - deg) > 1e-9 && currentMode !== 'free') {
-          const a = ((-t) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-          const b = px > g.cx ? (a > Math.PI ? 2 * Math.PI : 0) : Math.PI;
-          const s0 = Math.min(a, b), s1 = Math.max(a, b), mid = (s0 + s1) / 2;
-          ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.5;
-          ctx.beginPath(); ctx.arc(g.cx, g.cy, 62, s0, s1, false); ctx.stroke();
-          label(ctx, ref + '°', g.cx + 92 * Math.cos(mid), g.cy + 92 * Math.sin(mid), '#2563eb', 'center', 22);
-        }
-      }
-      // θ（x 軸の正の向きから左回り）
-      if (deg > 0) {
-        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(g.cx, g.cy, 34, 0, -t, true); ctx.stroke();
-        label(ctx, 'θ', g.cx + 50 * Math.cos(t / 2), g.cy - 50 * Math.sin(t / 2), '#d97706', 'center', 22);
-      }
-      // 動径 OP
-      ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(px, py); ctx.stroke();
-      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(px, py, 7, 0, 2 * Math.PI); ctx.fill();
-      if (!done) return;
-      const xOk = userAnswers.coordX === P0.x, yOk = userAnswers.coordY === P0.y;
-      const pl = xOk && yOk ? `P(${pretty(P0.x)}, ${pretty(P0.y)})` : 'P';
-      label(ctx, pl, px + 14 * Math.cos(t), py + (Math.sin(t) >= -1e-9 ? -30 : 30), '#b91c1c', 'center', 24);
-      if (!onAxis) {
-        // 辺の長さ（OH・HP・OP）。座標の符号は P(x, y) のほうに書く
-        if (xOk) label(ctx, pretty(P0.x).replace('−', ''), (g.cx + px) / 2, g.cy + (py < g.cy ? 24 : -24), '#1d4ed8', 'center', 22);
-        if (yOk) label(ctx, pretty(P0.y).replace('−', ''), px + (px > g.cx ? 12 : -12), (py + g.cy) / 2, '#1d4ed8', px > g.cx ? 'left' : 'right', 22);
-        if (rOk) {
-          const mx = (g.cx + px) / 2, my = (g.cy + py) / 2;
-          let nx = -(py - g.cy), ny = px - g.cx; const l = Math.hypot(nx, ny); nx /= l; ny /= l;
-          if (nx * (px - mx) + ny * (g.cy - my) > 0) { nx = -nx; ny = -ny; }
-          label(ctx, pretty(P0.r), mx + nx * 22, my + ny * 22, '#ea580c', 'center', 22);
-        }
-      }
-    }
-    function drawCoordinateSystem(angle) {
-      const th = document.getElementById('theta-now');
-      if (th) th.innerHTML = currentMode === 'free' ? 'θ = ?（P の座標から求める）'
-        : 'θ = ' + angle + '°' + (SEMI_MODES.includes(currentMode) ? '' : '　<span class="m2">数学Ⅱ（一般角）</span>');
-      animateRadius(angle);
-    }
-    function animateRadius(target) {
-      const my = animateRadius.token = (animateRadius.token || 0) + 1;   // 別の角度に変えたら前の動きは止める
-      const start = Date.now(), dur = 1200;
-      animateRadius.running = true;
-      (function step() {
-        if (animateRadius.token !== my) return;
-        const pr = Math.min((Date.now() - start) / dur, 1);
-        drawFigure(target * pr, pr >= 1);
-        if (pr < 1) requestAnimationFrame(step); else animateRadius.running = false;
-      })();
-    }
-    function redrawFigure() {
-      if (currentAngle === null || currentMode === 'reverse' || animateRadius.running) return;
-      drawFigure(currentAngle, true);
-    }
-
-
-
-        function initChoices() {
-      const choicesContainer = document.getElementById('coord-choices');
-      choicesContainer.innerHTML = '';
-
-      const problem = curProblem();   // 【ブラッシュアップ】「r が 2 でない点」の問題も使う
-      const coordChoices = problem.coordChoices;
-
-      coordChoices.forEach(choice => {
-        const choiceEl = document.createElement('div');
-        choiceEl.className = 'choice';
-        choiceEl.textContent = pretty(choice);   // 【ブラッシュアップ】マイナスは「−」で表示
-        choiceEl.draggable = true;
-        choiceEl.dataset.value = choice;
-
-        choiceEl.addEventListener('dragstart', (e) => {
-          draggedElement = choiceEl;
-          e.dataTransfer.effectAllowed = 'move';
-        });
-
-        choiceEl.addEventListener('click', (e) => {
-          if (selectedChoice) {
-            selectedChoice.classList.remove('selected-choice');
-          }
-
-          selectedChoice = choiceEl;
-          choiceEl.classList.add('selected-choice');
-
-          const resultEl = document.getElementById('result');
-          resultEl.style.display = 'block';
-          resultEl.style.display = 'none';   // 【ブラッシュアップ】元は誤字（「あなは選択してください」）の案内を、画面の下に出していた
-        });
-
-        choicesContainer.appendChild(choiceEl);
-      });
-    }
-
-    function initDropZones() {
-      if (initDropZones.done) return;   // 【ブラッシュアップ】一度だけ登録する
-      initDropZones.done = true;
-      const dropZones = document.querySelectorAll('.drop-zone, .coord-drop-zone');
-
-      dropZones.forEach(zone => {
-        zone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          zone.classList.add('dragging-over');
-        });
-
-        zone.addEventListener('dragleave', () => {
-          zone.classList.remove('dragging-over');
-        });
-
-        zone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          zone.classList.remove('dragging-over');
-
-          if (draggedElement && !solvedNow && !zone.classList.contains('correct')) {   // 【ブラッシュアップ】正解した空欄は変えない
-            zone.textContent = pretty(draggedElement.dataset.value);
-            zone.classList.add('filled');
-
-            if (zone.id === 'coord-x') {
-              userAnswers.coordX = draggedElement.dataset.value;
-              checkAnswer('coordX', draggedElement.dataset.value, zone);
-            }
-            if (zone.id === 'coord-y') {
-              userAnswers.coordY = draggedElement.dataset.value;
-              checkAnswer('coordY', draggedElement.dataset.value, zone);
-            }
-            if (zone.id === 'radius') {
-              userAnswers.radius = draggedElement.dataset.value;
-              checkAnswer('radius', draggedElement.dataset.value, zone);
-            }
-            if (LETTER_ZONES[zone.id]) {   // 【ブラッシュアップ】sin θ = y/r などの式の空欄
-              userAnswers[LETTER_ZONES[zone.id]] = draggedElement.dataset.value;
-              checkAnswer(LETTER_ZONES[zone.id], draggedElement.dataset.value, zone);
-            }
-          }
-        });
-
-        zone.addEventListener('click', () => {
-          if (solvedNow) return;   // 【ブラッシュアップ】解きおえたら変えられない
-          if (selectedChoice && !zone.classList.contains('filled') && !zone.classList.contains('correct')) {   // 【ブラッシュアップ】正解した空欄は上書きしない
-            const value = selectedChoice.dataset.value;
-
-            zone.textContent = pretty(value);
-            zone.classList.add('filled');
-            selectedChoice.classList.remove('selected-choice');
-
-            if (zone.id === 'coord-x') {
-              userAnswers.coordX = value;
-              checkAnswer('coordX', value, zone);
-            }
-            if (zone.id === 'coord-y') {
-              userAnswers.coordY = value;
-              checkAnswer('coordY', value, zone);
-            }
-            if (zone.id === 'radius') {
-              userAnswers.radius = value;
-              checkAnswer('radius', value, zone);
-            }
-            if (LETTER_ZONES[zone.id]) {   // 【ブラッシュアップ】式の空欄
-              userAnswers[LETTER_ZONES[zone.id]] = value;
-              checkAnswer(LETTER_ZONES[zone.id], value, zone);
-            }
-
-            selectedChoice = null;
-          }
-          else if (zone.classList.contains('filled')) {
-            zone.textContent = '';
-            zone.classList.remove('filled', 'correct', 'incorrect');
-
-            if (zone.id === 'coord-x') userAnswers.coordX = null;
-            if (zone.id === 'coord-y') userAnswers.coordY = null;
-            if (zone.id === 'radius') userAnswers.radius = null;
-            if (LETTER_ZONES[zone.id]) userAnswers[LETTER_ZONES[zone.id]] = null;   // 【ブラッシュアップ】
-            updateSubs();
-            redrawFigure();
-          }
-        });
-      });
-    }
-
-        function createFractionHTML(text) {
-      if (text.includes('/')) {
-        let [numerator, denominator] = text.split('/');
-        if (numerator.startsWith('-')) {
-          numerator = numerator.substring(1);
-          return `<span style="margin-right: 2px;">−</span><span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
-        }
-        return `<span class="fraction"><span class="fraction-numerator">${numerator}</span><span class="fraction-denominator">${denominator}</span></span>`;
-      }
-      return pretty(text);
-    }
-
-    // 【ブラッシュアップ】「r が 2 でない点」の問題（P の座標は問題で与え、r・三角比・θ を求める）
-    const freeProblems = {
-      120: { x: '-3', y: '3√3', r: '6', sin: '√3/2', cos: '-1/2', tan: '-√3', theta: '120',
-        coordChoices: ['6', '36', '3√3', '√6', '9', '12'],
-        trigChoices: ['√3/2', '-1/2', '-√3', '1/2', '-√3/2', '√3'].map(v => ({ display: v, value: v })) },
-      45: { x: '2', y: '2', r: '2√2', sin: '1/√2', cos: '1/√2', tan: '1', theta: '45',
-        coordChoices: ['2√2', '4', '8', '√2', '2', '2√3'],
-        trigChoices: ['1/√2', '1', '√2', '1/2', '-1/√2', '√3/2'].map(v => ({ display: v, value: v })) },
-      150: { x: '-5√3', y: '5', r: '10', sin: '1/2', cos: '-√3/2', tan: '-1/√3', theta: '150',
-        coordChoices: ['10', '100', '5√3', '20', '5', '√10'],
-        trigChoices: ['1/2', '-√3/2', '-1/√3', '√3/2', '-1/2', '-√3'].map(v => ({ display: v, value: v })) }
-    };
-    function curProblem() {
-      return currentMode === 'free' ? freeProblems[currentAngle] : problems[currentAngle];
-    }
-    // 【ブラッシュアップ】sin θ = y/r などの「式」の空欄
-    const LETTER_ZONES = { 'sin-num': 'sinNum', 'sin-den': 'sinDen', 'cos-num': 'cosNum', 'cos-den': 'cosDen', 'tan-num': 'tanNum', 'tan-den': 'tanDen' };
-    const LETTER_TYPES = Object.values(LETTER_ZONES);
-    const LETTER_ANS = { sinNum: 'y', sinDen: 'r', cosNum: 'x', cosDen: 'r', tanNum: 'y', tanDen: 'x' };
-    const HINTS = {
-      basic: '💡 図の青い直角三角形に注目。30°・60° の直角三角形の辺の比は 1 : √3 : 2、45° は 1 : 1 : √2。いちばん長い辺（斜辺）が r。P が左側なら x 座標はマイナス。',
-      intermediate: '💡 P が x 軸・y 軸の上にあるときは、半径 r = 1 の半円で考えて、P の座標をそのまま読む。',
-      free: '💡 P の座標がわかっているので、r = √(x² + y²) で求める。三角比の値は r の大きさに関係なく同じ（比だから）。',
-      advanced: '💡 【数学Ⅱ】180° をこえる角も、x 軸の正の向きから左回りにはかる。青い直角三角形（30°・45°・60°）で考える。',
-      superadvanced: '💡 【数学Ⅱ】P が軸の上にあるときは r = 1 で考える。'
-    };
-
-    function initTrigOptions() {
-      const problem = curProblem();
-      ['sin', 'cos', 'tan'].forEach(trig => {
-        const container = document.getElementById(`${trig}-options`);
-        container.innerHTML = '';
-        problem.trigChoices.forEach(choice => {
-          const option = document.createElement('div');
-          option.className = 'trig-option';
-          option.innerHTML = createFractionHTML(choice.display);
-          option.dataset.value = choice.value;
-          option.addEventListener('click', () => {
-            if (solvedNow) return;
-            if (container.querySelector('.trig-option.correct')) return;   // 正解した行は変えない
-            container.querySelectorAll('.trig-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
-            option.classList.add('selected');
-            userAnswers[trig] = choice.value;
-            checkAnswer(trig, choice.value, option);
-          });
-          container.appendChild(option);
-        });
-      });
-      initExtra();
-    }
-
-    // x・y・r のカード、θ の選択肢、ヒント、「r が 2 でない点」の座標
-    function initExtra() {
-      const problem = curProblem();
-      const lc = document.getElementById('letter-chips');
-      lc.innerHTML = '';
-      ['x', 'y', 'r'].forEach(v => {
-        const el = document.createElement('div');
-        el.className = 'choice letter';
-        el.textContent = v;
-        el.dataset.value = v;
-        el.draggable = true;
-        el.addEventListener('dragstart', e => { draggedElement = el; e.dataTransfer.effectAllowed = 'move'; });
-        el.addEventListener('click', () => {
-          if (selectedChoice) selectedChoice.classList.remove('selected-choice');
-          selectedChoice = el;
-          el.classList.add('selected-choice');
-        });
-        lc.appendChild(el);
-      });
-      ['sin', 'cos', 'tan'].forEach(t => { document.getElementById(t + '-sub').innerHTML = ''; });
-      const tq = document.getElementById('theta-q');
-      const to = document.getElementById('theta-options');
-      tq.style.display = currentMode === 'free' ? '' : 'none';
-      to.innerHTML = '';
-      if (currentMode === 'free') {
-        ['30', '45', '60', '120', '135', '150'].forEach(v => {
-          const o = document.createElement('div');
-          o.className = 'trig-option';
-          o.textContent = v + '°';
-          o.dataset.value = v;
-          o.addEventListener('click', () => {
-            if (solvedNow || to.querySelector('.trig-option.correct')) return;
-            to.querySelectorAll('.trig-option').forEach(x => x.classList.remove('selected', 'correct', 'incorrect'));
-            o.classList.add('selected');
-            userAnswers.theta = v;
-            checkAnswer('theta', v, o);
-          });
-          to.appendChild(o);
-        });
-      }
-      document.getElementById('coord-hint').textContent = HINTS[currentMode] || '';
-      ['coord-x', 'coord-y'].forEach(id => document.getElementById(id).classList.remove('given'));
-      if (currentMode === 'free') {
-        [['coord-x', 'coordX', problem.x], ['coord-y', 'coordY', problem.y]].forEach(([id, k, v]) => {
-          const z = document.getElementById(id);
-          z.textContent = pretty(v);
-          z.classList.remove('filled', 'incorrect');
-          z.classList.add('correct', 'given');
-          userAnswers[k] = v;
-        });
-      }
-      redrawFigure();
-    }
-
-    // 式が合い、使う座標もわかったら「= 1/2」のように数を入れた分数を見せる
-    function updateSubs() {
-      const p = curProblem();
-      if (!p) return;
-      const has = { x: userAnswers.coordX === p.x, y: userAnswers.coordY === p.y, r: userAnswers.radius === p.r };
-      const val = { x: p.x, y: p.y, r: p.r };
-      [['sin', 'y', 'r'], ['cos', 'x', 'r'], ['tan', 'y', 'x']].forEach(([t, n, d]) => {
-        const el = document.getElementById(t + '-sub');
-        const ok = userAnswers[t + 'Num'] === n && userAnswers[t + 'Den'] === d && has[n] && has[d];
-        el.innerHTML = ok ? `= <span class="fraction"><span class="fraction-numerator">${pretty(val[n])}</span><span class="fraction-denominator">${pretty(val[d])}</span></span>`
-          + (val[d] === '0' ? '<small>（分母が 0）</small>' : '') : '';
-      });
-    }
-
-    // 【ブラッシュアップ】θ を求める（逆向き）：半円と直線の交点から θ を見つける（0° ≦ θ ≦ 180°）
-    const reverseProblems = {
-      1: { f: 'sin', val: '1/2', r: '2', k: '1', rNum: 2, kNum: 1, ans: [30, 150] },
-      2: { f: 'sin', val: '√3/2', r: '2', k: '√3', rNum: 2, kNum: Math.sqrt(3), ans: [60, 120] },
-      3: { f: 'sin', val: '1/√2', r: '√2', k: '1', rNum: Math.SQRT2, kNum: 1, ans: [45, 135] },
-      4: { f: 'cos', val: '-1/2', r: '2', k: '-1', rNum: 2, kNum: -1, ans: [120] },
-      5: { f: 'cos', val: '1/√2', r: '√2', k: '1', rNum: Math.SQRT2, kNum: 1, ans: [45] },
-      6: { f: 'sin', val: '0', r: '1', k: '0', rNum: 1, kNum: 0, ans: [0, 180] }
-    };
-    const REV_ANGLES = [0, 30, 45, 60, 90, 120, 135, 150, 180];
-    let revPicked = new Set();
-    let revDone = false;
-    function loadReverse(n) {
-      const q = reverseProblems[n];
-      revPicked = new Set();
-      revDone = false;
-      const letter = q.f === 'sin' ? 'y' : 'x';
-      document.getElementById('rev-q').innerHTML = `${q.f} θ = ${createFractionHTML(q.val)}　<small>（0° ≦ θ ≦ 180°）</small>`;
-      document.getElementById('rev-hint').textContent =
-        `💡 ${q.f} θ = ${letter}/r なので、半径 r = ${pretty(q.r)} の半円の上で、${letter} 座標が ${pretty(q.k)} の点 P をさがす（図の直線 ${letter} = ${pretty(q.k)} との交点）。θ は動径 OP の角。交点が 2 つあれば θ も 2 つ。`;
-      const box = document.getElementById('rev-angles');
-      box.innerHTML = '';
-      REV_ANGLES.forEach(a => {
-        const b = document.createElement('button');
-        b.className = 'rev-angle';
-        b.textContent = a + '°';
-        b.dataset.a = a;
-        b.onclick = () => {
-          if (revDone) return;
-          if (revPicked.has(a)) revPicked.delete(a); else revPicked.add(a);
-          b.classList.toggle('on', revPicked.has(a));
-        };
-        box.appendChild(b);
-      });
-      const res = document.getElementById('rev-result');
-      res.style.display = 'none';
-      res.className = 'result';
-      drawReverse(q, false);
-    }
-    function drawReverse(q, showAns) {
-      const ctx = document.getElementById('rev-canvas').getContext('2d');
-      const g = { cx: 300, cy: 322, R: 215, semi: true };
-      drawBase(ctx, g, pretty(q.r));
-      const s = g.R / q.rNum;   // 1 あたりの長さ
-      ctx.strokeStyle = '#ea580c'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
-      ctx.beginPath();
-      if (q.f === 'sin') { const y = g.cy - q.kNum * s; ctx.moveTo(36, y); ctx.lineTo(564, y); }
-      else { const x = g.cx + q.kNum * s; ctx.moveTo(x, g.cy + 30); ctx.lineTo(x, 44); }
-      ctx.stroke(); ctx.setLineDash([]);
-      if (q.f === 'sin') label(ctx, 'y = ' + pretty(q.k), 564, g.cy - q.kNum * s - 20, '#ea580c', 'right', 22);
-      else label(ctx, 'x = ' + pretty(q.k), g.cx + q.kNum * s + (q.kNum < 0 ? -10 : 10), 60, '#ea580c', q.kNum < 0 ? 'right' : 'left', 22);
-      q.ans.forEach(a => {
-        const t = a * Math.PI / 180, px = g.cx + g.R * Math.cos(t), py = g.cy - g.R * Math.sin(t);
-        if (showAns) {
-          ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 4;
-          ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(px, py); ctx.stroke();
-          label(ctx, 'θ = ' + a + '°', px + 10 * Math.cos(t), py - 30, '#dc2626', 'center', 22);
-        }
-        ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(px, py, 8, 0, 2 * Math.PI); ctx.fill();
-      });
-    }
-    function checkReverse() {
-      if (revDone) return;
-      const q = reverseProblems[currentAngle];
-      const res = document.getElementById('rev-result');
-      res.style.display = 'block';
-      const ok = revPicked.size === q.ans.length && q.ans.every(a => revPicked.has(a));
-      if (!ok) {
-        res.className = 'result incorrect';
-        const part = revPicked.size && [...revPicked].every(a => q.ans.includes(a));
-        res.textContent = part ? 'おしい！ほかにもあてはまる θ があるよ（交点はいくつ？）' : 'ざんねん！図の交点 P の角を、もう一度たしかめよう';
-        missedAngles.add('reverse-' + currentAngle);
-        return;
-      }
-      revDone = true;
-      drawReverse(q, true);
-      document.querySelectorAll('.rev-angle').forEach(b => { b.classList.toggle('ok', q.ans.includes(+b.dataset.a)); b.classList.remove('on'); });
-      const set = completedSetOf('reverse');
-      set.add(currentAngle);
-      updateAngleButtons();
-      res.className = 'result correct';
-      const next = modeAngles.reverse.find(a => !set.has(a));
-      if (set.size === modeAngles.reverse.length) {
-        res.textContent = 'すばらしい！このモードは全問正解！';
-        const doneMode = currentMode;
-        setTimeout(() => { if (currentMode === doneMode) showModeResult(); }, 700);   // ほかのモードに移っていたら出さない
-      } else {
-        res.innerHTML = `正解！θ = ${q.ans.join('°、')}°（${set.size} / ${modeAngles.reverse.length} 問クリア）<br><button class="next-angle" onclick="goAngle(${next})">次の問題（問${next}）へ ▶</button>`;
-      }
-    }
-
-
-
-        function resetProblem() {
-      userAnswers = {
-        coordX: null,
-        coordY: null,
-        radius: null,
-        sin: null,
-        cos: null,
-        tan: null
-      };
-
-      document.querySelectorAll('.drop-zone, .coord-drop-zone').forEach(zone => {
-        zone.textContent = '';
-        zone.classList.remove('filled', 'correct', 'incorrect');
-      });
-
-      document.querySelectorAll('.choice').forEach(choice => {
-        choice.classList.remove('selected-choice');
-      });
-
-      document.querySelectorAll('.trig-option').forEach(opt => {
-        opt.classList.remove('selected', 'correct', 'incorrect');
-      });
-
-      selectedChoice = null;
-      solvedNow = false;   // 【ブラッシュアップ】
-      document.getElementById('result').style.display = 'none';
-    }
-
-        function checkAnswer(type, value, element) {
-      const problem = curProblem();
-      let isCorrect = false;
-      if (type === 'coordX') isCorrect = value === problem.x;
-      else if (type === 'coordY') isCorrect = value === problem.y;
-      else if (type === 'radius') isCorrect = value === problem.r;
-      else if (type === 'sin' || type === 'cos' || type === 'tan') isCorrect = value === problem[type];
-      else if (LETTER_ANS[type]) isCorrect = value === LETTER_ANS[type];
-      else if (type === 'theta') isCorrect = value === problem.theta;
-
-      const resultEl = document.getElementById('result');
-      if (!isCorrect) {
-        if (element) {
-          element.classList.remove('correct', 'filled');
-          element.classList.add('incorrect');
-        }
-        resultEl.style.display = 'block';
-        resultEl.className = 'result incorrect';
-        let label;
-        if (type === 'coordX' || type === 'coordY') label = '座標';
-        else if (type === 'radius') label = 'OP の長さ r';
-        else if (LETTER_ANS[type]) label = type.slice(0, 3) + ' θ の式（x・y・r のどれとどれ？）';
-        else if (type === 'theta') label = 'θ';
-        else label = type + ' θ の値';
-        resultEl.textContent = `ざんねん！${label} がちがいます。もう一度考えてみよう`;
-        missedAngles.add(currentMode + '-' + currentAngle);
-        // 選び直していたら消さない
-        const token = element ? (element._token = (element._token || 0) + 1) : 0;
-        setTimeout(() => {
-          if (element && element._token !== token) return;
-          if (userAnswers[type] !== value) return;
-          resetIncorrectAnswer(type, element);
-        }, 500);
-      } else {
-        if (element) {
-          element.classList.remove('incorrect', 'filled');
-          element.classList.add('correct');
-        }
-        if (resultEl.classList.contains('incorrect') || resultEl.classList.contains('info')) resultEl.style.display = 'none';
-        updateSubs();
-        redrawFigure();
-        checkAllCorrect();
-      }
-    }
-
-
-
-        function resetIncorrectAnswer(type, element) {
-      if (type === 'coordX' || type === 'coordY' || type === 'radius' || LETTER_TYPES.includes(type)) {   // 【ブラッシュアップ】式の空欄も
-        if (element) {
-          element.textContent = '';
-          element.classList.remove('filled', 'correct', 'incorrect');
-        }
-
-        if (type === 'coordX') userAnswers.coordX = null;
-        if (type === 'coordY') userAnswers.coordY = null;
-        if (type === 'radius') userAnswers.radius = null;
-        if (LETTER_TYPES.includes(type)) userAnswers[type] = null;   // 【ブラッシュアップ】
-      } else {
-        if (element) {
-          element.classList.remove('selected', 'correct', 'incorrect');
-        }
-
-        if (type === 'sin') userAnswers.sin = null;
-        if (type === 'cos') userAnswers.cos = null;
-        if (type === 'tan') userAnswers.tan = null;
-        if (type === 'theta') userAnswers.theta = null;   // 【ブラッシュアップ】
-      }
-
-      document.getElementById('result').style.display = 'none';
-    }
-
-        function updateAngleButtons() {
-      const completedAngles = completedSetOf(currentMode);
-      document.querySelectorAll('.angle-btn').forEach(btn => {
-        const angle = parseInt(btn.dataset.angle);
-        btn.classList.toggle('completed', completedAngles.has(angle) && angle !== currentAngle);
-      });
-    }
-
-    function checkAllCorrect() {
-      const problem = curProblem();
-      const allCorrect =
-        userAnswers.coordX === problem.x &&
-        userAnswers.coordY === problem.y &&
-        userAnswers.radius === problem.r &&
-        userAnswers.sin === problem.sin &&
-        userAnswers.cos === problem.cos &&
-        userAnswers.tan === problem.tan &&
-        LETTER_TYPES.every(t => userAnswers[t] === LETTER_ANS[t]) &&
-        (currentMode !== 'free' || userAnswers.theta === problem.theta);
-      if (!allCorrect) return;
-      const completedAngles = completedSetOf(currentMode);
-      completedAngles.add(currentAngle);
-      updateAngleButtons();
-      const resultEl = document.getElementById('result');
-      resultEl.style.display = 'block';
-      resultEl.className = 'result correct';
-      const totalProblems = modeAngles[currentMode].length;
-      solvedNow = true;
-      const list = modeAngles[currentMode];
-      const nextAngle = list.find(a => !completedAngles.has(a));
-      if (completedAngles.size === totalProblems) {
-        resultEl.textContent = 'すばらしい！このモードは全問正解！';
-        const doneMode = currentMode;
-        setTimeout(() => { if (currentMode === doneMode) showModeResult(); }, 700);   // ほかのモードに移っていたら出さない
-      } else {
-        const name = currentMode === 'free' ? `次の点（点${list.indexOf(nextAngle) + 1}）` : `次の角度（${nextAngle}°）`;
-        resultEl.innerHTML = `正解！すごい！（${completedAngles.size} / ${totalProblems} 問クリア）<br><button class="next-angle" onclick="goAngle(${nextAngle})">${name}へ ▶</button>`;
-      }
-    }
-
-    function startMode(mode) {
-      currentMode = mode;
-      currentAngle = modeAngles[mode][0];
-      const rev = mode === 'reverse';
-      document.getElementById('mode-selection-screen').style.display = 'none';
-      document.getElementById('problem-screen').style.display = 'block';
-      document.querySelector('.main-content').style.display = rev ? 'none' : '';
-      document.getElementById('reverse-panel').style.display = rev ? '' : 'none';
-      document.getElementById('subtitle').textContent = rev ? '三角比の値から θ を求めよう（0° ≦ θ ≦ 180°）'
-        : SEMI_MODES.includes(mode) ? '動径と座標を使って三角比を求めよう（数学Ⅰ：0° ≦ θ ≦ 180°）'
-        : '一般角の三角関数（数学Ⅱの予習）';
-
-      const problemSelector = document.getElementById('problem-selector');
-      problemSelector.innerHTML = '';
-      modeAngles[mode].forEach((angle, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'angle-btn' + (index === 0 ? ' active' : '');
-        btn.dataset.angle = angle;
-        btn.textContent = rev ? '問' + angle : mode === 'free' ? '点' + (index + 1) : angle + '°';   // 「r が 2 でない点」は θ を答えるので角度を見せない
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentAngle = parseInt(btn.dataset.angle);
-          if (rev) { loadReverse(currentAngle); updateAngleButtons(); return; }
-          drawCoordinateSystem(currentAngle);
-          resetProblem();
-          initChoices();
-          initTrigOptions();
-          updateAngleButtons();
-        });
-        problemSelector.appendChild(btn);
-      });
-
-      window.scrollTo(0, 0);
-      if (rev) { loadReverse(currentAngle); updateAngleButtons(); return; }
-      drawCoordinateSystem(currentAngle);
-      resetProblem();
-      initChoices();
-      initDropZones();
-      initTrigOptions();
-      updateAngleButtons();
-    }
-
-
-
-    // 【ブラッシュアップ】結果：まちがえずに解けた問題・次のモード・もう一度・メニュー・ほかの教材
-    const modeOrder = ['basic', 'intermediate', 'free', 'reverse', 'advanced', 'superadvanced'];
-    const modeNames = { basic: '基本モード', intermediate: 'ちょい発展モード', free: 'r が 2 でない点', reverse: 'θ を求める', advanced: '超発展モード', superadvanced: '超超発展モード' };
-    function completedSetOf(mode) {
-      return { basic: completedAnglesBasic, intermediate: completedAnglesIntermediate, free: completedAnglesFree, reverse: completedAnglesReverse, advanced: completedAnglesAdvanced, superadvanced: completedAnglesSuperadvanced }[mode];
-    }
-
-    function goAngle(angle) {
-      const btn = document.querySelector(`.angle-btn[data-angle="${angle}"]`);
-      if (btn) btn.click();
-    }
-
-    function showModeResult() {
-      if (document.getElementById('resultOverlay')) return;
-      const mode = currentMode;
-      const angles = modeAngles[mode];
-      const clean = angles.filter(a => !missedAngles.has(mode + '-' + a)).length;
-      const nextMode = modeOrder[modeOrder.indexOf(mode) + 1];
-      const unit = (mode === 'reverse' || mode === 'free') ? '問題' : '角度';
-      const overlay = document.createElement('div');
-      overlay.className = 'result-overlay';
-      overlay.id = 'resultOverlay';
-      overlay.innerHTML = `
-        <div class="result-box">
-          <div class="result-emoji">${clean === angles.length ? '🎊🎉🎊' : '👍'}</div>
-          <h2>${modeNames[mode]} クリア！</h2>
-          <div class="result-score">まちがえずに解けた${unit}<br>${clean} / ${angles.length}</div>
-          <p>${clean === angles.length ? 'あなたは三角比のマスターです！' : 'まちがえた' + unit + 'も、もう一度たしかめてみよう！'}</p>
-          <div class="result-nav">
-            ${nextMode ? `<button class="next" onclick="closeResult(); startMode('${nextMode}');">次は「${modeNames[nextMode]}」へ ▶</button>` : ''}
-            <button class="again" onclick="closeResult(); retryMode('${mode}');">このモードをもう一度</button>
-            <button class="plain" onclick="closeResult(); document.getElementById('back-to-menu').click();">メニューに戻る</button>
-            <a href="../index.html">ほかの教材をえらぶ</a>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
-
-    function closeResult() {
-      const overlay = document.getElementById('resultOverlay');
-      if (overlay) overlay.remove();
-    }
-
-    function retryMode(mode) {
-      completedSetOf(mode).clear();
-      modeAngles[mode].forEach(a => missedAngles.delete(mode + '-' + a));
-      startMode(mode);
-    }
-
-    // 【ブラッシュアップ】メニューでは、クリアしたモードに印をつける
-    function markModeCards() {
-      document.querySelectorAll('.mode-card').forEach(card => {
-        const mode = card.dataset.mode;
-        let mark = card.querySelector('.mode-done');
-        const done = completedSetOf(mode).size === modeAngles[mode].length;
-        if (done && !mark) {
-          mark = document.createElement('div');
-          mark.className = 'mode-done';
-          mark.textContent = '✓ クリア';
-          card.appendChild(mark);
-        }
-        if (!done && mark) mark.remove();
-      });
-    }
-
-    document.getElementById('back-to-menu').addEventListener('click', () => {
-      markModeCards();   // 【ブラッシュアップ】
-      window.scrollTo(0, 0);
-      document.getElementById('problem-screen').style.display = 'none';
-      document.getElementById('mode-selection-screen').style.display = 'flex';
-      currentMode = null;
-      currentAngle = null;
-    });
-
-    document.querySelectorAll('.mode-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const mode = card.dataset.mode;
-        startMode(mode);
-      });
-    });
-
-    async function onConfigChange(config) {
-      document.getElementById('title').textContent = config.title_text || defaultConfig.title_text;
-      document.getElementById('subtitle').textContent = config.instruction_text || defaultConfig.instruction_text;
-    }
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ["title_text", config.title_text || defaultConfig.title_text],
-          ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
-        ])
-      });
-    }
-
-    onConfigChange(window.elementSdk ? window.elementSdk.config : defaultConfig);
-  </script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>三角比（座標）</title>
+<!--
+  30. 三角比（座標）
+  2026-10-28 先生の確認を受けて作り直し（Claude Code）。
+  ・図が動く練習：角度を決めた問題（sin 150° など）。図の中にも 150° と書く。P の座標と半径は書かない（自分でうめる）。
+    ヒントで、その角の直角三角形（30°・45°・60°）と辺の比を見せる。カードは 27・28 と同じ仕組み（assets/fill-steps.js）。
+  ・θ を求める問題：問題文 → ヒント1（円と直線）→ ヒント2（交点・直角三角形）→ ヒント3（角）と、図に少しずつかきこむ。
+  ・「r が 2 でない点」は使わないので消した。
+-->
+<link rel="stylesheet" href="../assets/port.css">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fill-steps.css">
+<style>
+/* メニュー */
+.zm-sec{margin:4px 0 14px}
+.zm-sec h2{font-size:15px;margin:0 0 6px;color:#1f4e8c;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.zm-sec h2 small{font-size:13px;color:#5b6470;font-weight:400}
+.zm-list{display:grid;gap:8px}
+.zm-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px;border:1px solid #c5d3e4;border-left:5px solid #1f4e8c;border-bottom:3px solid #b6bfc9;border-radius:6px;background:#fff;color:#1f2328;font:inherit;cursor:pointer;transition:transform .08s}
+.zm-item:active{transform:translateY(2px);border-bottom-width:1px}
+.zm-item .n{flex:none;width:30px;height:30px;border-radius:50%;background:#e3ecf7;color:#1f4e8c;font-weight:700;display:flex;align-items:center;justify-content:center}
+.zm-item b{display:block;font-size:17px}
+.zm-item span.s{display:block;font-size:14px;color:#5b6470}
+.zm-item.m2{border-left-color:#7048e8}.zm-item.m2 .n{background:#efe9fd;color:#5f3dc4}
+.zm-item.rev{border-left-color:#e8890c}.zm-item.rev .n{background:#fff1dc;color:#b35c00}
+.zm-item .ok{margin-left:auto;color:#2b8a3e;font-size:14px;font-weight:700;white-space:nowrap}
+.zm-note{font-size:14px;color:#5b6470;margin:4px 0 0}
+.zm-back{min-height:32px!important;padding:2px 10px!important;font-size:14px!important;margin-right:6px}
+/* 図 */
+.zf{position:relative;margin:0 auto;max-width:100%}
+.zf>svg{display:block;width:100%;height:auto}
+.zl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;width:max-content;font-size:17px;line-height:1.2;color:#b02525;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
+.fs-fig .zf{width:340px}
+.fs-hint .zf{width:250px;margin-top:6px}
+@media (min-width:900px) and (orientation:landscape){.fs-fig .zf{width:380px}}
+/* θ を求める */
+.rv-q{font-size:20px;margin:4px 0 10px;padding:10px 14px;background:#fff8e6;border-left:4px solid #e8890c;border-radius:4px}
+.rv-hints{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+.rv-hints .fs-btn.on{background:#e3ecf7}
+.rv-text{margin:6px 0;font-size:16px;line-height:1.8}
+.rv-text p{margin:2px 0}
+.rv-text .h{display:inline-block;font-size:13px;color:#fff;background:#1f4e8c;border-radius:3px;padding:0 6px;margin-right:6px}
+.rv-fig .zf{width:360px}
+.rv-angles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:8px 0}
+.rv-angle{min-height:46px;border:1px solid #9db6d6;border-bottom:3px solid #7f9cc4;border-radius:6px;background:#fff;font:19px 'STIX Two Text',serif;cursor:pointer;transition:transform .08s}
+.rv-angle:active{transform:translateY(2px);border-bottom-width:1px}
+.rv-angle.on{background:#1f4e8c;color:#fff;border-color:#1f4e8c;border-bottom-color:#163a69}
+.rv-res{margin:8px 0;padding:8px 12px;border-radius:4px}
+.rv-res.ok{background:#ebfbee;border-left:4px solid #2b8a3e}
+.rv-res.ng{background:#fff5f5;border-left:4px solid #c92a2a;color:#a61e1e}
+@media (min-width:900px) and (orientation:landscape){
+  .rv-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+  .rv-side{position:sticky;top:12px}
+  .rv-angles{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
+</head><body>
+<a class="port-back" href="../index.html">← 教材の一覧へ</a>
+<main class="fs-wrap">
+  <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>三角比（座標）</h1></header>
+  <div id="menu"></div>
+  <div id="app"></div>
+  <div id="rev"></div>
+</main>
+<script src="../assets/fill-steps.js"></script>
 <script>
-  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
-  (function () {
-    const SCOPE = '.fill-blank, .coord-hint, .trig-label, .trig-option, #coord-choices .choice, .theta-now, .rev-q, #rev-hint, .mode-card p, .step-note, .rev-angle, .result';   // 数式として書きかえる場所
-    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
-    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
-    function wrapRun(s) {
-      const span = document.createElement('span');
-      span.className = 'mf';
-      s.split(/(sin|cos|tan)/).forEach((part, i) => {
-        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
-        part.split(/([A-Za-zθ])/).forEach((q, j) => {
-          if (!q) return;
-          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
-          else span.appendChild(document.createTextNode(q));
-        });
-      });
-      return span;
-    }
-    function run() {
-      document.querySelectorAll(SCOPE).forEach(el => {
-        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-        const list = [];
-        while (w.nextNode()) list.push(w.currentNode);
-        list.forEach(n => {
-          const p = n.parentElement;
-          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
-          const t = n.nodeValue;
-          if (!/[0-9A-Za-zθ√]/.test(t)) return;
-          const frag = document.createDocumentFragment();
-          let last = 0, m;
-          RUN.lastIndex = 0;
-          while ((m = RUN.exec(t))) {
-            if (!m[0].length) { RUN.lastIndex++; continue; }
-            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
-            frag.appendChild(wrapRun(m[0]));
-            last = m.index + m[0].length;
-          }
-          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
-          n.parentNode.replaceChild(frag, n);
-        });
-      });
-    }
-    let pending = false;
-    new MutationObserver(() => {
-      if (pending) return;
-      pending = true;
-      setTimeout(() => { pending = false; run(); }, 0);
-    }).observe(document.body, { childList: true, subtree: true, characterData: true });
-    run();
-  })();
-</script>
-<script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".mode-card": "u-choice",
-    ".start-btn": "u-btn",
-    ".back-btn": "u-btn u-btn-plain",
-    ".next-angle": "u-btn u-btn-blue",
-    ".rev-check": "u-btn",
-    ".result-nav .next": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .plain": "u-btn u-btn-plain"
+const md = FillSteps.md;
+const NAVY = '#1f4e8c', RED = '#c92a2a', GREEN = '#2b8a3e', ORANGE = '#d9480f', PURPLE = '#7048e8';
+
+// 角度ごとの P(x, y)・r・sin・cos・tan
+const T = {
+  0: ['1', '0', '1', '0', '1', '0'], 30: ['√3', '1', '2', '1/2', '√3/2', '1/√3'], 45: ['1', '1', '√2', '1/√2', '1/√2', '1'],
+  60: ['1', '√3', '2', '√3/2', '1/2', '√3'], 90: ['0', '1', '1', '1', '0', 'なし'], 120: ['−1', '√3', '2', '√3/2', '−1/2', '−√3'],
+  135: ['−1', '1', '√2', '1/√2', '−1/√2', '−1'], 150: ['−√3', '1', '2', '1/2', '−√3/2', '−1/√3'], 180: ['−1', '0', '1', '0', '−1', '0'],
+  210: ['−√3', '−1', '2', '−1/2', '−√3/2', '1/√3'], 225: ['−1', '−1', '√2', '−1/√2', '−1/√2', '1'], 240: ['−1', '−√3', '2', '−√3/2', '−1/2', '√3'],
+  270: ['0', '−1', '1', '−1', '0', 'なし'], 300: ['1', '−√3', '2', '−√3/2', '1/2', '−√3'], 315: ['1', '−1', '√2', '−1/√2', '1/√2', '−1'],
+  330: ['√3', '−1', '2', '−1/2', '√3/2', '−1/√3'], 360: ['1', '0', '1', '0', '1', '0']
+};
+const MODES = [
+  { id: 'basic', name: '基本の角', sub: '30°・45°・60°・120°・135°・150°', angles: [30, 45, 60, 120, 135, 150] },
+  { id: 'axis', name: '軸の上の角', sub: '0°・90°・180°（P が x 軸・y 軸の上）', angles: [0, 90, 180] },
+  { id: 'm2a', name: '180° をこえる角', sub: '210°・225°・240°・300°・315°・330°', angles: [210, 225, 240, 300, 315, 330], full: true, m2: true },
+  { id: 'm2b', name: '270°・360°', sub: 'P が軸の上（円で考える）', angles: [270, 360], full: true, m2: true }
+];
+const done = {};   // メニューの「クリア」の印
+
+const num = s => { s = String(s); const neg = s[0] === '−'; s = s.replace('−', ''); const m = s.match(/^(\d*)√(\d+)$/); const v = m ? (+m[1] || 1) * Math.sqrt(+m[2]) : +s; return neg ? -v : v; };
+const refOf = d => { d = ((d % 360) + 360) % 360; return d <= 90 ? d : d <= 180 ? 180 - d : d <= 270 ? d - 180 : 360 - d; };
+const onAxis = d => d % 90 === 0;
+
+// 図の中の長さ（BIZ UDPGothic の太字。√ は記号の右上から線が中の数字にかぶさる）
+function svgNum(x, y, s, color, fs = 16) {
+  const m = String(s).match(/^(−?\d*)√(\d+)$/), cw = fs * 0.56;
+  if (!m) return `<text x="${x}" y="${y}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${s}</text>`;
+  const cwid = m[1].length * cw, dwid = m[2].length * cw, w = cwid + fs * 0.75 + dwid + 2, x0 = x - w / 2, x1 = x0 + cwid + 1;
+  return `<text x="${x0}" y="${y}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[1]}</text>` +
+    `<path d="M${x1} ${y - fs * 0.3}L${x1 + fs * 0.18} ${y - fs * 0.4}L${x1 + fs * 0.4} ${y + 1}L${x1 + fs * 0.7} ${y - fs * 0.92}H${x1 + fs * 0.75 + dwid + 2}" fill="none" stroke="${color}" stroke-width="1.4" stroke-linejoin="round"/>` +
+    `<text x="${x1 + fs * 0.75}" y="${y}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[2]}</text>`;
+}
+const it = (x, y, s, color = '#1f2328', fs = 18, anchor = 'middle') => `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="STIX Two Text, serif" font-style="italic" font-size="${fs}" fill="${color}">${s}</text>`;
+const gtext = (x, y, s, color, fs = 15) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${s}</text>`;
+const arrow = (x1, y1, x2, y2) => { const a = Math.atan2(y2 - y1, x2 - x1); return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#5b6470" stroke-width="1.4"/><path d="M${x2} ${y2}L${x2 - 10 * Math.cos(a - .4)} ${y2 - 10 * Math.sin(a - .4)}L${x2 - 10 * Math.cos(a + .4)} ${y2 - 10 * Math.sin(a + .4)}Z" fill="#5b6470"/>`; };
+const zl = (x, y, W, H, html, color) => `<span class="zl" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%;color:${color}">${html}</span>`;
+
+// 座標軸と円（半円）。ticks に文字を入れると、目盛りに長さを書く
+function axes(W, H, ox, oy, R, full, tick) {
+  let s = `<path d="${full ? `M${ox + R} ${oy}A${R} ${R} 0 1 0 ${ox - R} ${oy}A${R} ${R} 0 1 0 ${ox + R} ${oy}` : `M${ox + R} ${oy}A${R} ${R} 0 0 0 ${ox - R} ${oy}`}" fill="none" stroke="#98a2ad" stroke-width="1.6" stroke-dasharray="6 5"/>`;
+  s += arrow(14, oy, W - 8, oy) + arrow(ox, full ? H - 8 : oy + 24, ox, 10);
+  s += it(W - 12, oy + 20, 'x', '#5b6470', 17) + it(ox + 12, 20, 'y', '#5b6470', 17) + it(ox - (full ? 15 : 12), oy + (full ? 22 : 19), 'O', '#5b6470', 17);
+  [[ox + R, oy, 1], [ox - R, oy, 1], [ox, oy - R, 0]].concat(full ? [[ox, oy + R, 0]] : []).forEach(([x, y, h]) => {
+    s += h ? `<path d="M${x} ${y - 5}V${y + 5}" stroke="#5b6470" stroke-width="1.4"/>` : `<path d="M${x - 5} ${y}H${x + 5}" stroke="#5b6470" stroke-width="1.4"/>`;
   });
+  if (tick) s += svgNum(ox + R, oy + 19, tick, '#5b6470', 14) + svgNum(ox - R - 4, oy + 19, '−' + tick, '#5b6470', 14) + svgNum(ox - 16, oy - R + 5, tick, '#5b6470', 14);
+  return s;
+}
+
+// 辺 AB の長さを、辺のまん中から（cx, cy）と反対側に置く
+function sideNum(A, B, cx, cy, txt, color, fs = 16) {
+  const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2; let nx = -(B[1] - A[1]), ny = B[0] - A[0]; const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+  if ((cx - mx) * nx + (cy - my) * ny > 0) { nx = -nx; ny = -ny; }
+  const k = Math.abs(nx) > .6 ? 18 + String(txt).length * 2 : 13;
+  return svgNum(mx + nx * k, my + ny * k + fs * .36, txt, color, fs);
+}
+
+// 問題の図：0° から deg まで OP が回る（t が今の角度）
+function zahyouFig(deg, t, info) {
+  const full = deg > 180, W = 360, H = full ? 330 : 236, ox = 180, oy = full ? 168 : 206, R = 128;
+  const a = t * Math.PI / 180, px = ox + R * Math.cos(a), py = oy - R * Math.sin(a), fin = t === deg;
+  let s = axes(W, H, ox, oy, R, full), labels = '';
+  if (fin && !onAxis(deg)) {
+    s += `<path d="M${ox} ${oy}L${px} ${oy}L${px} ${py}Z" fill="#e3ecf7" opacity=".8"/>`;
+    s += `<path d="M${px} ${py}V${oy}" stroke="${NAVY}" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+    const sx = px > ox ? -1 : 1, sy = py < oy ? -1 : 1;
+    s += `<path d="M${px + sx * 10} ${oy}V${oy + sy * 10}H${px}" fill="none" stroke="${NAVY}" stroke-width="1.3"/>`;
+  }
+  if (t > 0) {
+    const r0 = t > 180 ? 16 : 24, big = t > 180 ? 1 : 0, e = [ox + r0 * Math.cos(a), oy - r0 * Math.sin(a)];
+    s += t >= 359.9 ? `<circle cx="${ox}" cy="${oy}" r="${r0}" fill="none" stroke="${ORANGE}" stroke-width="2.2"/>`
+      : `<path d="M${ox + r0} ${oy}A${r0} ${r0} 0 ${big} 0 ${e[0]} ${e[1]}" fill="none" stroke="${ORANGE}" stroke-width="2.2"/>`;
+  }
+  if (fin) {
+    // 角度の文字：弧の外の、二等分線の上（軸にかかるときは少しずらす）
+    let m = deg / 2, rr = deg < 60 ? Math.min(70, 25 / Math.sin(deg * Math.PI / 360)) : 46;
+    if (deg === 0) { m = 18; rr = 52; } else if (deg === 180) { m = 122; rr = 50; } else if (deg === 360) { m = 125; rr = 50; }
+    let lx = ox + rr * Math.cos(m * Math.PI / 180), ly = oy - rr * Math.sin(m * Math.PI / 180);
+    if (Math.abs(lx - ox) < 24) lx = ox + (Math.cos(m * Math.PI / 180) < -0.01 ? -24 : 24);   // y 軸にかからない
+    if (Math.abs(ly - oy) < 13) ly = oy + (Math.sin(m * Math.PI / 180) < -0.01 ? 13 : -13);  // x 軸にかからない
+    s += gtext(lx, ly + 5, deg + '°', ORANGE, 16);
+  }
+  s += `<path d="M${ox} ${oy}L${px} ${py}" stroke="${RED}" stroke-width="3" stroke-linecap="round"/><circle cx="${px}" cy="${py}" r="4.5" fill="${RED}"/>`;
+  if (fin) {
+    // P の名前（座標がうまったら P(x, y)）。点から外向きに
+    const ux = Math.cos(a), uy = -Math.sin(a), w = info.xy ? 30 + (info.xy.join('').length) * 9 : 14;
+    let lx = px + ux * 18 + (Math.abs(ux) > .25 ? Math.sign(ux) * w / 2 : 0), ly = py + uy * 20 + (Math.abs(uy) < .3 ? -14 : 0);
+    lx = Math.min(W - w / 2 - 2, Math.max(w / 2 + 2, lx));
+    labels += zl(lx, Math.max(12, Math.min(H - 12, ly)), W, H, info.xy ? md(`P(${info.xy[0]}, ${info.xy[1]})`) : md('P'), RED);
+    if (info.r) { // 半径がうまったら OP の長さ
+      const mx = (ox + px) / 2, my = (oy + py) / 2; let nx = -(py - oy), ny = px - ox; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+      if (!onAxis(deg) && nx * (px - mx) + ny * (oy - my) > 0) { nx = -nx; ny = -ny; }
+      if (onAxis(deg)) { nx = deg % 180 === 0 ? 0 : -1; ny = deg % 180 === 0 ? -1 : 0; }
+      s += svgNum(mx + nx * 16, my + ny * 16 + 6, info.r, NAVY, 16);
+    }
+  }
+  return `<div class="zf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${deg}°の動径OP">${s}</svg>${labels}</div>`;
+}
+
+// ヒントの図：その角の直角三角形（30°・45°・60°）と辺の比。座標の図と同じ向きにかく
+function refTriFig(deg) {
+  const d = ((deg % 360) + 360) % 360, ref = refOf(d), [x, y, r] = T[deg];
+  const W = 260, H = 170, a = d * Math.PI / 180, L = Math.min(170 / Math.abs(Math.cos(a)), 112 / Math.abs(Math.sin(a)), 160);
+  const dx = Math.cos(a) * L, dy = -Math.sin(a) * L;
+  const ox = (W - dx) / 2, oy = (H - dy) / 2;
+  const O = [ox, oy], Hh = [ox + dx, oy], P = [ox + dx, oy + dy];
+  const cx = (O[0] + Hh[0] + P[0]) / 3, cy = (O[1] + Hh[1] + P[1]) / 3;
+  let s = `<path d="M${O[0] - 20 * Math.sign(dx || 1)} ${oy}H${Hh[0] + 20 * Math.sign(dx || 1)}" stroke="#98a2ad" stroke-width="1.2"/>`;
+  s += `<path d="M${O[0]} ${O[1]}L${Hh[0]} ${Hh[1]}L${P[0]} ${P[1]}Z" fill="#f1f6fc"/>`;
+  s += `<path d="M${O[0]} ${O[1]}L${Hh[0]} ${Hh[1]}" stroke="${GREEN}" stroke-width="3.5"/><path d="M${Hh[0]} ${Hh[1]}L${P[0]} ${P[1]}" stroke="${RED}" stroke-width="3.5"/><path d="M${O[0]} ${O[1]}L${P[0]} ${P[1]}" stroke="${NAVY}" stroke-width="3.5"/>`;
+  const sx = Math.sign(O[0] - Hh[0]), sy = Math.sign(P[1] - Hh[1]);
+  s += `<path d="M${Hh[0] + sx * 10} ${Hh[1]}V${Hh[1] + sy * 10}H${Hh[0]}" fill="none" stroke="#1f2328" stroke-width="1.2"/>`;
+  // O の角
+  const b0 = dx >= 0 ? 0 : Math.PI, b1 = Math.atan2(-dy, dx), r0 = 22;
+  const p0 = [ox + r0 * Math.cos(b0), oy - r0 * Math.sin(b0)], p1 = [ox + r0 * Math.cos(b1), oy - r0 * Math.sin(b1)];
+  const diff = Math.atan2(Math.sin(b1 - b0), Math.cos(b1 - b0));
+  s += `<path d="M${p0[0]} ${p0[1]}A${r0} ${r0} 0 0 ${diff > 0 ? 0 : 1} ${p1[0]} ${p1[1]}" fill="none" stroke="${ORANGE}" stroke-width="2"/>`;
+  const bm = b0 + diff / 2, rl = ref === 60 ? 36 : ref === 45 ? 42 : 50;
+  s += gtext(ox + rl * Math.cos(bm), oy - rl * Math.sin(bm) + 5, ref + '°', ORANGE, 14);
+  // 辺の長さ（符号はつけない）
+  const side = (A, B, txt, color) => sideNum(A, B, cx, cy, txt, color);
+  s += side(O, Hh, x.replace('−', ''), GREEN) + side(Hh, P, y.replace('−', ''), RED) + side(O, P, r, NAVY);
+  const vn = (Q, n) => { let ux = Q[0] - cx, uy = Q[1] - cy; const l = Math.hypot(ux, uy); return it(Q[0] + ux / l * 14, Q[1] + uy / l * 14 + 6, n, '#1f2328', 16); };
+  s += vn(O, 'O') + vn(P, 'P') + vn(Hh, 'H');
+  return `<div class="zf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${ref}°の直角三角形">${s}</svg></div>`;
+}
+
+function problemFor(deg, mode) {
+  const [x, y, r, sn, cs, tn] = T[deg];
+  const flip = v => (v === '0' || v === 'なし') ? null : v[0] === '−' ? v.slice(1) : '−' + v;
+  const NUM = ['−2', '−√3', '−√2', '−1', '0', '1', '√2', '√3', '2'];
+  const RAT = ['−√3', '−1', '−√3/2', '−1/√2', '−1/2', '−1/√3', '0', '1/√3', '1/2', '1/√2', '√3/2', '1', '√3', 'なし'];
+  const nums = new Set([x, y, r]); [x, y].forEach(v => { const f = flip(v); if (f) nums.add(f); });
+  nums.add(r === '2' ? '√2' : '2');
+  const rats = new Set([sn, cs, tn]); [sn, cs, tn].forEach(v => { const f = flip(v); if (f && rats.size < 6) rats.add(f); });
+  for (const v of ['1/2', '√3/2', '1/√3', '√3', '−1/2', '−√3/2']) if (rats.size < 6) rats.add(v);
+  const rows = [`P([${x}], [${y}])`, `r = OP = [${r}]`, `sin ${deg}° = {[y]|[r]} = [${sn}]`, `cos ${deg}° = {[x]|[r]} = [${cs}]`];
+  if (tn === 'なし') rows.push(`tan ${deg}° = {[y]|[x]}`, `#x = 0 なので、tan ${deg}° の値は [なし]`);
+  else rows.push(`tan ${deg}° = {[y]|[x]} = [${tn}]`);
+  return {
+    deg, mode, fig: ' ',
+    q: `点 P の座標と r を求めて、${deg}° の三角比の値を求めよう。`,
+    rows,
+    cards: ['x', 'y', 'r', null].concat(NUM.filter(v => nums.has(v)), [null], RAT.filter(v => rats.has(v) && !nums.has(v))),
+    ans: `sin ${deg}° = ${tex(sn)}、cos ${deg}° = ${tex(cs)}、tan ${deg}° ${tn === 'なし' ? 'の値はなし' : '= ' + tex(tn)}`
+  };
+}
+function tex(v) { const m = v.match(/^(−?)([^/]+)\/(.+)$/); return m ? m[1] + '{' + m[2] + '|' + m[3] + '}' : v; }
+
+function hint(p, row) {
+  const i = p.rows.indexOf(row), d = p.deg, ref = refOf(d);
+  if (i === 0) return onAxis(d) ? `${d}° のとき、P は軸の上にあります。この円の半径は 1 です。` :
+    `${ref}° の直角三角形で考えよう。P が y 軸より左なら x 座標は −、x 軸より下なら y 座標は − です。`;
+  if (i === 1) return onAxis(d) ? 'この円の半径は 1 です。' : '直角三角形の斜辺の長さが r です。';
+  if (i === 2) return 'sin = {y|r}（y 座標 ÷ r）です。';
+  if (i === 3) return 'cos = {x|r}（x 座標 ÷ r）です。';
+  if (i === 4) return 'tan = {y|x}（y 座標 ÷ x 座標）です。';
+  return '0 でわることはできません。';
+}
+function hintFig(p, row) { const i = p.rows.indexOf(row); return (i <= 1 && !onAxis(p.deg)) ? refTriFig(p.deg) : ''; }
+
+// 図：問題がかわったときだけ OP を回す。うめた座標・r は図にもかきこむ
+let animKey = null, animTok = 0;
+function afterRender(root, p, st) {
+  const box = root.querySelector('.fs-fig'); if (!box) return;
+  const filled = i => st.fill[i] !== undefined || st.shown;
+  const info = { xy: filled(0) && filled(1) ? [st.fill[0] || p.blanks[0].a, st.fill[1] || p.blanks[1].a] : null, r: filled(2) ? p.blanks[2].a : null };
+  const key = p.mode + p.deg, tok = ++animTok;
+  if (animKey === key || matchMedia('(prefers-reduced-motion: reduce)').matches) { box.innerHTML = zahyouFig(p.deg, p.deg, info); animKey = key; return; }
+  animKey = key;
+  const t0 = performance.now(), dur = 300 + p.deg * 3.2;
+  (function step(now) {
+    if (tok !== animTok) return;
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    box.innerHTML = zahyouFig(p.deg, k >= 1 ? p.deg : p.deg * e, info);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function startMode(m) {
+  const mode = MODES.find(x => x.id === m);
+  document.getElementById('menu').innerHTML = ''; document.getElementById('rev').innerHTML = '';
+  const app = document.getElementById('app'); app.hidden = false; animKey = null;
+  const problems = mode.angles.map(d => problemFor(d, m));
+  let api = null;
+  api = FillSteps.mount({
+    el: app, problems, hint, hintFig, after: (root, p, st) => { afterRender(root, p, st); if (api) markDone(m, api); },
+    tabLabel: p => p.deg + '°', tabPrefix: '', badge: p => p.deg + '°',
+    tabsBefore: '<button type="button" class="fs-btn zm-back" onclick="showMenu()">メニュー</button>',
+    finalExtra: '<p><button type="button" class="fs-btn" onclick="showMenu()">メニューにもどる</button></p>'
+  });
+  window.scrollTo(0, 0);
+}
+function markDone(m, api) { if (api.state().every(s => s.done || s.shown)) done[m] = true; }
+
+// ---------------- θ を求める ----------------
+const REV = [
+  { f: 'sin', v: '1/2', r: '2', k: '1', ans: [30, 150] },
+  { f: 'sin', v: '√3/2', r: '2', k: '√3', ans: [60, 120] },
+  { f: 'sin', v: '1/√2', r: '√2', k: '1', ans: [45, 135] },
+  { f: 'cos', v: '−1/2', r: '2', k: '−1', ans: [120] },
+  { f: 'cos', v: '1/√2', r: '√2', k: '1', ans: [45] },
+  { f: 'cos', v: '−√3/2', r: '2', k: '−√3', ans: [150] },
+  { f: 'sin', v: '1', r: '1', k: '1', ans: [90] },
+  { f: 'sin', v: '0', r: '1', k: '0', ans: [0, 180] }
+];
+const REV_ANGLES = [0, 30, 45, 60, 90, 120, 135, 150, 180];
+let rv = { i: 0, stage: 0, picked: new Set(), res: null, solved: {} };
+
+function revFig(q, stage) {
+  const W = 360, H = 250, ox = 180, oy = 214, R = 140, u = R / num(q.r), k = num(q.k), isSin = q.f === 'sin';
+  let s = axes(W, H, ox, oy, R, false, q.r), labels = '';
+  if (stage >= 1) {
+    if (isSin) { const yy = oy - k * u; s += `<path d="M18 ${yy}H${W - 18}" stroke="${ORANGE}" stroke-width="2" stroke-dasharray="7 5"/>`; labels += zl(ox + 36, yy - (k === 0 ? 14 : 13), W, H, md(`y = ${q.k}`), ORANGE); }
+    else { const xx = ox + k * u; s += `<path d="M${xx} ${oy + 20}V14" stroke="${ORANGE}" stroke-width="2" stroke-dasharray="7 5"/>`; labels += zl(xx + (k < 0 ? -34 : 34), 22, W, H, md(`x = ${q.k}`), ORANGE); }
+  }
+  if (stage >= 2) {
+    q.ans.forEach((d, j) => {
+      const a = d * Math.PI / 180, px = ox + R * Math.cos(a), py = oy - R * Math.sin(a), [x, y] = T[d];
+      if (!onAxis(d)) {
+        s += `<path d="M${ox} ${oy}L${px} ${oy}L${px} ${py}Z" fill="#e3ecf7" opacity=".85"/>`;
+        s += `<path d="M${ox} ${oy}L${px} ${oy}" stroke="${GREEN}" stroke-width="3"/><path d="M${px} ${oy}L${px} ${py}" stroke="${RED}" stroke-width="3"/>`;
+        const sx = px > ox ? -1 : 1; s += `<path d="M${px + sx * 9} ${oy}V${oy - 9}H${px}" fill="none" stroke="#1f2328" stroke-width="1.2"/>`;
+        s += sideNum([ox, oy], [px, oy], px, py, x.replace('−', ''), GREEN, 15) + sideNum([px, oy], [px, py], ox, oy, y.replace('−', ''), RED, 15);
+      }
+      s += `<path d="M${ox} ${oy}L${px} ${py}" stroke="${NAVY}" stroke-width="3"/><circle cx="${px}" cy="${py}" r="4.5" fill="${NAVY}"/>`;
+      if (!onAxis(d)) s += j ? sideNum([ox, oy], [px, py], ox, py, q.r, NAVY, 15) : sideNum([ox, oy], [px, py], px, oy, q.r, NAVY, 15);
+      s += it(px + Math.cos(a) * 16, py - Math.sin(a) * 16 + (onAxis(d) && d !== 90 ? -8 : 4), q.ans.length > 1 ? (j ? 'P′' : 'P') : 'P', NAVY, 17);
+    });
+  }
+  if (stage >= 3) {
+    q.ans.forEach((d, j) => {
+      const c = j ? PURPLE : ORANGE, r0 = j ? 36 : 24, a = d * Math.PI / 180;
+      if (d > 0) s += `<path d="M${ox + r0} ${oy}A${r0} ${r0} 0 0 0 ${ox + r0 * Math.cos(a)} ${oy - r0 * Math.sin(a)}" fill="none" stroke="${c}" stroke-width="2.2"/>`;
+      let m = d / 2, rr = j ? 56 : (d < 60 ? Math.min(66, 24 / Math.sin(Math.max(d, 1) * Math.PI / 360)) : 42);
+      if (d === 0) { m = 14; rr = 58; } if (d === 180) { m = 118; rr = 56; } if (j && d > 90 && d < 180) { m = 118; rr = 50; }
+      s += gtext(ox + rr * Math.cos(m * Math.PI / 180), oy - rr * Math.sin(m * Math.PI / 180) + 5, d + '°', c, 15);
+    });
+  }
+  return `<div class="zf"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="θを求める図">${s}</svg>${labels}</div>`;
+}
+function revTexts(q, stage) {
+  const L = q.f === 'sin' ? 'y' : 'x', out = [];
+  if (stage >= 1) out.push(`<p><span class="h">ヒント1</span>${md(`${q.f} θ = {${L}|r} = ${tex(q.v)} なので、半径 r = ${q.r} の半円の上で、${L} = ${q.k} となる点 P をさがそう。`)}</p>`);
+  if (stage >= 2) out.push(`<p><span class="h">ヒント2</span>${md((q.ans.length > 1 ? '点 P は2つあります。' : '点 P は1つです。') + (onAxis(q.ans[0]) ? 'P は x 軸・y 軸の上にあります。' : '直角三角形の辺の比を見よう。'))}</p>`);
+  if (stage >= 3) out.push(`<p><span class="h">ヒント3</span>${md('θ は、x 軸の正の向きから OP までの角です。')}</p>`);
+  return out.join('');
+}
+function renderRev() {
+  const q = REV[rv.i], el = document.getElementById('rev');
+  const tabs = REV.map((_, j) => `<button type="button" class="fs-tab${j === rv.i ? ' cur' : ''}${rv.solved[j] ? ' done' : ''}" onclick="revGo(${j})">${j + 1}</button>`).join('');
+  const finished = rv.res === 'ok';
+  el.innerHTML = `<nav class="fs-tabs"><button type="button" class="fs-btn zm-back" onclick="showMenu()">メニュー</button><span>問</span>${tabs}</nav>
+  <div class="rv-grid"><div>
+    <p class="rv-q"><span class="fs-badge">問${rv.i + 1}</span>${md(`${q.f} θ = ${tex(q.v)}　を満たす θ を求めよ。`)}<span style="font-size:15px">${md('（0° ≦ θ ≦ 180°）')}</span></p>
+    <div class="rv-hints">${[1, 2, 3].map(h => `<button type="button" class="fs-btn${rv.stage >= h ? ' on' : ''}" onclick="revHint(${h})"${h > rv.stage + 1 && !finished ? ' disabled' : ''}>ヒント${h}</button>`).join('')}</div>
+    <div class="rv-text">${revTexts(q, finished ? 3 : rv.stage)}</div>
+    <div class="rv-fig">${(rv.stage || finished) ? revFig(q, finished ? 3 : rv.stage) : ''}</div>
+  </div><div class="rv-side">
+    <p style="margin:6px 0 0;font-size:15px">${md('あてはまる θ を')}<b>すべて</b>えらぼう</p>
+    <div class="rv-angles">${REV_ANGLES.map(a => `<button type="button" class="rv-angle${rv.picked.has(a) ? ' on' : ''}" onclick="revPick(${a})">${a}°</button>`).join('')}</div>
+    <div class="fs-ctrl"><button type="button" class="fs-btn primary" onclick="revCheck()">こたえ合わせ</button></div>
+    ${rv.res ? `<div class="rv-res ${finished ? 'ok' : 'ng'}">${finished ? '<b>正解</b>　θ = ' + q.ans.map(a => a + '°').join('、') : rv.res}</div>` : ''}
+    <div class="fs-nav"><button type="button" class="fs-btn" onclick="revGo(${rv.i - 1})"${rv.i ? '' : ' disabled'}>前の問題</button><button type="button" class="fs-btn${finished ? ' primary' : ''}" onclick="${rv.i === REV.length - 1 ? 'showMenu()' : `revGo(${rv.i + 1})`}">${rv.i === REV.length - 1 ? 'メニューへ' : '次の問題'}</button></div>
+  </div></div>`;
+}
+function revHint(h) { rv.stage = Math.max(rv.stage, h); renderRev(); }
+function revPick(a) { if (rv.res === 'ok') return; rv.picked.has(a) ? rv.picked.delete(a) : rv.picked.add(a); rv.res = null; renderRev(); }
+function revGo(j) { if (j < 0 || j >= REV.length) return; rv = { i: j, stage: 0, picked: new Set(), res: null, solved: rv.solved }; renderRev(); window.scrollTo(0, 0); }
+function revCheck() {
+  const q = REV[rv.i], ans = new Set(q.ans), p = [...rv.picked];
+  if (!p.length) rv.res = 'θ をえらんでから、こたえ合わせをしよう。';
+  else if (p.length === ans.size && p.every(a => ans.has(a))) { rv.res = 'ok'; rv.solved[rv.i] = true; if (Object.keys(rv.solved).length === REV.length) done.rev = true; }
+  else if (p.every(a => ans.has(a))) rv.res = 'あてはまる θ は、ほかにもあります。ヒントの図で、点 P がいくつあるか見てみよう。';
+  else rv.res = 'あてはまらない角がまざっています。ヒントの図で確かめよう。';
+  renderRev();
+}
+function startRev() {
+  document.getElementById('menu').innerHTML = ''; document.getElementById('app').hidden = true; document.getElementById('app').innerHTML = '';
+  revGo(0);
+}
+
+// ---------------- メニュー ----------------
+function showMenu() {
+  animTok++;
+  document.getElementById('app').hidden = true; document.getElementById('app').innerHTML = ''; document.getElementById('rev').innerHTML = '';
+  const item = (m, n, cls) => `<button type="button" class="zm-item ${cls || ''}" onclick="${m.id === 'rev' ? 'startRev()' : `startMode('${m.id}')`}"><span class="n">${n}</span><span><b>${m.name}</b><span class="s">${m.sub}</span></span>${done[m.id] ? '<span class="ok">✓ クリア</span>' : ''}</button>`;
+  document.getElementById('menu').innerHTML = `
+  <section class="zm-sec"><h2>角度から三角比を求める<small>図の P が回ります。P の座標と r を入れて sin・cos・tan へ</small></h2>
+    <div class="zm-list">${item(MODES[0], 1)}${item(MODES[1], 2)}</div></section>
+  <section class="zm-sec"><h2>三角比の値から θ を求める<small>問題を読んで、ヒントの図を1つずつ出して考える</small></h2>
+    <div class="zm-list">${item({ id: 'rev', name: 'θ を求める', sub: 'sin θ = ½ などを満たす θ（全8問）' }, 3, 'rev')}</div></section>
+  <section class="zm-sec"><h2>数学Ⅱの予習<small>180° をこえる角（円で考える）</small></h2>
+    <div class="zm-list">${item(MODES[2], 4, 'm2')}${item(MODES[3], 5, 'm2')}</div></section>
+  <p class="zm-note">三角比の値をすばやく言えるようにする練習は <a href="sankakuhi-value.html">31. 三角比の値（総合）</a> へ</p>`;
+  window.scrollTo(0, 0);
+}
+showMenu();
 </script>
-</body>
-</html>
+</body></html>

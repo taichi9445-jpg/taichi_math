@@ -16,6 +16,7 @@
      ' = '        行が長すぎるときは「＝」の前で改行する
      行の先頭が #  ことばの行（「0° < A < 90° より」など）
      行を { t: '…', h: 'ヒント' } にすると、その行のヒントを決められる
+   カードの並びに null を入れると、そこで改行する（カードの種類ごとに行を分けたいとき）
    ========================================================================= */
 (function (global) {
   'use strict';
@@ -122,7 +123,7 @@
         p.blanks.push(b); row.blanks.push(b.i); return '';
       } });
     });
-    p.cards = p.cards.map(function (c) { return Array.isArray(c) ? { v: c[0], why: c[1] } : { v: c }; });
+    p.cards = p.cards.map(function (c) { return c === null ? { sep: true } : Array.isArray(c) ? { v: c[0], why: c[1] } : { v: c }; });
   }
 
   function mount(o) {
@@ -180,10 +181,11 @@
 
       var tabs = P.map(function (_, i) {
         var s = S[i];
-        return '<button type="button" class="fs-tab' + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '" data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (i + 1) + '</button>';
+        return '<button type="button" class="fs-tab' + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '" data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (o.tabLabel ? o.tabLabel(P[i], i) : (i + 1)) + '</button>';
       }).join('');
 
       var cards = p.cards.map(function (c, ci) {
+        if (c.sep) return '<span class="fs-sep"></span>';
         var need = needCount(p, c.v), off = all || (need > 0 && usedCount(p, st, c.v) >= need);
         return '<button type="button" class="fs-card' + (off ? ' used' : '') + '" data-c="' + ci + '"' + (off ? ' disabled' : '') + '>' + valHTML(c.v) + '</button>';
       }).join('');
@@ -193,9 +195,9 @@
         '<span>' + md(p.ans) + '</span></div>';
 
       root.innerHTML =
-        '<nav class="fs-tabs"><span>問</span>' + tabs + '</nav>' +
+        '<nav class="fs-tabs">' + (o.tabsBefore || '') + '<span>' + (o.tabPrefix === undefined ? '問' : o.tabPrefix) + '</span>' + tabs + '</nav>' +
         '<div class="fs-grid"><section class="fs-main">' + (o.top ? o.top(p) : '') +
-        '<div class="fs-q' + (p.fig ? ' has-fig' : '') + '"><p class="fs-qt"><span class="fs-badge">問' + (cur + 1) + '</span>' + md(p.q) + '</p>' + (p.fig ? '<div class="fs-fig">' + p.fig + '</div>' : '') + '</div>' +
+        '<div class="fs-q' + (p.fig ? ' has-fig' : '') + '"><p class="fs-qt"><span class="fs-badge">' + (o.badge ? o.badge(p, cur) : '問' + (cur + 1)) + '</span>' + md(p.q) + '</p>' + (p.fig ? '<div class="fs-fig">' + p.fig + '</div>' : '') + '</div>' +
         '<ol class="fs-rows">' + rows + '</ol>' + done +
         '<div class="fs-ctrl">' +
         (all ? '' : '<button type="button" class="fs-btn" data-act="hint">' + (hintOpen ? 'ヒントを閉じる' : 'ヒント') + '</button><button type="button" class="fs-btn" data-act="show">答えを見る</button>') +
@@ -206,6 +208,7 @@
 
       bind(p, st);
       layout();
+      if (o.after) o.after(root, p, st);
     }
 
     function hintHTML(p, row) {
@@ -313,7 +316,7 @@
       root.innerHTML = '<section class="fs-final"><h2>学習の記録</h2>' +
         '<p>自分で全部うめた問題　<b>' + self + '</b> / ' + P.length + '</p><p>答えを見た問題　' + shown + '</p><p>まちがえて入れた回数　' + miss + '</p>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-act="back">問題にもどる</button><button type="button" class="fs-btn primary" data-act="again">最初からやり直す</button></div>' +
-        '<p><a href="../index.html">教材の一覧へ</a></p></section>';
+        (o.finalExtra || '<p><a href="../index.html">教材の一覧へ</a></p>') + '</section>';
       root.querySelector('[data-act="back"]').onclick = function () { finalView = false; render(); };
       root.querySelector('[data-act="again"]').onclick = function () { S = P.map(fresh); go(0); };
     }
@@ -321,7 +324,7 @@
     window.addEventListener('resize', layout);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
     render();
-    return { go: go };
+    return { go: go, state: function () { return S; } };
   }
 
   global.FillSteps = { mount: mount, md: md, valHTML: valHTML, radicalSVG: radicalSVG };
