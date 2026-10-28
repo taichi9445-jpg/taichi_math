@@ -1013,5 +1013,107 @@ function hintSemicircle(deg,pts,extra={}){
 
 acuteFigure=function(deg,fn,trace=false){return trace?textbookTrace(deg,fn):numericAcuteFigure(deg,fn,false)};
 const reviewedMakeProblem=makeProblem;makeProblem=function(item){const p=reviewedMakeProblem(item);if(currentLevel===1){const [fn,deg,choices]=L1[item.i];p.hint=textbookTrace(deg,fn);p.why=choices.map(c=>{if(c===VALUES[fn][deg])return '';const other=['sin','cos','tan'].filter(f=>f!==fn&&Math.abs(valueOf(VALUES[f][deg])-valueOf(c))<1e-9);return notation(c)+' は'+(other.length?other.join('・')+' '+deg+'° の値です。':'この三角比の値とは違います。')+'<p>'+fn+'の筆記体をなぞり、分母と分子に使う辺を確かめよう。</p>'})}return p};
+// 【Claude Code 2026-10-28】タイムアタックモード（先生の要望）
+//   ・「スタート」で時間が 0 から進み、問題はランダム。スタートのボタンは「もう一度やり直す」に変わる
+//   ・途中は解説を出さない（正解ならすぐ次へ、まちがえたら × をつけて、のこりからえらび直す）
+//   ・全部終わると時間が止まり、タイムと「間違えた問題を確認する」（図つきの解説）が出る
+let ta = null;
+const taFmt = ms => { const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), d = Math.floor(ms % 1000 / 100); return (m ? m + '分' : '') + String(s).padStart(m ? 2 : 1, '0') + '.' + d + '秒'; };
+function taBar() {
+  let bar = document.getElementById('taBar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'taBar'; bar.className = 'ta-bar'; document.querySelector('.mode-selector').after(bar); }
+  bar.style.display = currentMode === 'ta' ? 'flex' : 'none';
+  bar.innerHTML = `<span class="ta-time" id="taTime">${ta && ta.t0 ? taFmt((ta.end || performance.now()) - ta.t0) : '0.0秒'}</span>` +
+    `<button type="button" class="ta-go" onclick="taStart()">${ta && ta.t0 ? 'もう一度やり直す' : 'スタート'}</button>`;
+  document.querySelector('.problem-area').style.display = currentMode === 'ta' && !(ta && ta.t0) ? 'none' : '';
+  document.querySelector('.controls').style.display = currentMode === 'ta' ? 'none' : '';
+  if (currentMode === 'ta' && !(ta && ta.t0)) {
+    document.getElementById('progress').textContent = 'スタートを押すと、時間がはかられます（' + levelList(currentLevel).length + '問・ランダム）';
+    document.getElementById('score').textContent = '';
+  }
+}
+function taStop() { if (ta && ta.timer) clearInterval(ta.timer); }
+function taStart() {
+  taStop(); closeResult();
+  ta = { t0: performance.now(), wrong: [], miss: 0, timer: setInterval(() => { const el = document.getElementById('taTime'); if (el && ta && !ta.end) el.textContent = taFmt(performance.now() - ta.t0); }, 100) };
+  currentProblemIndex = 0; correctAnswers = 0; totalAnswered = 0;
+  playList = shuffleArray(levelList(currentLevel));
+  taBar(); loadProblem(); updateDisplay();
+}
+const baseSelectMode = selectMode;
+selectMode = function (mode) {
+  taStop(); ta = null;
+  if (mode !== 'ta') { document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); baseSelectMode(mode); taBar(); return; }
+  currentMode = 'ta';
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === 'ta'));
+  taBar();
+};
+const baseSelectLevel = selectLevel;
+selectLevel = function (level) { if (currentMode === 'ta') { taStop(); ta = null; currentLevel = level; document.querySelectorAll('.level-btn').forEach((b, i) => b.classList.toggle('active', i === level)); taBar(); return; } baseSelectLevel(level); };
+const baseNextProblem = nextProblem;
+nextProblem = function () { if (currentMode !== 'ta') baseNextProblem(); };
+const baseLoadProblem = loadProblem;
+loadProblem = function () { baseLoadProblem(); if (currentMode === 'ta') document.getElementById('hintSection').style.display = 'none'; };
+const baseSelectChoice = selectChoice;
+selectChoice = function (index) {
+  if (currentMode !== 'ta') return baseSelectChoice(index);
+  if (answered) return;
+  const orig = order[index], buttons = document.querySelectorAll('.choice');
+  if (orig === current.correct) {
+    answered = true; solved = true; buttons[index].classList.add('correct'); totalAnswered++; if (!missedThis) correctAnswers++;
+    updateDisplay();
+    setTimeout(() => { if (currentMode !== 'ta' || !ta) return; currentProblemIndex++; if (currentProblemIndex >= playList.length) taFinish(); else { loadProblem(); updateDisplay(); } }, 300);
+  } else {
+    missedThis = true; ta.miss++; buttons[index].classList.add('incorrect'); buttons[index].disabled = true;
+    let w = ta.wrong.find(x => x.p === current); if (!w) ta.wrong.push(w = { p: current, you: [] }); w.you.push(current.choices[orig]);
+  }
+};
+function taFinish() {
+  ta.end = performance.now(); taStop(); taBar();
+  const ms = ta.end - ta.t0, n = playList.length, best = taBest[currentLevel], newBest = !best || ms < best;
+  if (newBest) taBest[currentLevel] = ms;
+  const modal = document.createElement('div');
+  modal.className = 'result-modal'; modal.id = 'resultModal';
+  modal.innerHTML = `<div class="result-box">
+    <h2>タイムアタック クリア</h2>
+    <div class="ta-big">${taFmt(ms)}</div>
+    <div class="result-score">${n} 問　${ta.miss ? 'まちがえた回数 ' + ta.miss + ' 回' : 'ノーミス！'}${newBest && best ? '　記録更新！' : ''}</div>
+    <div class="result-nav">
+      ${ta.wrong.length ? `<button class="next" onclick="taReview()">間違えた問題を確認する（${ta.wrong.length}問）</button>` : ''}
+      <button class="again" onclick="taStart()">もう一度挑戦する</button>
+      <button class="mode" onclick="closeResult(); selectMode('sequential');">順番モードにもどる</button>
+    </div></div>`;
+  document.body.appendChild(modal);
+}
+const taBest = {};
+function taReview() {
+  const box = document.querySelector('#resultModal .result-box');
+  box.classList.add('ta-review');
+  box.innerHTML = `<h2>間違えた問題</h2>` + ta.wrong.map(w => `<div class="ta-item">
+      <div class="ta-q">${w.p.question}</div>${w.p.figure ? '<div class="problem-diagram">' + w.p.figure + '</div>' : ''}
+      <p class="ta-ans">答え　${mathHTML(w.p.choices[w.p.correct])}　<span class="ta-you">（選んだ答え：${w.you.map(mathHTML).join('、')}）</span></p>
+      <div class="ta-exp">${notation(w.p.exp)}</div>
+      ${w.p.hint ? '<div class="ta-fig">' + w.p.hint + '</div>' : ''}</div>`).join('') +
+    `<div class="result-nav"><button class="again" onclick="taStart()">もう一度挑戦する</button><button class="mode" onclick="closeResult(); selectMode('sequential');">順番モードにもどる</button></div>`;
+  if (typeof mathify === 'function') mathify(box);
+  document.getElementById('resultModal').scrollTop = 0;
+}
+(function () {
+  const sel = document.querySelector('.mode-selector');
+  sel.querySelectorAll('.mode-btn').forEach(b => { b.dataset.mode = b.textContent.includes('順番') ? 'sequential' : 'random'; });
+  const b = document.createElement('button'); b.className = 'mode-btn ta-mode'; b.dataset.mode = 'ta'; b.textContent = 'タイムアタック'; b.onclick = () => selectMode('ta');
+  sel.appendChild(document.createTextNode(' ')); sel.appendChild(b);
+  const st = document.createElement('style');
+  st.textContent = '.ta-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 6px}' +
+    '.ta-time{font:700 22px/1 "BIZ UDPGothic",sans-serif;font-variant-numeric:tabular-nums;color:#fff;background:#1f4e8c;border-radius:8px;padding:9px 14px;min-width:120px;text-align:center}' +
+    '.ta-go{padding:8px 18px!important;font:700 16px "BIZ UDPGothic",sans-serif!important;background:#e8890c!important;color:#fff!important;border-color:#e8890c!important;border-bottom-color:#b35c00!important;cursor:pointer}' +
+    '.mode-btn.ta-mode.active{background:#fff1dc!important;color:#b35c00!important}' +
+    '.ta-big{font:700 40px/1.3 "BIZ UDPGothic",sans-serif;font-variant-numeric:tabular-nums;color:#1f4e8c;margin:4px 0}' +
+    '.result-box.ta-review{max-width:640px!important;text-align:left}.result-box.ta-review h2{text-align:center}' +
+    '.ta-item{border:1px solid #d0d7de;border-left:5px solid #c92a2a;border-radius:8px;padding:8px 12px;margin:10px 0}' +
+    '.ta-q{font-size:19px}.ta-ans{margin:6px 0;font-size:18px}.ta-you{font-size:14px;color:#a61e1e;font-weight:400}.ta-exp{font-size:16px;line-height:1.8}' +
+    '.ta-fig{margin-top:6px;padding:8px;background:#f1f6fc;border-radius:6px}.ta-fig svg{max-width:100%;height:auto}';
+  document.head.appendChild(st);
+})();
 restart();
 </script></body></html>

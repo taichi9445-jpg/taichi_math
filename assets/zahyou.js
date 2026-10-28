@@ -3,7 +3,7 @@
    ---------------------------------------------------------------------------
    ・zahyouFig：P が 0° から回る図（角度は図の中に書く。P の座標と半径は、うめたら書く）
    ・refTriFig：ヒントの、その角の直角三角形（30°・45°・60°）と辺の比
-   ・problemFor：角度ごとの問題（P の座標 → r → sin・cos・tan）。カードは assets/fill-steps.js
+   ・problemFor：角度ごとの問題（P の座標 → r → 枠の中に sin・cos・tan の公式と値）。カードは assets/fill-steps.js
    ・mountZahyou：上の問題を fill-steps でならべる
    fill-steps.js のあとに読みこむ。
    ========================================================================= */
@@ -139,13 +139,24 @@ function problemFor(deg, mode) {
   nums.add(r === '2' ? '√2' : '2');
   const rats = new Set([sn, cs, tn]); [sn, cs, tn].forEach(v => { const f = flip(v); if (f && rats.size < 6) rats.add(f); });
   for (const v of ['1/2', '√3/2', '1/√3', '√3', '−1/2', '−√3/2']) if (rats.size < 6) rats.add(v);
-  const rows = [`P([${x}], [${y}])`, `r = OP = [${r}]`, `sin ${deg}° = {[y]|[r]} = [${sn}]`, `cos ${deg}° = {[x]|[r]} = [${cs}]`];
-  if (tn === 'なし') rows.push(`tan ${deg}° = {[y]|[x]}`, `#x = 0 なので、tan ${deg}° の値は [なし]`);
-  else rows.push(`tan ${deg}° = {[y]|[x]} = [${tn}]`);
+  // ゴールは sin・cos・tan の値。枠で囲み、公式（sin θ = y/r など）の行と値の行を分ける（先生の要望）
+  const G = 'ゴール：三角比の値', goal = t => ({ t, sec: G });
+  const rows = [`P([${x}], [${y}])`, `r = OP = [${r}]`,
+    goal('!sin θ = {[y]|[r]}'), goal(`sin ${deg}° = [${sn}]`),
+    goal('!cos θ = {[x]|[r]}'), goal(`cos ${deg}° = [${cs}]`),
+    goal('!tan θ = {[y]|[x]}'), goal(tn === 'なし' ? `#x = 0 なので、tan ${deg}° の値は [なし]` : `tan ${deg}° = [${tn}]`)];
+  // 半径 1（単位円）や半径 2 で考えた P の座標・r も正解にする（座標の値がそのまま cos・sin になる）
+  const main = [x, y, r, 'y', 'r', sn, 'x', 'r', cs, 'y', 'x', tn];
+  const val = c => { const neg = c[0] === '−', [n, d] = c.replace('−', '').split('/'); return (neg ? -1 : 1) * num(n) / (d ? num(d) : 1); };
+  const named = v => NUM.concat(RAT).find(c => c !== 'なし' && Math.abs(val(c) - v) < 1e-9);
+  const alts = ['1', '2'].filter(r1 => r1 !== r).map(r1 => {
+    const k = num(r1) / num(r), xy = [x, y].map(v => named(num(v) * k));
+    return xy.every(Boolean) ? [xy[0], xy[1], r1].concat(main.slice(3)) : null;
+  }).filter(Boolean);
   return {
     deg, mode, fig: ' ',
     q: `点 P の座標と r を求めて、${deg}° の三角比の値を求めよう。`,
-    rows,
+    rows, alts,
     cards: ['x', 'y', 'r', null].concat(NUM.filter(v => nums.has(v)), [null], RAT.filter(v => rats.has(v) && !nums.has(v))),
     ans: `sin ${deg}° = ${tex(sn)}、cos ${deg}° = ${tex(cs)}、tan ${deg}° ${tn === 'なし' ? 'の値はなし' : '= ' + tex(tn)}`
   };
@@ -153,14 +164,17 @@ function problemFor(deg, mode) {
 function tex(v) { const m = v.match(/^(−?)([^/]+)\/(.+)$/); return m ? m[1] + '{' + m[2] + '|' + m[3] + '}' : v; }
 
 function hint(p, row) {
-  const i = p.rows.indexOf(row), d = p.deg, ref = refOf(d);
+  const i = p.rows.indexOf(row), d = p.deg, ref = refOf(d), v = T[d];
   if (i === 0) return onAxis(d) ? `${d}° のとき、P は軸の上にあります。この円の半径は 1 です。` :
     `${ref}° の直角三角形で考えよう。P が y 軸より左なら x 座標は −、x 軸より下なら y 座標は − です。`;
   if (i === 1) return onAxis(d) ? 'この円の半径は 1 です。' : '直角三角形の斜辺の長さが r です。';
-  if (i === 2) return 'sin = {y|r}（y 座標 ÷ r）です。';
-  if (i === 3) return 'cos = {x|r}（x 座標 ÷ r）です。';
-  if (i === 4) return 'tan = {y|x}（y 座標 ÷ x 座標）です。';
-  return '0 でわることはできません。';
+  if (i === 2) return 'sin θ = {y|r}';
+  if (i === 4) return 'cos θ = {x|r}';
+  if (i === 6) return 'tan θ = {y|x}';
+  if (i === 3) return `sin ${d}° = {y|r} = {${v[1]}|${v[2]}}`;
+  if (i === 5) return `cos ${d}° = {x|r} = {${v[0]}|${v[2]}}`;
+  if (i === 7) return v[5] === 'なし' ? `tan ${d}° = {y|x} = {${v[1]}|0}。0 でわることはできません。` : `tan ${d}° = {y|x} = {${v[1]}|${v[0]}}`;
+  return '';
 }
 function hintFig(p, row) { const i = p.rows.indexOf(row); return (i <= 1 && !onAxis(p.deg)) ? refTriFig(p.deg) : ''; }
 
@@ -169,7 +183,7 @@ let animKey = null, animTok = 0;
 function afterRender(root, p, st) {
   const box = root.querySelector('.fs-fig'); if (!box) return;
   const filled = i => st.fill[i] !== undefined || st.shown;
-  const info = { xy: filled(0) && filled(1) ? [st.fill[0] || p.blanks[0].a, st.fill[1] || p.blanks[1].a] : null, r: filled(2) ? p.blanks[2].a : null };
+  const info = { xy: filled(0) && filled(1) ? [st.fill[0] || p.blanks[0].a, st.fill[1] || p.blanks[1].a] : null, r: filled(2) ? (st.fill[2] || p.blanks[2].a) : null };
   const key = p.mode + p.deg, tok = ++animTok;
   if (animKey === key || matchMedia('(prefers-reduced-motion: reduce)').matches) { box.innerHTML = zahyouFig(p.deg, p.deg, info); animKey = key; return; }
   animKey = key;
@@ -182,6 +196,27 @@ function afterRender(root, p, st) {
   })(t0);
 }
 
+
+// メニューのカードの小さな図（kind：'ang' 角度の図・'rev' θ を求める・'ta' タイムアタック・'mr' マラソン）
+function menuIcon(kind, deg = 150, color = NAVY) {
+  const g = '#98a2ad';
+  if (kind === 'ta') return `<svg viewBox="0 0 88 58" aria-hidden="true"><circle cx="44" cy="33" r="19" fill="#fff" stroke="${color}" stroke-width="3"/><path d="M39 9h10M44 9v5M60 17l4-4" stroke="${color}" stroke-width="3" stroke-linecap="round"/><path d="M44 33V21M44 33l8 5" stroke="${RED}" stroke-width="2.6" stroke-linecap="round"/><circle cx="44" cy="33" r="2.4" fill="${RED}"/></svg>`;
+  if (kind === 'mr') return `<svg viewBox="0 0 88 58" aria-hidden="true"><path d="M8 50H80" stroke="${g}" stroke-width="2"/><path d="M30 50V8" stroke="${color}" stroke-width="3" stroke-linecap="round"/><path d="M31 9h30l-7 9 7 9H31z" fill="${color}" opacity=".85"/><path d="M38 13h6v5h-6zM50 18h6v5h-6zM44 18h6v5h-6z" fill="#fff" opacity=".9"/></svg>`;
+  const full = deg > 180, ox = 44, oy = full ? 29 : 50, R = full ? 24 : 36, a = deg * Math.PI / 180;
+  let s = `<path d="M${full ? 12 : 4} ${oy}H${full ? 76 : 84}M${ox} ${full ? 54 : 54}V${full ? 3 : 8}" stroke="${g}" stroke-width="1.4"/>`;
+  s += full ? `<circle cx="${ox}" cy="${oy}" r="${R}" fill="none" stroke="${g}" stroke-width="1.6" stroke-dasharray="4 3"/>`
+    : `<path d="M${ox + R} ${oy}A${R} ${R} 0 0 0 ${ox - R} ${oy}" fill="none" stroke="${g}" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  if (kind === 'rev') {
+    const yy = oy - R * 0.5, dx = R * Math.sqrt(0.75);
+    s += `<path d="M6 ${yy}H82" stroke="${ORANGE}" stroke-width="2" stroke-dasharray="5 3"/>`;
+    [-1, 1].forEach(k => { s += `<path d="M${ox} ${oy}L${ox + k * dx} ${yy}" stroke="${color}" stroke-width="2.6"/><circle cx="${ox + k * dx}" cy="${yy}" r="3.4" fill="${color}"/>`; });
+    return `<svg viewBox="0 0 88 58" aria-hidden="true">${s}</svg>`;
+  }
+  const r0 = full ? 9 : 12, e = [ox + r0 * Math.cos(a), oy - r0 * Math.sin(a)];
+  s += `<path d="M${ox + r0} ${oy}A${r0} ${r0} 0 ${deg > 180 ? 1 : 0} 0 ${e[0]} ${e[1]}" fill="none" stroke="${ORANGE}" stroke-width="2"/>`;
+  s += `<path d="M${ox} ${oy}L${ox + R * Math.cos(a)} ${oy - R * Math.sin(a)}" stroke="${RED}" stroke-width="2.8" stroke-linecap="round"/><circle cx="${ox + R * Math.cos(a)}" cy="${oy - R * Math.sin(a)}" r="3.6" fill="${RED}"/>`;
+  return `<svg viewBox="0 0 88 58" aria-hidden="true">${s}</svg>`;
+}
 
 // 角度の一覧から、図が動く練習をはじめる（menuBtn：タブの左に出すボタン、finalExtra：最後の画面のボタン）
 function mountZahyou(app, angles, key, o = {}) {

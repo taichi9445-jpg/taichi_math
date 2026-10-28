@@ -1,0 +1,30 @@
+/* zahyou.css — 30 三角比（座標）・31 三角比の値（総合）で共通のメニューと図（zahyou.js とセット） */
+
+/* メニュー：小さな図のついたカードを、スマホは2列・広い画面は3〜4列に並べる */
+.zm{max-width:860px;margin:0 auto}
+.zm-sec{margin:6px 0 16px}
+.zm-sec h2{font-size:15px;margin:0 0 8px;color:#1f4e8c;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.zm-sec h2::before{content:'';width:6px;height:16px;border-radius:3px;background:currentColor;align-self:center}
+.zm-sec h2 small{font-size:13px;color:#5b6470;font-weight:400}
+.zm-sec.rev h2{color:#b35c00}.zm-sec.m2 h2{color:#5f3dc4}
+.zm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){.zm-list{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.zm-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;padding:10px 8px 12px;text-align:center;border:1px solid #c5d3e4;border-bottom:4px solid #9fb2c8;border-radius:14px;background:linear-gradient(#f2f7fd,#fff 70%);color:#1f2328;font:inherit;cursor:pointer;transition:transform .08s}
+.zm-item:active{transform:translateY(2px);border-bottom-width:2px}
+.zm-item .ic svg{display:block;width:88px;height:58px}
+.zm-item b{font-size:16px;line-height:1.4}
+.zm-item .s{font-size:12.5px;line-height:1.5;color:#5b6470}
+.zm-item.rev,.zm-item.ta{background:linear-gradient(#fff4e3,#fff 70%);border-color:#f3d9a4;border-bottom-color:#e2b866}
+.zm-item.mr{background:linear-gradient(#e9f8ec,#fff 70%);border-color:#b7e1c1;border-bottom-color:#8ccf9b}
+.zm-item.m2{background:linear-gradient(#f1ecfe,#fff 70%);border-color:#d3c6f7;border-bottom-color:#b3a1ee}
+.zm-item .ok{position:absolute;right:6px;top:6px;padding:0 7px;border-radius:9px;background:#2b8a3e;color:#fff;font-size:12px;line-height:1.6;font-weight:700;white-space:nowrap}
+.zm-note{font-size:14px;color:#5b6470;margin:4px 0 0}
+.zm-back{min-height:32px!important;padding:2px 10px!important;font-size:14px!important;margin-right:6px}
+
+/* P が回る図 */
+.zf{position:relative;margin:0 auto;max-width:100%}
+.zf>svg{display:block;width:100%;height:auto}
+.zl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;width:max-content;font-size:17px;line-height:1.2;color:#b02525;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
+.fs-fig .zf{width:340px}
+.fs-hint .zf{width:250px;margin-top:6px}
+@media (min-width:900px) and (orientation:landscape){.fs-fig .zf{width:380px}}

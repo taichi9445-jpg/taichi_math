@@ -1052,6 +1052,88 @@
                 .observe(document.body, { childList: true, subtree: true, characterData: true });
         }
 
+        // 【Claude Code 2026-10-28】レベル4のタイムアタック（先生の要望）
+        //   ・「タイムアタック」で時間が 0 から進み、問題をまぜ直して 9 問。ボタンは「もう一度やり直す」に変わる
+        //   ・途中は解説を出さない（正解ならすぐ次へ、まちがえたら × をつけて、のこりからえらび直す）
+        //   ・9 問目が終わると時間が止まり、タイムと「間違えた問題を確認する」（図つきの解説）が出る
+        let ta4 = null;
+        const ta4Best = {};
+        const ta4Fmt = ms => { const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), d = Math.floor(ms % 1000 / 100); return (m ? m + '分' : '') + String(s).padStart(m ? 2 : 1, '0') + '.' + d + '秒'; };
+        let ta4ResultsHTML = null;
+        function ta4Bar() {
+            let bar = document.getElementById('ta4Bar');
+            if (!bar) { bar = document.createElement('div'); bar.id = 'ta4Bar'; bar.className = 'ta4-bar'; document.querySelector('#level4 .question-card').before(bar); document.getElementById('level4').classList.add('has-ta4'); }
+            const on = ta4 && ta4.t0;
+            bar.innerHTML = on
+                ? '<span class="ta4-time" id="ta4Time">' + ta4Fmt((ta4.end || performance.now()) - ta4.t0) + '</span><button type="button" class="ta4-go" onclick="ta4Start()">もう一度やり直す</button><button type="button" class="ta4-quit" onclick="ta4Quit()">やめる</button>'
+                : '<button type="button" class="ta4-go" onclick="ta4Start()">タイムアタック</button><span class="ta4-note">9問をランダムに。時間をはかろう</span>';
+            document.querySelector('#level4 .buttons').style.display = on ? 'none' : '';
+        }
+        function ta4Stop() { if (ta4 && ta4.timer) clearInterval(ta4.timer); }
+        function ta4Restore() { const r = document.getElementById('results4'); if (ta4ResultsHTML !== null) r.innerHTML = ta4ResultsHTML; }
+        function ta4Start() {
+            ta4Stop(); ta4Restore();
+            ta4 = { t0: performance.now(), wrong: [], miss: 0, timer: setInterval(() => { const el = document.getElementById('ta4Time'); if (el && ta4 && !ta4.end) el.textContent = ta4Fmt(performance.now() - ta4.t0); }, 100) };
+            ta4Bar(); restartLevel(4); window.scrollTo(0, 0);
+        }
+        function ta4Quit() { ta4Stop(); ta4 = null; ta4Restore(); ta4Bar(); restartLevel(4); }
+        const baseGoLevel = goLevel;
+        goLevel = function (level) { if (ta4) { ta4Stop(); ta4 = null; ta4Restore(); } baseGoLevel(level); ta4Bar(); };
+        selectLevel = function (level) { goLevel(level); };
+        const baseLoadQuestion = loadQuestion;
+        loadQuestion = function (level) { baseLoadQuestion(level); if (level === 4) ta4Bar(); };
+        const baseSelectOption = selectOption;
+        selectOption = function (level, index) {
+            if (level !== 4 || !ta4 || ta4.end) return baseSelectOption(level, index);
+            if (isAnswered) return;
+            const q = levelQuestions[4][currentQuestion], buttons = document.querySelectorAll('#options4 .option'), orig = order[index];
+            if (orig === q.correct) {
+                isAnswered = true; buttons[index].classList.add('correct'); if (!missedThis) score++;
+                setTimeout(() => { if (ta4 && !ta4.end) nextQuestion(4); }, 300);
+            } else {
+                missedThis = true; ta4.miss++; buttons[index].classList.add('incorrect'); buttons[index].disabled = true;
+                let w = ta4.wrong.find(x => x.q === q); if (!w) ta4.wrong.push(w = { q, you: [] }); w.you.push(q.options[orig]);
+            }
+        };
+        const baseShowResults = showResults;
+        showResults = function (level) {
+            if (level !== 4 || !ta4) return baseShowResults(level);
+            ta4.end = performance.now(); ta4Stop();
+            const ms = ta4.end - ta4.t0, best = ta4Best[4], newBest = !best || ms < best; if (newBest) ta4Best[4] = ms;
+            document.querySelector('#level4 .question-card').style.display = 'none';
+            const r = document.getElementById('results4'); if (ta4ResultsHTML === null) ta4ResultsHTML = r.innerHTML;
+            r.style.display = 'block';
+            r.innerHTML = '<div class="score">タイムアタック クリア</div><div class="ta4-big">' + ta4Fmt(ms) + '</div>' +
+                '<p>' + (ta4.miss ? 'まちがえた回数 ' + ta4.miss + ' 回' : 'ノーミス！') + (newBest && best ? '　記録更新！' : '') + '</p>' +
+                '<div class="result-nav">' + (ta4.wrong.length ? '<button class="next" onclick="ta4Review()">間違えた問題を確認する（' + ta4.wrong.length + '問）</button>' : '') +
+                '<button class="again" onclick="ta4Start()">もう一度挑戦する</button><button class="again" onclick="ta4Quit()">ふつうの練習にもどる</button></div>';
+            ta4Bar();
+            document.getElementById('ta4Time').textContent = ta4Fmt(ms);
+        };
+        function ta4Review() {
+            const r = document.getElementById('results4');
+            r.innerHTML = '<div class="score">間違えた問題</div>' + ta4.wrong.map(w =>
+                '<div class="ta4-item"><div class="ta4-q">' + displayContent(w.q.question, 4) + '</div>' +
+                '<p class="ta4-ans">答え　' + w.q.options[w.q.correct] + '　<span class="ta4-you">（選んだ答え：' + w.you.join('、') + '）</span></p>' +
+                '<div class="ta4-exp">' + displayContent(w.q.exp, 4, true) + '</div>' +
+                (w.q.hint ? '<div class="ta4-fig">' + displayContent(w.q.hint, 4, true) + '</div>' : '') + '</div>').join('') +
+                '<div class="result-nav"><button class="again" onclick="ta4Start()">もう一度挑戦する</button><button class="again" onclick="ta4Quit()">ふつうの練習にもどる</button></div>';
+            r.scrollIntoView({ block: 'start' });
+        }
+        (function () {
+            const st = document.createElement('style');
+            st.textContent = '.ta4-bar{display:flex;align-items:center;gap:8px;height:48px;margin:0 0 10px;white-space:nowrap}#level4.has-ta4 .progress{top:73px}' +
+                '.ta4-time{font:700 20px/1 "BIZ UDPGothic",sans-serif;font-variant-numeric:tabular-nums;color:#fff;background:#1f4e8c;border-radius:8px;padding:9px 10px;min-width:96px;text-align:center}' +
+                '.ta4-go{min-height:44px;padding:6px 12px;border:1px solid #e8890c;border-bottom:3px solid #b35c00;border-radius:6px;background:#e8890c;color:#fff;font:700 16px "BIZ UDPGothic",sans-serif;cursor:pointer}' +
+                '.ta4-quit{min-height:44px;padding:6px 12px;border:1px solid #c5d3e4;border-radius:6px;background:#fff;color:#1f4e8c;font:15px "BIZ UDPGothic",sans-serif;cursor:pointer}' +
+                '.ta4-note{font-size:14px;color:#5b6470}' +
+                '.ta4-big{font:700 40px/1.3 "BIZ UDPGothic",sans-serif;font-variant-numeric:tabular-nums;color:#1f4e8c;margin:4px 0}' +
+                '.ta4-item{text-align:left;border:1px solid #d0d7de;border-left:5px solid #c92a2a;border-radius:8px;padding:8px 12px;margin:10px 0;background:#fff}' +
+                '.ta4-q{font-size:19px}.ta4-ans{margin:6px 0;font-size:18px}.ta4-you{font-size:14px;color:#a61e1e}.ta4-exp{font-size:16px;line-height:1.8}' +
+                '.ta4-fig{margin-top:6px;padding:8px;background:#f1f6fc;border-radius:6px}.ta4-fig svg{max-width:100%;height:auto}';
+            document.head.appendChild(st);
+        })();
+
         // 初期化
         document.addEventListener('DOMContentLoaded', function () {
             restartLevel(1);

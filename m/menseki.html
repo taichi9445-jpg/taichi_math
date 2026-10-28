@@ -6,7 +6,8 @@
   ・上に公式 S = ½bc sin A と「2つの辺・はさまれた角」。ほかの形の公式や鈍角の説明は使わないので消した。
   ・どの問題も「公式 → 代入 → ½×辺×辺 → sin の値 → かける → 分数 → 約分（有理化）」の同じ形。空欄を少しずつ増やす。
   ・問1 はカードを左上から順に使う。問2 からは間にダミーをはさむ。全8問。
-  ・図は数値どおりの形。2つの辺は紺、はさまれた角はオレンジ。
+  ・図は数値どおりの形。2つの辺は紺、はさまれた角はオレンジ。注目の角は、問題ごとに上・右・左下などに置く。
+  ・2026-10-28 夜：1行目の公式は空欄にしない（紫の「公式」の行）。sin の値の行のヒントは、筆記体の s の直角三角形（鈍角は半円）。
 -->
 <link rel="stylesheet" href="../assets/port.css">
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
@@ -21,6 +22,7 @@
 .ms-formula .or{color:#d9480f;font-weight:700}
 .ms-formula .f .bl i,.ms-formula .f .or i{font-weight:400}
 .fs-fig svg{max-height:175px;width:auto;max-width:100%}
+.fs-hint>svg{width:300px}
 @media (min-width:900px) and (orientation:landscape){.fs-fig svg{max-height:200px}}
 </style>
 </head><body>
@@ -30,6 +32,7 @@
   <div id="app"></div>
 </main>
 <script src="../assets/fill-steps.js"></script>
+<script src="../assets/hint-fig.js"></script>
 <script>
 const BLUE = '#1f4e8c', ORANGE = '#d9480f';
 
@@ -44,13 +47,14 @@ function svgNum(x, y, s, color, fs = 17) {
 }
 const numVal = s => { const m = String(s).match(/^(\d*)√(\d+)$/); return m ? (+m[1] || 1) * Math.sqrt(+m[2]) : +s; };
 
-// 問題の図：角 V を左下に置き、V→P を横、V→Q を角 deg の向きに。数値どおりの形。
-function triFig(V, P, Q, lp, lq, deg) {
-  const t = deg * Math.PI / 180, a = numVal(lp), b = numVal(lq);
-  const raw = [[0, 0], [a, 0], [b * Math.cos(t), -b * Math.sin(t)]];
+// 問題の図：数値どおりの形。phi は角 V の二等分線の向き（度、右が 0・上が 90）。
+//   問題ごとに phi を変えて、注目の角が上・右・左下などいろいろな場所にくるようにする（先生の要望：いつも左下にしない）
+function triFig(V, P, Q, lp, lq, deg, phi = deg / 2) {
+  const t = deg * Math.PI / 180, a = numVal(lp), b = numVal(lq), rot = (phi - deg / 2) * Math.PI / 180;
+  const raw = [[0, 0], [a * Math.cos(rot), -a * Math.sin(rot)], [b * Math.cos(rot + t), -b * Math.sin(rot + t)]];
   const xs = raw.map(p => p[0]), ys = raw.map(p => p[1]);
   const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
-  const s = Math.min(270 / w, 130 / h), pad = 34;
+  const s = Math.min(270 / w, 150 / h), pad = 34;
   const pts = raw.map(([x, y]) => [pad + (x - Math.min(...xs)) * s, pad + (y - Math.min(...ys)) * s]);
   const W = w * s + pad * 2, H = h * s + pad * 2;
   const [v, p, q] = pts, cx = (v[0] + p[0] + q[0]) / 3, cy = (v[1] + p[1] + q[1]) / 3;
@@ -67,10 +71,12 @@ function triFig(V, P, Q, lp, lq, deg) {
     let dx = o[0] - cx, dy = o[1] - cy; const L = Math.hypot(dx, dy); dx /= L; dy /= L;
     return `<text x="${o[0] + dx * 17}" y="${o[1] + dy * 17 + 7}" text-anchor="middle" font-family="STIX Two Text, serif" font-style="italic" font-size="20" fill="#1f2328">${n}</text>`;
   };
-  const r = deg >= 135 ? 14 : deg > 90 ? 18 : 24, a1 = pt(v, 0, r), a2 = pt(v, t, r);
+  const r = deg >= 135 ? 14 : deg > 90 ? 18 : 24, a1 = pt(v, rot, r), a2 = pt(v, rot + t, r);
   // 角度の文字：二等分線の上で、弧の外側・どの辺にもかからない、いちばん近い場所
   const afs = deg >= 135 ? 14 : 16, lw = (String(deg).length + 0.8) * afs * 0.6 + 6, lh = afs - 1;
+  const inTri = (x, y) => { const c = (A, B) => (B[0] - A[0]) * (y - A[1]) - (B[1] - A[1]) * (x - A[0]); const d1 = c(v, p), d2 = c(p, q), d3 = c(q, v); return (d1 >= 0 && d2 >= 0 && d3 >= 0) || (d1 <= 0 && d2 <= 0 && d3 <= 0); };
   const clear = (x, y) => {
+    if (!inTri(x, y)) return false;   // 角度の文字は三角形の中に
     const segs = [[v, p], [v, q], [p, q]];
     for (const [A, B] of segs) for (let k = 0; k <= 40; k++) {
       const sx = A[0] + (B[0] - A[0]) * k / 40, sy = A[1] + (B[1] - A[1]) * k / 40;
@@ -79,10 +85,10 @@ function triFig(V, P, Q, lp, lq, deg) {
     const nx = Math.max(x - lw / 2, Math.min(v[0], x + lw / 2)), ny = Math.max(y - lh / 2, Math.min(v[1], y + lh / 2));
     return Math.hypot(nx - v[0], ny - v[1]) > r + 1;
   };
-  let al = pt(v, t / 2, 42);
+  let al = pt(v, rot + t / 2, 42);
   // 二等分線の上を優先し、入らないときは角の中で少し横にずらす（150° のような平たい三角形）
   search: for (let d = r + 4; d < 160; d += 1) for (const k of [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78, 0.15, 0.85]) {
-    const c = pt(v, t * k, d); if (clear(c[0], c[1])) { al = c; break search; }
+    const c = pt(v, rot + t * k, d); if (clear(c[0], c[1])) { al = c; break search; }
   }
   return `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" width="${W.toFixed(0)}" role="img" aria-label="三角形${V}${P}${Q}">
     <polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="#eef4fb"/>
@@ -111,12 +117,13 @@ function formulaBox() {
     <div class="w"><span class="bl nw">2つの辺</span> と、<span class="or nw">その2辺にはさまれた角</span></div></div></div>`;
 }
 
+// 1行目の公式（角をはさむ辺の名前）は、どの問題も空欄にしない（先生の要望）。2行目の代入から問題にする。
 const problems = [
-  { // 問1：空欄は少なめ。カードは左上から順に使う。
+  { // 問1：空欄は少なめ。カードは左上から順に使う。注目の角は上。
     q: '△ABC において、CA = 6、CB = 8、C = 30° のとき、面積 S を求めよ。',
-    fig: triFig('C', 'B', 'A', '8', '6', 30), ang: 'C', deg: 30,
+    fig: triFig('C', 'B', 'A', '8', '6', 30, -90), ang: 'C', deg: 30,
     rows: [
-      'S = {1|2} × CA × CB × sin C',
+      '!S = {1|2} × CA × CB × sin C',
       'S = {1|2} × [6@s] × [8@s] × sin 30°',
       'S = [24] × sin 30°',
       '#sin 30° = [1/2] より',
@@ -127,14 +134,14 @@ const problems = [
     cards: ['6', '8', '24', '1/2', '12',
       ['48', '{1|2} をかけるのを忘れずに。{1|2} × 6 × 8 は？'],
       ['√3/2', 'sin 30° の値は？ 30°・60°・90° の直角三角形で考えよう。'],
-      ['60°', '6 と 8 の辺にはさまれた角は C ＝ 30° です。']],
+      ['16', '{24|2} は、24 ÷ 2 を計算します。']],
     ans: 'S = 12'
   },
-  { // 問2
+  { // 問2：注目の角は右下
     q: '△ABC において、AB = 10、BC = 12、B = 60° のとき、面積 S を求めよ。',
-    fig: triFig('B', 'C', 'A', '12', '10', 60), ang: 'B', deg: 60,
+    fig: triFig('B', 'A', 'C', '10', '12', 60, 150), ang: 'B', deg: 60,
     rows: [
-      'S = {1|2} × AB × BC × [sin B]',
+      '!S = {1|2} × AB × BC × sin B',
       'S = {1|2} × [10@s] × [12@s] × sin 60°',
       'S = [60] × sin 60°',
       '#sin 60° = [√3/2] より',
@@ -142,33 +149,32 @@ const problems = [
       'S = [60√3/2]',
       'S = [30√3]'
     ],
-    cards: [['sin A', '辺 AB と BC にはさまれた角は、角 B です。'], 'sin B', '10', '12',
-      ['120', '{1|2} をかけるのを忘れずに。{1|2} × 10 × 12 は？'], '60',
+    cards: ['10', '12', ['120', '{1|2} をかけるのを忘れずに。{1|2} × 10 × 12 は？'], '60',
       ['1/2', 'sin 60° の値は？ 30°・60°・90° の直角三角形で考えよう。'], '√3/2', '60√3/2',
       ['15√3', '{60√3|2} は、60 ÷ 2 を計算します。'], '30√3'],
     ans: 'S = 30√3'
   },
-  { // 問3
+  { // 問3：注目の角は左
     q: '△ABC において、AB = 10√2、CA = 7、A = 30° のとき、面積 S を求めよ。',
-    fig: triFig('A', 'B', 'C', '10√2', '7', 30), ang: 'A', deg: 30,
+    fig: triFig('A', 'B', 'C', '10√2', '7', 30, 0), ang: 'A', deg: 30,
     rows: [
-      'S = {1|2} × [AB@n] × [CA@n] × [sin A]',
-      'S = {1|2} × [10√2@s] × [7@s] × sin 30°',
+      '!S = {1|2} × AB × CA × sin A',
+      'S = {1|2} × [10√2@s] × [7@s] × [sin 30°]',
       'S = [35√2] × sin 30°',
       '#sin 30° = [1/2] より',
       'S = 35√2 × {1|2}',
       'S = [35√2/2]'
     ],
-    cards: ['AB', ['BC', '角 A をはさむ2つの辺は、A につながっている辺です。'], 'CA', 'sin A', '10√2', '7',
+    cards: ['10√2', '7', ['sin 60°', 'はさまれた角は A ＝ 30° です。'], 'sin 30°',
       ['70√2', '{1|2} をかけるのを忘れずに。'], '35√2', '1/2',
       ['√3/2', 'sin 30° の値は？ 30°・60°・90° の直角三角形で考えよう。'], '35√2/2'],
     ans: 'S = {35√2|2}'
   },
-  { // 問4：分母の有理化が入る
+  { // 問4：分母の有理化が入る。注目の角は右上
     q: '△ABC において、AB = 8、CA = 6、A = 45° のとき、面積 S を求めよ。',
-    fig: triFig('A', 'B', 'C', '8', '6', 45), ang: 'A', deg: 45,
+    fig: triFig('A', 'B', 'C', '8', '6', 45, -135), ang: 'A', deg: 45,
     rows: [
-      'S = {1|2} × [AB@n] × [CA@n] × [sin A]',
+      '!S = {1|2} × AB × CA × sin A',
       'S = {1|2} × [8@s] × [6@s] × [sin 45°]',
       'S = [24] × sin 45°',
       '#sin 45° = [1/√2] より',
@@ -179,18 +185,18 @@ const problems = [
       'S = [24√2/2]',
       'S = [12√2]'
     ],
-    cards: ['AB', 'CA', ['sin C', '辺 AB と CA にはさまれた角は、角 A です。'], 'sin A', '8', '6', 'sin 45°',
+    cards: ['8', '6', ['sin 90°', 'はさまれた角は A ＝ 45° です。'], 'sin 45°',
       ['48', '{1|2} をかけるのを忘れずに。'], '24', '1/√2',
       ['√3/2', 'sin 45° の値は？ 45°・45°・90° の直角三角形で考えよう。'], '24/√2', '√2', '24√2/2',
       ['6√2', '{24√2|2} は、24 ÷ 2 を計算します。'], '12√2'],
     ans: 'S = 12√2'
   },
-  { // 問5
+  { // 問5：注目の角は左下
     q: '△ABC において、AB = 12、BC = 7、B = 45° のとき、面積 S を求めよ。',
-    fig: triFig('B', 'A', 'C', '12', '7', 45), ang: 'B', deg: 45,
+    fig: triFig('B', 'C', 'A', '7', '12', 45, 22.5), ang: 'B', deg: 45,
     rows: [
-      'S = [1/2] × [AB@n] × [BC@n] × [sin B]',
-      'S = {1|2} × [12@s] × [7@s] × [sin 45°]',
+      '!S = {1|2} × AB × BC × sin B',
+      'S = [1/2] × [12@s] × [7@s] × [sin 45°]',
       'S = [42] × [sin 45°]',
       '#sin 45° = [1/√2] より',
       'S = [42] × [1/√2]',
@@ -200,33 +206,32 @@ const problems = [
       'S = [42√2/2]',
       'S = [21√2]'
     ],
-    cards: ['1/2', ['CA', '角 B をはさむ2つの辺は、B につながっている辺です。'], 'AB', 'BC', 'sin B', '12', '7',
-      ['sin 90°', 'はさまれた角は B ＝ 45° です。'], 'sin 45°', '42', '1/√2', '42/√2',
+    cards: ['1/2', '12', '7', ['sin 90°', 'はさまれた角は B ＝ 45° です。'], 'sin 45°', '42', '1/√2', '42/√2',
       ['√7', '分母と同じ √2 をかけます。'], '√2', '42√2/2', '21√2'],
     ans: 'S = 21√2'
   },
-  { // 問6：鈍角
+  { // 問6：鈍角。注目の角は上
     q: '△ABC において、AB = 8、CA = 5、A = 120° のとき、面積 S を求めよ。',
-    fig: triFig('A', 'B', 'C', '8', '5', 120), ang: 'A', deg: 120,
+    fig: triFig('A', 'C', 'B', '5', '8', 120, -90), ang: 'A', deg: 120,
     rows: [
-      'S = [1/2] × [AB@n] × [CA@n] × [sin A]',
-      'S = {1|2} × [8@s] × [5@s] × [sin 120°]',
-      'S = [20] × sin 120°',
+      '!S = {1|2} × AB × CA × sin A',
+      'S = [1/2] × [8@s] × [5@s] × [sin 120°]',
+      'S = [20] × [sin 120°]',
       '#sin 120° = [√3/2] より',
-      'S = 20 × [√3/2]',
+      'S = [20] × [√3/2]',
       'S = [20√3/2]',
       'S = [10√3]'
     ],
-    cards: ['1/2', 'AB', 'CA', ['sin B', '辺 AB と CA にはさまれた角は、角 A です。'], 'sin A', '8', '5', 'sin 120°',
+    cards: ['1/2', '8', '5', ['sin 60°', 'はさまれた角は A ＝ 120° です。'], 'sin 120°',
       ['40', '{1|2} をかけるのを忘れずに。'], '20',
       ['−√3/2', '0° から 180° の角の sin は、正の数です。'], '√3/2', '20√3/2', '10√3'],
     ans: 'S = 10√3'
   },
-  { // 問7：鈍角
+  { // 問7：鈍角。注目の角は下
     q: '△ABC において、BC = 6、CA = 10、C = 150° のとき、面積 S を求めよ。',
-    fig: triFig('C', 'A', 'B', '10', '6', 150), ang: 'C', deg: 150,
+    fig: triFig('C', 'A', 'B', '10', '6', 150, 90), ang: 'C', deg: 150,
     rows: [
-      'S = [1/2] × [BC@n] × [CA@n] × [sin C]',
+      '!S = {1|2} × BC × CA × sin C',
       'S = [1/2] × [6@s] × [10@s] × [sin 150°]',
       'S = [30] × [sin 150°]',
       '#[sin 150°] = [1/2] より',
@@ -234,49 +239,40 @@ const problems = [
       'S = [30/2]',
       'S = [15]'
     ],
-    cards: ['1/2', 'BC', ['AB', '角 C をはさむ2つの辺は、C につながっている辺です。'], 'CA', 'sin C', '6', '10',
-      ['sin 30°', 'はさまれた角は C ＝ 150° です。'], 'sin 150°', '30',
+    cards: ['1/2', '6', '10', ['sin 30°', 'はさまれた角は C ＝ 150° です。'], 'sin 150°', '30',
       ['√3/2', 'sin 150° の値は？ 半径 2 の半円の上の点で考えよう。'], '30/2', '15'],
     ans: 'S = 15'
   },
-  { // 問8：鈍角＋有理化（すべて空欄）
+  { // 問8：鈍角＋有理化（1行目のほかは、すべて空欄）。注目の角は右上
     q: '△ABC において、AB = 6、BC = 4、B = 135° のとき、面積 S を求めよ。',
-    fig: triFig('B', 'A', 'C', '6', '4', 135), ang: 'B', deg: 135,
+    fig: triFig('B', 'A', 'C', '6', '4', 135, -120), ang: 'B', deg: 135,
     rows: [
-      'S = [1/2] × [AB@n] × [BC@n] × [sin B]',
+      '!S = {1|2} × AB × BC × sin B',
       'S = [1/2] × [6@s] × [4@s] × [sin 135°]',
       'S = [12] × [sin 135°]',
       '#[sin 135°] = [1/√2] より',
       'S = [12] × [1/√2]',
       'S = [12/√2]',
       '#分母を有理化して',
-      'S = {12 × [√2]|[√2] × [√2]}',
+      'S = {[12] × [√2]|[√2] × [√2]}',
       'S = [12√2/2]',
       'S = [6√2]'
     ],
-    cards: ['1/2', 'AB', 'BC', ['sin A', '辺 AB と BC にはさまれた角は、角 B です。'], 'sin B', '6', '4', 'sin 135°',
+    cards: ['1/2', '6', '4', ['sin 45°', 'はさまれた角は B ＝ 135° です。'], 'sin 135°',
       ['24', '{1|2} をかけるのを忘れずに。'], '12', ['−1/√2', '0° から 180° の角の sin は、正の数です。'], '1/√2', '12/√2', '√2',
       '12√2/2', ['3√2', '{12√2|2} は、12 ÷ 2 を計算します。'], '6√2'],
     ans: 'S = 6√2'
   }
 ];
 
-// ヒント（行の位置で決まる。0〜5 行目はどの問題も同じ）
-const SIN_HINT = {
-  30: '30°・60°・90° の直角三角形の辺の比は 1 : 2 : √3。sin = {対辺|斜辺} です。',
-  60: '30°・60°・90° の直角三角形の辺の比は 1 : 2 : √3。sin = {対辺|斜辺} です。',
-  45: '45°・45°・90° の直角三角形の辺の比は 1 : 1 : √2。sin = {対辺|斜辺} です。',
-  120: '120° は、半径 2 の半円の上の点 P(−1, √3) で考えよう。sin = {y|r} です。',
-  135: '135° は、半径 √2 の半円の上の点 P(−1, 1) で考えよう。sin = {y|r} です。',
-  150: '150° は、半径 2 の半円の上の点 P(−√3, 1) で考えよう。sin = {y|r} です。'
-};
+// ヒント（行の位置で決まる。今うめている行のヒントが出る）
 function hint(p, row) {
   const i = p.rows.indexOf(row), n = p.rows.length;
-  if (i === 0) return '角 ' + p.ang + ' をはさむ2つの辺と、sin ' + p.ang + ' を使います。';
-  if (i === 1) return '辺の長さと、角 ' + p.ang + ' の大きさを代入します。';
+  if (i === 1) return `角 ${p.ang} をはさむ2つの辺の長さと、sin ${p.deg}° を代入します。`;
   if (i === 2) return '{1|2} × ○ × ○ を先に計算します。';
-  if (i === 3) return SIN_HINT[p.deg];
-  if (i === 4) return 'sin ' + p.deg + '° の値を代入します。';
+  if (i === 3) return p.deg < 90 ? `sin ${p.deg}° は、この直角三角形で考えよう。` :
+    `半径 ${HintFig.POINT[p.deg][2]} の半円の上の点 P で考えよう。　sin θ = {y|r}`;
+  if (i === 4) return `sin ${p.deg}° の値を代入します。`;
   if (i === 5) return 'かけ算をして、1つの分数にまとめます。';
   if (n === 7 && i === 6) return '約分します。';
   if (i === 7) return '分母と分子に同じ √2 をかけて、分母の √ をなくします。';
@@ -284,7 +280,12 @@ function hint(p, row) {
   if (i === 9) return '約分します。';
   return '';
 }
+// sin の値の行のヒントの図：30°・45°・60° は筆記体の s をなぞる直角三角形（26 と同じ）、鈍角は半円の上の点 P
+function hintFig(p, row) {
+  if (p.rows.indexOf(row) !== 3) return '';
+  return p.deg < 90 ? HintFig.trace(p.deg, 'sin') : HintFig.semi(p.deg);
+}
 
-FillSteps.mount({ el: "#app", problems, hint, top: formulaBox });
+FillSteps.mount({ el: "#app", problems, hint, hintFig, top: formulaBox });
 </script>
 </body></html>

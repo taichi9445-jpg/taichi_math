@@ -6,35 +6,13 @@
   ・図が動く練習は 30「三角比（座標）」と同じもの（assets/zahyou.js・fill-steps.js）。
   ・タイムアタック（10問）とマラソン（全部）は、問題がランダムに出る。選択肢は6つ。
   ・√ は SVG で描き、外と中の数字を同じ大きさに（元は文字の √ に線を重ねていてずれていた）。
+  ・2026-10-28 夜：終わったあと「間違えた問題を確認する」で、間違えた問題の図つきの解説を見られる（途中には出さない）。メニューは 30 と同じカード。
 -->
 <link rel="stylesheet" href="../assets/port.css">
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/fill-steps.css">
+<link rel="stylesheet" href="../assets/zahyou.css">
 <style>
-/* メニュー（30 と同じ形） */
-.zm-sec{margin:4px 0 14px}
-.zm-sec h2{font-size:15px;margin:0 0 6px;color:#1f4e8c;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.zm-sec h2 small{font-size:13px;color:#5b6470;font-weight:400}
-.zm-list{display:grid;gap:8px}
-@media (min-width:640px){.zm-list{grid-template-columns:1fr 1fr}}
-.zm-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px;border:1px solid #c5d3e4;border-left:5px solid #1f4e8c;border-bottom:3px solid #b6bfc9;border-radius:6px;background:#fff;color:#1f2328;font:inherit;cursor:pointer;transition:transform .08s}
-.zm-item:active{transform:translateY(2px);border-bottom-width:1px}
-.zm-item .n{flex:none;width:30px;height:30px;border-radius:50%;background:#e3ecf7;color:#1f4e8c;font-weight:700;display:flex;align-items:center;justify-content:center}
-.zm-item b{display:block;font-size:17px}
-.zm-item span.s{display:block;font-size:14px;color:#5b6470}
-.zm-item.ta{border-left-color:#e8890c;background:#fffaf0}.zm-item.ta .n{background:#fff1dc;color:#b35c00}
-.zm-item.mr{border-left-color:#2b8a3e;background:#f6fcf7}.zm-item.mr .n{background:#e3f6e7;color:#2b8a3e}
-.zm-item.m2{border-left-color:#7048e8}.zm-item.m2 .n{background:#efe9fd;color:#5f3dc4}
-.zm-item .ok{margin-left:auto;color:#2b8a3e;font-size:14px;font-weight:700;white-space:nowrap}
-.zm-note{font-size:14px;color:#5b6470;margin:4px 0 0}
-.zm-back{min-height:32px!important;padding:2px 10px!important;font-size:14px!important;margin-right:6px}
-/* 図（30 と同じ） */
-.zf{position:relative;margin:0 auto;max-width:100%}
-.zf>svg{display:block;width:100%;height:auto}
-.zl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;width:max-content;font-size:17px;line-height:1.2;color:#b02525;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
-.fs-fig .zf{width:340px}
-.fs-hint .zf{width:250px;margin-top:6px}
-@media (min-width:900px) and (orientation:landscape){.fs-fig .zf{width:380px}}
 /* タイムアタック・マラソン */
 .ta-wrap{max-width:720px;margin:0 auto}
 .ta-top{display:flex;align-items:center;gap:8px;margin:0 0 8px}
@@ -58,6 +36,14 @@
 .ta-res h2{font-size:21px;margin:0 0 8px}
 .ta-res .t{font:700 44px/1.2 'BIZ UDPGothic',sans-serif;font-variant-numeric:tabular-nums;color:#1f4e8c;margin:6px 0}
 .ta-res .fs-nav{justify-content:center}
+/* 間違えた問題の確認 */
+.rv-list{display:grid;gap:12px;margin:10px 0}
+.rv-item{border:1px solid #d0d7de;border-left:5px solid #c92a2a;border-radius:8px;padding:8px 12px;background:#fff}
+.rv-item h3{margin:0 0 4px;font-size:21px;font-weight:400}
+.rv-item .you{font-size:14px;color:#a61e1e;margin:0 0 4px}
+.rv-item .ex{font-size:16px;line-height:1.9;margin:4px 0 0}
+.rv-item .zf{width:300px}
+@media (min-width:640px){.rv-item{display:grid;grid-template-columns:1fr 300px;gap:4px 16px;align-items:center}.rv-item .zf{grid-row:1/4;grid-column:2}}
 </style>
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -74,13 +60,13 @@ const PRACTICE = {
   basic: { name: '基本の角', sub: '30°・45°・60°・120°・135°・150°', angles: [30, 45, 60, 120, 135, 150] },
   axis: { name: '軸の上の角', sub: '0°・90°・180°', angles: [0, 90, 180] },
   m2a: { name: '180° をこえる角', sub: '210°・225°・240°・300°・315°・330°', angles: [210, 225, 240, 300, 315, 330] },
-  m2b: { name: '270°・360°', sub: 'P が軸の上（円で考える）', angles: [270, 360] }
+  m2b: { name: '270°・360°', sub: 'P が軸の上', angles: [270, 360] }
 };
 const RUNS = {
-  ta1: { name: 'タイムアタック', sub: '0°〜180° の sin・cos・tan から 10 問', all: false, n: 10 },
-  mr1: { name: 'マラソン', sub: '0°〜180° の 27 問をぜんぶ', all: false },
+  ta1: { name: 'タイムアタック', sub: '0°〜180° から 10 問', all: false, n: 10 },
+  mr1: { name: 'マラソン', sub: '0°〜180° の 27 問ぜんぶ', all: false },
   ta2: { name: '一般角 タイムアタック', sub: '0°〜330° から 10 問', all: true, n: 10 },
-  mr2: { name: '一般角 マラソン', sub: '16 の角度の 48 問をぜんぶ', all: true }
+  mr2: { name: '一般角 マラソン', sub: '48 問ぜんぶ', all: true }
 };
 const done = {}, best = {};
 const MENU_BTN = '<button type="button" class="fs-btn zm-back" onclick="showMenu()">メニュー</button>';
@@ -116,7 +102,7 @@ function startRun(id) {
   const R = RUNS[id], qs = [];
   Object.keys(T).map(Number).filter(d => R.all ? d !== 360 : d <= 180).forEach(d => ['sin', 'cos', 'tan'].forEach((f, k) => qs.push({ d, f, v: T[d][3 + k] })));
   shuffle(qs);
-  run = { id, qs: R.n ? qs.slice(0, R.n) : qs, i: 0, miss: 0, t0: performance.now(), lock: false, picked: [] };
+  run = { id, qs: R.n ? qs.slice(0, R.n) : qs, i: 0, miss: 0, t0: performance.now(), lock: false, picked: [], wrong: [] };
   timer = setInterval(tick, 100);
   renderRun(); window.scrollTo(0, 0);
 }
@@ -138,7 +124,7 @@ function answer(q, v, b) {
   if (v === q.v) {
     run.lock = true; b.classList.add('ok');
     setTimeout(() => { run.i++; run.picked = []; run.lock = false; run.i >= run.qs.length ? finishRun() : renderRun(); }, 220);
-  } else { run.miss++; run.picked.push(v); renderRun(); }
+  } else { run.miss++; run.picked.push(v); if (!run.wrong.includes(q)) run.wrong.push(q); (q.you = q.you || []).push(v); renderRun(); }
 }
 function finishRun() {
   clearInterval(timer);
@@ -147,21 +133,39 @@ function finishRun() {
   document.getElementById('ta').innerHTML = `<div class="ta-wrap ta-res">
     <h2>${R.name}　クリア</h2><div class="t">${fmt(ms)}</div>
     <p>${run.miss ? 'まちがえた回数　' + run.miss + ' 回' : 'ノーミス'}${newBest ? '　記録更新！' : ''}</p>
+    ${run.wrong.length ? '<p><button type="button" class="fs-btn primary" onclick="showReview()">間違えた問題を確認する（' + run.wrong.length + '問）</button></p>' : ''}
+    <div class="fs-nav"><button type="button" class="fs-btn" onclick="showMenu()">メニューへ</button><button type="button" class="fs-btn${run.wrong.length ? '' : ' primary'}" onclick="startRun('${id}')">もう一度</button></div></div>`;
+  window.scrollTo(0, 0);
+}
+// 間違えた問題の解説（P が回る図と、P の座標・r から値を出す式）
+function showReview() {
+  const id = run.id;
+  const items = run.wrong.map(q => {
+    const [x, y, r] = T[q.d], u = q.f === 'sin' ? ['y', y, 'r', r] : q.f === 'cos' ? ['x', x, 'r', r] : ['y', y, 'x', x];
+    const ex = q.v === 'なし' ? `P(${x}, ${y}) で x = 0 なので、${q.f} ${q.d}° = {y|x} は 0 でわることになり、値はなし。`
+      : `P(${x}, ${y})、r = ${r} なので、${q.f} ${q.d}° = {${u[0]}|${u[2]}} = {${u[1]}|${u[3]}}${u[1] + "/" + u[3] === q.v ? "" : " = " + tex(q.v)}`;
+    return `<div class="rv-item"><h3>${md(`${q.f} ${q.d}° = ${tex(q.v)}`)}</h3>
+      <p class="you">選んだ答え：${q.you.map(v => FillSteps.valHTML(v)).join('、')}</p>
+      <p class="ex">${md(ex)}</p>${zahyouFig(q.d, q.d, { xy: [x, y], r })}</div>`;
+  }).join('');
+  document.getElementById('ta').innerHTML = `<div class="ta-wrap"><div class="ta-top">${MENU_BTN}<span class="ta-count">${RUNS[id].name}　間違えた問題</span></div>
+    <div class="rv-list">${items}</div>
     <div class="fs-nav"><button type="button" class="fs-btn" onclick="showMenu()">メニューへ</button><button type="button" class="fs-btn primary" onclick="startRun('${id}')">もう一度</button></div></div>`;
+  window.scrollTo(0, 0);
 }
 
 // ---------------- メニュー ----------------
 function showMenu() {
   clearViews();
-  const item = (id, n, cls, m, fn) => `<button type="button" class="zm-item ${cls}" onclick="${fn}('${id}')"><span class="n">${n}</span><span><b>${m.name}</b><span class="s">${m.sub}</span></span>${done[id] ? `<span class="ok">✓${best[id] ? ' ' + fmt(best[id]) : ''}</span>` : ''}</button>`;
-  document.getElementById('menu').innerHTML = `
+  const item = (id, cls, m, fn, icon) => `<button type="button" class="zm-item ${cls}" onclick="${fn}('${id}')"><span class="ic">${icon}</span><b>${m.name}</b><span class="s">${m.sub}</span>${done[id] ? `<span class="ok">✓${best[id] ? ' ' + fmt(best[id]) : ''}</span>` : ''}</button>`;
+  document.getElementById('menu').innerHTML = `<div class="zm">
   <section class="zm-sec"><h2>数学Ⅰ<small>0° ≦ θ ≦ 180°</small></h2>
-    <div class="zm-list">${item('basic', 1, '', PRACTICE.basic, 'startPractice')}${item('axis', 2, '', PRACTICE.axis, 'startPractice')}
-    ${item('ta1', 3, 'ta', RUNS.ta1, 'startRun')}${item('mr1', 4, 'mr', RUNS.mr1, 'startRun')}</div></section>
-  <section class="zm-sec"><h2>数学Ⅱの予習<small>180° をこえる角</small></h2>
-    <div class="zm-list">${item('m2a', 5, 'm2', PRACTICE.m2a, 'startPractice')}${item('m2b', 6, 'm2', PRACTICE.m2b, 'startPractice')}
-    ${item('ta2', 7, 'ta', RUNS.ta2, 'startRun')}${item('mr2', 8, 'mr', RUNS.mr2, 'startRun')}</div></section>
-  <p class="zm-note">P の座標から三角比を考える練習・θ を求める問題は <a href="sankakuhi-zahyou.html">30. 三角比（座標）</a> へ</p>`;
+    <div class="zm-list">${item('basic', '', PRACTICE.basic, 'startPractice', menuIcon('ang', 150))}${item('axis', '', PRACTICE.axis, 'startPractice', menuIcon('ang', 90))}
+    ${item('ta1', 'ta', RUNS.ta1, 'startRun', menuIcon('ta', 0, ORANGE))}${item('mr1', 'mr', RUNS.mr1, 'startRun', menuIcon('mr', 0, GREEN))}</div></section>
+  <section class="zm-sec m2"><h2>数学Ⅱの予習<small>180° をこえる角</small></h2>
+    <div class="zm-list">${item('m2a', 'm2', PRACTICE.m2a, 'startPractice', menuIcon('ang', 210, PURPLE))}${item('m2b', 'm2', PRACTICE.m2b, 'startPractice', menuIcon('ang', 270, PURPLE))}
+    ${item('ta2', 'ta', RUNS.ta2, 'startRun', menuIcon('ta', 0, ORANGE))}${item('mr2', 'mr', RUNS.mr2, 'startRun', menuIcon('mr', 0, GREEN))}</div></section>
+  <p class="zm-note">P の座標から三角比を考える練習・θ を求める問題は <a href="sankakuhi-zahyou.html">30. 三角比（座標）</a> へ</p></div>`;
   window.scrollTo(0, 0);
 }
 showMenu();

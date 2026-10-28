@@ -1,2101 +1,347 @@
-<!doctype html>
-<html lang="ja">
- <head>
-  <meta charset="UTF-8">
-  <!--
-    29. 正弦定理（正弦定理 練習問題）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../assets/port.css">
-  <script src="../assets/port.js"></script>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>正弦定理 練習問題</title>
-  
-  <style>
-    body {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100%;
-    }
-
-    .header {
-      background: white;
-      padding: 24px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .header h1 {
-      margin: 0;
-      color: #2d3748;
-      font-size: 32px;
-    }
-
-    .navigation {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    .nav-button {
-      padding: 10px 20px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-
-    .nav-button:hover {
-      background: #5568d3;
-      transform: translateY(-2px);
-    }
-
-    .nav-button.active {
-      background: #48bb78;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 32px auto;
-      background: white;
-      border-radius: 16px;
-      padding: 40px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .problem-page {
-      display: none;
-    }
-
-    .problem-page.active {
-      display: block;
-    }
-
-    .problem-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 24px;
-      padding: 24px;
-      background: #f7fafc;
-      border-radius: 12px;
-      border-left: 4px solid #667eea;
-    }
-
-    .problem-text {
-      width: 100%;
-      text-align: center;
-    }
-
-    .problem-text h2 {
-      margin: 0 0 12px 0;
-      color: #2d3748;
-      font-size: 22px;
-    }
-
-    .problem-text p {
-      margin: 0;
-      font-size: 17px;
-      line-height: 1.6;
-      color: #4a5568;
-    }
-
-    .triangle-diagram {
-      display: flex;
-      justify-content: center;
-    }
-
-    .choices-area {
-      background: #f7fafc;
-      padding: 16px 20px;
-      border-radius: 12px;
-      margin-bottom: 24px;
-    }
-
-    .choices-area h3 {
-      margin: 0 0 12px 0;
-      font-size: 16px;
-      color: #2d3748;
-      text-align: center;
-    }
-
-    .choices-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .choice-item {
-      background: white;
-      border: 2px solid #667eea;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 15px;
-      color: #2d3748;
-      user-select: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      min-height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .choice-item:hover {
-      background: #667eea;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .choice-item.dragging {
-      opacity: 0.5;
-      cursor: grabbing;
-    }
-
-    .choice-item.fully-used {
-      background: #e2e8f0;
-      color: #a0aec0;
-      cursor: not-allowed;
-      border-color: #cbd5e0;
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .choice-item.selected {
-      background: #667eea;
-      color: white;
-      transform: scale(1.05);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-    }
-
-    .work-area {
-      background: #fefefe;
-      border: 2px dashed #cbd5e0;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      display: flex;
-      gap: 60px;
-    }
-
-    .column {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      position: relative;
-    }
-
-    .equation-line {
-      padding: 16px;
-      padding-left: 50px;
-      background: white;
-      border-radius: 8px;
-      min-height: 60px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 18px;
-      border: 1px solid #e2e8f0;
-      position: relative;
-    }
-
-    .equation-line.no-wrap {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-    }
-
-    .equation-line.final-answer {
-      background: #fffef0;
-      border: 2px solid #f6ad55;
-      padding: 20px;
-      padding-left: 50px;
-    }
-
-    .equation-line::before {
-      content: attr(data-step);
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 28px;
-      height: 28px;
-      background: #667eea;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .equation-line.hint::before {
-      background: #ed8936;
-    }
-
-    .equation-line.final-answer::before {
-      background: #f6ad55;
-      content: '★';
-      font-size: 16px;
-    }
-
-    .final-choices {
-      display: flex;
-      gap: 10px;
-      margin-left: 12px;
-      flex-wrap: wrap;
-    }
-
-    .final-choice-item {
-      background: white;
-      border: 2px solid #f6ad55;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 18px;
-      color: #2d3748;
-      user-select: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      min-height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-    }
-
-    .final-choice-item:hover {
-      background: #f6ad55;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(246, 173, 85, 0.3);
-    }
-
-    .final-choice-item.selected {
-      background: #f6ad55;
-      color: white;
-      transform: scale(1.05);
-      box-shadow: 0 0 0 3px rgba(246, 173, 85, 0.3);
-    }
-
-    .drop-zone {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 90px;
-      min-height: 48px;
-      border: 2px dashed #a0aec0;
-      border-radius: 6px;
-      background: #edf2f7;
-      padding: 8px 16px;
-      transition: all 0.2s;
-      vertical-align: middle;
-      cursor: pointer;
-    }
-
-    .drop-zone.drag-over {
-      background: #bee3f8;
-      border-color: #4299e1;
-      transform: scale(1.05);
-    }
-
-    .drop-zone.filled {
-      background: #c6f6d5;
-      border: 2px solid #48bb78;
-    }
-
-    .drop-zone.waiting-input {
-      background: #bee3f8;
-      border-color: #4299e1;
-      border-style: solid;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    .fraction {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      vertical-align: middle;
-      margin: 0 4px;
-    }
-
-    .fraction-numerator {
-      padding-bottom: 2px;
-      border-bottom: 2px solid #2d3748;
-      min-width: 40px;
-      text-align: center;
-    }
-
-    .fraction-denominator {
-      padding-top: 2px;
-      min-width: 40px;
-      text-align: center;
-    }
-
-    .math {
-      font-family: 'Times New Roman', serif;
-      font-style: italic;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin-top: 24px;
-    }
-
-    button {
-      padding: 14px 36px;
-      border: none;
-      border-radius: 8px;
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
-    }
-
-    .check-button {
-      background: #48bb78;
-      color: white;
-    }
-
-    .check-button:hover {
-      background: #38a169;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
-    }
-
-    .reset-button {
-      background: #718096;
-      color: white;
-    }
-
-    .reset-button:hover {
-      background: #4a5568;
-      transform: translateY(-2px);
-    }
-
-    .show-answer-button {
-      background: #ed8936;
-      color: white;
-    }
-
-    .show-answer-button:hover {
-      background: #dd6b20;
-      transform: translateY(-2px);
-    }
-
-    .next-problem-button {
-      background: #48bb78;
-      color: white;
-      font-size: 18px;
-      padding: 16px 40px;
-      margin-top: 12px;
-      animation: bounceIn 0.5s ease-out;
-    }
-
-    .next-problem-button:hover {
-      background: #38a169;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-    }
-
-    @keyframes bounceIn {
-      0% { transform: scale(0); opacity: 0; }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .result-message {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-      display: none;
-    }
-
-    .result-message.correct {
-      background: #c6f6d5;
-      color: #22543d;
-      border: 2px solid #48bb78;
-      display: block;
-    }
-
-    .result-message.incorrect {
-      background: #fed7d7;
-      color: #742a2a;
-      border: 2px solid #f56565;
-      display: block;
-    }
-
-    .version {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      color: #667eea;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-  </style>
-  <style>@view-transition { navigation: auto; }</style>
-  
-  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
-       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
-       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
-  <link rel="stylesheet" href="../assets/gas.css">
-   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    body { padding: 12px; min-height: 100vh; box-sizing: border-box; }
-    .version { display: none; }
-    .header { background: none; box-shadow: none; padding: 8px 0 0; max-width: 1100px; margin: 0 auto; }
-    .header h1 { font-size: min(2rem, 7vw) !important; white-space: nowrap; }
-    .navigation { gap: 8px; }
-    .nav-button { padding: 8px 14px; font-size: 15px !important; }
-    .container { margin: 16px auto; padding: 24px 20px; box-sizing: border-box; }
-    .problem-header { background: var(--u-soft-yellow) !important; border: 4px dashed #fde68a; border-left: 4px dashed #fde68a !important; border-radius: 20px; }
-    .problem-text h2 { color: var(--u-soft-yellow-text) !important; }
-    .problem-text p { color: var(--u-ink); font-weight: 700; }
-    .triangle-diagram svg { max-width: 100%; height: auto; }
-    .choices-area { position: sticky; top: 0; z-index: 5; background: #fff; border: 3px solid var(--u-line); border-radius: 16px; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06); }
-    .choices-area h3 { color: var(--u-sub); font-size: 14px; }
-    .choice-item { background: var(--u-blue) !important; color: #fff; border: none !important; border-bottom: 4px solid var(--u-blue-dark) !important; border-radius: 12px; font-weight: 700; }
-    .choice-item:hover { background: var(--u-blue-dark) !important; color: #fff; }
-    .choice-item.selected { background: var(--u-accent) !important; border-bottom-color: var(--u-accent-dark) !important; }
-    .choice-item.fully-used { background: #94a3b8 !important; border-bottom-color: #64748b !important; color: #fff; opacity: 0.35; }
-    .work-area { border: 3px dashed var(--u-line); border-radius: 20px; background: #f8fafc; gap: 24px; }
-    .equation-line { color: var(--u-ink); font-weight: 700; border: 2px solid var(--u-line); border-radius: 14px; }
-    .equation-line::before { background: var(--u-blue); }
-    .equation-line.hint { background: var(--u-soft-blue); border-color: var(--u-soft-blue-line); color: var(--u-title); }
-    .equation-line.hint::before { background: #fbbf24; }
-    .equation-line.final-answer { background: var(--u-soft-yellow); border-color: #fbbf24; }
-    .final-choice-item { border-color: #fbbf24; border-radius: 12px; font-weight: 700; }
-    .drop-zone { border-radius: 10px; background: #fff; }
-    .fraction-numerator { border-bottom-color: currentColor; }
-    .result-message { border-radius: 16px; }
-    .result-message.correct { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); }
-    .result-message button { margin: 10px 4px 0; }
-    .result-overlay { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.55); display: flex; z-index: 9999; padding: 16px; overflow-y: auto; box-sizing: border-box; }
-    .result-box { background: #fff; border: 8px solid var(--u-frame); border-radius: 32px; padding: 26px 20px; max-width: 460px; width: 100%; text-align: center; margin: auto; box-sizing: border-box; }
-    .result-emoji { font-size: 2.6em; }
-    .result-box h2 { color: var(--u-accent-text); font-size: min(2rem, 7.5vw); white-space: nowrap; margin: 4px 0 8px; }
-    .result-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); white-space: nowrap; margin-bottom: 8px; }
-    .result-box p { color: var(--u-ink); font-weight: 700; line-height: 1.7; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-    .result-nav button { padding: 12px; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    @media (max-width: 760px) {
-      body { padding: 8px; }
-      .container { padding: 14px 8px; margin: 10px auto; }
-      .problem-header { padding: 14px 10px; }
-      .work-area { flex-direction: column; padding: 10px 6px; gap: 12px; }
-      .column { gap: 12px; }
-      .equation-line { padding: 10px 8px 10px 40px; font-size: 16px !important; min-height: 0; }
-      .equation-line.final-answer { padding: 12px 8px 12px 40px; }
-      .equation-line::before { left: 8px; width: 24px; height: 24px; }
-      .equation-line.no-wrap { flex-wrap: wrap; }
-      .drop-zone { min-width: 50px; min-height: 40px; padding: 4px 8px; }
-      .choices-area { padding: 8px; max-height: 34vh; overflow-y: auto; }
-      .choices-area h3 { display: none; }   /* 【ブラッシュアップ】スマホでは説明を消して選択肢を広く */
-      .choices-container { gap: 6px; }
-      .choice-item { padding: 6px 10px; font-size: 15px !important; }
-      .button-group button { padding: 12px 18px; }
-      /* 【ブラッシュアップ】スマホ：問題文と図を上に、選択肢を下に固定して、式と同時に見えるようにする */
-      .problem-page.active { display: flex; flex-direction: column; }
-      .problem-header { position: sticky; top: 0; z-index: 6; flex-direction: row !important; align-items: center !important; gap: 6px !important; padding: 6px 8px !important; margin-bottom: 8px !important; border-width: 3px !important; }
-      .problem-text { width: auto; flex: 1; text-align: left; }
-      .problem-text h2 { display: none; }
-      .problem-text p { font-size: 13px !important; line-height: 1.5 !important; }
-      .triangle-diagram { flex-shrink: 0; }
-      .st-svg { width: 168px; }
-      .st-vtx { font-size: 27px; }
-      .st-side { font-size: 25px; }
-      .st-side.var { font-size: 30px; }
-      .st-ang { font-size: 22px; }
-      .st-o, .st-r { font-size: 20px; }
-      .pair-note { display: none; }
-      .formula-card { order: 1; font-size: 13px !important; padding: 4px 8px !important; margin-bottom: 8px !important; line-height: 1.7 !important; }
-      .formula-card .sub { font-size: 11px !important; }
-      .work-area { order: 2; }
-      .choices-area { order: 3; top: auto !important; bottom: 0; margin: 8px 0 0 !important; max-height: 30vh !important; }
-      .button-group { order: 4; }
-      .result-message { order: 5; }
-      .navigation { gap: 5px !important; }
-      .nav-button { padding: 5px 9px !important; font-size: 13px !important; }
-    }
-    /* 【ブラッシュアップ】計算してかいた図・公式カード・考え方 */
-    .triangle-diagram { flex-direction: column; align-items: center; }
-    .st-svg { background: #fff; border-radius: 12px; max-width: 100%; height: auto; font-family: var(--u-font); }
-    .st-body { fill: #f1f5f9; stroke: #475569; stroke-width: 2.5; stroke-linejoin: round; }
-    .st-arc { fill: none; stroke: #64748b; stroke-width: 2; }
-    .st-arc.k { stroke: #2563eb; }
-    .st-arc.t { stroke: #ea580c; }
-    .st-right { fill: none; stroke: #64748b; stroke-width: 1.5; }
-    .st-vtx { font-size: 21px; font-weight: 800; fill: #334155; font-family: var(--u-math-font); font-style: italic; }   /* 【ブラッシュアップ】頂点の文字は斜体 */
-    .st-ang, .st-side, .st-o, .st-r { font-family: var(--u-math-font); }
-    .st-o, .st-r .v { font-style: italic; }
-    .st-ang { font-size: 15px; font-weight: 800; fill: #475569; }
-    .st-side { font-size: 18px; font-weight: 800; fill: var(--u-ink); }
-    .st-side.var { font-family: 'Times New Roman', serif; font-style: italic; font-size: 22px; }
-    .st-vtx.k, .st-ang.k, .st-side.k { fill: #2563eb; }
-    .st-vtx.t, .st-ang.t, .st-side.t { fill: #ea580c; }
-    .st-circle { fill: none; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 5 4; }
-    .st-radius { stroke: #94a3b8; stroke-width: 1.5; }
-    .st-center { fill: #475569; }
-    .st-o, .st-r { font-size: 14px; font-weight: 800; fill: #475569; }
-    .st-vtx, .st-ang, .st-side, .st-o, .st-r { paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
-    .pair-note { font-size: 12px; color: var(--u-sub); font-weight: 700; text-align: center; margin-top: 4px; }
-    .pair-note .k { color: #2563eb; }
-    .pair-note .t { color: #ea580c; }
-    .formula-card { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; padding: 8px 12px; margin: 0 0 16px; color: var(--u-title); font-weight: 700; text-align: center; line-height: 1.9; }
-    .formula-card .fraction-numerator, .formula-card .fraction-denominator { min-width: 0; padding-left: 2px; padding-right: 2px; }
-    .formula-card .sub { color: var(--u-ink); font-size: 13px; }
-    .result-message .point { display: inline-block; margin-top: 8px; font-size: 15px; color: var(--u-ink); font-weight: 700; line-height: 1.6; }
-    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
-    .mf { font-family: var(--u-math-font); font-style: normal; }
-    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
-  
-  </style>
-</head>
- <body class="u-theme">
-  <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-  <header class="header">
-   <h1 id="main-title">正弦定理 練習問題</h1>
-   <nav class="navigation" id="navigation"></nav>
-  </header>
-  <main id="problems-container"></main>
-  <div class="version">
-   v66
-  </div>
-  <script>
-    const defaultConfig = {
-      main_title: "正弦定理 練習問題",
-      primary_color: "#667eea",
-      secondary_color: "#48bb78",
-      text_color: "#2d3748",
-      background_color: "#f7fafc",
-      accent_color: "#764ba2",
-      font_family: "Hiragino Sans",
-      font_size: 16
-    };
-
-    function frac(num, denom) {
-      return { type: 'fraction', numerator: num, denominator: denom };
-    }
-
-    const Z = (id, answer) => ({ id, answer });   // 【ブラッシュアップ】空欄
-    const problems = [
-      {
-        id: 1, title: "問題1",
-        description: "△ABC において、A＝30°、B＝60°、b＝6 のとき、辺 a の長さを求めよ。",
-        point: "わかっている「辺 b と角 B」がペア。求める辺 a は角 A と向かい合う。だから a/sinA = b/sinB を使う。",
-        triangle: { A: 30, B: 60, C: 90, angles: { A: "30°", B: "60°" }, sides: { a: "a", b: "6" }, known: "b", target: "a" },
-        lines: [
-          { template: [frac("a", Z("1-1", "sin30°")), " = ", frac(Z("1-2", "6"), Z("1-3", "sin60°"))] },
-          { template: ["両辺に sin30° をかけて　a = ", frac(Z("1-4", "6"), Z("1-5", "sin60°")), " × ", Z("1-6", "sin30°")] },
-          { template: ["sin30° = ", frac("1", "2"), "、sin60° = ", frac("√3", "2"), " を代入すると"], isHint: true },
-          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "2")] },
-          { template: ["÷ 分数 は、逆数をかける"], isHint: true },
-          { template: ["a = 6 × ", frac(Z("1-7", "2"), Z("1-8", "√3")), " × ", frac(Z("1-9", "1"), Z("1-10", "2"))], columnBreak: true },
-          { template: ["a = ", frac(Z("1-11", "6"), Z("1-12", "√3"))] },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["a = ", frac("6", "√3"), " × ", frac(Z("1-13", "√3"), Z("1-14", "√3")), "　（同じルートを分母と分子にかける）"] },
-          { template: ["a = ", frac(Z("1-15", "6√3"), "3")] },
-          { template: ["a = "], isFinal: true, finalId: "1-16", finalAnswer: "2√3" }
-        ],
-        finalChoices: ["2√3", "√3", "3√3", "6√3"],
-        choices: ["sin30°", "6", "sin60°", "2", "√3", "1", "6√3", "sin90°", "3", "√2"]
-      },
-      {
-        id: 2, title: "問題2",
-        description: "△ABC において、A＝30°、C＝45°、c＝4 のとき、辺 a の長さを求めよ。",
-        point: "わかっている「辺 c と角 C」がペア。求める a は A と向かい合うので a/sinA = c/sinC。",
-        triangle: { A: 30, B: 105, C: 45, angles: { A: "30°", C: "45°" }, sides: { a: "a", c: "4" }, known: "c", target: "a" },
-        lines: [
-          { template: [frac("a", Z("2-1", "sin30°")), " = ", frac(Z("2-2", "4"), Z("2-3", "sin45°"))] },
-          { template: ["a = ", frac(Z("2-4", "4"), Z("2-5", "sin45°")), " × ", Z("2-6", "sin30°")] },
-          { template: ["sin30° = ", frac(Z("2-7", "1"), Z("2-8", "2")), "、sin45° = ", frac(Z("2-9", "1"), Z("2-10", "√2")), "<br>", "を代入すると"], isHint: true },
-          { template: ["a = 4 ÷ ", frac("1", "√2"), " × ", frac("1", "2")] },
-          { template: ["÷ 分数 は、逆数をかける"], isHint: true },
-          { template: ["a = 4 × ", frac(Z("2-11", "√2"), Z("2-12", "1")), " × ", frac(Z("2-13", "1"), Z("2-14", "2"))], columnBreak: true },
-          { template: ["a = ", frac(Z("2-15", "4√2"), Z("2-16", "2"))] },
-          { template: ["a = "], isFinal: true, finalId: "2-17", finalAnswer: "2√2" }
-        ],
-        finalChoices: ["2√2", "√2", "4√2", "2"],
-        choices: ["sin30°", "4", "sin45°", "1", "2", "√2", "4√2", "sin105°", "sin60°", "√3"]
-      },
-      {
-        id: 3, title: "問題3",
-        description: "△ABC において、A＝45°、B＝60°、b＝6 のとき、辺 a の長さを求めよ。",
-        point: "わかっている「辺 b と角 B」がペア。a/sinA = b/sinB に入れる。最後は分母の √6 を有理化。",
-        triangle: { A: 45, B: 60, C: 75, angles: { A: "45°", B: "60°" }, sides: { a: "a", b: "6" }, known: "b", target: "a" },
-        lines: [
-          { template: [frac("a", Z("3-1", "sin45°")), " = ", frac(Z("3-2", "6"), Z("3-3", "sin60°"))] },
-          { template: ["a = ", frac(Z("3-4", "6"), Z("3-5", "sin60°")), " × ", Z("3-6", "sin45°")] },
-          { template: ["sin45° = ", frac(Z("3-7", "1"), Z("3-8", "√2")), "、sin60° = ", frac(Z("3-9", "√3"), Z("3-10", "2")), "<br>", "を代入すると"], isHint: true },
-          { template: ["a = 6 ÷ ", frac("√3", "2"), " × ", frac("1", "√2")] },
-          { template: ["a = 6 × ", frac(Z("3-11", "2"), Z("3-12", "√3")), " × ", frac(Z("3-13", "1"), Z("3-14", "√2"))], columnBreak: true },
-          { template: ["a = ", frac(Z("3-15", "12"), Z("3-16", "√6"))] },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["a = ", frac("12", "√6"), " × ", frac(Z("3-17", "√6"), Z("3-18", "√6"))] },
-          { template: ["a = ", frac(Z("3-19", "12√6"), Z("3-20", "6"))] },
-          { template: ["a = "], isFinal: true, finalId: "3-21", finalAnswer: "2√6" }
-        ],
-        finalChoices: ["2√6", "√6", "3√6", "4√6"],
-        choices: ["sin45°", "6", "sin60°", "1", "√2", "√3", "2", "12", "√6", "12√6", "sin75°", "3"]
-      },
-      {
-        id: 4, title: "問題4",
-        description: "△ABC において、B＝60°、C＝45°、b＝12 のとき、辺 c の長さを求めよ。",
-        point: "わかっている「辺 b と角 B」がペア。求める c は C と向かい合うので c/sinC = b/sinB。",
-        triangle: { A: 75, B: 60, C: 45, angles: { B: "60°", C: "45°" }, sides: { b: "12", c: "c" }, known: "b", target: "c" },
-        lines: [
-          { template: [frac("c", Z("4-1", "sin45°")), " = ", frac(Z("4-2", "12"), Z("4-3", "sin60°"))] },
-          { template: ["c = ", frac(Z("4-4", "12"), Z("4-5", "sin60°")), " × ", Z("4-6", "sin45°")] },
-          { template: ["c = 12 ÷ ", frac(Z("4-7", "√3"), Z("4-8", "2")), " × ", frac(Z("4-9", "1"), Z("4-10", "√2"))] },
-          { template: ["c = 12 × ", frac(Z("4-11", "2"), Z("4-12", "√3")), " × ", frac(Z("4-13", "1"), Z("4-14", "√2"))], columnBreak: true },
-          { template: ["c = ", frac(Z("4-15", "24"), Z("4-16", "√6"))] },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["c = ", frac("24", "√6"), " × ", frac(Z("4-17", "√6"), Z("4-18", "√6"))] },
-          { template: ["c = ", frac(Z("4-19", "24√6"), Z("4-20", "6"))] },
-          { template: ["c = "], isFinal: true, finalId: "4-21", finalAnswer: "4√6" }
-        ],
-        finalChoices: ["6√6", "4√6", "2√6", "8√6"],
-        choices: ["sin45°", "12", "sin60°", "1", "2", "√2", "√3", "√6", "24", "24√6", "6", "sin75°", "12√6"]
-      },
-      {
-        id: 5, title: "問題5",
-        description: "△ABC において、A＝60°、B＝45°、a＝8 のとき、辺 b の長さを求めよ。",
-        point: "わかっている「辺 a と角 A」がペア。b/sinB = a/sinA。答えは約分して分数のまま。",
-        triangle: { A: 60, B: 45, C: 75, angles: { A: "60°", B: "45°" }, sides: { a: "8", b: "b" }, known: "a", target: "b" },
-        lines: [
-          { template: [frac("b", Z("5-1", "sin45°")), " = ", frac(Z("5-2", "8"), Z("5-3", "sin60°"))] },
-          { template: ["b = ", frac(Z("5-4", "8"), Z("5-5", "sin60°")), " × ", Z("5-6", "sin45°")] },
-          { template: ["b = 8 × ", frac(Z("5-7", "2"), Z("5-8", "√3")), " × ", frac(Z("5-9", "1"), Z("5-10", "√2"))] },
-          { template: ["b = ", frac(Z("5-11", "16"), Z("5-12", "√6"))] },
-          { template: ["b = ", frac("16", "√6"), " × ", frac(Z("5-13", "√6"), Z("5-14", "√6"))], columnBreak: true },
-          { template: ["b = ", frac(Z("5-15", "16√6"), Z("5-16", "6"))] },
-          { template: ["b = "], isFinal: true, finalId: "5-17", finalAnswer: "8√6/3" }
-        ],
-        finalChoices: [
-          { type: 'fraction', numerator: "8√6", denominator: "3" },
-          { type: 'fraction', numerator: "4√6", denominator: "3" },
-          { type: 'fraction', numerator: "16√6", denominator: "3" },
-          { type: 'fraction', numerator: "2√6", denominator: "3" }
-        ],
-        choices: ["sin45°", "8", "sin60°", "√6", "16", "16√6", "6", "√3", "2", "1", "√2", "sin75°", "4√6"]
-      },
-      {
-        id: 6, title: "問題6",
-        description: "△ABC において、A＝105°、B＝45°、b＝4 のとき、辺 c の長さを求めよ。（まず C を求めよう）",
-        point: "c と向かい合う角 C がわからないので、まず C = 180° − (A + B) = 30°。そのあと c/sinC = b/sinB。",
-        triangle: { A: 105, B: 45, C: 30, angles: { A: "105°", B: "45°", C: "?" }, sides: { b: "4", c: "c" }, known: "b", target: "c" },
-        lines: [
-          { template: ["C = 180° − (105° + 45°) = ", Z("6-1", "30°")] },
-          { template: [frac("c", Z("6-2", "sin30°")), " = ", frac(Z("6-3", "4"), Z("6-4", "sin45°"))] },
-          { template: ["c = ", frac(Z("6-5", "4"), Z("6-6", "sin45°")), " × ", Z("6-7", "sin30°")] },
-          { template: ["c = 4 ÷ ", frac(Z("6-8", "1"), Z("6-9", "√2")), " × ", frac(Z("6-10", "1"), Z("6-11", "2"))] },
-          { template: ["c = 4 × ", frac(Z("6-12", "√2"), Z("6-13", "1")), " × ", frac(Z("6-14", "1"), Z("6-15", "2"))], columnBreak: true },
-          { template: ["c = ", frac(Z("6-16", "4√2"), Z("6-17", "2"))] },
-          { template: ["c = "], isFinal: true, finalId: "6-18", finalAnswer: "2√2" }
-        ],
-        finalChoices: ["2√2", "4√2", "√2", "2√6"],
-        choices: ["30°", "sin30°", "4", "sin45°", "1", "√2", "2", "4√2", "60°", "sin105°", "sin60°"]
-      },
-      {
-        id: 7, title: "問題7",
-        description: "△ABC において、a＝6、A＝30° のとき、外接円の半径 R を求めよ。",
-        point: "正弦定理の続き「= 2R」を使う。a/sinA = 2R なので、2R = 6 ÷ sin30° = 12、R = 6。",
-        triangle: { A: 30, B: 65, C: 85, angles: { A: "30°" }, sides: { a: "6" }, known: "a", circle: "R" },
-        lines: [
-          { template: [frac(Z("7-1", "6"), Z("7-2", "sin30°")), " = 2R"] },
-          { template: ["sin30° = ", frac(Z("7-3", "1"), Z("7-4", "2")), " より　2R = 6 ÷ ", frac("1", "2"), " = 6 × ", Z("7-5", "2"), " = ", Z("7-6", "12")] },
-          { template: ["R = "], isFinal: true, finalId: "7-7", finalAnswer: "6", columnBreak: true }
-        ],
-        finalChoices: ["6", "12", "3", "6√3"],
-        choices: ["6", "sin30°", "1", "2", "12", "sin60°", "√3", "3"]
-      },
-      {
-        id: 8, title: "問題8",
-        description: "△ABC の外接円の半径が R＝3、A＝45° のとき、辺 a の長さを求めよ。",
-        point: "a/sinA = 2R から a = 2R sinA = 6 × sin45° = 3√2。",
-        triangle: { A: 45, B: 75, C: 60, angles: { A: "45°" }, sides: { a: "a" }, target: "a", circle: "R＝3" },
-        lines: [
-          { template: [frac("a", Z("8-1", "sin45°")), " = 2R = 2 × 3 = ", Z("8-2", "6")] },
-          { template: ["a = ", Z("8-3", "6"), " × sin45° = 6 × ", frac(Z("8-4", "1"), Z("8-5", "√2")), " = ", frac(Z("8-6", "6"), Z("8-7", "√2"))] },
-          { template: ["分母にルートがあるので有理化すると、"], isHint: true },
-          { template: ["a = ", frac("6", "√2"), " × ", frac(Z("8-8", "√2"), Z("8-9", "√2")), " = ", frac(Z("8-10", "6√2"), Z("8-11", "2"))], columnBreak: true },
-          { template: ["a = "], isFinal: true, finalId: "8-12", finalAnswer: "3√2" }
-        ],
-        finalChoices: ["3√2", "6√2", "3", "2√3"],
-        choices: ["sin45°", "6", "1", "√2", "6√2", "2", "sin60°", "3", "√3"]
-      },
-      {
-        id: 9, title: "問題9",
-        description: "△ABC において、a＝2√3、b＝2、A＝60° のとき、B を求めよ。",
-        point: "sin B = 1/2 になる B は 30° と 150° の 2 つ。でも B = 150° だと A + B = 210° となり三角形ができないので、B = 30°。",
-        triangle: { A: 60, B: 30, C: 90, angles: { A: "60°", B: "?" }, sides: { a: "2√3", b: "2" }, known: "a", target: "b" },
-        lines: [
-          { template: [frac(Z("9-1", "2√3"), "sin60°"), " = ", frac(Z("9-2", "2"), "sin B")] },
-          { template: ["sin B = ", frac("2 × sin60°", "2√3"), " = 2 × ", frac(Z("9-3", "√3"), Z("9-4", "2")), " ÷ 2√3 = ", frac(Z("9-5", "1"), Z("9-6", "2"))] },
-          { template: ["0° < B < 180° で sin B = ", frac("1", "2"), " となる B は 30° と 150°"], isHint: true },
-          { template: ["B = 150° とすると　A + B = 60° + 150° = ", Z("9-7", "210°")], columnBreak: true },
-          { template: ["180° をこえるので、B = 150° は三角形にならない"], isHint: true },
-          { template: ["B = "], isFinal: true, finalId: "9-8", finalAnswer: "30°" }
-        ],
-        finalChoices: ["30°", "150°", "30° または 150°", "60°"],
-        choices: ["2√3", "2", "√3", "1", "210°", "150°", "√2", "90°"]
-      },
-      {
-        id: 10, title: "問題10",
-        description: "△ABC において、a＝√2、b＝√3、A＝45° のとき、B を求めよ。",
-        point: "sin B = √3/2 になる B は 60° と 120°。どちらも A + B が 180° より小さいので、答えは 2 つ。",
-        triangle: { A: 45, B: 60, C: 75, angles: { A: "45°", B: "?" }, sides: { a: "√2", b: "√3" }, known: "a", target: "b" },
-        lines: [
-          { template: [frac(Z("10-1", "√2"), "sin45°"), " = ", frac(Z("10-2", "√3"), "sin B")] },
-          { template: ["sin B = ", frac("√3 × sin45°", "√2"), " = √3 × ", frac(Z("10-3", "1"), Z("10-4", "√2")), " ÷ √2 = ", frac(Z("10-5", "√3"), Z("10-6", "2"))] },
-          { template: ["0° < B < 180° で sin B = ", frac("√3", "2"), " となる B は 60° と 120°"], isHint: true },
-          { template: ["B = 60° のとき A + B = ", Z("10-7", "105°")], columnBreak: true },
-          { template: ["B = 120° のとき A + B = ", Z("10-8", "165°")] },
-          { template: ["どちらも 180° より小さいので、どちらも三角形になる"], isHint: true },
-          { template: ["B = "], isFinal: true, finalId: "10-9", finalAnswer: "60° または 120°" }
-        ],
-        finalChoices: ["60°", "120°", "60° または 120°", "45° または 135°"],
-        choices: ["√2", "√3", "1", "2", "105°", "165°", "225°", "√6"]
-      },
-      {
-        id: 11, title: "問題11",
-        description: "△ABC において、b＝3、c＝5、A＝120° のとき、辺 a の長さを求めよ。（どちらの定理を使う？）",
-        point: "「2辺とその間の角」がわかっているときは余弦定理。正弦定理は「向かい合う辺と角のペア」が 1 組わかっているときに使う。",
-        triangle: { A: 120, B: 21.786789298261798, C: 38.213210701738202, angles: { A: "120°" }, sides: { a: "a", b: "3", c: "5" } },
-        lines: [
-          { template: ["2辺とその間の角がわかっているので、使うのは ", Z("11-1", "余弦定理")] },
-          { template: ["a² = ", Z("11-2", "3"), "² + ", Z("11-3", "5"), "² − 2 × 3 × 5 × cos", Z("11-4", "120°")] },
-          { template: ["cos120° = ", frac(Z("11-5", "−1"), Z("11-6", "2"))] },
-          { template: ["a² = 9 + 25 + ", Z("11-7", "15"), " = ", Z("11-8", "49")], columnBreak: true },
-          { template: ["a > 0 より　a = "], isFinal: true, finalId: "11-9", finalAnswer: "7" }
-        ],
-        finalChoices: ["7", "49", "√19", "19"],
-        choices: ["余弦定理", "正弦定理", "3", "5", "120°", "−1", "2", "15", "49", "−15", "60°"]
-      }
-    ];
-
-    let currentProblem = 1;
-    let draggedElement = null;
-    let problemAnswers = {};
-    let selectedChoice = null;
-    let selectedFinalChoice = null;
-    let waitingDropZone = null;
-    // 【ブラッシュアップ】正解した問題・答えを見た問題・変えられないようにした問題
-    let solvedMap = {};
-    let shownMap = {};
-    let lockedMap = {};
-
-    function createFractionHTML(item) {
-      if (typeof item === 'string') {
-        return item;
-      }
-      if (item && item.type === 'fraction') {
-        const numHTML = typeof item.numerator === 'object' && item.numerator.id
-          ? `<div class="drop-zone" data-blank-id="${item.numerator.id}" data-answer="${item.numerator.answer}"></div>`
-          : (item.numerator || '');
-        const denomHTML = typeof item.denominator === 'object' && item.denominator.id
-          ? `<div class="drop-zone" data-blank-id="${item.denominator.id}" data-answer="${item.denominator.answer}"></div>`
-          : (item.denominator || '');
-        return `<span class="fraction"><span class="fraction-numerator">${numHTML}</span><span class="fraction-denominator">${denomHTML}</span></span>`;
-      }
-      if (item && item.id) {
-        return `<div class="drop-zone" data-blank-id="${item.id}" data-answer="${item.answer}"></div>`;
-      }
-      return '';
-    }
-
-    function getChoiceValue(choice) {
-      if (typeof choice === 'string') return choice;
-      if (choice && choice.type === 'fraction') return `${choice.numerator}/${choice.denominator}`;
-      return String(choice);
-    }
-
-    function drawTriangle(triangle, problem) {
-      // 【ブラッシュアップ】元は BC と CA の長さを決め打ちして角 C だけで描いていたため、
-      //   角 A・B と辺の比が問題の数値と合っていなかった（105° が鋭角に描かれる、大きい角と小さい角が逆 など）。
-      //   正弦定理 BC : CA = sinA : sinB から形を計算し、画面に収まるように拡大してかく。
-      //   同じ色の辺と角が「向かい合うペア」（青：わかっているペア、オレンジ：求めるペア）。
-      const toRad = d => d * Math.PI / 180;
-      const { A, B, C } = triangle;
-      const ca = Math.sin(toRad(B)) / Math.sin(toRad(A));          // BC を 1 としたときの CA
-      const raw = { C: [0, 0], B: [1, 0], A: [ca * Math.cos(toRad(C)), ca * Math.sin(toRad(C))] };
-      const R0 = 1 / (2 * Math.sin(toRad(A)));                      // 外接円の半径（BC = 1 のとき）
-      const O0 = [0.5, Math.sqrt(Math.max(R0 * R0 - 0.25, 0)) * (A < 90 ? 1 : -1)];
-      const xs = [0, 1, raw.A[0]], ys = [0, 0, raw.A[1]];
-      if (triangle.circle) { xs.push(O0[0] - R0, O0[0] + R0); ys.push(O0[1] - R0, O0[1] + R0); }
-      const W = 250, H = 170, M = 36;
-      const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
-      const k = Math.min(W / (maxx - minx), H / (maxy - miny));
-      const ox = M + (W - (maxx - minx) * k) / 2, oy = M + (H - (maxy - miny) * k) / 2;
-      const T = p => [ox + (p[0] - minx) * k, oy + (maxy - p[1]) * k];
-      const P = { A: T(raw.A), B: T(raw.B), C: T(raw.C) };
-      const G = [(P.A[0] + P.B[0] + P.C[0]) / 3, (P.A[1] + P.B[1] + P.C[1]) / 3];
-      const f = v => Math.round(v * 10) / 10;
-      const unit = (p, q) => { const x = q[0] - p[0], y = q[1] - p[1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
-      const at = (p, u, d) => [f(p[0] + u[0] * d), f(p[1] + u[1] * d)];
-      const pair = L => {
-        const l = L.toLowerCase();
-        if (triangle.known && triangle.known === l) return ' k';
-        if (triangle.target && triangle.target === l) return ' t';
-        return '';
-      };
-      const text = (p, s, cls) => `<text x="${p[0]}" y="${p[1]}" class="${cls}" text-anchor="middle" dominant-baseline="central">${s}</text>`;
-      let svg = `<svg viewBox="0 0 ${W + 2 * M} ${H + 2 * M}" width="${W + 2 * M}" height="${H + 2 * M}" class="st-svg" data-pts="${[P.A, P.B, P.C].map(p => f(p[0]) + ',' + f(p[1])).join(' ')}">`;
-      svg += `<polygon points="${[P.A, P.B, P.C].map(p => f(p[0]) + ',' + f(p[1])).join(' ')}" class="st-body" />`;
-      if (triangle.circle) {   // 外接円（三角形の上にかいて、中心 O と半径 R が見えるように）
-        const O = T(O0), r = R0 * k;
-        svg += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="${f(r)}" class="st-circle" />`;
-        svg += `<line x1="${f(O[0])}" y1="${f(O[1])}" x2="${f(P.B[0])}" y2="${f(P.B[1])}" class="st-radius" />`;
-        svg += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="3" class="st-center" />`;
-        svg += text(at(O, unit(P.B, O), 12), 'O', 'st-o');
-        const mid = [(O[0] + P.B[0]) / 2, (O[1] + P.B[1]) / 2], u = unit(O, P.B);
-        svg += text(at(mid, [-u[1], u[0]], 14), triangle.circle.replace(/([A-Za-z])/g, '<tspan class="v">$1</tspan>'), 'st-r');   // R は斜体
-      }
-      const others = { A: ['B', 'C'], B: ['C', 'A'], C: ['A', 'B'] };
-      ['A', 'B', 'C'].forEach(L => {
-        const V = P[L], u1 = unit(V, P[others[L][0]]), u2 = unit(V, P[others[L][1]]);
-        const lens = others[L].map(o => Math.hypot(P[o][0] - V[0], P[o][1] - V[1]));
-        const deg = triangle[L];
-        const label = triangle.angles && triangle.angles[L];
-        if (!label && Math.abs(deg - 90) < 0.01) {   // 直角のしるし
-          const s = 12, a1 = at(V, u1, s), a2 = at(V, u2, s), c = [f(V[0] + (u1[0] + u2[0]) * s), f(V[1] + (u1[1] + u2[1]) * s)];
-          svg += `<path d="M ${a1[0]},${a1[1]} L ${c[0]},${c[1]} L ${a2[0]},${a2[1]}" class="st-right" />`;
-        }
-        if (!label) return;
-        const r = Math.min(26, 0.28 * Math.min(...lens));
-        const a1 = at(V, u1, r), a2 = at(V, u2, r);
-        const sweep = (u1[0] * u2[1] - u1[1] * u2[0]) > 0 ? 1 : 0;
-        svg += `<path d="M ${a1[0]},${a1[1]} A ${f(r)},${f(r)} 0 0,${sweep} ${a2[0]},${a2[1]}" class="st-arc${pair(L)}" />`;
-        const bis = unit([0, 0], [u1[0] + u2[0], u1[1] + u2[1]]);
-        svg += text(at(V, bis, r + (deg > 90 ? 13 : 17)), label, 'st-ang' + pair(L));
-      });
-      const ends = { a: ['B', 'C'], b: ['C', 'A'], c: ['A', 'B'] };
-      Object.keys(triangle.sides || {}).forEach(l => {
-        const p = P[ends[l][0]], q = P[ends[l][1]], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-        let n = [-(q[1] - p[1]), q[0] - p[0]]; const len = Math.hypot(...n); n = [n[0] / len, n[1] / len];
-        if ((m[0] - G[0]) * n[0] + (m[1] - G[1]) * n[1] < 0) n = [-n[0], -n[1]];
-        const s = triangle.sides[l], w = 10 * s.length + 4;
-        svg += text(at(m, n, 8 + Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * 9), s, 'st-side' + (/^[abc]$/.test(s) ? ' var' : '') + pair(l));
-      });
-      ['A', 'B', 'C'].forEach(L => { svg += text(at(P[L], unit(G, P[L]), 17), L, 'st-vtx' + pair(L)); });
-      return svg + '</svg>';
-    }
-
-    function initializeProblems() {
-      const nav = document.getElementById('navigation');
-      const container = document.getElementById('problems-container');
-
-      problems.forEach(problem => {
-        const navBtn = document.createElement('button');
-        navBtn.className = 'nav-button';
-        navBtn.textContent = problem.title;
-        if (problem.id === 1) navBtn.classList.add('active');
-        navBtn.onclick = () => showProblem(problem.id);
-        nav.appendChild(navBtn);
-
-        const page = document.createElement('div');
-        page.className = 'problem-page container';
-        page.id = `problem-${problem.id}`;
-        if (problem.id === 1) page.classList.add('active');
-
-        page.innerHTML = `
-          <div class="problem-header">
-            <div class="problem-text">
-              <h2>${problem.title}</h2>
-              <p>${problem.description}</p>
-            </div>
-            <div class="triangle-diagram">
-              ${drawTriangle(problem.triangle, problem)}
-              ${problem.triangle.known || problem.triangle.target ? '<div class="pair-note">同じ色の辺と角が向かい合うペア（<span class="k">青</span>：わかっている　<span class="t">オレンジ</span>：求める）</div>' : ''}
-            </div>
-          </div>
-          <!-- 【ブラッシュアップ】公式カード -->
-          <div class="formula-card">正弦定理：<span class="fraction"><span class="fraction-numerator">a</span><span class="fraction-denominator">sin A</span></span> = <span class="fraction"><span class="fraction-numerator">b</span><span class="fraction-denominator">sin B</span></span> = <span class="fraction"><span class="fraction-numerator">c</span><span class="fraction-denominator">sin C</span></span> = 2R<br><span class="sub">R：外接円の半径　／　余弦定理：a² = b² + c² − 2bc cos A（2辺とその間の角がわかるとき）</span></div>
-
-          <div class="choices-area">
-            <h3>選択肢（ドラッグまたはタップして空欄に入れてください）</h3>
-            <div class="choices-container" id="choices-${problem.id}"></div>
-          </div>
-
-          <div class="work-area" id="work-${problem.id}"></div>
-
-          <div class="button-group">
-            <button class="reset-button" onclick="resetProblem(${problem.id})">リセット</button>
-            <button class="show-answer-button" onclick="showAnswer(${problem.id})">答えを見る</button>
-          </div>
-
-          <div class="result-message" id="result-${problem.id}"></div>
-        `;
-
-        container.appendChild(page);
-
-        renderChoices(problem);
-        renderEquations(problem);
-      });
-    }
-
-    function shuffleArray(array) {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    }
-
-    function renderChoices(problem) {
-      const container = document.getElementById(`choices-${problem.id}`);
-      container.innerHTML = '';
-
-      const shuffledChoices = shuffleArray(problem.choices);
-
-      shuffledChoices.forEach((choice, index) => {
-        const choiceDiv = document.createElement('div');
-        choiceDiv.className = 'choice-item';
-        choiceDiv.draggable = true;
-
-        if (typeof choice === 'string') {
-          if (choice.includes('/')) {
-            const parts = choice.split('/');
-            const fracSpan = document.createElement('span');
-            fracSpan.className = 'fraction';
-            fracSpan.innerHTML = `
-              <span class="fraction-numerator">${parts[0]}</span>
-              <span class="fraction-denominator">${parts[1]}</span>
-            `;
-            choiceDiv.appendChild(fracSpan);
-          } else {
-            choiceDiv.textContent = choice;
-          }
-        } else if (choice && choice.type === 'fraction') {
-          const fracSpan = document.createElement('span');
-          fracSpan.className = 'fraction';
-          fracSpan.innerHTML = `
-            <span class="fraction-numerator">${choice.numerator}</span>
-            <span class="fraction-denominator">${choice.denominator}</span>
-          `;
-          choiceDiv.appendChild(fracSpan);
-        }
-
-        choiceDiv.dataset.value = getChoiceValue(choice);
-        choiceDiv.dataset.problemId = problem.id;
-        choiceDiv.dataset.index = index;
-
-        choiceDiv.addEventListener('dragstart', handleDragStart);
-        choiceDiv.addEventListener('dragend', handleDragEnd);
-        choiceDiv.addEventListener('click', handleChoiceClick);
-
-        container.appendChild(choiceDiv);
-      });
-    }
-
-    function renderEquations(problem) {
-      const workArea = document.getElementById(`work-${problem.id}`);
-
-      const column1 = document.createElement('div');
-      column1.className = 'column';
-      const column2 = document.createElement('div');
-      column2.className = 'column';
-
-      let currentColumn = column1;
-      let stepNumber = 1;
-
-      problem.lines.forEach((line, lineIndex) => {
-        if (line.columnBreak) {
-          currentColumn = column2;
-        }
-
-        if (line.isHint) {
-          const hintDiv = document.createElement('div');
-          hintDiv.className = 'equation-line hint';
-          hintDiv.dataset.step = '💡';
-
-          line.template.forEach(item => {
-            if (typeof item === 'string') {
-              if (item === '<br>') {
-                hintDiv.appendChild(document.createElement('br'));
-              } else {
-                const span = document.createElement('span');
-                span.textContent = item;
-                hintDiv.appendChild(span);
-              }
-            } else if (item && item.type === 'fraction') {
-              const fracContainer = document.createElement('span');
-              fracContainer.className = 'fraction';
-
-              const numSpan = document.createElement('span');
-              numSpan.className = 'fraction-numerator';
-              if (typeof item.numerator === 'object' && item.numerator.id) {
-                const dropZone = document.createElement('div');
-                dropZone.className = 'drop-zone';
-                dropZone.dataset.blankId = item.numerator.id;
-                dropZone.dataset.answer = item.numerator.answer;
-                dropZone.dataset.problemId = problem.id;
-                dropZone.addEventListener('dragover', handleDragOver);
-                dropZone.addEventListener('dragleave', handleDragLeave);
-                dropZone.addEventListener('drop', handleDrop);
-                dropZone.addEventListener('click', handleDropZoneClick);
-                numSpan.appendChild(dropZone);
-              } else {
-                numSpan.textContent = item.numerator || '';
-              }
-
-              const denomSpan = document.createElement('span');
-              denomSpan.className = 'fraction-denominator';
-              if (typeof item.denominator === 'object' && item.denominator.id) {
-                const dropZone = document.createElement('div');
-                dropZone.className = 'drop-zone';
-                dropZone.dataset.blankId = item.denominator.id;
-                dropZone.dataset.answer = item.denominator.answer;
-                dropZone.dataset.problemId = problem.id;
-                dropZone.addEventListener('dragover', handleDragOver);
-                dropZone.addEventListener('dragleave', handleDragLeave);
-                dropZone.addEventListener('drop', handleDrop);
-                dropZone.addEventListener('click', handleDropZoneClick);
-                denomSpan.appendChild(dropZone);
-              } else {
-                denomSpan.textContent = item.denominator || '';
-              }
-
-              fracContainer.appendChild(numSpan);
-              fracContainer.appendChild(denomSpan);
-              hintDiv.appendChild(fracContainer);
-            }
-          });
-
-          currentColumn.appendChild(hintDiv);
-        } else {
-          const lineDiv = document.createElement('div');
-          lineDiv.className = 'equation-line';
-          if (line.isFinal) {
-            lineDiv.classList.add('final-answer');
-          }
-          if (line.noWrap) {
-            lineDiv.classList.add('no-wrap');
-          }
-          lineDiv.dataset.step = stepNumber;
-          stepNumber++;
-
-          line.template.forEach(item => {
-            if (typeof item === 'string') {
-              const span = document.createElement('span');
-              span.textContent = item;
-              lineDiv.appendChild(span);
-            } else if (item && item.type === 'fraction') {
-              const fracContainer = document.createElement('span');
-              fracContainer.className = 'fraction';
-
-              const numSpan = document.createElement('span');
-              numSpan.className = 'fraction-numerator';
-              if (typeof item.numerator === 'object' && item.numerator.id) {
-                const dropZone = document.createElement('div');
-                dropZone.className = 'drop-zone';
-                dropZone.dataset.blankId = item.numerator.id;
-                dropZone.dataset.answer = item.numerator.answer;
-                dropZone.dataset.problemId = problem.id;
-                dropZone.addEventListener('dragover', handleDragOver);
-                dropZone.addEventListener('dragleave', handleDragLeave);
-                dropZone.addEventListener('drop', handleDrop);
-                dropZone.addEventListener('click', handleDropZoneClick);
-                numSpan.appendChild(dropZone);
-              } else {
-                numSpan.textContent = item.numerator || '';
-              }
-
-              const denomSpan = document.createElement('span');
-              denomSpan.className = 'fraction-denominator';
-              if (typeof item.denominator === 'object' && item.denominator.id) {
-                const dropZone = document.createElement('div');
-                dropZone.className = 'drop-zone';
-                dropZone.dataset.blankId = item.denominator.id;
-                dropZone.dataset.answer = item.denominator.answer;
-                dropZone.dataset.problemId = problem.id;
-                dropZone.addEventListener('dragover', handleDragOver);
-                dropZone.addEventListener('dragleave', handleDragLeave);
-                dropZone.addEventListener('drop', handleDrop);
-                dropZone.addEventListener('click', handleDropZoneClick);
-                denomSpan.appendChild(dropZone);
-              } else {
-                denomSpan.textContent = item.denominator || '';
-              }
-
-              fracContainer.appendChild(numSpan);
-              fracContainer.appendChild(denomSpan);
-              lineDiv.appendChild(fracContainer);
-            } else if (item && item.id) {
-              const dropZone = document.createElement('div');
-              dropZone.className = 'drop-zone';
-              dropZone.dataset.blankId = item.id;
-              dropZone.dataset.answer = item.answer;
-              dropZone.dataset.problemId = problem.id;
-
-              dropZone.addEventListener('dragover', handleDragOver);
-              dropZone.addEventListener('dragleave', handleDragLeave);
-              dropZone.addEventListener('drop', handleDrop);
-              dropZone.addEventListener('click', handleDropZoneClick);
-
-              lineDiv.appendChild(dropZone);
-            }
-          });
-
-          if (line.isFinal) {
-            const finalChoicesWrapper = document.createElement('div');
-            finalChoicesWrapper.style.display = 'flex';
-            finalChoicesWrapper.style.alignItems = 'center';
-            finalChoicesWrapper.style.gap = '12px';
-            finalChoicesWrapper.style.flexWrap = 'wrap';
-
-            const finalChoicesDiv = document.createElement('div');
-            finalChoicesDiv.className = 'final-choices';
-            finalChoicesDiv.style.margin = '0';
-
-            const shuffledFinalChoices = shuffleArray(problem.finalChoices);
-
-            shuffledFinalChoices.forEach(choice => {
-              const finalChoiceDiv = document.createElement('div');
-              finalChoiceDiv.className = 'final-choice-item';
-
-              if (typeof choice === 'string') {
-                finalChoiceDiv.textContent = choice;
-                finalChoiceDiv.dataset.value = choice;
-              } else if (choice && choice.type === 'fraction') {
-                const fracSpan = document.createElement('span');
-                fracSpan.className = 'fraction';
-                fracSpan.innerHTML = `
-                  <span class="fraction-numerator">${choice.numerator}</span>
-                  <span class="fraction-denominator">${choice.denominator}</span>
-                `;
-                finalChoiceDiv.appendChild(fracSpan);
-                finalChoiceDiv.dataset.value = `${choice.numerator}/${choice.denominator}`;
-              }
-
-              finalChoiceDiv.dataset.problemId = problem.id;
-              finalChoiceDiv.dataset.finalId = line.finalId;
-              finalChoiceDiv.dataset.answer = line.finalAnswer;
-
-              finalChoiceDiv.addEventListener('click', handleFinalChoiceClick);
-              finalChoicesDiv.appendChild(finalChoiceDiv);
-            });
-
-            const labelSpan = document.createElement('span');
-            labelSpan.textContent = '（答えはここから選ぶ）';
-            labelSpan.style.fontSize = '14px';
-            labelSpan.style.color = '#744210';
-            labelSpan.style.fontWeight = '600';
-            labelSpan.style.whiteSpace = 'nowrap';
-
-            finalChoicesWrapper.appendChild(finalChoicesDiv);
-            finalChoicesWrapper.appendChild(labelSpan);
-            lineDiv.appendChild(finalChoicesWrapper);
-          }
-
-          currentColumn.appendChild(lineDiv);
-        }
-      });
-
-      workArea.appendChild(column1);
-      workArea.appendChild(column2);
-    }
-
-    function showProblem(id) {
-      currentProblem = id;
-
-      document.querySelectorAll('.problem-page').forEach(page => {
-        page.classList.remove('active');
-      });
-      const problemPage = document.getElementById(`problem-${id}`);
-      if (problemPage) {
-        problemPage.classList.add('active');
-      }
-
-      document.querySelectorAll('.nav-button').forEach((btn, index) => {
-        btn.classList.remove('active');
-        if (index + 1 === id) {
-          btn.classList.add('active');
-        }
-      });
-
-      updateNavigationColors();
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function updateNavigationColors() {
-      const config = window.elementSdk ? window.elementSdk.config : defaultConfig;
-      document.querySelectorAll('.nav-button').forEach((btn, index) => {
-        if (index + 1 === currentProblem) {
-          btn.style.background = config.secondary_color || defaultConfig.secondary_color;
-        } else {
-          btn.style.background = config.primary_color || defaultConfig.primary_color;
-        }
-      });
-    }
-
-    function handleFinalChoiceClick(e) {
-      const choice = e.currentTarget;
-      const problemId = choice.dataset.problemId;
-      const finalId = choice.dataset.finalId;
-      const answer = choice.dataset.answer;
-      const value = choice.dataset.value;
-      if (lockedMap[problemId]) return;   // 【ブラッシュアップ】
-
-      document.querySelectorAll(`.final-choice-item[data-problem-id="${problemId}"]`).forEach(item => {
-        item.classList.remove('selected');
-      });
-
-      choice.classList.add('selected');
-
-      if (!problemAnswers[problemId]) {
-        problemAnswers[problemId] = {};
-      }
-      problemAnswers[problemId][finalId] = value;
-
-      if (value === answer) {
-        choice.style.borderColor = '#48bb78';
-        choice.style.background = '#c6f6d5';
-        choice.style.color = '#22543d';
-
-        checkProblemComplete(problemId);
-      } else {
-        choice.style.borderColor = '#f56565';
-        choice.style.background = '#fed7d7';
-        choice.style.color = '#742a2a';
-
-        setTimeout(() => {
-          choice.classList.remove('selected');
-          choice.style.borderColor = '';
-          choice.style.background = '';
-          choice.style.color = '';
-          if (problemAnswers[problemId][finalId] === value) delete problemAnswers[problemId][finalId];   // 【ブラッシュアップ】
-        }, 500);
-      }
-    }
-
-    function handleChoiceClick(e) {
-      const choice = e.currentTarget;
-      if (choice.classList.contains('fully-used') || lockedMap[choice.dataset.problemId]) return;   // 【ブラッシュアップ】
-
-      if (waitingDropZone) {
-        fillDropZone(waitingDropZone, choice.dataset.value, choice.dataset.problemId, choice);
-        waitingDropZone.classList.remove('waiting-input');
-        waitingDropZone = null;
-        return;
-      }
-
-      if (selectedChoice) {
-        selectedChoice.classList.remove('selected');
-      }
-
-      if (selectedChoice === choice) {
-        selectedChoice = null;
-      } else {
-        selectedChoice = choice;
-        choice.classList.add('selected');
-      }
-    }
-
-    function handleDropZoneClick(e) {
-      const dropZone = e.currentTarget;
-      if (lockedMap[dropZone.dataset.problemId]) return;   // 【ブラッシュアップ】
-      if (dropZone.dataset.currentValue && dropZone.dataset.currentValue === dropZone.dataset.answer) return;   // 【ブラッシュアップ】正解した空欄は上書きしない
-
-      if (waitingDropZone) {
-        waitingDropZone.classList.remove('waiting-input');
-      }
-
-      if (selectedChoice) {
-        fillDropZone(dropZone, selectedChoice.dataset.value, selectedChoice.dataset.problemId, selectedChoice);
-        selectedChoice.classList.remove('selected');
-        selectedChoice = null;
-        waitingDropZone = null;
-      } else {
-        if (waitingDropZone === dropZone) {
-          waitingDropZone = null;
-          dropZone.classList.remove('waiting-input');
-        } else {
-          waitingDropZone = dropZone;
-          dropZone.classList.add('waiting-input');
-        }
-      }
-    }
-
-    function handleDragStart(e) {
-      draggedElement = e.target;
-      e.target.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', e.target.dataset.value);
-    }
-
-    function handleDragEnd(e) {
-      e.target.classList.remove('dragging');
-      draggedElement = null;
-    }
-
-    function handleDragOver(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      e.currentTarget.classList.add('drag-over');
-    }
-
-    function handleDragLeave(e) {
-      e.currentTarget.classList.remove('drag-over');
-    }
-
-    function handleDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.remove('drag-over');
-
-      const dropZone = e.currentTarget;
-      const value = e.dataTransfer.getData('text/plain');
-      const problemId = dropZone.dataset.problemId;
-      // 【ブラッシュアップ】固定した問題・使い切った選択肢は入れられない
-      if (lockedMap[problemId] || (draggedElement && draggedElement.classList.contains('fully-used'))) return;
-
-      fillDropZone(dropZone, value, problemId, draggedElement);
-    }
-
-    function fillDropZone(dropZone, value, problemId, sourceElement) {
-      const blankId = dropZone.dataset.blankId;
-      dropZone._token = (dropZone._token || 0) + 1;   // 【ブラッシュアップ】
-
-      if (dropZone.dataset.currentValue) {
-        const oldChoice = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${dropZone.dataset.currentValue}"]`);
-        if (oldChoice) {
-          oldChoice.classList.remove('used');
-          updateChoiceUsageCount(problemId);
-        }
-      }
-
-      const problem = problems.find(p => p.id == problemId);
-      const originalChoice = problem.choices.find(c => getChoiceValue(c) === value);
-
-      if (typeof originalChoice === 'string') {
-        if (originalChoice.includes('/')) {
-          const parts = originalChoice.split('/');
-          dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${parts[0]}</span><span class="fraction-denominator">${parts[1]}</span></span>`;
-        } else {
-          dropZone.textContent = originalChoice;
-        }
-      } else if (originalChoice && originalChoice.type === 'fraction') {
-        dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${originalChoice.numerator}</span><span class="fraction-denominator">${originalChoice.denominator}</span></span>`;
-      }
-
-      dropZone.classList.add('filled');
-      dropZone.dataset.currentValue = value;
-
-      if (!problemAnswers[problemId]) {
-        problemAnswers[problemId] = {};
-      }
-      problemAnswers[problemId][blankId] = value;
-
-      if (sourceElement) {
-        sourceElement.classList.add('used');
-      }
-
-      updateChoiceUsageCount(problemId);
-      checkSingleAnswer(dropZone, problemId);
-    }
-
-    function updateChoiceUsageCount(problemId) {
-      const problem = problems.find(p => p.id == problemId);
-
-      problem.choices.forEach(choice => {
-        const choiceValue = getChoiceValue(choice);
-        const totalNeeded = countChoiceNeeded(problemId, choiceValue);
-        const currentUsed = countChoiceUsed(problemId, choiceValue);
-
-        const choiceElement = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${choiceValue}"]`);
-        if (choiceElement) {
-          if (totalNeeded > 0 && currentUsed >= totalNeeded) {   // 【ブラッシュアップ】
-            choiceElement.classList.add('fully-used');
-          } else {
-            choiceElement.classList.remove('fully-used');
-          }
-        }
-      });
-    }
-
-    function countChoiceNeeded(problemId, value) {
-      const problem = problems.find(p => p.id == problemId);
-      let count = 0;
-
-      problem.lines.forEach(line => {
-        if (!line.isFinal) {
-          line.template.forEach(item => {
-            if (item && item.id && item.answer === value) {
-              count++;
-            } else if (item && item.type === 'fraction') {
-              if (typeof item.numerator === 'object' && item.numerator.answer === value) count++;
-              if (typeof item.denominator === 'object' && item.denominator.answer === value) count++;
-            }
-          });
-        }
-      });
-
-      return count;
-    }
-
-    function countChoiceUsed(problemId, value) {
-      let count = 0;
-      const answers = problemAnswers[problemId] || {};
-
-      for (const blankId in answers) {
-        if (answers[blankId] === value) {
-          count++;
-        }
-      }
-
-      return count;
-    }
-
-    function checkSingleAnswer(dropZone, problemId) {
-      const blankId = dropZone.dataset.blankId;
-      const correctAnswer = dropZone.dataset.answer;
-      const userAnswer = problemAnswers[problemId]?.[blankId] || '';
-
-      const isCorrect = userAnswer === correctAnswer;
-
-      if (isCorrect) {
-        dropZone.style.borderColor = '#48bb78';
-        dropZone.style.background = '#c6f6d5';
-
-        checkProblemComplete(problemId);
-      } else {
-        dropZone.style.borderColor = '#f56565';
-        dropZone.style.background = '#fed7d7';
-
-        const token = dropZone._token;
-        setTimeout(() => {
-          if (dropZone._token !== token) return;   // 【ブラッシュアップ】入れ直していたら消さない
-          const value = dropZone.dataset.currentValue;
-          const choice = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${value}"]`);
-          if (choice) {
-            choice.classList.remove('used');
-          }
-
-          dropZone.textContent = '';
-          dropZone.innerHTML = '';
-          dropZone.classList.remove('filled');
-          dropZone.style.borderColor = '';
-          dropZone.style.background = '';
-          delete dropZone.dataset.currentValue;
-          delete problemAnswers[problemId][blankId];
-
-          updateChoiceUsageCount(problemId);
-        }, 500);
-      }
-    }
-
-    function checkProblemComplete(problemId) {
-      problemId = Number(problemId);   // 【ブラッシュアップ】数として扱う
-      setTimeout(() => {
-        const problem = problems.find(p => p.id == problemId);
-        const answers = problemAnswers[problemId] || {};
-
-        let totalBlanks = 0;
-        let correctBlanks = 0;
-
-        problem.lines.forEach(line => {
-          if (line.isFinal) {
-            totalBlanks++;
-            if (answers[line.finalId] === line.finalAnswer) correctBlanks++;
-          } else {
-            line.template.forEach(item => {
-              if (item && item.id) {
-                totalBlanks++;
-                if (answers[item.id] === item.answer) correctBlanks++;
-              } else if (item && item.type === 'fraction') {
-                if (typeof item.numerator === 'object' && item.numerator.id) {
-                  totalBlanks++;
-                  if (answers[item.numerator.id] === item.numerator.answer) correctBlanks++;
-                }
-                if (typeof item.denominator === 'object' && item.denominator.id) {
-                  totalBlanks++;
-                  if (answers[item.denominator.id] === item.denominator.answer) correctBlanks++;
-                }
-              }
-            });
-          }
-        });
-
-        if (correctBlanks === totalBlanks && totalBlanks > 0) {
-          // 【ブラッシュアップ】一度だけ。正解したら固定する
-          if (lockedMap[problemId]) return;
-          solvedMap[problemId] = true;
-          lockedMap[problemId] = true;
-          markNav(problemId);
-          const result = document.getElementById(`result-${problemId}`);
-          const messages = [
-            '🎉 完璧です！すべて正解です！素晴らしい！',
-            '✨ 大正解！完璧に解けましたね！',
-            '🌟 パーフェクト！全問正解です！',
-            '🎊 すごい！全部正解です！最高です！',
-            '👏 お見事！完璧な答えです！'
-          ];
-          const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-          result.innerHTML = randomMessage + (problem.point ? '<br><span class="point">💡 ' + problem.point + '</span>' : '');   // 【ブラッシュアップ】
-          result.className = 'result-message correct';
-          result.style.display = 'block';
-
-          if (problemId < problems.length) {
-            const existingButton = result.querySelector('.next-problem-button');
-            if (!existingButton) {
-              const nextButton = document.createElement('button');
-              nextButton.className = 'next-problem-button';
-              nextButton.textContent = '次の問題へ →';
-              nextButton.addEventListener('click', () => {
-                showProblem(problemId + 1);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              });
-              result.appendChild(document.createElement('br'));
-              result.appendChild(nextButton);
-            }
-          }
-
-          // 【ブラッシュアップ】最後の問題なら「結果を見る」。全部おわったら結果の画面
-          if (problemId === problems.length) addFinishButton(result);
-          if (allDone()) setTimeout(showResult, 900);
-        }
-      }, 100);
-    }
-
-    function checkAllProblemsComplete() {
-      const allComplete = problems.every(problem => {
-        const answers = problemAnswers[problem.id] || {};
-        let totalBlanks = 0;
-        let correctBlanks = 0;
-
-        problem.lines.forEach(line => {
-          if (line.isFinal) {
-            totalBlanks++;
-            if (answers[line.finalId] === line.finalAnswer) correctBlanks++;
-          } else {
-            line.template.forEach(item => {
-              if (item && item.id) {
-                totalBlanks++;
-                if (answers[item.id] === item.answer) correctBlanks++;
-              } else if (item && item.type === 'fraction') {
-                if (typeof item.numerator === 'object' && item.numerator.id) {
-                  totalBlanks++;
-                  if (answers[item.numerator.id] === item.numerator.answer) correctBlanks++;
-                }
-                if (typeof item.denominator === 'object' && item.denominator.id) {
-                  totalBlanks++;
-                  if (answers[item.denominator.id] === item.denominator.answer) correctBlanks++;
-                }
-              }
-            });
-          }
-        });
-
-        return correctBlanks === totalBlanks && totalBlanks > 0;
-      });
-
-      if (allComplete) {
-        setTimeout(() => {
-          const overlay = document.createElement('div');
-          overlay.style.position = 'fixed';
-          overlay.style.top = '0';
-          overlay.style.left = '0';
-          overlay.style.width = '100%';
-          overlay.style.height = '100%';
-          overlay.style.background = 'rgba(0, 0, 0, 0.8)';
-          overlay.style.display = 'flex';
-          overlay.style.alignItems = 'center';
-          overlay.style.justifyContent = 'center';
-          overlay.style.zIndex = '9999';
-          overlay.style.animation = 'fadeIn 0.3s ease-in';
-
-          const message = document.createElement('div');
-          message.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          message.style.color = 'white';
-          message.style.padding = '40px 60px';
-          message.style.borderRadius = '20px';
-          message.style.fontSize = '28px';
-          message.style.fontWeight = 'bold';
-          message.style.textAlign = 'center';
-          message.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.4)';
-          message.style.animation = 'scaleIn 0.5s ease-out';
-          message.innerHTML = '🎊🎉 全問正解！🎉🎊<br><br>本当に素晴らしいです！<br>完璧にマスターしましたね！';
-
-          overlay.appendChild(message);
-          document.body.appendChild(overlay);
-
-          const style = document.createElement('style');
-          style.textContent = `
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes scaleIn {
-              from { transform: scale(0.5); opacity: 0; }
-              to { transform: scale(1); opacity: 1; }
-            }
-          `;
-          document.head.appendChild(style);
-
-          overlay.onclick = () => {
-            overlay.style.animation = 'fadeOut 0.3s ease-out';
-            setTimeout(() => overlay.remove(), 300);
-          };
-
-          const fadeOutStyle = document.createElement('style');
-          fadeOutStyle.textContent = `
-            @keyframes fadeOut {
-              from { opacity: 1; }
-              to { opacity: 0; }
-            }
-          `;
-          document.head.appendChild(fadeOutStyle);
-        }, 500);
-      }
-    }
-
-    // 【ブラッシュアップ】結果の画面など
-    function markNav(id) {
-      const btn = document.querySelectorAll('.nav-button')[id - 1];
-      if (btn) btn.textContent = problems[id - 1].title + (solvedMap[id] ? ' ✓' : '');
-    }
-
-    function allDone() {
-      return problems.every(p => lockedMap[p.id]);
-    }
-
-    function addFinishButton(result) {
-      if (result.querySelector('.finish-button')) return;
-      const btn = document.createElement('button');
-      btn.className = 'finish-button';
-      btn.textContent = '結果を見る';
-      btn.addEventListener('click', showResult);
-      result.appendChild(document.createElement('br'));
-      result.appendChild(btn);
-    }
-
-    function showResult() {
-      if (document.getElementById('resultOverlay')) return;
-      const ids = problems.map(p => p.id);
-      const self = ids.filter(id => solvedMap[id] && !shownMap[id]).length;
-      const rest = ids.filter(id => !lockedMap[id]);
-      const shown = ids.filter(id => shownMap[id]);
-      const perfect = self === ids.length;
-      let message;
-      if (perfect) message = '全問正解！本当に素晴らしいです！<br>正弦定理を完璧にマスターしましたね！';
-      else if (rest.length) message = 'まだ解いていない問題があります：問題' + rest.join('、');
-      else message = '答えを見た問題（問題' + shown.join('、') + '）は、「リセット」してもう一度自分で解いてみよう！';
-      const overlay = document.createElement('div');
-      overlay.className = 'result-overlay';
-      overlay.id = 'resultOverlay';
-      overlay.innerHTML = `
-        <div class="result-box">
-          <div class="result-emoji">${perfect ? '🎊🎉🎊' : (rest.length ? '📝' : '👍')}</div>
-          <h2>${perfect ? '全問正解！' : (rest.length ? 'とちゅうの記録' : 'おつかれさま！')}</h2>
-          <div class="result-score">自力で正解 ${self} / ${ids.length} 問</div>
-          <p>${message}</p>
-          <div class="result-nav">
-            ${rest.length ? `<button class="next" onclick="closeResult(); showProblem(${rest[0]});">問題${rest[0]} を解く ▶</button>` : ''}
-            <button class="again" onclick="closeResult(); restartAll();">最初からもう一度</button>
-            <button class="plain" onclick="closeResult()">閉じる</button>
-            <a href="../index.html">ほかの教材をえらぶ</a>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
-
-    function closeResult() {
-      const overlay = document.getElementById('resultOverlay');
-      if (overlay) overlay.remove();
-    }
-
-    function restartAll() {
-      problems.forEach(p => {
-        resetProblem(p.id);
-        document.getElementById(`result-${p.id}`).innerHTML = '';
-      });
-      solvedMap = {};
-      shownMap = {};
-      lockedMap = {};
-      problems.forEach(p => markNav(p.id));
-      showProblem(1);
-    }
-
-    function showAnswer(problemId) {
-      // 【ブラッシュアップ】正解する前に答えを見たら記録して、空欄を固定する
-      if (!lockedMap[problemId]) shownMap[problemId] = true;
-      lockedMap[problemId] = true;
-      const problem = problems.find(p => p.id == problemId);
-
-      problem.lines.forEach(line => {
-        if (line.isFinal) {
-          const finalChoice = document.querySelector(`[data-problem-id="${problemId}"][data-final-id="${line.finalId}"][data-value="${line.finalAnswer}"]`);
-          if (finalChoice) {
-            document.querySelectorAll(`.final-choice-item[data-problem-id="${problemId}"]`).forEach(item => {
-              item.classList.remove('selected');
-              item.style.borderColor = '';
-              item.style.background = '';
-              item.style.color = '';
-            });
-
-            finalChoice.classList.add('selected');
-            finalChoice.style.borderColor = '#48bb78';
-            finalChoice.style.background = '#c6f6d5';
-            finalChoice.style.color = '#22543d';
-
-            if (!problemAnswers[problemId]) {
-              problemAnswers[problemId] = {};
-            }
-            problemAnswers[problemId][line.finalId] = line.finalAnswer;
-          }
-        } else {
-          line.template.forEach(item => {
-            if (item && item.id) {
-              const dropZone = document.querySelector(`[data-blank-id="${item.id}"]`);
-              if (dropZone && !dropZone.classList.contains('filled')) {
-                fillDropZoneWithAnswer(dropZone, item.answer, problemId);
-              }
-            } else if (item && item.type === 'fraction') {
-              if (typeof item.numerator === 'object' && item.numerator.id) {
-                const dropZone = document.querySelector(`[data-blank-id="${item.numerator.id}"]`);
-                if (dropZone && !dropZone.classList.contains('filled')) {
-                  fillDropZoneWithAnswer(dropZone, item.numerator.answer, problemId);
-                }
-              }
-              if (typeof item.denominator === 'object' && item.denominator.id) {
-                const dropZone = document.querySelector(`[data-blank-id="${item.denominator.id}"]`);
-                if (dropZone && !dropZone.classList.contains('filled')) {
-                  fillDropZoneWithAnswer(dropZone, item.denominator.answer, problemId);
-                }
-              }
-            }
-          });
-        }
-      });
-
-      updateChoiceUsageCount(problemId);
-
-      setTimeout(() => {
-        const result = document.getElementById(`result-${problemId}`);
-        result.innerHTML = '💡 答えを表示しました。復習に役立ててください！' + (problem.point ? '<br><span class="point">' + problem.point + '</span>' : '');   // 【ブラッシュアップ】
-        result.className = 'result-message';
-        result.style.display = 'block';
-        result.style.background = '#fef5e7';
-        result.style.color = '#8b4513';
-        result.style.border = '2px solid #f39c12';
-
-        if (problemId < problems.length) {
-          const existingButton = result.querySelector('.next-problem-button');
-          if (!existingButton) {
-            const nextButton = document.createElement('button');
-            nextButton.className = 'next-problem-button';
-            nextButton.textContent = '次の問題へ →';
-            nextButton.addEventListener('click', () => {
-              showProblem(problemId + 1);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-            result.appendChild(document.createElement('br'));
-            result.appendChild(nextButton);
-          }
-        }
-        // 【ブラッシュアップ】最後の問題なら「結果を見る」。全部おわったら結果の画面
-        if (problemId == problems.length) addFinishButton(result);
-        if (allDone()) setTimeout(showResult, 900);
-      }, 100);
-    }
-
-    function fillDropZoneWithAnswer(dropZone, value, problemId) {
-      const blankId = dropZone.dataset.blankId;
-      const problem = problems.find(p => p.id == problemId);
-      const originalChoice = problem.choices.find(c => getChoiceValue(c) === value);
-
-      if (typeof originalChoice === 'string') {
-        if (originalChoice.includes('/')) {
-          const parts = originalChoice.split('/');
-          dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${parts[0]}</span><span class="fraction-denominator">${parts[1]}</span></span>`;
-        } else {
-          dropZone.textContent = originalChoice;
-        }
-      } else if (originalChoice && originalChoice.type === 'fraction') {
-        dropZone.innerHTML = `<span class="fraction"><span class="fraction-numerator">${originalChoice.numerator}</span><span class="fraction-denominator">${originalChoice.denominator}</span></span>`;
-      }
-
-      dropZone.classList.add('filled');
-      dropZone.dataset.currentValue = value;
-      dropZone.style.borderColor = '#48bb78';
-      dropZone.style.background = '#c6f6d5';
-
-      if (!problemAnswers[problemId]) {
-        problemAnswers[problemId] = {};
-      }
-      problemAnswers[problemId][blankId] = value;
-
-      const choiceElement = document.querySelector(`.choice-item[data-problem-id="${problemId}"][data-value="${value}"]`);
-      if (choiceElement) {
-        choiceElement.classList.add('used');
-      }
-    }
-
-    function resetProblem(problemId) {
-      solvedMap[problemId] = false;   // 【ブラッシュアップ】
-      lockedMap[problemId] = false;
-      markNav(Number(problemId));
-      if (problemAnswers[problemId]) {
-        problemAnswers[problemId] = {};
-      }
-
-      document.querySelectorAll(`[data-problem-id="${problemId}"].drop-zone`).forEach(zone => {
-        zone.textContent = '';
-        zone.innerHTML = '';
-        zone.classList.remove('filled');
-        zone.style.borderColor = '';
-        zone.style.background = '';
-        delete zone.dataset.currentValue;
-      });
-
-      document.querySelectorAll(`[data-problem-id="${problemId}"].choice-item`).forEach(item => {
-        item.classList.remove('used', 'fully-used');
-      });
-
-      document.querySelectorAll(`[data-problem-id="${problemId}"].final-choice-item`).forEach(item => {
-        item.classList.remove('selected');
-        item.style.borderColor = '';
-        item.style.background = '';
-        item.style.color = '';
-      });
-
-      const result = document.getElementById(`result-${problemId}`);
-      result.className = 'result-message';
-      result.style.display = 'none';
-      result.style.background = '';
-      result.style.color = '';
-      result.style.border = '';
-    }
-
-    async function onConfigChange(config) {
-      const customFont = config.font_family || defaultConfig.font_family;
-      const baseSize = config.font_size || defaultConfig.font_size;
-      const baseFontStack = 'Hiragino Kaku Gothic ProN, Noto Sans JP, sans-serif';
-
-      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
-      document.body.style.background = `linear-gradient(135deg, ${config.primary_color || defaultConfig.primary_color} 0%, ${config.accent_color || defaultConfig.accent_color} 100%)`;
-
-      const title = document.getElementById('main-title');
-      title.textContent = config.main_title || defaultConfig.main_title;
-      title.style.fontSize = `${baseSize * 2}px`;
-      title.style.color = config.text_color || defaultConfig.text_color;
-
-      document.querySelectorAll('.nav-button').forEach(btn => {
-        btn.style.fontSize = `${baseSize}px`;
-        btn.style.background = config.primary_color || defaultConfig.primary_color;
-      });
-
-      document.querySelectorAll('.nav-button').forEach((btn, index) => {
-        if (index + 1 === currentProblem) {
-          btn.style.background = config.secondary_color || defaultConfig.secondary_color;
-        } else {
-          btn.style.background = config.primary_color || defaultConfig.primary_color;
-        }
-      });
-
-      document.querySelectorAll('.problem-text h2').forEach(h2 => {
-        h2.style.fontSize = `${baseSize * 1.375}px`;
-        h2.style.color = config.text_color || defaultConfig.text_color;
-      });
-
-      document.querySelectorAll('.problem-text p').forEach(p => {
-        p.style.fontSize = `${baseSize * 1.0625}px`;
-      });
-
-      document.querySelectorAll('.equation-line').forEach(line => {
-        line.style.fontSize = `${baseSize * 1.125}px`;
-      });
-
-      document.querySelectorAll('.choice-item').forEach(item => {
-        item.style.fontSize = `${baseSize * 0.9375}px`;
-        item.style.borderColor = config.primary_color || defaultConfig.primary_color;
-      });
-
-      document.querySelectorAll('.check-button').forEach(btn => {
-        btn.style.background = config.secondary_color || defaultConfig.secondary_color;
-        btn.style.fontSize = `${baseSize * 1.0625}px`;
-      });
-
-      document.querySelectorAll('.problem-header').forEach(header => {
-        header.style.background = config.background_color || defaultConfig.background_color;
-        header.style.borderLeftColor = config.primary_color || defaultConfig.primary_color;
-      });
-    }
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig,
-        onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [
-            {
-              get: () => config.primary_color || defaultConfig.primary_color,
-              set: (value) => {
-                config.primary_color = value;
-                window.elementSdk.setConfig({ primary_color: value });
-              }
-            },
-            {
-              get: () => config.secondary_color || defaultConfig.secondary_color,
-              set: (value) => {
-                config.secondary_color = value;
-                window.elementSdk.setConfig({ secondary_color: value });
-              }
-            },
-            {
-              get: () => config.text_color || defaultConfig.text_color,
-              set: (value) => {
-                config.text_color = value;
-                window.elementSdk.setConfig({ text_color: value });
-              }
-            },
-            {
-              get: () => config.background_color || defaultConfig.background_color,
-              set: (value) => {
-                config.background_color = value;
-                window.elementSdk.setConfig({ background_color: value });
-              }
-            },
-            {
-              get: () => config.accent_color || defaultConfig.accent_color,
-              set: (value) => {
-                config.accent_color = value;
-                window.elementSdk.setConfig({ accent_color: value });
-              }
-            }
-          ],
-          borderables: [],
-          fontEditable: {
-            get: () => config.font_family || defaultConfig.font_family,
-            set: (value) => {
-              config.font_family = value;
-              window.elementSdk.setConfig({ font_family: value });
-            }
-          },
-          fontSizeable: {
-            get: () => config.font_size || defaultConfig.font_size,
-            set: (value) => {
-              config.font_size = value;
-              window.elementSdk.setConfig({ font_size: value });
-            }
-          }
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ["main_title", config.main_title || defaultConfig.main_title]
-        ])
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', initializeProblems);
-  </script>
- <script>
-  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
-  (function () {
-    const SCOPE = '.formula-card, .problem-text p, .equation-line, .choice-item, .final-choice-item, .result-message .point';   // 数式として書きかえる場所
-    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
-    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
-    function wrapRun(s) {
-      const span = document.createElement('span');
-      span.className = 'mf';
-      s.split(/(sin|cos|tan)/).forEach((part, i) => {
-        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
-        part.split(/([A-Za-zθ])/).forEach((q, j) => {
-          if (!q) return;
-          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
-          else span.appendChild(document.createTextNode(q));
-        });
-      });
-      return span;
-    }
-    function run() {
-      document.querySelectorAll(SCOPE).forEach(el => {
-        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-        const list = [];
-        while (w.nextNode()) list.push(w.currentNode);
-        list.forEach(n => {
-          const p = n.parentElement;
-          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
-          const t = n.nodeValue;
-          if (!/[0-9A-Za-zθ√]/.test(t)) return;
-          const frag = document.createDocumentFragment();
-          let last = 0, m;
-          RUN.lastIndex = 0;
-          while ((m = RUN.exec(t))) {
-            if (!m[0].length) { RUN.lastIndex++; continue; }
-            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
-            frag.appendChild(wrapRun(m[0]));
-            last = m.index + m[0].length;
-          }
-          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
-          n.parentNode.replaceChild(frag, n);
-        });
-      });
-    }
-    let pending = false;
-    new MutationObserver(() => {
-      if (pending) return;
-      pending = true;
-      setTimeout(() => { pending = false; run(); }, 0);
-    }).observe(document.body, { childList: true, subtree: true, characterData: true });
-    run();
-  })();
-</script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>正弦定理</title>
+<!--
+  29. 正弦定理
+  2026-10-28 ChatGPT Work が共通の仕組み（assets/fill-steps.js）に移した版（PR #5）をもとに、Claude Code が指示書11の内容を直した。
+  ・どの問題も同じ形の途中式（公式 → 代入 → 両辺に sin をかける → sin の値 → 代入 → 逆数をかける → まとめる → 有理化 → 約分）。
+    空欄は問1 がいちばん少なく、少しずつ増やす。問7・8 は「= 2R」の問題で、2問で同じ形。
+  ・公式の行は紫の「公式」の行（27・28 と同じ）。sin の値の行のヒントは、筆記体の s の直角三角形（28 と同じ assets/hint-fig.js）。
+  ・図：数値どおりの形。わかっている辺と角の組は紺、求める組はオレンジ。角度の文字は三角形の中の、辺にかからない場所に置く。
+  ・カードは使う順にしない。sin・√・ふつうの数・分数ごとにまとめる（先生の指定）。スマホでは3枚だけ出る（共通の仕組み）。
+-->
+<link rel="stylesheet" href="../assets/port.css">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fill-steps.css">
+<style>
+.st-formula{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px;padding:5px 10px;background:#eef4fb;border-radius:6px;font-size:17px}
+.st-formula small{font-size:12px;color:#5b6470}
+/* スマホ：問題文と図を上にとめて、途中式をうめながら見られるように */
+.fs-q{position:sticky;top:0;background:#fff;z-index:4;border-bottom:1px solid #d0d7de;padding:4px 0}
+.fs-qt{font-size:15px;line-height:1.6}
+.fs-fig svg{height:150px;width:auto;max-width:100%}
+.fs-row{scroll-margin-top:240px}
+.fs-hint>svg{width:280px}
+@media (min-width:900px) and (orientation:landscape){.fs-fig svg{height:200px}.fs-qt{font-size:17px}.fs-q{position:static;border-bottom:0}}
+</style>
+</head><body>
+<a class="port-back" href="../index.html">← 教材の一覧へ</a>
+<main class="fs-wrap">
+  <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>正弦定理</h1></header>
+  <div id="app"></div>
+</main>
+<script src="../assets/fill-steps.js"></script>
+<script src="../assets/hint-fig.js"></script>
 <script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".header h1": "u-title",
-    ".nav-button:not(.active)": "u-btn u-btn-plain",
-    ".nav-button.active": "u-btn",
-    ".reset-button": "u-btn u-btn-plain",
-    ".show-answer-button": "u-btn u-btn-plain",
-    ".next-problem-button": "u-btn u-btn-blue",
-    ".finish-button": "u-btn",
-    ".result-nav .next": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .plain": "u-btn u-btn-plain"
+const NAVY = '#1f4e8c', ORANGE = '#d9480f', INK = '#1f2328';
+
+// 図の中の数（√ は記号の右上から横線が中の数字にかぶさる）。(x, y) が文字のまん中
+function svgNum(x, y, s, color, fs = 19) {
+  const m = String(s).match(/^(\d*)√(\d+)$/), cw = fs * 0.56, b = y + fs * 0.35;
+  if (!m) return `<text x="${x}" y="${b}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${s}</text>`;
+  const hw = m[1].length * cw, dw = m[2].length * cw, w = hw + fs * 0.75 + dw + 2, x0 = x - w / 2, x1 = x0 + hw + 1;
+  return `<text x="${x0}" y="${b}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[1]}</text>` +
+    `<path d="M${x1} ${b - fs * 0.3}L${x1 + fs * 0.18} ${b - fs * 0.4}L${x1 + fs * 0.4} ${b + 1}L${x1 + fs * 0.7} ${b - fs * 0.92}H${x1 + fs * 0.75 + dw + 2}" fill="none" stroke="${color}" stroke-width="1.4" stroke-linejoin="round"/>` +
+    `<text x="${x1 + fs * 0.75}" y="${b}" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${color}">${m[2]}</text>`;
+}
+const ital = (x, y, s, color, fs = 22) => `<text x="${x}" y="${y + fs * 0.35}" text-anchor="middle" font-family="STIX Two Text, serif" font-style="italic" font-size="${fs}" fill="${color}">${s}</text>`;
+
+// 問題の図：正弦定理 BC : CA = sin A : sin B から形を計算する（PR #5 の形をもとに、文字の置き方を直した）
+function drawTriangle(tr) {
+  const rad = d => d * Math.PI / 180, { A, B, C } = tr;
+  const ca = Math.sin(rad(B)) / Math.sin(rad(A));
+  const raw = { C: [0, 0], B: [1, 0], A: [ca * Math.cos(rad(C)), ca * Math.sin(rad(C))] };
+  const R0 = 1 / (2 * Math.sin(rad(A))), O0 = [0.5, Math.sqrt(Math.max(R0 * R0 - 0.25, 0)) * (A < 90 ? 1 : -1)];
+  const xs = [0, 1, raw.A[0]], ys = [0, 0, raw.A[1]];
+  if (tr.circle) { xs.push(O0[0] - R0, O0[0] + R0); ys.push(O0[1] - R0, O0[1] + R0); }
+  const W = 250, H = 170, M = 34;
+  const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+  const k = Math.min(W / (maxx - minx), H / (maxy - miny));
+  const ox = M + (W - (maxx - minx) * k) / 2, oy = M + (H - (maxy - miny) * k) / 2;
+  const T = p => [ox + (p[0] - minx) * k, oy + (maxy - p[1]) * k];
+  const P = { A: T(raw.A), B: T(raw.B), C: T(raw.C) };
+  const G = [(P.A[0] + P.B[0] + P.C[0]) / 3, (P.A[1] + P.B[1] + P.C[1]) / 3];
+  const f = v => Math.round(v * 10) / 10, unit = (p, q) => { const x = q[0] - p[0], y = q[1] - p[1], l = Math.hypot(x, y) || 1; return [x / l, y / l]; };
+  const col = L => { const l = L.toLowerCase(); return tr.known === l ? NAVY : tr.target === l ? ORANGE : INK; };
+  const segs = [[P.A, P.B], [P.B, P.C], [P.C, P.A]];
+  const inTri = (x, y) => { const c = (U, V) => (V[0] - U[0]) * (y - U[1]) - (V[1] - U[1]) * (x - U[0]); const d = [c(P.A, P.B), c(P.B, P.C), c(P.C, P.A)]; return d.every(v => v >= 0) || d.every(v => v <= 0); };
+  const offEdges = (x, y, w, h) => segs.every(([U, V]) => { for (let i = 0; i <= 40; i++) { const sx = U[0] + (V[0] - U[0]) * i / 40, sy = U[1] + (V[1] - U[1]) * i / 40; if (Math.abs(sx - x) < w / 2 + 3 && Math.abs(sy - y) < h / 2 + 3) return false; } return true; });
+  let s = `<svg viewBox="0 0 ${W + 2 * M} ${H + 2 * M}" width="${W + 2 * M}" role="img" aria-label="三角形ABC">`;
+  s += `<polygon points="${[P.A, P.B, P.C].map(p => f(p[0]) + ',' + f(p[1])).join(' ')}" fill="#eef4fb" stroke="${INK}" stroke-width="2"/>`;
+  let away = null; const avoid = [];   // 角度の文字が重なってはいけないもの（円の中心・R の文字）
+  if (tr.circle) {   // 外接円。半径は頂点からはなれた向きにかき、R はその線のすぐ上
+    const O = T(O0), r = R0 * k, dirs = [P.A, P.B, P.C].map(V => Math.atan2(V[1] - O[1], V[0] - O[0]));
+    let best = 0, bestGap = -1;   // 3つの頂点の向きから、いちばんはなれた向き（水平に近いほうを少し優先）
+    for (let d = 0; d < 360; d += 5) { const t = d * Math.PI / 180, gap = Math.min(...dirs.map(q => Math.abs(Math.atan2(Math.sin(t - q), Math.cos(t - q))))) + 0.15 * Math.abs(Math.cos(t)); if (gap > bestGap) { bestGap = gap; best = t; } }
+    away = [Math.cos(best), Math.sin(best)];
+    const E = [O[0] + away[0] * r, O[1] + away[1] * r];
+    s += `<circle cx="${f(O[0])}" cy="${f(O[1])}" r="${f(r)}" fill="none" stroke="#7296be" stroke-width="1.5"/>`;
+    s += `<path d="M${f(O[0])} ${f(O[1])}L${f(E[0])} ${f(E[1])}" stroke="#2b8a3e" stroke-width="2" stroke-dasharray="5 3"/><circle cx="${f(O[0])}" cy="${f(O[1])}" r="3.2" fill="#2b8a3e"/>`;
+    const n = [-away[1], away[0]], lw = tr.circleVal ? 58 : 16;
+    let mx = (O[0] + E[0]) / 2 + n[0] * 14, my = (O[1] + E[1]) / 2 + n[1] * 14;
+    pick: for (const t of [0.55, 0.7, 0.4, 0.85]) for (const sd of [1, -1]) {   // 三角形の外で、辺にかからない場所
+      const off = 8 + Math.abs(n[0]) * lw / 2 + Math.abs(n[1]) * 10, x = O[0] + (E[0] - O[0]) * t + n[0] * off * sd, y = O[1] + (E[1] - O[1]) * t + n[1] * off * sd;
+      if (!inTri(x, y) && offEdges(x, y, lw, 20)) { mx = x; my = y; break pick; }
+    }
+    avoid.push([O[0], O[1], 6, 6], [mx, my, lw, 20]);
+    s += tr.circleVal ? `<text x="${mx}" y="${my + 7}" text-anchor="middle" font-size="20" fill="#2b8a3e"><tspan font-family="STIX Two Text, serif" font-style="italic">R</tspan><tspan font-family="BIZ UDPGothic, sans-serif" font-weight="700"> = ${tr.circleVal}</tspan></text>` : ital(mx, my, 'R', '#2b8a3e', 21);
+  }
+  ['A', 'B', 'C'].forEach(L => {   // 角：弧と角度の文字（三角形の中の、辺にかからない場所）
+    const V = P[L], o = { A: ['B', 'C'], B: ['C', 'A'], C: ['A', 'B'] }[L], u1 = unit(V, P[o[0]]), u2 = unit(V, P[o[1]]), deg = tr[L], label = tr.angles && tr.angles[L];
+    if (!label) {
+      if (Math.abs(deg - 90) < 0.01) { const a1 = [V[0] + u1[0] * 12, V[1] + u1[1] * 12], a2 = [V[0] + u2[0] * 12, V[1] + u2[1] * 12]; s += `<path d="M${f(a1[0])} ${f(a1[1])}L${f(a1[0] + u2[0] * 12)} ${f(a1[1] + u2[1] * 12)}L${f(a2[0])} ${f(a2[1])}" fill="none" stroke="${INK}" stroke-width="1.5"/>`; }
+      return;
+    }
+    const lens = o.map(q => Math.hypot(P[q][0] - V[0], P[q][1] - V[1])), r = Math.min(deg > 90 ? 18 : 26, 0.4 * Math.min(...lens));
+    const a1 = [V[0] + u1[0] * r, V[1] + u1[1] * r], a2 = [V[0] + u2[0] * r, V[1] + u2[1] * r], sweep = (u1[0] * u2[1] - u1[1] * u2[0]) > 0 ? 1 : 0;
+    s += `<path d="M${f(a1[0])} ${f(a1[1])}A${f(r)} ${f(r)} 0 0 ${sweep} ${f(a2[0])} ${f(a2[1])}" fill="none" stroke="${col(L)}" stroke-width="2"/>`;
+    const fs = 17, w = String(label).length * fs * 0.62, h = fs;
+    const t0 = Math.atan2(u1[1], u1[0]); let dt = Math.atan2(u2[1], u2[0]) - t0; if (dt > Math.PI) dt -= 2 * Math.PI; if (dt < -Math.PI) dt += 2 * Math.PI;
+    let at = null;
+    search: for (let d = r + 6; d < 150; d += 1) for (const q of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]) {
+      const x = V[0] + d * Math.cos(t0 + dt * q), y = V[1] + d * Math.sin(t0 + dt * q);
+      if (inTri(x, y) && offEdges(x, y, w, h) && Math.hypot(x - V[0], y - V[1]) > r + w / 2 && avoid.every(([ax, ay, aw, ah]) => Math.abs(ax - x) > (aw + w) / 2 + 3 || Math.abs(ay - y) > (ah + h) / 2 + 3)) { at = [x, y]; break search; }
+    }
+    if (!at) at = [V[0] + (r + 16) * Math.cos(t0 + dt / 2), V[1] + (r + 16) * Math.sin(t0 + dt / 2)];
+    s += `<text x="${f(at[0])}" y="${f(at[1] + fs * 0.35)}" text-anchor="middle" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="${fs}" fill="${col(L)}">${label}</text>`;
   });
+  const ends = { a: ['B', 'C'], b: ['C', 'A'], c: ['A', 'B'] };
+  Object.keys(tr.sides || {}).forEach(l => {   // 辺：わかっている組・求める組は太線。長さは辺のまん中の外側（円があるときは内側）
+    const p = P[ends[l][0]], q = P[ends[l][1]], m = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+    let n = [-(q[1] - p[1]), q[0] - p[0]]; const len = Math.hypot(...n); n = [n[0] / len, n[1] / len];
+    if ((m[0] - G[0]) * n[0] + (m[1] - G[1]) * n[1] < 0) n = [-n[0], -n[1]];
+    if (tr.circle) n = [-n[0], -n[1]];
+    if (col(l) !== INK) s += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${col(l)}" stroke-width="4" stroke-linecap="round"/>`;
+    const txt = tr.sides[l], d = 12 + Math.abs(n[0]) * (txt.length * 6 + 4);
+    s += /^[abc]$/.test(txt) ? ital(m[0] + n[0] * d, m[1] + n[1] * d, txt, col(l)) : svgNum(m[0] + n[0] * d, m[1] + n[1] * d, txt, col(l));
+  });
+  ['A', 'B', 'C'].forEach(L => { const u = unit(G, P[L]); s += ital(P[L][0] + u[0] * 17, P[L][1] + u[1] * 17, L, col(L), 21); });
+  return s + '</svg>';
+}
+
+// 行は [式, ヒントの種類]。ヒントの文は hint() で作る
+const problems = [
+  { // 問1：空欄は少なめ
+    q: '△ABC において、A = 30°、B = 60°、b = 6 のとき、辺 a の長さを求めよ。',
+    triangle: { A: 30, B: 60, C: 90, angles: { A: '30°', B: '60°' }, sides: { a: 'a', b: '6' }, known: 'b', target: 'a' },
+    pair: ['b', 'B', 'a', 'A'],
+    rows: [
+      ['!{a|sin A} = {b|sin B}'],
+      ['{a|sin 30°} = {[6]|sin 60°}', 'sub'],
+      ['#両辺に sin 30° をかけて'],
+      ['a = {6|sin 60°} × sin 30°', 'mul'],
+      ['sin 30° = [1/2]', 'sin'],
+      ['sin 60° = [√3/2]', 'sin'],
+      ['#を代入すると'],
+      ['a = 6 ÷ {√3|2} × {1|2}', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['a = 6 × [2/√3] × {1|2}', 'inv'],
+      ['a = {6|√3}', 'prod'],
+      ['#分母にルートがあるので有理化すると、'],
+      ['a = {6 × [√3]|√3 × [√3]}', 'rat'],
+      ['a = {6√3|3}', 'rat2'],
+      ['a = [2√3]', 'red']
+    ],
+    cards: ['√3', '2√3', ['3√2', '{6√3|3} は、6 ÷ 3 を計算します。√ の中の数は変わりません。'], null,
+      '6', ['3', '辺 b の長さは 6 です。'], null, '1/2', '√3/2', '2/√3', ['1/√3', '{√3|2} の逆数は、分子と分母を入れかえた {2|√3} です。']],
+    ans: 'a = 2√3'
+  },
+  { // 問2
+    q: '△ABC において、A = 30°、C = 45°、c = 4 のとき、辺 a の長さを求めよ。',
+    triangle: { A: 30, B: 105, C: 45, angles: { A: '30°', C: '45°' }, sides: { a: 'a', c: '4' }, known: 'c', target: 'a' },
+    pair: ['c', 'C', 'a', 'A'],
+    rows: [
+      ['!{a|sin A} = {c|sin C}'],
+      ['{a|[sin 30°]} = {[4]|[sin 45°]}', 'sub'],
+      ['#両辺に sin 30° をかけて'],
+      ['a = {4|sin 45°} × sin 30°', 'mul'],
+      ['sin 30° = [1/2]', 'sin'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['#を代入すると'],
+      ['a = 4 ÷ {1|√2} × {1|2}', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['a = 4 × [√2] × {1|2}', 'inv'],
+      ['a = [4√2/2]', 'prod'],
+      ['a = [2√2]', 'red']
+    ],
+    cards: [['sin 105°', '辺 a と向かい合う角は A ＝ 30° です。'], 'sin 45°', 'sin 30°', null,
+      '√2', '2√2', null, '4', null, '1/2', '1/√2', ['√2/2', 'sin 45° は {1|√2}。45° の直角三角形の辺の比 1 : 1 : √2 で考えよう。'], '4√2/2'],
+    ans: 'a = 2√2'
+  },
+  { // 問3
+    q: '△ABC において、A = 45°、B = 60°、b = 6 のとき、辺 a の長さを求めよ。',
+    triangle: { A: 45, B: 60, C: 75, angles: { A: '45°', B: '60°' }, sides: { a: 'a', b: '6' }, known: 'b', target: 'a' },
+    pair: ['b', 'B', 'a', 'A'],
+    rows: [
+      ['!{a|sin A} = {b|sin B}'],
+      ['{a|[sin 45°]} = {[6]|sin 60°}', 'sub'],
+      ['#両辺に sin 45° をかけて'],
+      ['a = {6|sin 60°} × sin 45°', 'mul'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['sin 60° = [√3/2]', 'sin'],
+      ['#を代入すると'],
+      ['a = 6 ÷ {√3|2} × {1|√2}', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['a = 6 × [2/√3] × [1/√2]', 'inv'],
+      ['a = [12/√6]', 'prod'],
+      ['#分母にルートがあるので有理化すると、'],
+      ['a = {12 × √6|√6 × [√6]}', 'rat'],
+      ['a = [12√6/6]', 'rat2'],
+      ['a = [2√6]', 'red']
+    ],
+    cards: [['sin 75°', '辺 a と向かい合う角は A ＝ 45° です。'], 'sin 45°', null,
+      '√6', '2√6', ['12√6', '分母の 6 で約分します。'], null, '6', null, '1/√2', '√3/2', '2/√3', '12/√6', '12√6/6'],
+    ans: 'a = 2√6'
+  },
+  { // 問4
+    q: '△ABC において、B = 60°、C = 45°、b = 12 のとき、辺 c の長さを求めよ。',
+    triangle: { A: 75, B: 60, C: 45, angles: { B: '60°', C: '45°' }, sides: { b: '12', c: 'c' }, known: 'b', target: 'c' },
+    pair: ['b', 'B', 'c', 'C'],
+    rows: [
+      ['!{c|sin C} = {b|sin B}'],
+      ['{c|[sin 45°]} = {[12]|[sin 60°]}', 'sub'],
+      ['#両辺に sin 45° をかけて'],
+      ['c = {12|sin 60°} × [sin 45°]', 'mul'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['sin 60° = [√3/2]', 'sin'],
+      ['#を代入すると'],
+      ['c = 12 ÷ {√3|2} × {1|√2}', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['c = 12 × [2/√3] × [1/√2]', 'inv'],
+      ['c = [24/√6]', 'prod'],
+      ['#分母にルートがあるので有理化すると、'],
+      ['c = {24 × √6|√6 × [√6]}', 'rat'],
+      ['c = [24√6/6]', 'rat2'],
+      ['c = [4√6]', 'red']
+    ],
+    cards: [['sin 75°', '辺 c と向かい合う角は C ＝ 45° です。'], 'sin 60°', 'sin 45°', null,
+      '√6', '4√6', ['2√6', '{24√6|6} は、24 ÷ 6 を計算します。'], null, '12', null, '1/√2', '√3/2', '2/√3', '24/√6', '24√6/6'],
+    ans: 'c = 4√6'
+  },
+  { // 問5
+    q: '△ABC において、A = 60°、B = 45°、a = 8 のとき、辺 b の長さを求めよ。',
+    triangle: { A: 60, B: 45, C: 75, angles: { A: '60°', B: '45°' }, sides: { a: '8', b: 'b' }, known: 'a', target: 'b' },
+    pair: ['a', 'A', 'b', 'B'],
+    rows: [
+      ['!{b|sin B} = {a|sin A}'],
+      ['{b|[sin 45°]} = {[8]|[sin 60°]}', 'sub'],
+      ['#両辺に sin 45° をかけて'],
+      ['b = {[8]|[sin 60°]} × [sin 45°]', 'mul'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['sin 60° = [√3/2]', 'sin'],
+      ['#を代入すると'],
+      ['b = 8 ÷ [√3/2] × [1/√2]', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['b = 8 × [2/√3] × [1/√2]', 'inv'],
+      ['b = [16/√6]', 'prod'],
+      ['#分母にルートがあるので有理化すると、'],
+      ['b = {16 × [√6]|√6 × [√6]}', 'rat'],
+      ['b = [16√6/6]', 'rat2'],
+      ['b = [8√6/3]', 'red']
+    ],
+    cards: [['sin 75°', '辺 b と向かい合う角は B ＝ 45° です。'], 'sin 60°', 'sin 45°', null,
+      '√6', null, '8', null, '1/√2', '√3/2', '2/√3', '16/√6', '16√6/6', '8√6/3', ['4√6/3', '{16√6|6} の分子と分母を 2 でわると？']],
+    ans: 'b = {8√6|3}'
+  },
+  { // 問6：まず C を求める（ほぼすべて空欄）
+    q: '△ABC において、A = 105°、B = 45°、b = 4 のとき、辺 c の長さを求めよ。（まず C を求めよう）',
+    triangle: { A: 105, B: 45, C: 30, angles: { A: '105°', B: '45°', C: '?' }, sides: { b: '4', c: 'c' }, known: 'b', target: 'c' },
+    pair: ['b', 'B', 'c', 'C'],
+    rows: [
+      ['C = 180° − [105°] − [45°]', 'csum'],
+      ['C = [30°]', 'ccalc'],
+      ['!{c|sin C} = {b|sin B}'],
+      ['{c|[sin 30°]} = {[4]|[sin 45°]}', 'sub'],
+      ['#両辺に sin 30° をかけて'],
+      ['c = {[4]|[sin 45°]} × [sin 30°]', 'mul'],
+      ['sin 30° = [1/2]', 'sin'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['#を代入すると'],
+      ['c = [4] ÷ [1/√2] × [1/2]', 'put'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['c = [4] × [√2] × [1/2]', 'inv'],
+      ['c = [4√2/2]', 'prod'],
+      ['c = [2√2]', 'red']
+    ],
+    cards: [['sin 105°', '辺 c と向かい合う角は C です。まず C を求めよう。'], 'sin 45°', 'sin 30°', null,
+      '105°', '45°', '30°', ['60°', '180° − 105° − 45° をもう一度計算しよう。'], null,
+      '√2', '2√2', null, '4', null, '1/2', '1/√2', '4√2/2'],
+    ans: 'c = 2√2'
+  },
+  { // 問7：外接円の半径（= 2R の問題。問8 と同じ形）
+    q: '△ABC において、a = 6、A = 30° のとき、外接円の半径 R を求めよ。',
+    triangle: { A: 30, B: 65, C: 85, angles: { A: '30°' }, sides: { a: '6' }, known: 'a', circle: true },
+    rows: [
+      ['!{a|sin A} = 2R'],
+      ['{[6]|[sin 30°]} = 2R', 'sub2'],
+      ['sin 30° = [1/2]', 'sin'],
+      ['#を代入すると'],
+      ['2R = 6 ÷ {1|2}', 'put2'],
+      ['#÷ 分数 は、逆数をかける'],
+      ['2R = 6 × [2]', 'inv2'],
+      ['2R = [12]', 'mul2'],
+      ['R = [6]', 'half']
+    ],
+    cards: [['sin 60°', '辺 a と向かい合う角は A ＝ 30° です。'], 'sin 30°', null, '2', '6', '12', ['3', '6 ÷ {1|2} は、6 × 2 です。'], null, '1/2'],
+    ans: 'R = 6'
+  },
+  { // 問8：外接円の半径から辺
+    q: '△ABC の外接円の半径が R = 3、A = 45° のとき、辺 a の長さを求めよ。',
+    triangle: { A: 45, B: 75, C: 60, angles: { A: '45°' }, sides: { a: 'a' }, target: 'a', circle: true, circleVal: '3' },
+    rows: [
+      ['!{a|sin A} = 2R'],
+      ['{a|[sin 45°]} = 2 × [3]', 'sub3'],
+      ['{a|sin 45°} = [6]', 'mul2'],
+      ['#両辺に sin 45° をかけて'],
+      ['a = [6] × [sin 45°]', 'mul'],
+      ['sin 45° = [1/√2]', 'sin'],
+      ['#を代入すると'],
+      ['a = 6 × [1/√2]', 'put'],
+      ['a = [6/√2]', 'prod'],
+      ['#分母にルートがあるので有理化すると、'],
+      ['a = {6 × [√2]|[√2] × [√2]}', 'rat'],
+      ['a = [6√2/2]', 'rat2'],
+      ['a = [3√2]', 'red']
+    ],
+    cards: [['sin 75°', '辺 a と向かい合う角は A ＝ 45° です。'], 'sin 45°', null, '√2', '3√2', ['6√2', '{6√2|2} を約分しよう。'], null, '3', '6', null, '1/√2', '6/√2', '6√2/2'],
+    ans: 'a = 3√2'
+  }
+];
+
+// 行ごとのヒント（今うめている行のヒントが出る）
+function hintText(p, kind, row) {
+  const pr = p.pair, sd = (row.t.match(/sin (\d+)°/) || [])[1];
+  return {
+    sub: pr ? `わかっている「辺 ${pr[0]} と角 ${pr[1]}」が向かい合うペア。求める ${pr[2]} は、角 ${pr[3]} と向かい合います。` : '',
+    mul: `両辺に sin ${sd}° をかけると、左は ${row.t[0]} だけになります。`,
+    sin: `sin ${sd}° は、この直角三角形で考えよう。`,
+    put: 'sin の値を代入します。',
+    inv: '分数でわるときは、分子と分母を入れかえた数（逆数）をかけます。',
+    prod: '分子どうし・分母どうしをかけて、1つの分数にまとめます（√2 × √3 = √6）。約分できるときは約分します。',
+    rat: '分母の √ と同じものを、分母と分子にかけます。',
+    rat2: '同じ √ どうしをかけると、√ がはずれます（√6 × √6 = 6）。',
+    red: '約分します。√ の中の数は変わりません。',
+    csum: '三角形の内角の和は 180° です。',
+    ccalc: '180° − 105° − 45° を計算しよう。',
+    sub2: '正弦定理の最後の「= 2R」を使います。わかっている辺 a と角 A を入れよう。',
+    sub3: '正弦定理の最後の「= 2R」を使います。R に 3 を入れよう。',
+    put2: 'sin 30° の値を代入します。',
+    inv2: '分数でわるときは、分子と分母を入れかえた数（逆数）をかけます。',
+    mul2: 'かけ算をします。',
+    half: '2R が 12 なので、R はその半分です。'
+  }[kind] || '';
+}
+
+problems.forEach(p => {
+  p.fig = drawTriangle(p.triangle);
+  p.rows = p.rows.map(([t, k]) => ({ t, k }));
+});
+FillSteps.mount({
+  el: '#app', problems,
+  top: () => '<div class="st-formula"><span>' + FillSteps.md('{a|sin A} = {b|sin B} = {c|sin C} = 2R') + '</span><small>R は外接円の半径</small></div>',
+  hint: (p, row) => hintText(p, row.k, row),
+  hintFig: (p, row) => row.k === 'sin' ? HintFig.trace(+row.t.match(/sin (\d+)°/)[1], 'sin') : ''
+});
+// 問題文を上にとめているので、今の空欄がその下に隠れたら見える位置へもどす（PR #5 で ChatGPT Work が入れた補助）
+let follow; new MutationObserver(() => { clearTimeout(follow); follow = setTimeout(() => { const b = document.querySelector('.fs-blank.active'), q = document.querySelector('.fs-q'); if (b && q && getComputedStyle(q).position === 'sticky') { const r = b.getBoundingClientRect(), limit = q.getBoundingClientRect().bottom + 10; if (r.top < limit) window.scrollBy(0, r.top - limit); } }, 450); }).observe(document.querySelector('#app'), { childList: true, subtree: true });
 </script>
-</body>
-</html>
+</body></html>

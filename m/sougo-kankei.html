@@ -211,6 +211,9 @@ function wrong(p, b, v) {
   return null;
 }
 
+// 公式の行（sin²A + cos²A = 1 と tan A = sin A/cos A）は、背景の色を変えて「公式」としるす（先生の要望）
+problems.forEach(p => [0, 7].forEach(i => { p.rows[i] = '!' + p.rows[i]; }));
+
 FillSteps.mount({ el: '#app', problems, hint, hintFig, wrong });
 </script>
 </body></html>

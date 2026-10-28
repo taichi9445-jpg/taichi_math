@@ -15,8 +15,14 @@
      2√3          √（係数つき）    (…)²     中に分数があると大きなかっこになる
      ' = '        行が長すぎるときは「＝」の前で改行する
      行の先頭が #  ことばの行（「0° < A < 90° より」など）
+     行の先頭が !  公式の行（うすい紫の背景と「公式」のしるし）
      行を { t: '…', h: 'ヒント' } にすると、その行のヒントを決められる
+     行に sec: '見出し' をつけると、続けて同じ sec の行を1つの枠で囲む（30 の「三角比の値」など）
    カードの並びに null を入れると、そこで改行する（カードの種類ごとに行を分けたいとき）
+   alts: [[空欄0の答え, 空欄1の答え, …], …] … 別の正しい答えの組（30 の単位円で考えた座標など）。
+     どれか1つの組と、それまでに入れたカードがすべて合っていれば正解にする。
+   スマホなど（PC の横長の画面でないとき）は、今の空欄の答えとダミー2つの3枚だけを出す（fewCards: false でやめる）。
+   ヒントは、同じ行の空欄をうめているあいだは開いたまま。次の行に進むか、閉じるボタンで閉じる。
    ========================================================================= */
 (function (global) {
   'use strict';
@@ -116,7 +122,8 @@
     p.blanks = [];
     p.rows.forEach(function (row, ri) {
       row.prose = row.t[0] === '#';
-      row.src = bigParens(row.prose ? row.t.slice(1) : row.t);
+      row.formula = row.t[0] === '!';
+      row.src = bigParens(row.prose || row.formula ? row.t.slice(1) : row.t);
       row.blanks = [];
       parse(row.src, { blank: function (spec) {
         var sp = spec.split('@'), b = { a: sp[0], g: sp[1] || null, row: ri, i: p.blanks.length };
@@ -131,7 +138,9 @@
     var P = o.problems;
     P.forEach(prepare);
     var S = P.map(function () { return fresh(); });
-    var cur = 0, hintOpen = false, msg = '', finalView = false;
+    var cur = 0, hintOpen = false, hintRow = -1, msg = '', finalView = false;
+    var wide = window.matchMedia ? matchMedia('(min-width:900px) and (orientation:landscape)') : { matches: true };
+    if (wide.addEventListener) wide.addEventListener('change', function () { render(); });
 
     function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0 }; }
     function firstEmpty(p, st) { for (var i = 0; i < p.blanks.length; i++) if (st.fill[i] === undefined) return i; return null; }
@@ -140,6 +149,13 @@
     // その空欄に、そのカードを入れてよいか（@ のついた空欄は、同じ組の中で入れかえてよい）
     function accepts(p, st, i, v) {
       var b = p.blanks[i];
+      if (!b.g && p.alts) {
+        return [p.blanks.map(function (x) { return x.a; })].concat(p.alts).some(function (set) {
+          if (set[i] !== v) return false;
+          for (var k in st.fill) if (!p.blanks[k].g && set[k] !== st.fill[k]) return false;
+          return true;
+        });
+      }
       if (!b.g) return b.a === v;
       var pool = [];
       p.blanks.forEach(function (x) { if (x.g === b.g) pool.push(x.a); });
@@ -150,6 +166,28 @@
     }
     function needCount(p, v) { return p.blanks.filter(function (b) { return b.a === v; }).length; }
     function usedCount(p, st, v) { var n = 0; for (var k in st.fill) if (st.fill[k] === v) n++; return n; }
+    function isOff(p, st, v) { var need = needCount(p, v); return need > 0 && usedCount(p, st, v) >= need; }
+
+    // スマホ：今の空欄に入るカード1枚と、なるべく同じ種類のダミー2枚（毎回同じ並びになるように、問題と空欄の番号で決める）
+    function kind(v) { v = String(v); return /^(sin|cos|tan)/.test(v) ? 't' : /[A-Za-zθ]/.test(v) ? 'v' : /\//.test(v) ? 'f' : /√/.test(v) ? 'r' : /°/.test(v) ? 'd' : 'n'; }
+    function fewCards(p, st, i) {
+      var seed = (cur + 1) * 7919 + i * 104729 + 17;
+      var rnd = function () { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+      var ok = null, others = [], seen = {};
+      p.cards.forEach(function (c, ci) {
+        if (c.sep || isOff(p, st, c.v) || seen[c.v]) return;
+        seen[c.v] = true;
+        if (accepts(p, st, i, c.v)) { if (ok === null || c.v === p.blanks[i].a) ok = ci; }
+        else others.push(ci);
+      });
+      if (ok === null) return null;
+      var k = kind(p.cards[ok].v);
+      others = others.map(function (ci) { return { ci: ci, w: (kind(p.cards[ci].v) === k ? 0 : 1) + rnd() }; })
+        .sort(function (a, b) { return a.w - b.w; }).slice(0, 2).map(function (x) { return x.ci; });
+      var three = [ok].concat(others);
+      for (var n = three.length - 1; n > 0; n--) { var j = Math.floor(rnd() * (n + 1)), t = three[n]; three[n] = three[j]; three[j] = t; }
+      return three;
+    }
 
     function render() {
       if (finalView) return renderFinal();
@@ -157,12 +195,18 @@
       if (st.active === null || st.fill[st.active] !== undefined) st.active = firstEmpty(p, st);
       var all = st.shown || st.done;
       var activeRow = st.active === null ? -1 : p.blanks[st.active].row;
+      if (hintOpen && (all || activeRow !== hintRow)) hintOpen = false;
       var stop = all ? p.rows.length : -1;
       if (!all) { stop = p.rows.length; for (var r = 0; r < p.rows.length; r++) if (!rowDone(p, st, r)) { stop = r + 1; break; } }
 
-      var no = 0, rows = '';
+      var no = 0, rows = '', sec = null;
       p.rows.forEach(function (row, ri) {
         if (ri >= stop) return;
+        if ((row.sec || null) !== sec) {
+          if (sec) rows += '</ol></li>';
+          sec = row.sec || null;
+          if (sec) rows += '<li class="fs-sec"><p class="fs-sec-h">' + md(sec) + '</p><ol class="fs-rows">';
+        }
         var ctx = { k: 0, blank: function () {
           var i = row.blanks[ctx.k++], b = p.blanks[i], v = st.fill[i];
           var isFrac = /\//.test(b.a) && !/\s/.test(b.a);
@@ -174,19 +218,22 @@
         else body = '<div class="fs-eq">' + splitTop(row.src, ' = ').map(function (g, gi) {
           return '<span class="fs-g">' + (gi ? '<span class="fs-m fs-eqs">=</span>' : '') + parse(g, ctx) + '</span>';
         }).join('') + '</div>';
-        rows += '<li class="fs-row' + (row.prose ? ' prose' : '') + (ri === activeRow && !all ? ' now' : '') + '">' +
-          (row.prose ? '<span class="fs-no"></span>' : '<span class="fs-no">' + (++no) + '</span>') + body + '</li>';
-        if (hintOpen && ri === activeRow && !all) rows += '<li class="fs-hint"><b>ヒント</b>' + hintHTML(p, row) + '</li>';
+        rows += '<li class="fs-row' + (row.prose ? ' prose' : '') + (row.formula ? ' formula' : '') + (ri === activeRow && !all ? ' now' : '') + '">' +
+          (row.prose ? '<span class="fs-no"></span>' : '<span class="fs-no">' + (++no) + '</span>') + (row.formula ? '<span class="fs-ftag">公式</span>' : '') + body + '</li>';
+        if (hintOpen && ri === activeRow && !all) rows += '<li class="fs-hint"><b>ヒント</b><button type="button" class="fs-hx" data-act="hint" aria-label="ヒントを閉じる">×</button>' + hintHTML(p, row) + '</li>';
       });
+      if (sec) rows += '</ol></li>';
 
       var tabs = P.map(function (_, i) {
         var s = S[i];
         return '<button type="button" class="fs-tab' + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '" data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (o.tabLabel ? o.tabLabel(P[i], i) : (i + 1)) + '</button>';
       }).join('');
 
-      var cards = p.cards.map(function (c, ci) {
+      var few = o.fewCards !== false && !wide.matches && !all && st.active !== null ? fewCards(p, st, st.active) : null;
+      var cards = (few || p.cards.map(function (_, ci) { return ci; })).map(function (ci) {
+        var c = p.cards[ci];
         if (c.sep) return '<span class="fs-sep"></span>';
-        var need = needCount(p, c.v), off = all || (need > 0 && usedCount(p, st, c.v) >= need);
+        var off = all || isOff(p, st, c.v);
         return '<button type="button" class="fs-card' + (off ? ' used' : '') + '" data-c="' + ci + '"' + (off ? ' disabled' : '') + '>' + valHTML(c.v) + '</button>';
       }).join('');
 
@@ -204,7 +251,7 @@
         ((all || Object.keys(st.fill).length) ? '<button type="button" class="fs-btn" data-act="reset">やり直す</button>' : '') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-act="prev"' + (cur ? '' : ' disabled') + '>前の問題</button>' +
         '<button type="button" class="fs-btn' + (all ? ' primary' : '') + '" data-act="next">' + (cur === P.length - 1 ? '結果を見る' : '次の問題') + '</button></div>' +
-        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards">' + cards + '</div></aside></div>';
+        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards' + (few ? ' few' : '') + '">' + cards + '</div></aside></div>';
 
       bind(p, st);
       layout();
@@ -220,7 +267,7 @@
       var p = P[cur], st = S[cur];
       if (st.done || st.shown || st.fill[i] !== undefined) return;
       if (accepts(p, st, i, v)) {
-        st.fill[i] = v; msg = ''; hintOpen = false; st.active = null;
+        st.fill[i] = v; msg = ''; st.active = null;
         if (firstEmpty(p, st) === null) st.done = true;
         render(); follow();
       } else {
@@ -248,7 +295,7 @@
       root.querySelectorAll('[data-act]').forEach(function (b) {
         b.onclick = function () {
           var a = b.dataset.act;
-          if (a === 'hint') { hintOpen = !hintOpen; render(); if (hintOpen) follow('.fs-hint'); }
+          if (a === 'hint') { hintOpen = !hintOpen; hintRow = st.active === null ? -1 : p.blanks[st.active].row; render(); if (hintOpen) follow('.fs-hint'); }
           else if (a === 'show') { p.blanks.forEach(function (x) { st.fill[x.i] = x.a; }); st.shown = true; msg = ''; render(); }
           else if (a === 'reset') { S[cur] = fresh(); msg = ''; hintOpen = false; render(); window.scrollTo(0, 0); }
           else if (a === 'prev') go(cur - 1);
@@ -258,28 +305,37 @@
     }
 
     // カードを空欄までドラッグして入れる（スマホの指でも動くように pointer events で作る）
+    //   指のときは touch events を使う（pointer events は、ページのスクロールの勢いが残っていると取り消されて、ドラッグできなかった）
     function drag(b, v) {
       var start = null, ghost = null;
-      b.onpointerdown = function (e) { if (b.disabled) return; start = [e.clientX, e.clientY]; b._dragged = false; try { b.setPointerCapture(e.pointerId); } catch (_) {} };
-      b.onpointermove = function (e) {
+      function begin(x, y) { if (b.disabled) return false; start = [x, y]; b._dragged = false; return true; }
+      function move(x, y) {
         if (!start) return;
-        if (!b._dragged && Math.hypot(e.clientX - start[0], e.clientY - start[1]) < 8) return;
+        if (!b._dragged && Math.hypot(x - start[0], y - start[1]) < 8) return;
         b._dragged = true;
         if (!ghost) { ghost = b.cloneNode(true); ghost.className = 'fs-card fs-ghost'; document.body.appendChild(ghost); }
-        ghost.style.left = e.clientX + 'px'; ghost.style.top = e.clientY + 'px';
+        ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
         root.querySelectorAll('.fs-blank.over').forEach(function (z) { z.classList.remove('over'); });
-        var z = document.elementFromPoint(e.clientX, e.clientY); z = z && z.closest('.fs-blank:not(.ok)');
+        var z = document.elementFromPoint(x, y); z = z && z.closest('.fs-blank:not(.ok)');
         if (z) z.classList.add('over');
-      };
-      b.onpointerup = function (e) {
+      }
+      function end(x, y) {
         if (!start) return; start = null;
         if (ghost) { ghost.remove(); ghost = null; }
         if (b._dragged) {
-          var z = document.elementFromPoint(e.clientX, e.clientY); z = z && z.closest('.fs-blank');
-          if (z) place(+z.dataset.b, v); else root.querySelectorAll('.fs-blank.over').forEach(function (x) { x.classList.remove('over'); });
+          var z = document.elementFromPoint(x, y); z = z && z.closest('.fs-blank');
+          if (z) place(+z.dataset.b, v); else root.querySelectorAll('.fs-blank.over').forEach(function (q) { q.classList.remove('over'); });
         }
-      };
-      b.onpointercancel = function () { start = null; if (ghost) { ghost.remove(); ghost = null; } b._dragged = false; };
+      }
+      function cancel() { start = null; if (ghost) { ghost.remove(); ghost = null; } b._dragged = false; }
+      b.onpointerdown = function (e) { if (e.pointerType === 'touch') return; if (begin(e.clientX, e.clientY)) try { b.setPointerCapture(e.pointerId); } catch (_) {} };
+      b.onpointermove = function (e) { if (e.pointerType !== 'touch') move(e.clientX, e.clientY); };
+      b.onpointerup = function (e) { if (e.pointerType !== 'touch') end(e.clientX, e.clientY); };
+      b.onpointercancel = function (e) { if (e.pointerType !== 'touch') cancel(); };
+      b.addEventListener('touchstart', function (e) { begin(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+      b.addEventListener('touchmove', function (e) { if (!start) return; if (e.cancelable) e.preventDefault(); move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+      b.addEventListener('touchend', function (e) { var dragged = b._dragged, t = e.changedTouches[0]; end(t.clientX, t.clientY); if (dragged && e.cancelable) e.preventDefault(); });
+      b.addEventListener('touchcancel', cancel);
     }
 
     // 入れたあと、次の空欄の行がカードの箱に隠れないように少し動かす
