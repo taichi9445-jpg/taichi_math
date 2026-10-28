@@ -1,1147 +1,169 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-
-    <!--
-      31. 三角比の値（三角比・三角関数マスター）
-      山﨑先生の GAS 版をもとにブラッシュアップしたもの。
-      問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-    -->
-    <link rel="stylesheet" href="../assets/port.css">
-    <script src="../assets/port.js"></script>
-  <!-- 【ブラッシュアップ】GAS が自動で入れていた画面幅の設定を、ページに直接書く -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>三角比・三角関数マスター</title>
-  <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-light: #eef2ff;
-      --accent: #f59e0b;
-      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --card-bg: #ffffff;
-      --text-main: #1f2937;
-      --success: #10b981;
-      --error: #ef4444;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
-    body { background: var(--bg-gradient); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; color: var(--text-main); }
-    .container { width: 100%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); min-height: 680px; display: flex; flex-direction: column; position: relative; }
-    .hidden { display: none !important; }
-    
-    /* メニュー画面 */
-    .menu-header { text-align: center; margin-bottom: 25px; }
-    .menu-title { font-size: 32px; color: #1e1b4b; margin-bottom: 10px; font-weight: 800; }
-    .menu-subtitle { font-size: 16px; color: #4338ca; font-weight: bold; }
-    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 850px; margin: 0 auto; }
-    @media (max-width: 600px) { .menu-grid { grid-template-columns: 1fr; } }
-    .menu-card { background: #fff; border-radius: 16px; padding: 22px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #e5e7eb; transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
-    .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-color: var(--primary); }
-    .menu-card.special { background: #fef3c7; border: 2px dashed var(--accent); }
-    .menu-card.marathon { background: #ecfdf5; border: 2px dashed var(--success); }
-    .icon { font-size: 36px; margin-bottom: 10px; }
-    .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 6px; color: var(--primary); }
-    .menu-card.special .mode-title { color: #b45309; }
-    .menu-card.marathon .mode-title { color: #065f46; }
-    .mode-desc { font-size: 13px; color: #4b5563; line-height: 1.5; margin-bottom: 15px; }
-    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; max-width: 160px; font-size: 15px; text-align: center; }
-    .btn:hover { background: #3730a3; }
-    
-    /* クイズ画面共通 */
-    .btn-back { background: #6b7280; align-self: flex-start; margin-bottom: 15px; padding: 8px 15px; font-size: 14px; width: auto; max-width: none; border-radius: 20px; }
-    .btn-back:hover { background: #4b5563; }
-    .btn-hint { background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-left: auto; transition: background 0.2s; }
-    .btn-hint:hover { background: #d97706; }
-
-    /* クイズモードレイアウト */
-    .angle-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-    .tab { background: #e5e7eb; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 15px; border: none; white-space: nowrap; }
-    .tab.active { background: var(--accent); color: white; }
-    
-    /* 図とパネルの黄金比率（選択肢を大きく広々と） */
-    .quiz-area { display: grid; grid-template-columns: 380px 1fr; gap: 30px; flex-grow: 1; align-items: start; }
-    @media (max-width: 850px) { .quiz-area { grid-template-columns: 1fr; } }
-    
-    /* キャンバスコンテナ（コンパクトサイズに維持） */
-    .canvas-container { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; display: flex; justify-content: center; align-items: center; position: relative; min-height: 360px; padding: 10px; }
-    canvas { width: 100%; height: 100%; max-width: 340px; max-height: 340px; }
-
-    /* 回答パネル */
-    .panel { display: flex; flex-direction: column; gap: 20px; width: 100%; }
-    .section-header { display: flex; align-items: center; margin-bottom: 10px; }
-    .section-title { font-size: 18px; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; color: #374151; }
-    .box-row { display: flex; gap: 15px; align-items: center; margin-bottom: 12px; font-size: 18px; font-weight: bold; }
-    
-    /* ドロップボックス */
-    .drop-box { width: 90px; height: 48px; border: 2px dashed #9ca3af; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center; background: #fff; font-weight: bold; font-size: 18px; cursor: pointer; transition: background 0.2s; vertical-align: middle; }
-    .drop-box.selected { border-color: var(--primary); background: var(--primary-light); }
-    .drop-box.filled { border-style: solid; border-color: #4b5563; background: #f3f4f6; }
-    .drop-box.correct { border-color: var(--success); background: #ecfdf5; color: var(--success); }
-    .drop-box.wrong { border-color: var(--error); background: #fef2f2; color: var(--error); }
-    
-    /* 選択肢チップ */
-    .chip-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; min-height: 55px; }
-    .chip { padding: 10px 18px; background: #3b82f6; color: white; border-radius: 6px; font-weight: bold; cursor: grab; user-select: none; border: none; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-flex; align-items: center; justify-content: center; min-width: 55px; }
-    
-    /* 三角比 1列・4択用スタイル（文字とボタンを特大化） */
-    .trig-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .trig-label { font-weight: 800; font-size: 20px; display: inline-flex; align-items: center; color: #1e293b; }
-    .trig-options { display: flex; gap: 15px; width: 100%; }
-    
-    /* 特大ボタン */
-    .opt-btn { background: #fff; border: 2px solid #d1d5db; height: 65px; flex: 1; border-radius: 10px; font-weight: bold; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); white-space: nowrap; }
-    .opt-btn:hover { border-color: var(--primary); background: var(--primary-light); transform: translateY(-1px); }
-    
-    .opt-btn.correct-ans { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
-    .opt-btn.wrong-ans { background: var(--error) !important; color: white !important; border-color: var(--error) !important; }
-
-    /* 数学表記（マイナスを分数線の左側中央に完全に独立・配置） */
-    .math-expr-wrapper { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
-    .math-minus-sign { font-size: 22px; font-weight: bold; margin-right: 3px; display: inline-block; line-height: 1; }
-    .math-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; padding: 0 4px; font-size: 18px; line-height: 1.05; font-weight: bold; }
-    .math-frac .num { border-bottom: 2px solid currentColor; padding-bottom: 1px; width: 100%; text-align: center; }
-    .math-frac .den { padding-top: 1px; width: 100%; text-align: center; }
-    
-    .math-sqrt-container { display: inline-flex; align-items: center; vertical-align: middle; line-height: 1; }
-    .math-sqrt-symbol { font-size: 1.15em; line-height: 1; font-weight: normal; margin-right: -1px; transform: translateY(-1px); }
-    .math-sqrt { border-top: 1.8px solid currentColor; padding-top: 1px; display: inline-block; line-height: 1; font-size: 0.95em; }
-
-    /* 総合練習モード用UI */
-    .random-container { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0; }
-    .random-header-bar { width: 100%; max-width: 850px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 18px; color: #4b5563; }
-    .progress-container { width: 100%; max-width: 850px; height: 14px; background: #e5e7eb; border-radius: 7px; overflow: hidden; margin-bottom: 25px; border: 1px solid #d1d5db; }
-    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s ease; }
-    .timer-display { background: #1e293b; color: #38bdf8; font-family: monospace; padding: 6px 16px; border-radius: 8px; font-size: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
-    
-    .question-large-box { background: #f8fafc; border: 3px solid #e2e8f0; border-radius: 16px; width: 100%; max-width: 850px; text-align: center; padding: 45px 20px; margin-bottom: 35px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .question-text-huge { font-size: 68px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
-    
-    .grid-6-huge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; width: 100%; max-width: 850px; }
-    @media (max-width: 600px) { .grid-6-huge { grid-template-columns: repeat(2, 1fr); gap: 15px; } }
-    .grid-6-huge .opt-btn { height: 90px; font-size: 26px; border-radius: 14px; border-width: 2.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
-    .grid-6-huge .opt-btn:hover { transform: scale(1.02); }
-
-    /* 結果画面 */
-    .result-screen { text-align: center; padding: 40px 20px; }
-    .result-title { font-size: 36px; color: var(--success); font-weight: bold; margin-bottom: 20px; }
-    .result-time { font-size: 52px; font-weight: 800; color: #1e293b; margin-bottom: 30px; font-family: monospace; }
-    
-    /* モーダルポップアップ */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    .modal-title { font-size: 22px; font-weight: bold; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-    .modal-row { display: flex; justify-content: space-between; padding: 12px 20px; font-size: 18px; border-bottom: 1px solid #f3f4f6; align-items: center; }
-    .modal-label { font-weight: bold; color: #4b5563; }
-    .modal-value { font-weight: bold; color: #111827; font-size: 20px; }
-    .btn-close { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; margin-top: 20px; cursor: pointer; width: 100%; font-size: 16px; }
-    .btn-close:hover { background: #1f2937; }
-
-    /* 【ブラッシュアップ】 */
-    body { flex-direction: column; }
-    .port-back { width: 100%; max-width: 1200px; color: #fff; }
-    .opt-btn:disabled { opacity: .45; cursor: default; transform: none; }
-    .tab.done { background: #d1fae5; color: #065f46; }
-    .tab.done::after { content: ' ✓'; }
-    .tab.done.active { background: var(--success); color: #fff; }
-    .drop-box.correct { cursor: default; }
-    .chip-guide { font-size: 13px; color: #6b7280; margin: -4px 0 4px; }
-    .btn-sub { background: #e5e7eb; color: #374151; }
-    .btn-sub:hover { background: #d1d5db; }
-    .angle-clear { background: #ecfdf5; border: 2px solid var(--success); border-radius: 14px; padding: 16px; text-align: center; }
-    .angle-clear-msg { font-size: 20px; font-weight: 800; color: #065f46; margin-bottom: 12px; }
-    .angle-clear-btns, .result-nav { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .angle-clear-btns .btn, .result-nav .btn { max-width: 340px; width: 100%; padding: 12px 16px; font-size: 16px; }
-    .result-nav a { color: #6b7280; margin-top: 4px; }
-    .result-miss { font-size: 18px; font-weight: bold; color: #4b5563; margin: -14px 0 24px; }
-    /* 【ブラッシュアップ】メニューを数学Ⅰ・数学Ⅱに分ける／y/r の式／答えを見た印 */
-    .menu-sec { max-width: 850px; margin: 18px auto 10px; font-weight: 800; font-size: 17px; color: #1e40af; }
-    .menu-sec.m2 { color: #7c3aed; margin-top: 26px; }
-    .menu-sub2 { font-size: 13px; color: #6b7280; margin-top: 6px; font-weight: bold; }
-    .menu-sub2 a { color: #b45309; }
-    .trig-row { grid-template-columns: 1fr; gap: 6px; }
-    .trig-label { gap: 6px; flex-wrap: wrap; }
-    .trig-label i { font-family: 'Times New Roman', serif; font-size: 22px; }
-    .yr { display: inline-flex; align-items: center; gap: 4px; color: #1d4ed8; }
-    .yr small { font-size: 12px; color: #6b7280; }
-    .tab.shown::before { content: '👀 '; }
-    .theta-cap { text-align: center; font-weight: 800; color: #1e40af; font-size: 17px; margin-bottom: 4px; }
-    .theta-cap .m2 { font-size: 12px; color: #7c3aed; }
-    .canvas-container { flex-direction: column; }
-
-    /* 【ブラッシュアップ】スマホ用の表示（画面の幅が 640px 以下のときだけ切り替わる） */
-    @media (max-width: 640px) {
-      body { padding: 8px; }
-      .container { padding: 14px 10px; min-height: 0; border-radius: 16px; }
-      .menu-header { margin-bottom: 16px; }
-      .menu-title { font-size: min(28px, 7vw); white-space: nowrap; }
-      .menu-subtitle { font-size: 14px; }
-      .menu-grid { gap: 12px; }
-      .menu-card { padding: 16px; }
-      .mode-title { font-size: 19px; }
-      .mode-desc { font-size: 15px; margin-bottom: 10px; }
-      .btn { font-size: 16px; padding: 12px 25px; max-width: 220px; }
-      .btn-back { font-size: 14px; padding: 8px 14px; margin-bottom: 10px; }
-      .angle-tabs { margin-bottom: 12px; }
-      .tab { font-size: 16px; padding: 8px 14px; }
-      .quiz-area { gap: 16px; }
-      .canvas-container { min-height: 0; padding: 6px; }
-      canvas { width: 100%; height: auto; max-width: 300px; }
-      .section-title { font-size: 17px; }
-      .btn-hint { font-size: 14px; padding: 7px 12px; white-space: nowrap; }
-      .box-row { flex-wrap: wrap; gap: 8px; font-size: 18px; }
-      .drop-box { width: 80px; height: 52px; font-size: 20px; }
-      .chip { font-size: 20px; padding: 10px 14px; min-width: 62px; min-height: 52px; }
-      .chip-guide { font-size: 14px; }
-      .trig-row { grid-template-columns: 1fr; gap: 6px; margin-bottom: 14px; }
-      .trig-label { font-size: 21px; }
-      .trig-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-      .opt-btn { height: 62px; font-size: 20px; padding: 0 2px; }
-      .opt-btn.long { font-size: 15px; }
-      .pc-only { display: none; }
-      /* 分数・ルートを大きく（元は 18px のまま固定だった） */
-      .opt-btn .math-frac, .drop-box .math-frac, .chip .math-frac { font-size: 20px; }
-      .grid-6-huge .opt-btn .math-frac { font-size: 25px; }
-      .grid-6-huge .math-minus-sign { font-size: 26px; }
-      .random-header-bar { font-size: 16px; }
-      .timer-display { font-size: 18px; padding: 5px 12px; }
-      .progress-container { margin-bottom: 16px; }
-      .question-large-box { padding: 26px 8px; margin-bottom: 18px; }
-      .question-text-huge { font-size: min(52px, 12.4vw); white-space: nowrap; }
-      .grid-6-huge { gap: 10px; }
-      .grid-6-huge .opt-btn { height: 78px; font-size: 24px; }
-      .result-screen { padding: 20px 6px; }
-      .result-title { font-size: min(30px, 7.4vw); white-space: nowrap; }
-      .result-time { font-size: 44px; }
-      .angle-clear-msg { font-size: 18px; }
-      .modal-content { padding: 20px 14px; }
-      .modal-row { padding: 10px 8px; }
-      /* 【ブラッシュアップ】角度のボタンは折り返す（元は 135°・150° が画面の外で横スクロールが必要だった） */
-      .angle-tabs { flex-wrap: wrap; overflow-x: visible; gap: 6px; }
-      .tab { padding: 6px 11px; font-size: 15px; }
-      /* 【ブラッシュアップ】図を上に固定して、答える欄と同時に見えるようにする */
-      .canvas-container { position: sticky; top: 0; z-index: 5; }
-      .canvas-container canvas { max-height: 200px; width: auto; }
-      .theta-cap { font-size: 15px; margin: 0; }
-      .trig-label i { font-size: 20px; }
-    }
-  </style>
-    <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-    <link rel="stylesheet" href="../assets/theme.css">
-    <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    :root { --primary: var(--u-title); --primary-light: var(--u-soft-blue); --accent: var(--u-accent); --bg-gradient: var(--u-bg); --text-main: var(--u-ink); }
-    :where(body.u-theme) * { font-family: var(--u-font); }
-    .container { box-sizing: border-box; }
-    .menu-subtitle { color: var(--u-sub); }
-    .menu-card { border: 3px solid var(--u-line); box-shadow: none; border-radius: 22px; }
-    .menu-card.special { background: var(--u-soft-yellow); border: 3px dashed #fde68a; }
-    .menu-card.marathon { background: var(--u-ok-soft); border: 3px dashed var(--u-ok-line); }
-    .mode-desc { color: var(--u-sub); font-weight: 700; }
-    .tab { background: #fff; border: 2px solid var(--u-line); color: var(--u-ink); }
-    .tab.active { background: var(--u-accent); border-color: var(--u-accent-dark); color: #fff; }
-    .canvas-container { background: #fff; border: 3px solid var(--u-line); border-radius: 18px; }
-    .section-title { color: var(--u-title-dark); border-left-color: var(--u-accent); }
-    .drop-box { border-color: var(--u-line-dark); border-radius: 10px; }
-    .chip { background: var(--u-blue); border-bottom: 4px solid var(--u-blue-dark); border-radius: 12px; }
-    .question-large-box { background: var(--u-soft-yellow); border: 4px dashed #fde68a; border-radius: 20px; }
-    .result-title { color: var(--u-accent-text); }
-    .result-time { color: var(--u-ink); }
-    /* 【ブラッシュアップ】数式の書体：文字は斜体、数字・sin/cos/tan はまっすぐ */
-    .mf { font-family: var(--u-math-font); font-style: normal; }
-    .mv { font-family: var(--u-math-font); font-style: italic; padding-right: 0.06em; }
-  
-    </style>
-</head>
-<body class="u-theme">
-
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>三角比の値（総合）</title>
+<!--
+  31. 三角比の値（総合）
+  2026-10-28 先生の確認を受けて作り直し（Claude Code）。
+  ・図が動く練習は 30「三角比（座標）」と同じもの（assets/zahyou.js・fill-steps.js）。
+  ・タイムアタック（10問）とマラソン（全部）は、問題がランダムに出る。選択肢は6つ。
+  ・√ は SVG で描き、外と中の数字を同じ大きさに（元は文字の √ に線を重ねていてずれていた）。
+-->
+<link rel="stylesheet" href="../assets/port.css">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fill-steps.css">
+<style>
+/* メニュー（30 と同じ形） */
+.zm-sec{margin:4px 0 14px}
+.zm-sec h2{font-size:15px;margin:0 0 6px;color:#1f4e8c;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.zm-sec h2 small{font-size:13px;color:#5b6470;font-weight:400}
+.zm-list{display:grid;gap:8px}
+@media (min-width:640px){.zm-list{grid-template-columns:1fr 1fr}}
+.zm-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px;border:1px solid #c5d3e4;border-left:5px solid #1f4e8c;border-bottom:3px solid #b6bfc9;border-radius:6px;background:#fff;color:#1f2328;font:inherit;cursor:pointer;transition:transform .08s}
+.zm-item:active{transform:translateY(2px);border-bottom-width:1px}
+.zm-item .n{flex:none;width:30px;height:30px;border-radius:50%;background:#e3ecf7;color:#1f4e8c;font-weight:700;display:flex;align-items:center;justify-content:center}
+.zm-item b{display:block;font-size:17px}
+.zm-item span.s{display:block;font-size:14px;color:#5b6470}
+.zm-item.ta{border-left-color:#e8890c;background:#fffaf0}.zm-item.ta .n{background:#fff1dc;color:#b35c00}
+.zm-item.mr{border-left-color:#2b8a3e;background:#f6fcf7}.zm-item.mr .n{background:#e3f6e7;color:#2b8a3e}
+.zm-item.m2{border-left-color:#7048e8}.zm-item.m2 .n{background:#efe9fd;color:#5f3dc4}
+.zm-item .ok{margin-left:auto;color:#2b8a3e;font-size:14px;font-weight:700;white-space:nowrap}
+.zm-note{font-size:14px;color:#5b6470;margin:4px 0 0}
+.zm-back{min-height:32px!important;padding:2px 10px!important;font-size:14px!important;margin-right:6px}
+/* 図（30 と同じ） */
+.zf{position:relative;margin:0 auto;max-width:100%}
+.zf>svg{display:block;width:100%;height:auto}
+.zl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;width:max-content;font-size:17px;line-height:1.2;color:#b02525;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
+.fs-fig .zf{width:340px}
+.fs-hint .zf{width:250px;margin-top:6px}
+@media (min-width:900px) and (orientation:landscape){.fs-fig .zf{width:380px}}
+/* タイムアタック・マラソン */
+.ta-wrap{max-width:720px;margin:0 auto}
+.ta-top{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.ta-count{font-size:14px;color:#5b6470;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ta-timer{flex:none;margin-left:auto;font:700 18px/1 'BIZ UDPGothic',sans-serif;font-variant-numeric:tabular-nums;color:#fff;background:#1f4e8c;border-radius:6px;padding:7px 12px}
+.ta-bar{height:6px;background:#e6edf5;border-radius:3px;overflow:hidden;margin:0 0 12px}
+.ta-bar span{display:block;height:100%;background:#e8890c;transition:width .2s}
+.ta-q{display:flex;justify-content:center;align-items:center;min-height:120px;margin:0 0 14px;padding:12px;background:#fff8e6;border:1px solid #f3d9a4;border-left:5px solid #e8890c;border-radius:8px;font-size:40px;color:#1f4e8c}
+.ta-q .fs-m{font-size:1em}
+.ta-q .qm{color:#e8890c;font-family:'BIZ UDPGothic',sans-serif;font-weight:700;margin-left:.2em}
+.ta-q.sin{color:#c92a2a}.ta-q.cos{color:#2b8a3e}.ta-q.tan{color:#1f4e8c}
+.ta-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ta-opt{position:relative;min-height:84px;border:1px solid #c5d3e4;border-bottom:4px solid #9fb2c8;border-radius:8px;background:#fff;color:#1f2328;font:30px 'STIX Two Text',serif;cursor:pointer;transition:transform .08s}
+.ta-opt:not(:disabled):active{transform:translateY(2px);border-bottom-width:2px}
+.ta-opt .fs-jp{font-size:24px}
+.ta-opt.ok{background:#ebfbee;border-color:#2b8a3e;border-bottom-color:#1f6a2f}
+.ta-opt.ng{background:#fff5f5;border-color:#c92a2a;border-bottom-color:#a61e1e;opacity:.75}
+.ta-opt.ng::after{content:'×';position:absolute;right:8px;top:2px;font:700 16px 'BIZ UDPGothic',sans-serif;color:#c92a2a}
+@media (min-width:640px){.ta-opts{grid-template-columns:repeat(3,1fr)}.ta-q{font-size:48px;min-height:140px}}
+.ta-res{text-align:center;padding:10px 0}
+.ta-res h2{font-size:21px;margin:0 0 8px}
+.ta-res .t{font:700 44px/1.2 'BIZ UDPGothic',sans-serif;font-variant-numeric:tabular-nums;color:#1f4e8c;margin:6px 0}
+.ta-res .fs-nav{justify-content:center}
+</style>
+</head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-<div class="container" id="app">
-  <div id="view-menu">
-    <div class="menu-header">
-      <h1 class="menu-title">三角比・三角関数マスター</h1>
-      <p class="menu-subtitle">三角比の値を、すばやく正確に言えるようにしよう</p>
-      <p class="menu-sub2">動径と座標で三角比を求める考え方は <a href="sankakuhi-zahyou.html">30. 三角比：動径と座標</a> で</p>
-    </div>
-    <!-- 【ブラッシュアップ】数学Ⅰ（0°〜180°）と数学Ⅱ（一般角）に分けた -->
-    <div class="menu-sec">数学Ⅰ（0° ≦ θ ≦ 180°）</div>
-    <div class="menu-grid">
-      <div class="menu-card">
-        <div class="icon">📐</div>
-        <div class="mode-title">基本モード</div>
-        <div class="mode-desc">30°, 45°, 60°<br>120°, 135°, 150°</div>
-        <button class="btn" onclick="startMode('basic')">スタート</button>
-      </div>
-      <div class="menu-card">
-        <div class="icon">⭐</div>
-        <div class="mode-title">ちょい発展</div>
-        <div class="mode-desc">0°, 90°, 180°</div>
-        <button class="btn" onclick="startMode('slight')">スタート</button>
-      </div>
-      <div class="menu-card special">
-        <div class="icon">🔥</div>
-        <div class="mode-title">数学Ⅰ タイムアタック（10問）</div>
-        <div class="mode-desc">0°〜180° の 27 パターンから 10 問！<br>スピード勝負！</div>
-        <button class="btn" style="background:var(--accent); max-width: 200px;" onclick="startMode('rand10')">タイムアタック</button>
-      </div>
-      <div class="menu-card marathon">
-        <div class="icon">🏆</div>
-        <div class="mode-title">数学Ⅰ マラソン（27問）</div>
-        <div class="mode-desc">0°〜180° の sin, cos, tan を全部！<br>完全制覇のタイムを計測します。</div>
-        <button class="btn" style="background:var(--success); max-width: 200px;" onclick="startMode('marathon')">マラソン開始</button>
-      </div>
-    </div>
-    <div class="menu-sec m2">数学Ⅱ（一般角）の予習</div>
-    <div class="menu-grid">
-      <div class="menu-card">
-        <div class="icon">🚀</div>
-        <div class="mode-title">超発展モード</div>
-        <div class="mode-desc">210°, 225°, 240°<br>300°, 315°, 330°</div>
-        <button class="btn" onclick="startMode('super')">スタート</button>
-      </div>
-      <div class="menu-card">
-        <div class="icon">👑</div>
-        <div class="mode-title">超超発展</div>
-        <div class="mode-desc">270°, 360°</div>
-        <button class="btn" onclick="startMode('ultra')">スタート</button>
-      </div>
-      <div class="menu-card special">
-        <div class="icon">🔥</div>
-        <div class="mode-title">一般角 タイムアタック（10問）</div>
-        <div class="mode-desc">0°〜330° の 48 パターンから 10 問！</div>
-        <button class="btn" style="background:var(--accent); max-width: 200px;" onclick="startMode('rand10all')">タイムアタック</button>
-      </div>
-      <div class="menu-card marathon">
-        <div class="icon">🏆</div>
-        <div class="mode-title">一般角 マラソン（48問）</div>
-        <div class="mode-desc">16 の角度の sin, cos, tan を全部！</div>
-        <button class="btn" style="background:var(--success); max-width: 200px;" onclick="startMode('marathonall')">マラソン開始</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="view-quiz" class="hidden">
-    <button class="btn btn-back" onclick="backToMenu()">メニューに戻る</button>
-    <div class="angle-tabs" id="tabs-container"></div>
-    
-    <div class="quiz-area">
-      <div class="canvas-container">
-        <div class="theta-cap" id="theta-cap"></div>
-        <canvas id="graphCanvas" width="340" height="340"></canvas>
-      </div>
-      
-      <div class="panel">
-        <div>
-          <div class="section-header">
-            <div class="section-title">座標と動径を求めよう</div>
-            <button class="btn-hint" onclick="openHintModal()">答えを見る</button>
-          </div>
-          <div class="box-row">
-            点Pの座標: ( 
-            <div class="drop-box" id="box-px" onclick="selectBox('box-px')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-px')"></div> , 
-            <div class="drop-box" id="box-py" onclick="selectBox('box-py')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-py')"></div> )
-          </div>
-          <div class="box-row">
-            OP の長さ r（半径）= 
-            <div class="drop-box" id="box-r" onclick="selectBox('box-r')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'box-r')"></div>
-          </div>
-          <!-- 【ブラッシュアップ】スマホではドラッグできないので、タップで入れる方法を書いておく -->
-          <p class="chip-guide">枠をえらんで、下のカードをタップ<span class="pc-only">（ドラッグでもOK）</span></p>
-          <div class="chip-container" id="coords-chips"></div>
-        </div>
-        
-        <hr style="border:0; border-top:1px solid #e5e7eb; margin: 5px 0;">
-        
-        <div>
-          <div class="section-title" style="margin-bottom: 15px;">三角比を求めよう</div>
-          <div class="trig-row">
-            <span class="trig-label">sin θ = <span class="math-frac"><span class="num"><i>y</i></span><span class="den"><i>r</i></span></span><span class="yr" id="yr-sin"></span> =</span>
-            <div class="trig-options" id="opts-sin"></div>
-          </div>
-          <div class="trig-row">
-            <span class="trig-label">cos θ = <span class="math-frac"><span class="num"><i>x</i></span><span class="den"><i>r</i></span></span><span class="yr" id="yr-cos"></span> =</span>
-            <div class="trig-options" id="opts-cos"></div>
-          </div>
-          <div class="trig-row">
-            <span class="trig-label">tan θ = <span class="math-frac"><span class="num"><i>y</i></span><span class="den"><i>x</i></span></span><span class="yr" id="yr-tan"></span> =</span>
-            <div class="trig-options" id="opts-tan"></div>
-          </div>
-        </div>
-        <!-- 【ブラッシュアップ】元は全部答えても何も起きなかった。クリアを知らせて、次の角度・次のモードへ進めるようにした -->
-        <div class="angle-clear hidden" id="angle-clear">
-          <div class="angle-clear-msg" id="angle-clear-msg"></div>
-          <div class="angle-clear-btns" id="angle-clear-btns"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="view-random" class="hidden">
-    <button class="btn btn-back" onclick="backToMenu()">中断してメニューに戻る</button>
-    <div class="random-container">
-      <div class="random-header-bar">
-        <div id="rand-progress-text">問題 1 / 10</div>
-        <div class="timer-display" id="rand-timer">00:00.0</div>
-      </div>
-      <div class="progress-container">
-        <div class="progress-bar" id="rand-progress-bar"></div>
-      </div>
-      
-      <div class="question-large-box">
-        <div class="question-text-huge" id="rand-question">sin 30° = ?</div>
-      </div>
-      
-      <div class="grid-6-huge" id="rand-options"></div>
-    </div>
-  </div>
-
-  <div id="view-result" class="hidden">
-    <div class="result-screen">
-      <div class="icon" style="font-size: 70px;">🎉</div>
-      <div class="result-title" id="result-title-text">タイムアタック(10問)クリア！</div>
-      <p style="font-size: 18px; color: #4b5563; margin-bottom: 10px;">あなたの記録</p>
-      <div class="result-time" id="result-final-time">00:45.2</div>
-      <div class="result-miss" id="result-miss"></div>
-      <!-- 【ブラッシュアップ】同じモードでもう一度・次のモード・えらび直す・ほかの教材 を選べるようにした -->
-      <div class="result-nav">
-        <button class="btn" onclick="startMode(currentMode)">同じモードでもう一度</button>
-        <button class="btn hidden" id="btn-result-next" style="background:var(--success);" onclick="startMode(currentMode === 'rand10all' ? 'marathonall' : 'marathon')">つぎは マラソンに挑戦 ▶</button>
-        <button class="btn btn-sub" onclick="backToMenu()">モードをえらび直す</button>
-        <a href="../index.html">ほかの教材をえらぶ</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay hidden" id="hint-modal">
-  <div class="modal-content">
-    <div class="modal-title" id="modal-angle-title">0° の答え</div>
-    <div class="modal-row"><span class="modal-label">点Pの x 座標</span><span class="modal-value" id="hint-x"></span></div>
-    <div class="modal-row"><span class="modal-label">点Pの y 座標</span><span class="modal-value" id="hint-y"></span></div>
-    <div class="modal-row"><span class="modal-label">動径の長さ r</span><span class="modal-value" id="hint-r"></span></div>
-    <div class="modal-row"><span class="modal-label">sin θ</span><span class="modal-value" id="hint-sin"></span></div>
-    <div class="modal-row"><span class="modal-label">cos θ</span><span class="modal-value" id="hint-cos"></span></div>
-    <div class="modal-row"><span class="modal-label">tan θ</span><span class="modal-value" id="hint-tan"></span></div>
-    <button class="btn-close" onclick="closeHintModal()">閉じる</button>
-  </div>
-</div>
-
+<main class="fs-wrap">
+  <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>三角比の値（総合）</h1></header>
+  <div id="menu"></div>
+  <div id="app"></div>
+  <div id="ta"></div>
+</main>
+<script src="../assets/fill-steps.js"></script>
+<script src="../assets/zahyou.js"></script>
 <script>
-  // マスターデータ (▲はルート記号の内部マーカー)
-  const anglesData = {
-    30:  { x:'▲3',  y:'1',   r:'2',  sin:'1/2',     cos:'▲3/2',    tan:'1/▲3' },
-    45:  { x:'1',   y:'1',   r:'▲2', sin:'1/▲2',    cos:'1/▲2',    tan:'1' },
-    60:  { x:'1',   y:'▲3',  r:'2',  sin:'▲3/2',    cos:'1/2',     tan:'▲3' },
-    120: { x:'-1',  y:'▲3',  r:'2',  sin:'▲3/2',    cos:'-1/2',    tan:'-▲3' },
-    135: { x:'-1',  y:'1',   r:'▲2', sin:'1/▲2',    cos:'-1/▲2',   tan:'-1' },
-    150: { x:'-▲3', y:'1',   r:'2',  sin:'1/2',     cos:'-▲3/2',   tan:'-1/▲3' },
-    0:   { x:'1',   y:'0',   r:'1',  sin:'0',       cos:'1',       tan:'0' },
-    90:  { x:'0',   y:'1',   r:'1',  sin:'1',       cos:'0',       tan:'定義なし' },
-    180: { x:'-1',  y:'0',   r:'1',  sin:'0',       cos:'-1',      tan:'0' },
-    210: { x:'-▲3', y:'-1',  r:'2',  sin:'-1/2',    cos:'-▲3/2',   tan:'1/▲3' },
-    225: { x:'-1',  y:'-1',  r:'▲2', sin:'-1/▲2',   cos:'-1/▲2',   tan:'1' },
-    240: { x:'-1',  y:'-▲3', r:'2',  sin:'-▲3/2',   cos:'-1/2',    tan:'▲3' },
-    300: { x:'1',   y:'-▲3', r:'2',  sin:'-▲3/2',   cos:'1/2',     tan:'-▲3' },
-    315: { x:'1',   y:'-1',  r:'▲2', sin:'-1/▲2',   cos:'1/▲2',    tan:'-1' },
-    330: { x:'▲3',  y:'-1',  r:'2',  sin:'-1/2',    cos:'▲3/2',    tan:'-1/▲3' },
-    270: { x:'0',   y:'-1',  r:'1',  sin:'-1',      cos:'0',       tan:'定義なし' },
-    360: { x:'1',   y:'0',   r:'1',  sin:'0',       cos:'1',       tan:'0' }
-  };
+const PRACTICE = {
+  basic: { name: '基本の角', sub: '30°・45°・60°・120°・135°・150°', angles: [30, 45, 60, 120, 135, 150] },
+  axis: { name: '軸の上の角', sub: '0°・90°・180°', angles: [0, 90, 180] },
+  m2a: { name: '180° をこえる角', sub: '210°・225°・240°・300°・315°・330°', angles: [210, 225, 240, 300, 315, 330] },
+  m2b: { name: '270°・360°', sub: 'P が軸の上（円で考える）', angles: [270, 360] }
+};
+const RUNS = {
+  ta1: { name: 'タイムアタック', sub: '0°〜180° の sin・cos・tan から 10 問', all: false, n: 10 },
+  mr1: { name: 'マラソン', sub: '0°〜180° の 27 問をぜんぶ', all: false },
+  ta2: { name: '一般角 タイムアタック', sub: '0°〜330° から 10 問', all: true, n: 10 },
+  mr2: { name: '一般角 マラソン', sub: '16 の角度の 48 問をぜんぶ', all: true }
+};
+const done = {}, best = {};
+const MENU_BTN = '<button type="button" class="fs-btn zm-back" onclick="showMenu()">メニュー</button>';
 
-  const modes = {
-    basic: [30, 45, 60, 120, 135, 150],
-    slight: [0, 90, 180],
-    super: [210, 225, 240, 300, 315, 330],
-    ultra: [270, 360]
-  };
+function clearViews() { animTok++; clearInterval(timer); ['menu', 'app', 'ta'].forEach(id => document.getElementById(id).innerHTML = ''); }
 
-  let currentMode = '';
-  let currentAngle = 0;
-  let selectedBoxId = null;
-  
-  // アニメーション用
-  const canvas = document.getElementById('graphCanvas');
-  const ctx = canvas.getContext('2d');
-  let animCurrentAngle = 0;
-  let animTargetAngle = 0;
-  let animStartTime = null;
-  let animId = null;
-  const ANIM_DURATION = 1000;
-
-  // 総合演習用
-  let randomQuestionsList = [];
-  let currentRandIndex = 0;
-  let totalRandQuestions = 0;
-  let timerInterval = null;
-  let startTimeStamp = 0;
-  let randMiss = 0;        // 【ブラッシュアップ】まちがえた回数（結果画面に出す）
-  let randLocked = false;  // 【ブラッシュアップ】正解のあと、次の問題が出るまでは受け付けない
-  let doneAngles = new Set();  // 【ブラッシュアップ】このモードでクリアした角度
-
-  // 【ブラッシュアップ】数学Ⅰ（0°〜180°）と数学Ⅱ（一般角）を分けた
-  const MODE_ORDER = ['basic', 'slight', 'rand10', 'marathon', 'super', 'ultra', 'rand10all', 'marathonall'];
-  const MODE_NAMES = { basic: '基本モード', slight: 'ちょい発展', super: '超発展モード', ultra: '超超発展', rand10: '数学Ⅰ タイムアタック（10問）', marathon: '数学Ⅰ マラソン（27問）', rand10all: '一般角 タイムアタック（10問）', marathonall: '一般角 マラソン（48問）' };
-  let angleMiss = 0;              // 【ブラッシュアップ】この角度でまちがえた回数
-  const shownAngles = new Set();  // 【ブラッシュアップ】答えを見た角度
-
-  // 【ブラッシュアップ】元の並べかえ（sort と Math.random）は、かたよりが出る。きちんと混ぜる。
-  function shuffleArr(a) {
-    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-    return a;
-  }
-
-  // 【ブラッシュアップ】選択肢の作り方
-  //   元は、選択肢の残りをいつも同じ順の表から取っていたので、総合練習では毎回ほぼ
-  //   「0, 1, −1, 1/2, −1/2」が並び、tan 90° でも 0 が選択肢に出てこなかった。
-  //   まちがえやすい値（符号ちがい・sin と cos の取りちがえ・tan の逆数・0 と 定義なし）を先に入れる。
-  const TRIG_VALUES = ['0', '1', '-1', '1/2', '-1/2', '▲3/2', '-▲3/2', '1/▲2', '-1/▲2', '▲3', '-▲3', '1/▲3', '-1/▲3', '定義なし'];
-  const NEAR = {
-    '1/2': ['▲3/2', '1/▲2'], '▲3/2': ['1/2', '1/▲2'], '1/▲2': ['1/2', '▲3/2', '1'],
-    '▲3': ['1/▲3', '▲3/2'], '1/▲3': ['▲3', '1/2'], '1': ['0', '1/▲2', '▲3'],
-    '0': ['定義なし', '1', '-1'], '定義なし': ['0', '1']
-  };
-  function makeChoices(correct, n) {
-    const minus = correct.startsWith('-');
-    const abs = minus ? correct.slice(1) : correct;
-    const signed = (v) => (minus && v !== '0' && v !== '定義なし') ? '-' + v : v;
-    let traps = [];
-    if (correct !== '0' && correct !== '定義なし') traps.push(minus ? abs : '-' + abs);
-    traps = traps.concat(shuffleArr((NEAR[abs] || []).map(signed)));
-    traps = traps.concat(shuffleArr(TRIG_VALUES.slice()));
-    const choices = [correct];
-    for (const v of traps) {
-      if (choices.length >= n) break;
-      if (!choices.includes(v)) choices.push(v);
-    }
-    return shuffleArr(choices);
-  }
-
-  // 数式成形フォーマッタ（マイナス独立制御＆タグの文字列漏れバグを完全防止）
-  function formatMathHtml(str) {
-    if (str === '定義なし' || !str) return str || '';
-    
-    let hasGlobalMinus = false;
-    let workingStr = str;
-
-    if (workingStr.startsWith('-')) {
-      hasGlobalMinus = true;
-      workingStr = workingStr.substring(1);
-    }
-
-    const processSqrt = (s) => {
-      if (s.includes('▲')) {
-        let inside = s.replace(/▲/g, '');
-        let localMinus = '';
-        if (inside.startsWith('-')) {
-          localMinus = '-';
-          inside = inside.substring(1);
-        }
-        return `${localMinus}<span class="math-sqrt-container"><span class="math-sqrt-symbol">√</span><span class="math-sqrt">${inside}</span></span>`;
-      }
-      return s;
-    };
-
-    let innerHtml = '';
-    if (workingStr.includes('/')) {
-      const parts = workingStr.split('/');
-      let numStr = parts[0];
-      let denStr = parts[1];
-      if (numStr.startsWith('-')) {
-        hasGlobalMinus = !hasGlobalMinus;
-        numStr = numStr.substring(1);
-      }
-      if (denStr.startsWith('-')) {
-        hasGlobalMinus = !hasGlobalMinus;
-        denStr = denStr.substring(1);
-      }
-      
-      const numeratorHTML = processSqrt(numStr);
-      const denominatorHTML = processSqrt(denStr);
-      innerHtml = `<span class="math-frac"><span class="num">${numeratorHTML}</span><span class="den">${denominatorHTML}</span></span>`;
-    } else {
-      innerHtml = processSqrt(workingStr);
-    }
-
-    if (hasGlobalMinus) {
-      return `<span class="math-expr-wrapper"><span class="math-minus-sign">－</span>${innerHtml}</span>`;
-    }
-    return `<span class="math-expr-wrapper">${innerHtml}</span>`;
-  }
-
-  function startMode(mode) {
-    currentMode = mode;
-    doneAngles = new Set();
-    window.scrollTo(0, 0);
-    document.getElementById('view-menu').classList.add('hidden');
-    document.getElementById('view-result').classList.add('hidden');
-    
-    if(['rand10', 'marathon', 'rand10all', 'marathonall'].includes(mode)) {   // 【ブラッシュアップ】
-      document.getElementById('view-quiz').classList.add('hidden');
-      document.getElementById('view-random').classList.remove('hidden');
-      buildRandomQuestions(mode);
-    } else {
-      document.getElementById('view-random').classList.add('hidden');
-      document.getElementById('view-quiz').classList.remove('hidden');
-      setupTabs(modes[mode]);
-      loadQuestion(modes[mode][0]);
-    }
-  }
-
-  function backToMenu() {
-    clearInterval(timerInterval);
-    document.getElementById('view-quiz').classList.add('hidden');
-    document.getElementById('view-random').classList.add('hidden');
-    document.getElementById('view-result').classList.add('hidden');
-    document.getElementById('view-menu').classList.remove('hidden');
-    if(animId) cancelAnimationFrame(animId);
-  }
-
-  function setupTabs(angles) {
-    const container = document.getElementById('tabs-container');
-    container.innerHTML = '';
-    angles.forEach(angle => {
-      const btn = document.createElement('button');
-      btn.className = 'tab';
-      btn.innerText = angle + '°';
-      btn.onclick = () => loadQuestion(angle);
-      btn.id = 'tab-' + angle;
-      container.appendChild(btn);
-    });
-  }
-
-  function loadQuestion(angle) {
-    currentAngle = angle;
-    selectedBoxId = null;
-    
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const activeTab = document.getElementById('tab-' + angle);
-    if(activeTab) activeTab.classList.add('active');
-
-    ['box-px', 'box-py', 'box-r'].forEach(id => {
-      const box = document.getElementById(id);
-      box.innerHTML = '';
-      box.className = 'drop-box';
-      box.removeAttribute('data-value');
-    });
-    // 【ブラッシュアップ】はじめから x の枠をえらんでおく（カードをタップするだけで入る）
-    selectBox('box-px');
-    document.getElementById('angle-clear').classList.add('hidden');
-    angleMiss = 0;
-    updateYR();
-
-    const data = anglesData[angle];
-    
-    // 【修正：正解保証アルゴリズム】必ずx, y, rの正解データを最初に確定させる
-    // 【ブラッシュアップ】45° や 90° では同じ値（1）が 2 枚出ていたので、1 枚にまとめる
-    let pool = [...new Set([data.x, data.y, data.r])];
-    
-    // 足りないダミー選択肢をユニークに補填
-    const defaults = ['1', '-1', '2', '▲2', '▲3', '-▲3', '0'];
-    for (let i = 0; i < defaults.length; i++) {
-      if (pool.length >= 6) break;
-      if (!pool.includes(defaults[i])) {
-        pool.push(defaults[i]);
-      }
-    }
-    // 完全にシャッフル
-    shuffleArr(pool);
-
-    const chipContainer = document.getElementById('coords-chips');
-    chipContainer.innerHTML = '';
-    pool.forEach(val => {
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      chip.innerHTML = formatMathHtml(val);
-      chip.draggable = true;
-      chip.ondragstart = (e) => { e.dataTransfer.setData('text', val); };
-      chip.onclick = () => handleChipTap(val);
-      chipContainer.appendChild(chip);
-    });
-
-    setupTrigOptions('sin', data.sin);
-    setupTrigOptions('cos', data.cos);
-    setupTrigOptions('tan', data.tan);
-
-    startCanvasAnimation(angle);
-  }
-
-  function setupTrigOptions(type, correctVal) {
-    const container = document.getElementById('opts-' + type);
-    container.innerHTML = '';
-
-    let choices = makeChoices(correctVal, 4);
-
-    choices.forEach(val => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.innerHTML = formatMathHtml(val);
-      if (val === '定義なし') btn.classList.add('long');
-      // 【ブラッシュアップ】元は正解のあとにほかを押すと、正解の印が消えて「まちがい」になった。
-      //   正解したらその行は固定し、まちがえた選択肢は押せなくする。
-      btn.onclick = () => {
-        if (container.querySelector('.correct-ans')) return;
-        if(val === correctVal) {
-          btn.classList.add('correct-ans');
-        } else {
-          btn.classList.add('wrong-ans');
-          btn.disabled = true;
-          angleMiss++;   // 【ブラッシュアップ】
-        }
-        checkCoordsCorrectness();
-      };
-      container.appendChild(btn);
-    });
-  }
-
-  // 【ブラッシュアップ】座標・r・sin・cos・tan が全部そろったら、クリアを知らせる
-  function checkAngleClear() {
-    const boxesOk = ['box-px', 'box-py', 'box-r'].every(id => document.getElementById(id).classList.contains('correct'));
-    const trigOk = ['sin', 'cos', 'tan'].every(t => document.querySelector('#opts-' + t + ' .correct-ans'));
-    const panel = document.getElementById('angle-clear');
-    if (!boxesOk || !trigOk || !panel.classList.contains('hidden')) return;
-
-    doneAngles.add(currentAngle);
-    const tab = document.getElementById('tab-' + currentAngle);
-    if (tab) tab.classList.add('done');
-
-    const list = modes[currentMode];
-    const rest = list.filter(a => !doneAngles.has(a));
-    const msg = document.getElementById('angle-clear-msg');
-    const btns = document.getElementById('angle-clear-btns');
-    btns.innerHTML = '';
-    const addBtn = (label, fn, cls) => {
-      const b = document.createElement('button');
-      b.className = cls; b.textContent = label; b.onclick = fn;
-      btns.appendChild(b);
-    };
-    const missNote = shownAngles.has(currentAngle) ? '（答えを見た）' : angleMiss ? '（まちがい ' + angleMiss + ' 回）' : '（ノーミス！）';
-    if (rest.length) {
-      msg.textContent = '🎉 ' + currentAngle + '° クリア' + missNote + '　のこり ' + rest.length + ' こ';
-      const next = list.slice(list.indexOf(currentAngle) + 1).find(a => !doneAngles.has(a)) ?? rest[0];
-      addBtn('つぎの角度（' + next + '°）へ ▶', () => { loadQuestion(next); window.scrollTo(0, 0); }, 'btn');
-    } else {
-      msg.textContent = '🏆 ' + MODE_NAMES[currentMode] + ' の角度をぜんぶクリア！';
-      const nextMode = MODE_ORDER[MODE_ORDER.indexOf(currentMode) + 1];
-      addBtn('つぎは「' + MODE_NAMES[nextMode] + '」へ ▶', () => startMode(nextMode), 'btn');
-      addBtn('このモードをもう一度', () => startMode(currentMode), 'btn btn-sub');
-      addBtn('モードをえらび直す', backToMenu, 'btn btn-sub');
-    }
-    panel.classList.remove('hidden');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  function selectBox(id) {
-    if (document.getElementById(id).classList.contains('correct')) return;   // 【ブラッシュアップ】正解した枠はそのまま
-    ['box-px', 'box-py', 'box-r'].forEach(b => document.getElementById(b).classList.remove('selected'));
-    selectedBoxId = id;
-    document.getElementById(id).classList.add('selected');
-  }
-
-  function handleChipTap(val) {
-    // 【ブラッシュアップ】元は枠をえらばずにカードを押すと何も起きなかった。空いている枠に入れる。
-    if(!selectedBoxId) {
-      const open = ['box-px', 'box-py', 'box-r'].find(id => !document.getElementById(id).classList.contains('correct'));
-      if (!open) return;
-      selectBox(open);
-    }
-    const box = document.getElementById(selectedBoxId);
-    box.setAttribute('data-value', val);
-    box.innerHTML = formatMathHtml(val);
-    box.classList.add('filled');
-    checkCoordsCorrectness();
-    if (box.classList.contains('wrong')) angleMiss++;   // 【ブラッシュアップ】
-    // 【ブラッシュアップ】正解なら次の空いた枠へ。ちがったら同じ枠のまま入れ直せる
-    if (box.classList.contains('correct')) {
-      const next = ['box-px', 'box-py', 'box-r'].find(id => !document.getElementById(id).classList.contains('filled'));
-      selectedBoxId = null;
-      if (next) selectBox(next);
-    } else {
-      box.classList.add('selected');
-    }
-  }
-
-  function allowDrop(e) { e.preventDefault(); }
-  function handleDrop(e, boxId) {
-    e.preventDefault();
-    const val = e.dataTransfer.getData('text');
-    const box = document.getElementById(boxId);
-    if (box.classList.contains('correct')) return;   // 【ブラッシュアップ】正解した枠はそのまま
-    box.setAttribute('data-value', val);
-    box.innerHTML = formatMathHtml(val);
-    box.classList.add('filled');
-    checkCoordsCorrectness();
-  }
-
-  function checkCoordsCorrectness() {
-    const data = anglesData[currentAngle];
-    const bx = document.getElementById('box-px');
-    const by = document.getElementById('box-py');
-    const br = document.getElementById('box-r');
-
-    if(bx.classList.contains('filled')) {
-      bx.className = (bx.getAttribute('data-value') === data.x) ? 'drop-box filled correct' : 'drop-box filled wrong';
-    }
-    if(by.classList.contains('filled')) {
-      by.className = (by.getAttribute('data-value') === data.y) ? 'drop-box filled correct' : 'drop-box filled wrong';
-    }
-    if(br.classList.contains('filled')) {
-      br.className = (br.getAttribute('data-value') === data.r) ? 'drop-box filled correct' : 'drop-box filled wrong';
-    }
-    updateYR();        // 【ブラッシュアップ】座標がそろったら「y/r = 1/2」のように数を入れた分数を出す
-    redrawFigure();    // 【ブラッシュアップ】合った座標・r を図に書きこむ
-    checkAngleClear();
-  }
-
-  function openHintModal() {
-    // 【ブラッシュアップ】1 回目は「もう一度おすと答え」と出すだけ（元はワンタップで全部の答えが出た）
-    const hb = document.querySelector('.btn-hint');
-    if (!hb.dataset.armed) {
-      hb.dataset.armed = '1';
-      hb.textContent = 'もう一度おすと答え';
-      setTimeout(() => { delete hb.dataset.armed; hb.textContent = '答えを見る'; }, 3000);
-      return;
-    }
-    delete hb.dataset.armed;
-    hb.textContent = '答えを見る';
-    shownAngles.add(currentAngle);
-    const tabEl = document.getElementById('tab-' + currentAngle);
-    if (tabEl) tabEl.classList.add('shown');
-    const data = anglesData[currentAngle];
-    document.getElementById('modal-angle-title').innerText = `${currentAngle}° の答え一覧`;
-    document.getElementById('hint-x').innerHTML = formatMathHtml(data.x);
-    document.getElementById('hint-y').innerHTML = formatMathHtml(data.y);
-    document.getElementById('hint-r').innerHTML = formatMathHtml(data.r);
-    document.getElementById('hint-sin').innerHTML = formatMathHtml(data.sin);
-    document.getElementById('hint-cos').innerHTML = formatMathHtml(data.cos);
-    document.getElementById('hint-tan').innerHTML = formatMathHtml(data.tan);
-    document.getElementById('hint-modal').classList.remove('hidden');
-  }
-
-  function closeHintModal() {
-    document.getElementById('hint-modal').classList.add('hidden');
-  }
-
-  function startCanvasAnimation(targetDegree) {
-    if(animId) cancelAnimationFrame(animId);
-    animTargetAngle = targetDegree;
-    animStartTime = null;
-    animId = requestAnimationFrame(updateAnimation);   // 【ブラッシュアップ】角度を続けて切りかえても、前の動きを止められるように
-  }
-
-  function updateAnimation(timestamp) {
-    if (!animStartTime) animStartTime = timestamp;
-    const elapsed = timestamp - animStartTime;
-    const progress = Math.min(elapsed / ANIM_DURATION, 1.0);
-
-    animCurrentAngle = animTargetAngle * progress;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawRadius(animCurrentAngle);
-
-    if (progress < 1.0) {
-      animId = requestAnimationFrame(updateAnimation);
-    } else {
-      drawPointsAndLines(animTargetAngle);
-    }
-  }
-
-    // 【ブラッシュアップ】図：教科書と同じかき方にする（元は目盛り・半円・θ がなく、90° では P と y の文字が重なっていた）
-  const SEMI = ['basic', 'slight'];   // 数学Ⅰ（半円で考える）
-  // 数学Ⅰは上半分だけ使うので、図の高さを 280 にして大きく見せる
-  function geo() { return SEMI.includes(currentMode) ? { cx: 170, cy: 244, R: 142, semi: true, h: 280 } : { cx: 170, cy: 170, R: 118, semi: false, h: 340 }; }
-  function plain(v) { return String(v).replace(/▲(\d+)/g, '√$1').replace(/^-/, '−'); }
-  function lab(text, x, y, color, align, size) {
-      // 【ブラッシュアップ】文字（x, y, O, P, r, θ）は斜体、数字・記号はまっすぐ（数式の書体）に分けてかく
-      size = Math.round((size || 24) * 1.1);
-      const parts = String(text).match(/[A-Za-zθ]|[^A-Za-zθ]+/g) || [];
-      const fontOf = p => (/^[A-Za-zθ]$/.test(p) ? 'italic ' : '') + 'bold ' + size + 'px "Times New Roman", serif';
-      const ws = parts.map(p => { ctx.font = fontOf(p); return ctx.measureText(p).width; });
-      const w = ws.reduce((a, b) => a + b, 0);
-      align = align || 'center';
-      let left = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
-      left = Math.min(Math.max(left, 3), 337 - w);
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-      [true, false].forEach(back => {
-        let l = left;
-        parts.forEach((p, i) => {
-          ctx.font = fontOf(p);
-          if (back) { ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.strokeText(p, l, y); }
-          else { ctx.fillStyle = color || '#334155'; ctx.fillText(p, l, y); }
-          l += ws[i];
-        });
-      });
-  }
-  function arrow(x1, y1, x2, y2) {
-    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    const a = Math.atan2(y2 - y1, x2 - x1);
-    ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(x2, y2);
-    ctx.lineTo(x2 - 10 * Math.cos(a - 0.4), y2 - 10 * Math.sin(a - 0.4));
-    ctx.lineTo(x2 - 10 * Math.cos(a + 0.4), y2 - 10 * Math.sin(a + 0.4));
-    ctx.closePath(); ctx.fill();
-  }
-  function drawGrid() {
-    const g = geo();
-    if (canvas.height !== g.h) canvas.height = g.h;   // 高さを変えると中身は消える（このあとかき直す）
-    const rOk = document.getElementById('box-r').classList.contains('correct');
-    const rt = rOk ? plain(anglesData[currentAngle].r) : 'r';
-    ctx.setLineDash([5, 5]); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R, g.semi ? Math.PI : 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
-    arrow(8, g.cy, 334, g.cy);
-    arrow(g.cx, g.h - 4, g.cx, 6);
-    lab('x', 332, g.cy + 18, '#64748b', 'right', 21);
-    lab('y', g.cx + 16, 14, '#64748b', 'center', 21);
-    lab('O', g.cx - 13, g.cy + 17, '#64748b', 'center', 19);
-    ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
-    [g.cx + g.R, g.cx - g.R].forEach(x => { ctx.beginPath(); ctx.moveTo(x, g.cy - 5); ctx.lineTo(x, g.cy + 5); ctx.stroke(); });
-    ctx.beginPath(); ctx.moveTo(g.cx - 5, g.cy - g.R); ctx.lineTo(g.cx + 5, g.cy - g.R); ctx.stroke();
-    const neg = '−' + rt;
-    lab(rt, g.cx + g.R, g.cy + 18, '#64748b', 'center', 18);
-    lab(neg, g.cx - g.R, g.cy + 18, '#64748b', 'center', 18);
-    lab(rt, g.cx - 9, g.cy - g.R - 4, '#64748b', 'right', 18);
-    if (!g.semi) {
-      ctx.beginPath(); ctx.moveTo(g.cx - 5, g.cy + g.R); ctx.lineTo(g.cx + 5, g.cy + g.R); ctx.stroke();
-      lab(neg, g.cx - 9, g.cy + g.R + 4, '#64748b', 'right', 18);
-    }
-    const cap = document.getElementById('theta-cap');
-    if (cap) cap.innerHTML = 'θ = ' + currentAngle + '°' + (SEMI.includes(currentMode) ? '' : '　<span class="m2">数学Ⅱ（一般角）</span>');
-  }
-  function drawRadius(deg) {
-    const g = geo();
-    const t = deg * Math.PI / 180;
-    const x = g.cx + g.R * Math.cos(t), y = g.cy - g.R * Math.sin(t);
-    if (deg > 0) {
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.arc(g.cx, g.cy, 22, 0, -t, true); ctx.closePath(); ctx.fill(); ctx.stroke();
-      lab('θ', g.cx + 37 * Math.cos(t / 2), g.cy - 37 * Math.sin(t / 2), '#d97706', 'center', 18);
-    }
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(x, y); ctx.stroke();
-  }
-  function drawPointsAndLines(deg) {
-    const g = geo(), d = anglesData[currentAngle];
-    const t = deg * Math.PI / 180;
-    const x = g.cx + g.R * Math.cos(t), y = g.cy - g.R * Math.sin(t);
-    const onAxis = Math.abs(Math.sin(t)) < 1e-9 || Math.abs(Math.cos(t)) < 1e-9;
-    const ok = id => document.getElementById(id).classList.contains('correct');
-    if (!onAxis) {
-      // 直角三角形 OHP（H：P から x 軸にひいた垂線の足）
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.12)';
-      ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.lineTo(x, g.cy); ctx.lineTo(x, y); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, g.cy); ctx.stroke(); ctx.setLineDash([]);
-      const sx = x > g.cx ? -1 : 1, sy = y < g.cy ? -1 : 1;
-      ctx.beginPath(); ctx.moveTo(x + sx * 9, g.cy); ctx.lineTo(x + sx * 9, g.cy + sy * 9); ctx.lineTo(x, g.cy + sy * 9); ctx.stroke();
-      // 直角三角形の O の角（θ が 90° をこえるとき）
-      const dd = ((deg % 360) + 360) % 360;
-      const ref = dd <= 90 ? dd : dd <= 180 ? 180 - dd : dd <= 270 ? dd - 180 : 360 - dd;
-      if (Math.abs(ref - deg) > 1e-9) {
-        const a = ((-t) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-        const b = x > g.cx ? (a > Math.PI ? 2 * Math.PI : 0) : Math.PI;
-        const s0 = Math.min(a, b), s1 = Math.max(a, b), mid = (s0 + s1) / 2;
-        ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(g.cx, g.cy, 40, s0, s1, false); ctx.stroke();
-        lab(ref + '°', g.cx + 58 * Math.cos(mid), g.cy + 58 * Math.sin(mid), '#2563eb', 'center', 17);
-      }
-      // 合った数を辺に書く（OH・HP・OP の長さ）
-      if (ok('box-px')) lab(plain(d.x).replace('−', ''), (g.cx + x) / 2, g.cy + (y < g.cy ? 16 : -16), '#1d4ed8', 'center', 17);
-      if (ok('box-py')) lab(plain(d.y).replace('−', ''), x + (x > g.cx ? 7 : -7), (y + g.cy) / 2, '#1d4ed8', x > g.cx ? 'left' : 'right', 17);
-      if (ok('box-r')) {
-        const mx = (g.cx + x) / 2, my = (g.cy + y) / 2;
-        let nx = -(y - g.cy), ny = x - g.cx; const l = Math.hypot(nx, ny); nx /= l; ny /= l;
-        if (nx * (x - mx) + ny * (g.cy - my) > 0) { nx = -nx; ny = -ny; }
-        lab(plain(d.r), mx + nx * 16, my + ny * 16, '#ea580c', 'center', 17);
-      }
-    }
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fill();
-    const pl = ok('box-px') && ok('box-py') ? `P(${plain(d.x)}, ${plain(d.y)})` : 'P';
-    if (Math.abs(Math.cos(t)) < 1e-9) lab(pl, x + 10, y + (Math.sin(t) > 0 ? 10 : -10), '#b91c1c', 'left', 18);   // y 軸の上：右に書く（y の文字と重ならないように）
-    else lab(pl, x + 8 * Math.cos(t), y + (Math.sin(t) >= -1e-9 ? -18 : 18), '#b91c1c', 'center', 18);
-  }
-  // 答えが合ったときに図をかき直す（動いているあいだはかかない）
-  function redrawFigure() {
-    if (animCurrentAngle !== animTargetAngle) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawRadius(animTargetAngle);
-    drawPointsAndLines(animTargetAngle);
-  }
-  // 座標と r がそろったら「= 1/2」のように数を入れた分数を出す
-  function updateYR() {
-    const d = anglesData[currentAngle];
-    const ok = ['box-px', 'box-py', 'box-r'].every(id => document.getElementById(id).classList.contains('correct'));
-    [['sin', d.y, d.r], ['cos', d.x, d.r], ['tan', d.y, d.x]].forEach(([t, n, m]) => {
-      const el = document.getElementById('yr-' + t);
-      // 符号は約分せずにそのまま見せる（例：tan 210° = (−1)/(−√3)）
-      if (el) el.innerHTML = ok ? `= <span class="math-frac"><span class="num">${plain(n)}</span><span class="den">${plain(m)}</span></span>` + (m === '0' ? '<small>（分母が 0）</small>' : '') : '';
-    });
-  }
-
-
-
-  function buildRandomQuestions(mode) {
-    randomQuestionsList = [];
-    // 【ブラッシュアップ】数学Ⅰ は 0°〜180°、一般角は 360° をのぞく（0° と同じ問題になるため）
-    const allAngles = Object.keys(anglesData).filter(a => (mode === 'rand10' || mode === 'marathon') ? +a <= 180 : +a !== 360);
-    const types = ['sin', 'cos', 'tan'];
-
-    allAngles.forEach(ang => {
-      types.forEach(ty => {
-        randomQuestionsList.push({ angle: ang, type: ty, correct: anglesData[ang][ty] });
-      });
-    });
-
-    shuffleArr(randomQuestionsList);
-
-    if (mode === 'rand10' || mode === 'rand10all') {
-      randomQuestionsList = randomQuestionsList.slice(0, 10);
-    }
-    // 【ブラッシュアップ】結果のタイトルは範囲ごとに
-    document.getElementById('result-title-text').innerText = MODE_NAMES[mode] + (mode.startsWith('rand') ? ' クリア！' : ' 制覇！');
-
-    totalRandQuestions = randomQuestionsList.length;
-    currentRandIndex = 0;
-    randMiss = 0;
-
-    startTimeStamp = performance.now();
-    clearInterval(timerInterval);
-    timerInterval = setInterval(updateTimer, 100);
-
-    showNextRandomQuestion();
-  }
-
-  function updateTimer() {
-    const elapsed = performance.now() - startTimeStamp;
-    const minutes = Math.floor(elapsed / 60000);
-    const seconds = Math.floor((elapsed % 60000) / 1000);
-    const ms = Math.floor((elapsed % 1000) / 100);
-    
-    const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${ms}`;
-    document.getElementById('rand-timer').innerText = timeStr;
-  }
-
-  function showNextRandomQuestion() {
-    if (currentRandIndex >= totalRandQuestions) {
-      clearInterval(timerInterval);
-      const finalTime = document.getElementById('rand-timer').innerText;
-      document.getElementById('view-random').classList.add('hidden');
-      document.getElementById('view-result').classList.remove('hidden');
-      document.getElementById('result-final-time').innerText = finalTime;
-      document.getElementById('result-miss').innerText = randMiss === 0 ? '✨ ノーミス！' : 'まちがえた回数：' + randMiss + ' 回';
-      document.getElementById('btn-result-next').classList.toggle('hidden', currentMode !== 'rand10' && currentMode !== 'rand10all');
-      return;
-    }
-
-    document.getElementById('rand-progress-text').innerText = `問題 ${currentRandIndex + 1} / ${totalRandQuestions}`;
-    const progressPercent = (currentRandIndex / totalRandQuestions) * 100;
-    document.getElementById('rand-progress-bar').style.width = progressPercent + '%';
-
-    const q = randomQuestionsList[currentRandIndex];
-    document.getElementById('rand-question').innerHTML = `${q.type} ${q.angle}° = <span style="color:#f59e0b;">?</span>`;
-
-    let choices = makeChoices(q.correct, 6);
-    randLocked = false;
-
-    const container = document.getElementById('rand-options');
-    container.innerHTML = '';
-    choices.forEach(val => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.innerHTML = formatMathHtml(val);
-      // 【ブラッシュアップ】元は正解を 2 回続けて押すと、次の問題がとばされた
-      btn.onclick = () => {
-        if (randLocked || btn.disabled) return;
-        if(val === q.correct) {
-          randLocked = true;
-          btn.classList.add('correct-ans');
-          currentRandIndex++;
-          setTimeout(() => { showNextRandomQuestion(); }, 200);
-        } else {
-          btn.classList.add('wrong-ans');
-          btn.disabled = true;
-          randMiss++;
-        }
-      };
-      container.appendChild(btn);
-    });
-  }
-</script>
-<script>
-  // 【ブラッシュアップ】数式の文字：文字は斜体、数字・sin/cos/tan はまっすぐ（数式の書体）
-  (function () {
-    const SCOPE = '.trig-label, .opt-btn, .chip, .drop-box, .box-row, .modal-row, .modal-title, .question-text-huge, .theta-cap, .mode-desc, .angle-clear-msg, .tab';   // 数式として書きかえる場所
-    const RUN = /[0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*[0-9A-Za-zθ√°²³][0-9A-Za-zθ√°²³+\-−=×÷().\/,′ ]*/g;
-    // 数式のひとまとまり（例「a² = b² + c² − 2bc cos A」）を、文字は斜体・ほかはまっすぐにする
-    function wrapRun(s) {
-      const span = document.createElement('span');
-      span.className = 'mf';
-      s.split(/(sin|cos|tan)/).forEach((part, i) => {
-        if (i % 2) { span.appendChild(document.createTextNode(part)); return; }
-        part.split(/([A-Za-zθ])/).forEach((q, j) => {
-          if (!q) return;
-          if (j % 2) { const it = document.createElement('i'); it.className = 'mv'; it.textContent = q; span.appendChild(it); }
-          else span.appendChild(document.createTextNode(q));
-        });
-      });
-      return span;
-    }
-    function run() {
-      document.querySelectorAll(SCOPE).forEach(el => {
-        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-        const list = [];
-        while (w.nextNode()) list.push(w.currentNode);
-        list.forEach(n => {
-          const p = n.parentElement;
-          if (!p || p.closest('.mf, .mv, .u-btn, svg, canvas, script, style')) return;
-          const t = n.nodeValue;
-          if (!/[0-9A-Za-zθ√]/.test(t)) return;
-          const frag = document.createDocumentFragment();
-          let last = 0, m;
-          RUN.lastIndex = 0;
-          while ((m = RUN.exec(t))) {
-            if (!m[0].length) { RUN.lastIndex++; continue; }
-            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
-            frag.appendChild(wrapRun(m[0]));
-            last = m.index + m[0].length;
-          }
-          if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
-          n.parentNode.replaceChild(frag, n);
-        });
-      });
-    }
-    let pending = false;
-    new MutationObserver(() => {
-      if (pending) return;
-      pending = true;
-      setTimeout(() => { pending = false; run(); }, 0);
-    }).observe(document.body, { childList: true, subtree: true, characterData: true });
-    run();
-  })();
-</script>
-<script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".menu-title": "u-title",
-    ".menu-card .btn": "u-btn",
-    ".menu-card.marathon .btn": "u-btn-blue",
-    ".btn-back": "u-btn u-btn-plain",
-    ".btn-hint": "u-btn u-btn-plain",
-    ".opt-btn": "u-choice",
-    ".opt-btn.correct-ans": "u-ok",
-    ".opt-btn.wrong-ans": "u-ng",
-    ".angle-clear-btns .btn:not(.btn-sub)": "u-btn u-btn-blue",
-    ".angle-clear-btns .btn.btn-sub": "u-btn u-btn-plain",
-    ".result-nav .btn:not(.btn-sub)": "u-btn",
-    "#btn-result-next": "u-btn-blue",
-    ".result-nav .btn.btn-sub": "u-btn u-btn-plain"
+function startPractice(id) {
+  clearViews();
+  mountZahyou(document.getElementById('app'), PRACTICE[id].angles, id, {
+    onDone: () => { done[id] = true; }, menuBtn: MENU_BTN,
+    finalExtra: '<p><button type="button" class="fs-btn" onclick="showMenu()">メニューにもどる</button></p>'
   });
+  window.scrollTo(0, 0);
+}
+
+// ---------------- タイムアタック・マラソン ----------------
+const VALUES = ['0', '1', '−1', '1/2', '−1/2', '√3/2', '−√3/2', '1/√2', '−1/√2', '√3', '−√3', '1/√3', '−1/√3', 'なし'];
+const NEAR = { '1/2': ['√3/2', '1/√2'], '√3/2': ['1/2', '1/√2'], '1/√2': ['1/2', '√3/2', '1'], '√3': ['1/√3', '√3/2'], '1/√3': ['√3', '1/2'], '1': ['0', '1/√2', '√3'], '0': ['なし', '1', '−1'], 'なし': ['0', '1'] };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// 選択肢：まちがえやすい値（符号ちがい・sin と cos の取りちがえ・tan の逆数・0 と なし）を先に入れる
+function choicesFor(correct) {
+  const minus = correct[0] === '−', abs = minus ? correct.slice(1) : correct;
+  const signed = v => (minus && v !== '0' && v !== 'なし') ? '−' + v : v;
+  let traps = (correct !== '0' && correct !== 'なし') ? [minus ? abs : '−' + abs] : [];
+  traps = traps.concat(shuffle((NEAR[abs] || []).map(signed)), shuffle(VALUES.slice()));
+  const out = [correct];
+  for (const v of traps) { if (out.length >= 6) break; if (!out.includes(v)) out.push(v); }
+  return shuffle(out);
+}
+let run = null, timer = null;
+function startRun(id) {
+  clearViews();
+  const R = RUNS[id], qs = [];
+  Object.keys(T).map(Number).filter(d => R.all ? d !== 360 : d <= 180).forEach(d => ['sin', 'cos', 'tan'].forEach((f, k) => qs.push({ d, f, v: T[d][3 + k] })));
+  shuffle(qs);
+  run = { id, qs: R.n ? qs.slice(0, R.n) : qs, i: 0, miss: 0, t0: performance.now(), lock: false, picked: [] };
+  timer = setInterval(tick, 100);
+  renderRun(); window.scrollTo(0, 0);
+}
+const fmt = ms => { const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), d = Math.floor(ms % 1000 / 100); return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + d; };
+function tick() { const el = document.getElementById('ta-timer'); if (el && run) el.textContent = fmt(performance.now() - run.t0); }
+function renderRun() {
+  const q = run.qs[run.i], el = document.getElementById('ta');
+  if (!q.ch) q.ch = choicesFor(q.v);
+  el.innerHTML = `<div class="ta-wrap">
+    <div class="ta-top">${MENU_BTN}<span class="ta-count">${RUNS[run.id].name}　${run.i + 1} / ${run.qs.length}</span><span class="ta-timer" id="ta-timer">${fmt(performance.now() - run.t0)}</span></div>
+    <div class="ta-bar"><span style="width:${run.i / run.qs.length * 100}%"></span></div>
+    <div class="ta-q ${q.f}">${FillSteps.md(`${q.f} ${q.d}° =`)}<span class="qm">?</span></div>
+    <div class="ta-opts">${q.ch.map((v, k) => `<button type="button" class="ta-opt${run.picked.includes(v) ? ' ng' : ''}" data-k="${k}"${run.picked.includes(v) ? ' disabled' : ''}>${FillSteps.valHTML(v)}</button>`).join('')}</div>
+  </div>`;
+  el.querySelectorAll('.ta-opt').forEach(b => b.onclick = () => answer(q, q.ch[+b.dataset.k], b));
+}
+function answer(q, v, b) {
+  if (run.lock || b.disabled) return;
+  if (v === q.v) {
+    run.lock = true; b.classList.add('ok');
+    setTimeout(() => { run.i++; run.picked = []; run.lock = false; run.i >= run.qs.length ? finishRun() : renderRun(); }, 220);
+  } else { run.miss++; run.picked.push(v); renderRun(); }
+}
+function finishRun() {
+  clearInterval(timer);
+  const ms = performance.now() - run.t0, id = run.id, R = RUNS[id];
+  const prev = best[id], newBest = prev && ms < prev; if (!prev || newBest) best[id] = ms; done[id] = true;
+  document.getElementById('ta').innerHTML = `<div class="ta-wrap ta-res">
+    <h2>${R.name}　クリア</h2><div class="t">${fmt(ms)}</div>
+    <p>${run.miss ? 'まちがえた回数　' + run.miss + ' 回' : 'ノーミス'}${newBest ? '　記録更新！' : ''}</p>
+    <div class="fs-nav"><button type="button" class="fs-btn" onclick="showMenu()">メニューへ</button><button type="button" class="fs-btn primary" onclick="startRun('${id}')">もう一度</button></div></div>`;
+}
+
+// ---------------- メニュー ----------------
+function showMenu() {
+  clearViews();
+  const item = (id, n, cls, m, fn) => `<button type="button" class="zm-item ${cls}" onclick="${fn}('${id}')"><span class="n">${n}</span><span><b>${m.name}</b><span class="s">${m.sub}</span></span>${done[id] ? `<span class="ok">✓${best[id] ? ' ' + fmt(best[id]) : ''}</span>` : ''}</button>`;
+  document.getElementById('menu').innerHTML = `
+  <section class="zm-sec"><h2>数学Ⅰ<small>0° ≦ θ ≦ 180°</small></h2>
+    <div class="zm-list">${item('basic', 1, '', PRACTICE.basic, 'startPractice')}${item('axis', 2, '', PRACTICE.axis, 'startPractice')}
+    ${item('ta1', 3, 'ta', RUNS.ta1, 'startRun')}${item('mr1', 4, 'mr', RUNS.mr1, 'startRun')}</div></section>
+  <section class="zm-sec"><h2>数学Ⅱの予習<small>180° をこえる角</small></h2>
+    <div class="zm-list">${item('m2a', 5, 'm2', PRACTICE.m2a, 'startPractice')}${item('m2b', 6, 'm2', PRACTICE.m2b, 'startPractice')}
+    ${item('ta2', 7, 'ta', RUNS.ta2, 'startRun')}${item('mr2', 8, 'mr', RUNS.mr2, 'startRun')}</div></section>
+  <p class="zm-note">P の座標から三角比を考える練習・θ を求める問題は <a href="sankakuhi-zahyou.html">30. 三角比（座標）</a> へ</p>`;
+  window.scrollTo(0, 0);
+}
+showMenu();
 </script>
-</body>
-</html>
+</body></html>
