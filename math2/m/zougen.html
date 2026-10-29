@@ -1,1452 +1,2183 @@
 <!doctype html>
 <html lang="ja">
- <head>
-  <meta charset="UTF-8">
-  <!--
-    数学Ⅱ 08. 増減表（微分・増減表クイズ）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../../assets/port.css">
-  <script src="../../assets/port.js"></script>
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>微分・増減表クイズ</title>
-  <style>
-        body {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 20px;
-            min-height: 100%;
-            color: #333;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>増減表</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/fill-steps.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 10px;
+        background: #f5f7fa;
+        color: #1f2328;
+        font:
+          17px/1.7 "BIZ UDPGothic",
+          sans-serif;
+      }
+      .port-back {
+        display: block;
+        max-width: 1120px;
+        margin: 0 auto 8px;
+        color: #5b6470;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: auto;
+        background: white;
+        border: 1px solid #d0d7de;
+        border-top: 4px solid #1f4e8c;
+        border-radius: 8px;
+        padding: 14px;
+      }
+      .head {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .head small {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+      h2 {
+        font-size: 19px;
+      }
+      h3 {
+        font-size: 17px;
+      }
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .menu-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        text-align: left;
+        min-height: 135px;
+        padding: 12px !important;
+      }
+      .menu-card svg {
+        width: 70px;
+        height: 42px;
+      }
+      .menu-card small {
+        font-size: 12px;
+        color: #5b6470;
+        line-height: 1.7;
+      }
+      .menu-card b {
+        font-size: 16px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 6px 0 12px;
+        font-size: 13px;
+        color: #5b6470;
+      }
+      button {
+        font:
+          15px "BIZ UDPGothic",
+          sans-serif;
+        min-height: 44px;
+        padding: 8px 14px;
+        border: 1px solid #c5d3e4;
+        border-bottom: 3px solid #b6bfc9;
+        border-radius: 6px;
+        background: white;
+        color: #1f4e8c;
+        cursor: pointer;
+        transition: transform 0.08s;
+      }
+      button:not(:disabled):active {
+        transform: translateY(2px);
+        border-bottom-width: 1px;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+      .primary {
+        background: #1f4e8c;
+        color: white;
+        border-color: #1f4e8c;
+        border-bottom-color: #163a69;
+      }
+      .question-no {
+        background: #1f4e8c;
+        color: white;
+        padding: 2px 8px;
+      }
+      .problem {
+        font-size: 23px;
+        margin: 16px 0 8px;
+      }
+      .ask {
+        font-size: 17px;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+      }
+      .choice {
+        position: relative;
+        min-height: 76px;
+        font-size: 22px;
+        padding: 22px 8px 12px;
+        color: #1f2328;
+      }
+      .choice::before {
+        content: attr(data-label);
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font: 12px "BIZ UDPGothic";
+        color: #5b6470;
+      }
+      .choice.correct {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .choice.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .feedback,
+      .hint-box,
+      .explain-box {
+        padding: 12px;
+        border-left: 4px solid #1f4e8c;
+        background: #f1f6fc;
+        margin-top: 12px;
+        font-size: 16px;
+      }
+      .feedback.correct,
+      .explain-box.ok {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .feedback.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .hint-tag {
+        display: block;
+        font-size: 13px;
+        color: #1f4e8c;
+        margin-bottom: 4px;
+      }
+      .formula {
+        background: #f5f0ff;
+        border-left: 3px solid #9366d5;
+        padding: 8px;
+        margin: 8px 0;
+      }
+      .formula b {
+        font: 12px "BIZ UDPGothic";
+        color: #6e40c9;
+        margin-right: 10px;
+      }
+      .controls,
+      .result-nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .result-nav a {
+        font-size: 14px;
+        color: #1f4e8c;
+        padding: 10px;
+      }
+      .result-score {
+        font-size: 24px;
+        color: #1f4e8c;
+      }
+      .m {
+        font-family: "STIX Two Text", serif;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+      .m i {
+        font-style: italic;
+      }
+      sup {
+        font-size: 0.72em;
+        line-height: 0;
+        vertical-align: 0.55em;
+      }
+      .fraction {
+        display: inline-flex;
+        flex-direction: column;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 1.15;
+        margin: 0 0.1em;
+        font-family: "STIX Two Text";
+        font-weight: 400;
+      }
+      .numerator {
+        border-bottom: 1px solid;
+        padding: 0 0.15em 0.1em;
+      }
+      .denominator {
+        padding: 0.12em 0.15em 0;
+      }
+      .equation {
+        font-size: 19px;
+        margin: 8px 0;
+        line-height: 1.9;
+      }
+      .eqpart {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .explain-title {
+        margin-bottom: 8px;
+        font-size: 17px;
+      }
+      .input-section {
+        margin: 16px 0;
+      }
+      input {
+        font: 21px "STIX Two Text";
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid #9db6d6;
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .input-tools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 8px 0;
+      }
+      .input-tools button {
+        min-width: 42px;
+        padding: 6px;
+      }
+      .input-feedback {
+        font-size: 15px;
+        margin-top: 8px;
+        color: #a61e1e;
+      }
+      .input-help {
+        font-size: 14px;
+        margin-top: 12px;
+      }
+      .review-item {
+        border-top: 1px solid #d0d7de;
+        padding: 14px 0;
+      }
+      .review-item svg {
+        display: block;
+        width: 300px;
+        max-width: 100%;
+        margin: 12px auto;
+      }
+      .review-item summary {
+        cursor: pointer;
+        color: #1f4e8c;
+      }
+      .formula .m {
+        font-size: 18px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .progress-track {
+        height: 3px;
+        background: #e6edf5;
+        margin: 10px 0;
+      }
+      .progress-track span {
+        display: block;
+        height: 3px;
+        background: #1f4e8c;
+      }
+      .level-label {
+        font-size: 14px;
+        color: #8056a1;
+      }
+      .keyboard-note {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      .math-fit {
+        max-width: 100%;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .wrap {
+          max-width: 1120px;
+          padding: 20px;
         }
-
-        html {
-            height: 100%;
+        .quiz-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 370px;
+          gap: 24px;
+          align-items: start;
         }
+        .answer-panel {
+          position: sticky;
+          top: 12px;
+        }
+        .choices {
+          margin-top: 0;
+        }
+        .menu-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .menu-grid.modes {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
 
+      .equal {
+        display: inline-block;
+        margin: 0 0.28em;
+      }
+      .container {
+        max-width: 760px;
+        margin: auto;
+        background: white;
+        border: 1px solid #d0d7de;
+        border-top: 4px solid #1f4e8c;
+        border-radius: 8px;
+        padding: 14px;
+      }
+      .mode-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .mode-btn {
+        text-align: left;
+        padding: 12px;
+      }
+      .mode-title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .mode-desc {
+        font-size: 12px;
+        color: #5b6470;
+        line-height: 1.7;
+      }
+      .mode-icon {
+        height: 65px;
+        display: flex;
+        align-items: center;
+        font-size: 23px;
+      }
+      .mode-icon table {
+        font-size: 12px;
+        width: 100%;
+      }
+      .mode-icon td {
+        border: 1px solid #d0d7de;
+        padding: 2px;
+      }
+      .status,
+      .mode-indicator {
+        font-size: 13px;
+        display: inline-block;
+        margin: 8px 6px 8px 0;
+      }
+      .function {
+        font-size: 21px;
+      }
+      .domain-info {
+        font-size: 16px;
+      }
+      .zt {
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+        font-size: 16px;
+      }
+      .zt td,
+      .zt th {
+        border: 1px solid #aeb8c5;
+        text-align: center;
+        padding: 3px 1px;
+      }
+      .zt th {
+        width: 48px;
+        font-size: 14px;
+      }
+      .zt input.num {
+        width: 100%;
+        padding: 3px 0;
+        border: 1px solid #aeb8c5;
+        min-height: 40px;
+        font-size: 17px;
+        text-align: center;
+      }
+      .tap {
+        font-size: 17px;
+        width: 100%;
+        padding: 2px;
+        min-height: 40px;
+      }
+      .tap.ext {
+        font-size: 12px;
+        margin-bottom: 3px;
+      }
+      .ans.correct {
+        background: #ebfbee;
+        color: #2b8a3e;
+        opacity: 1;
+      }
+      .ans.incorrect {
+        background: #fff5f5;
+        color: #c92a2a;
+      }
+      .ans.picking {
+        outline: 2px solid #d9480f;
+      }
+      .max-min-question {
+        border: 1px solid #d0d7de;
+        padding: 8px;
+        margin: 10px 0;
+      }
+      .max-min-sentence {
+        font-size: 16px;
+        margin: 8px 0;
+      }
+      .max-min-sentence input {
+        width: 46px;
+        min-height: 40px;
+        font-size: 18px;
+        padding: 3px;
+      }
+      .table-note {
+        font-size: 14px;
+        background: #eef4fb;
+        padding: 10px;
+      }
+      .pick-panel {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 8px 0;
+        z-index: 3;
+      }
+      .pick-panel:empty {
+        display: none;
+      }
+      .pick-title {
+        font-size: 14px;
+        margin: 0;
+      }
+      .pick-options {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .pick-btn {
+        touch-action: none;
+        font-size: 20px;
+        min-height: 52px;
+        padding: 6px;
+      }
+      .pick-panel p:last-child {
+        font-size: 14px;
+        margin: 4px 0;
+        color: #a61e1e;
+      }
+      .summary {
+        background: #ebfbee;
+        padding: 10px;
+        margin-top: 12px;
+        font-size: 16px;
+      }
+      .summary svg {
+        display: block;
+        width: 320px;
+        max-width: 100%;
+        margin: auto;
+      }
+      .point-labels {
+        font-size: 13px;
+        text-align: center;
+      }
+      .problem-toast {
+        position: fixed;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ebfbee;
+        border: 1px solid #2b8a3e;
+        padding: 8px;
+        z-index: 10;
+      }
+      .completion {
+        display: none;
+      }
+      .final-score {
+        font-size: 24px;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .controls button {
+        font-size: 13px;
+        padding: 7px 10px;
+      }
+      .progress {
+        height: 3px;
+        background: #e6edf5;
+      }
+      .progress-bar {
+        height: 3px;
+        background: #1f4e8c;
+      }
+      .fs-tabs,
+      .fs-nav,
+      #formulaApp .fs-q {
+        display: none;
+      }
+      .fs-eqs {
+        margin: 0 0.28em;
+      }
+      .fs-ctrl {
+        margin-bottom: 10px;
+      }
+      .fs-done {
+        font-size: 14px;
+      }
+      #formulaApp .fs-main {
+        min-width: 0;
+      }
+      .fs-grid {
+        margin-bottom: 10px;
+      }
+      #tableStage[hidden] {
+        display: none !important;
+      }
+      #formulaApp .fs-eq {
+        font-size: 18px;
+      }
+      .fs-no {
+        display: none;
+      }
+      #formulaApp .fs-row {
+        padding-left: 5px;
+      }
+      .fs-card {
+        font-size: 21px;
+      }
+      .head {
+        margin-bottom: 10px;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          max-width: 1120px;
+          padding: 20px;
         }
-
-        h1 {
-            text-align: center;
-            color: #4a5568;
-            margin-bottom: 30px;
-            font-size: 2.2em;
-        }
-
-        .problem-header {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .function {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .derivative {
-            font-size: 1.3em;
-            opacity: 0.9;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-bottom: 30px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-            font-size: 1.1em;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-weight: bold;
-        }
-
-        .input-cell {
-            position: relative;
-        }
-
-        input {
-            width: 80px;
-            padding: 8px;
-            border: 2px solid #cbd5e0;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-
-        .correct {
-            background-color: #c6f6d5 !important;
-            border-color: #38a169 !important;
-            color: #2d3748;
-        }
-
-        .incorrect {
-            background-color: #fed7d7 !important;
-            border-color: #e53e3e !important;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .controls {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        button {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 1.1em;
-            cursor: pointer;
-            margin: 0 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
-        }
-
-        button:disabled {
-            background: #a0aec0;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .progress {
-            background: #e2e8f0;
-            border-radius: 10px;
-            height: 8px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            height: 100%;
-            transition: width 0.5s ease;
-            border-radius: 10px;
-        }
-
-        .status {
-            text-align: center;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-
-
-        .completion {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 1.3em;
-            display: none;
-        }
-
-        .formula-steps {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.5;
-            font-size: 1.3em;
-            text-align: center;
-            margin-top: 10px;
-            opacity: 0.9;
-        }
-
-        .formula-input {
-            width: 40px;
-            padding: 4px;
-            border: 2px solid #cbd5e0;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin: 0 2px;
-            background-color: #f7fafc;
-        }
-
-        .formula-input:hover {
-            border-color: #4299e1;
-            background-color: #ebf8ff;
-            cursor: pointer;
-        }
-
-        .formula-input:focus {
-            outline: none;
-            border-color: #3182ce;
-            background-color: #bee3f8;
-            box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.3);
-            transform: scale(1.05);
-        }
-
-        .formula-input.correct {
-            background-color: #c6f6d5 !important;
-            border-color: #38a169 !important;
-            color: #2d3748;
-        }
-
-        .formula-input.incorrect {
-            background-color: #fed7d7 !important;
-            border-color: #e53e3e !important;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        .mode-selection {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .mode-selection h2 {
-            color: #4a5568;
-            margin-bottom: 40px;
-            font-size: 1.8em;
-        }
-
         .mode-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
-
-        .mode-btn {
-            background: white;
-            border: 3px solid #e2e8f0;
-            border-radius: 15px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        .table-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 300px;
+          gap: 25px;
         }
-
-        .mode-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        .pick-panel {
+          position: sticky;
+          top: 12px;
+          align-self: start;
         }
-
-        .basic-mode:hover {
-            border-color: #4299e1;
-            background: linear-gradient(135deg, #ebf8ff, #bee3f8);
+        .zt {
+          font-size: 19px;
         }
-
-        .random-mode:hover {
-            border-color: #ed8936;
-            background: linear-gradient(135deg, #fffaf0, #fbd38d);
+        .zt .tap {
+          min-height: 44px;
         }
-
-        .advanced-mode:hover {
-            border-color: #9f7aea;
-            background: linear-gradient(135deg, #faf5ff, #d6bcfa);
-        }
-
-        .mode-title {
-            font-size: 1.4em;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #2d3748;
-        }
-
-        .mode-desc {
-            color: #718096;
-            font-size: 1.1em;
-            line-height: 1.4;
-        }
-
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 0;
-        }
-
-        .back-btn {
-            background: linear-gradient(135deg, #718096, #4a5568);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(113, 128, 150, 0.3);
-        }
-
-        .mode-indicator {
-            font-weight: bold;
-            color: #4a5568;
-            font-size: 1.1em;
-        }
-
-        .domain-info {
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border: 2px solid #cbd5e0;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.2em;
-            color: #2d3748;
-        }
-
-        .max-min-question {
-            background: linear-gradient(135deg, #fff5f5, #fed7d7);
-            border: 2px solid #fc8181;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .max-min-question h4 {
-            color: #c53030;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        .max-min-inputs {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .max-min-sentence {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .max-min-sentence input {
-            width: 60px;
-            padding: 8px;
-            border: 2px solid #fc8181;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1em;
-            margin: 0 5px;
-        }
-
-        @media (max-width: 768px) {
-            .mode-buttons {
-                padding: 0 20px;
-            }
-
-            .quiz-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .max-min-inputs {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
+      }
+      #formulaApp [data-act="reset"] {
+        display: none;
+      }
+      .formula-complete:not(.show-completed) .fs-grid {
+        display: none;
+      }
+      #stepsToggle {
+        margin: 8px 0;
+        font-size: 13px;
+      }
     </style>
-  <style>@view-transition { navigation: auto; }</style>
-  
-  
-  <!-- 【ブラッシュアップ】元は Tailwind の開発用CDN（cdn.tailwindcss.com）をその場で動かしていた。
-       本番用ではなく、重いうえに読み込めないと見た目が全部崩れるため、
-       同じクラスから作った固定の CSS に置きかえた。見た目は同じ。 -->
-  <link rel="stylesheet" href="../../assets/gas.css">
-   <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
+  </head>
+  <body>
+    <a class="port-back" href="../index.html">← 教材の一覧へ</a>
+    <main class="container">
+      <header class="head">
+        <small>数学Ⅱ　微分・積分</small>
+        <h1>増減表</h1>
+      </header>
+      <section id="modeSelection">
+        <div class="mode-buttons">
+          <button class="mode-btn" onclick="startMode('basic')">
+            <div class="mode-icon">
+              <table>
+                <tr>
+                  <td>f′(x)</td>
+                  <td>−</td>
+                  <td>0</td>
+                  <td>+</td>
+                </tr>
+                <tr>
+                  <td>f(x)</td>
+                  <td>↘</td>
+                  <td>極小</td>
+                  <td>↗</td>
+                </tr>
+              </table>
+            </div>
+            <div class="mode-title">基本モード</div>
+            <div class="mode-desc">6問。微分・増減・極値</div></button
+          ><button class="mode-btn" onclick="startMode('random')">
+            <div class="mode-icon">①　③　②</div>
+            <div class="mode-title">ランダムモード</div>
+            <div class="mode-desc">7問から3問を出題</div></button
+          ><button class="mode-btn" onclick="startMode('advanced')">
+            <div class="mode-icon">
+              <span class="m">a ≦ <i>x</i> ≦ b</span>
+            </div>
+            <div class="mode-title">発展問題モード</div>
+            <div class="mode-desc">定義域のある関数の最大・最小</div>
+          </button>
+        </div>
+      </section>
+      <section id="quizContainer" style="display: none">
+        <span id="modeIndicator" class="mode-indicator"></span
+        ><span id="status" class="status"></span>
+        <div class="progress">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <div id="problemContainer"></div>
+        <div class="controls">
+          <button id="prevBtn" onclick="previousProblem()">前の問題</button
+          ><button id="nextBtn" onclick="nextProblem()">次の問題</button
+          ><button id="resetBtn" onclick="resetProblem()">やり直す</button
+          ><button id="showAnswersBtn" onclick="showAnswers()">
+            答えを見る</button
+          ><button onclick="backToModeSelection()">モードを選ぶ</button>
+        </div>
+        <section id="completion" class="completion">
+          <h2>学習の結果</h2>
+          <div id="completionMessage"></div>
+          <div id="completionNav" class="result-nav"></div>
+        </section>
+      </section>
+    </main>
+    <script src="../../assets/fill-steps.js"></script>
+    <script>
+      // 数式のHTMLは、文字だけ斜体・数字は立体。式の行と日本語の説明を分ける。
+      function mathHTML(html) {
+        return String(html)
+          .split(/(<[^>]+>)/g)
+          .map((part, i) =>
+            i % 2
+              ? part
+              : part.replace(
+                  /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()+−=×÷·.,^\- ]+/g,
+                  (run) => {
+                    if (!/[A-Za-z0-9ⁿ]/.test(run)) return run;
+                    let text = run
+                      .replace(/'/g, "′")
+                      .replace(/-/g, "−")
+                      .replace(/\^(\d+)/g, (_, n) => "<sup>" + n + "</sup>");
+                    text = text.replace(
+                      /[ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g,
+                      (x) =>
+                        "<sup>" +
+                        [...x]
+                          .map((c) =>
+                            c === "ⁿ"
+                              ? "n"
+                              : c === "⁻"
+                                ? "−"
+                                : "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c),
+                          )
+                          .join("") +
+                        "</sup>",
+                    );
+                    text = text
+                      .split(/(<[^>]+>)/g)
+                      .map((x, j) =>
+                        j % 2
+                          ? x
+                          : x.replace(/[A-Za-z]+/g, (letters) =>
+                              ["sin", "cos", "tan", "log"].includes(letters)
+                                ? letters
+                                : "<i>" + letters + "</i>",
+                            ),
+                      )
+                      .join("");
+                    return '<span class="m">' + text + "</span>";
+                  },
+                ),
+          )
+          .join("");
+      }
+      // 等号を独立した要素にし、折り返しの前後でも左右の間隔を保つ。
+      function lessonMath(html) {
+        return mathHTML(html)
+          .split(/(<[^>]+>)/g)
+          .map((s, i) =>
+            i % 2 ? s : s.replace(/\s*=\s*/g, '<span class="equal">=</span>'),
+          )
+          .join("");
+      }
+      function lessonSteps(mid) {
+        return String(mid)
+          .replace(/<br\s*\/?\s*>/g, "。")
+          .split(/(?:。|、つまり |、(?=y =)| なので、?| なので | より )/)
+          .filter(Boolean)
+          .map(
+            (line) =>
+              '<div class="equation">' +
+              line
+                .split(" = ")
+                .map(
+                  (s, i) =>
+                    '<span class="eqpart">' +
+                    (i ? '<span class="equal">=</span>' : "") +
+                    lessonMath(s) +
+                    "</span>",
+                )
+                .join("<wbr>") +
+              "</div>",
+          )
+          .join("");
+      }
+      function graphSVG(fn, points = [], lines = [], range) {
+        const xs = points.map((p) => p[0]);
+        let xmin = range ? range[0] : Math.min(-3, ...xs) - 1,
+          xmax = range ? range[1] : Math.max(3, ...xs) + 1;
+        const samples = Array.from(
+          { length: 121 },
+          (_, i) => xmin + ((xmax - xmin) * i) / 120,
+        );
+        const ys = [
+          0,
+          ...points.map((p) => p[1]),
+          ...samples.map((x) => (fn ? fn(x) : 0)),
+          ...lines.flatMap((l) =>
+            l.x !== undefined ? [] : samples.map((x) => l.m * x + l.n),
+          ),
+        ];
+        let ymin = Math.min(...ys),
+          ymax = Math.max(...ys),
+          pad = Math.max(1, (ymax - ymin) * 0.12);
+        ymin -= pad;
+        ymax += pad;
+        const X = (x) => 30 + ((x - xmin) / (xmax - xmin)) * 260,
+          Y = (y) => 185 - ((y - ymin) / (ymax - ymin)) * 160;
+        const path = (f) =>
+          samples
+            .map(
+              (x, i) =>
+                (i ? "L" : "M") + X(x).toFixed(2) + " " + Y(f(x)).toFixed(2),
+            )
+            .join(" ");
+        const text = (x, y, t, anchor = "middle") =>
+          '<text x="' +
+          x +
+          '" y="' +
+          y +
+          '" text-anchor="' +
+          anchor +
+          '" font-family="STIX Two Text,serif" font-size="13">' +
+          String(t).replace(/-/g, "−") +
+          "</text>";
+        return (
+          '<svg viewBox="0 0 320 215" role="img" aria-label="座標とグラフ"><path d="M30 ' +
+          Y(0) +
+          "H290" +
+          (xmin <= 0 && xmax >= 0 ? "M" + X(0) + " 20V190" : "") +
+          '" stroke="#aeb8c5" fill="none"/>' +
+          text(301, Y(0) + 4, "x") +
+          (xmin <= 0 && xmax >= 0 ? text(X(0) + 9, 15, "y") : "") +
+          text(30, 207, xmin) +
+          text(290, 207, xmax) +
+          text(25, Y(Math.floor(ymax)) + 4, Math.floor(ymax), "end") +
+          text(25, Y(Math.ceil(ymin)) + 4, Math.ceil(ymin), "end") +
+          (fn
+            ? '<path d="' +
+              path(fn) +
+              '" fill="none" stroke="#1f4e8c" stroke-width="2"/>'
+            : "") +
+          lines
+            .map(
+              (l) =>
+                '<path d="' +
+                (l.x !== undefined
+                  ? "M" + X(l.x) + " 25V185"
+                  : path((x) => l.m * x + l.n)) +
+                '" stroke="#d9480f" stroke-width="2" fill="none"/>',
+            )
+            .join("") +
+          points
+            .map(
+              (p, i) =>
+                '<circle cx="' +
+                X(p[0]) +
+                '" cy="' +
+                Y(p[1]) +
+                '" r="3" fill="#d9480f"/>' +
+                text(
+                  X(p[0]) + 9,
+                  Y(p[1]) - 8,
+                  String.fromCharCode(65 + i),
+                  "start",
+                ),
+            )
+            .join("") +
+          '</svg><div class="point-labels">' +
+          points
+            .map((p, i) =>
+              lessonMath(
+                String.fromCharCode(65 + i) + "(" + p[0] + ", " + p[1] + ")",
+              ),
+            )
+            .join("　") +
+          "</div>"
+        );
+      }
 
-    body { padding: 12px; }
-    /* 【ブラッシュアップ】式：文字は斜体、数・記号は立体、数式用の書体 */
-    .m { font-family: var(--u-math-font); font-size: 1.08em; }
-    .m i { font-style: italic; padding-right: 0.04em; }
-    .container { padding: 24px 20px; }
-    h1 { font-size: min(2.2rem, 7vw); white-space: nowrap; margin: 0 0 16px; }
-    .mode-selection { padding: 8px 0; }
-    .mode-selection h2 { color: var(--u-title-dark); font-size: 1.3em; margin-bottom: 16px; }
-    .mode-buttons { gap: 12px; }
-    .mode-btn { text-align: left; }
-    .mode-title { color: var(--u-title); }
-    .mode-desc { color: var(--u-sub); font-weight: 700; }
-    .quiz-header { padding: 0; margin-bottom: 8px; }
-    .mode-indicator { background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
-    .status { color: var(--u-sub); }
-    .problem-header { background: var(--u-soft-yellow); color: var(--u-ink); border: 4px dashed #fde68a; border-radius: 20px; }
-    .function { color: var(--u-ink); font-family: var(--u-font); }
-    .derivative, .formula-steps { opacity: 1; color: var(--u-ink); font-weight: 700; font-family: var(--u-font); }
-    .formula-input { background: #fff; color: var(--u-ink); }
-    .domain-info { background: #fff; border: 3px solid var(--u-soft-blue-line); color: var(--u-title); font-weight: 800; border-radius: 14px; }
-    table { box-shadow: none; border: 3px solid var(--u-line); border-radius: 14px; }
-    th { background: var(--u-soft-blue); color: var(--u-title); white-space: nowrap; }
-    th, td { border-color: var(--u-line); color: var(--u-ink); font-weight: 700; }
-    input { border-color: var(--u-line-dark); border-radius: 10px; font-weight: 700; color: var(--u-ink); font-size: 16px; }
-    /* 【ブラッシュアップ】増減表の見た目 */
-    .zt td.zt-dots { color: var(--u-sub); letter-spacing: 0; }
-    .zt td.zt-slash { color: var(--u-sub); background: #f8fafc; }
-    .zt td.zt-end { font-weight: 800; }
-    .zt input.num { width: 64px; }
-    .tap { background: #fff; color: var(--u-sub); border: 3px solid var(--u-line-dark); border-bottom-width: 5px; border-radius: 12px;
-           min-width: 48px; min-height: 42px; margin: 0; padding: 2px 8px; font-size: 1.2em; font-weight: 800; box-shadow: none; transition: none; }
-    .tap:hover { transform: none; box-shadow: none; background: var(--u-soft-blue); }
-    .tap:disabled { background: var(--u-ok-soft); cursor: default; }
-    .tap.correct { background: var(--u-ok-soft) !important; border-color: var(--u-ok-line) !important; color: var(--u-ok); }
-    .tap.incorrect { background: var(--u-ng-soft) !important; border-color: var(--u-ng-line) !important; color: var(--u-ng); }
-    .tap.picking { outline: 4px solid var(--u-accent); outline-offset: 2px; position: relative; z-index: 1001; }
-    .tap.ext { display: block; margin: 0 auto 6px; font-size: 0.9em; min-height: 34px; padding: 2px 6px; white-space: nowrap; }
-    .table-note { color: var(--u-sub); font-weight: 700; font-size: 0.92em; margin: -18px 0 18px; text-align: center; line-height: 1.6; }
-    .pick-modal { position: fixed; inset: 0; background: rgba(75, 44, 32, 0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; box-sizing: border-box; }
-    .pick-box { background: #fff; border: 6px solid var(--u-frame); border-radius: 28px; padding: 18px 14px; text-align: center; width: 100%; max-width: 380px; box-sizing: border-box; }
-    .pick-title { font-weight: 800; color: var(--u-title); margin: 0 0 12px; font-size: 1.1rem; }
-    .pick-row { display: flex; gap: 10px; justify-content: center; }
-    .pick-btn { flex: 1; min-height: 64px; margin: 0; padding: 8px 4px; font-size: 1.4rem; }
-    .pick-close { margin: 14px 0 0; padding: 8px 22px; font-size: 1rem; }
-    .summary { margin: 16px 0 0; padding: 12px 14px; background: var(--u-soft-blue); border: 3px solid var(--u-soft-blue-line); border-radius: 16px; color: var(--u-title-dark); font-weight: 800; text-align: center; line-height: 1.8; }
-    .problem-toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none;
-                     background: var(--u-ok); color: #fff; padding: 12px 24px; border-radius: 999px; font-weight: 800; font-size: 1.2rem;
-                     box-shadow: 0 6px 16px rgba(0,0,0,0.15); animation: toastIn 1.6s ease-in-out; }
-    @keyframes toastIn { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-    .max-min-question { background: var(--u-soft-blue); border: 3px dashed var(--u-soft-blue-line); border-radius: 18px; }
-    .max-min-question h4 { color: var(--u-title); }
-    .max-min-sentence { color: var(--u-ink); flex-wrap: wrap; justify-content: center; }
-    .max-min-sentence input { border-color: var(--u-line-dark); }
-    .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-    .controls button, .result-nav button { margin: 0; }
-    /* 【ブラッシュアップ】共通CSS（gas.css）がボタン・入力欄の余白を 0 にしていたので、PC でも余白をつける */
-    .controls button { padding: 12px 22px; white-space: nowrap; }
-    input { padding: 6px 4px; }
-    .zt input.num { min-height: 40px; }
-    .formula-input { min-height: 36px; }
-    .max-min-sentence input { min-height: 40px; }
-    .completion { background: #fff; color: var(--u-ink); border: 4px dashed var(--u-line); border-radius: 24px; font-size: 1.05em; }
-    .completion h2 { color: var(--u-accent-text); font-size: min(1.8rem, 6.5vw); white-space: nowrap; }
-    .completion p { font-weight: 700; line-height: 1.8; }
-    .final-score { font-size: 1.4em; font-weight: 800; color: var(--u-title); margin-bottom: 4px; }
-    .sub-score { font-weight: 800; color: var(--u-ok); margin-bottom: 8px; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 16px auto 0; }
-    .result-nav button { padding: 12px; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    @media (max-width: 640px) {
-      body { padding: 8px; }
-      .container { padding: 14px 8px; }
-      .problem-header { padding: 14px 8px; }
-      .function { font-size: 1.35em; }
-      .derivative, .formula-steps { font-size: 1.05em; line-height: 2.1; }
-      .formula-steps span[style] { margin-left: 0 !important; display: inline-block; }
-      th, td { padding: 5px 2px; font-size: 0.9em; }
-      .zt th, .zt td { padding: 4px 1px; }
-      .zt th { font-size: 0.8em; }
-      .zt input.num { width: 34px; padding: 6px 0; }
-      .tap { min-width: 32px; min-height: 40px; padding: 2px 3px; font-size: 1.05em; }
-      .tap.ext { font-size: 0.8em; padding: 2px 2px; }
-      .formula-input { width: 34px; }
-      .max-min-sentence { font-size: 1.05em; }
-      .max-min-sentence input { width: 48px; }
-      .controls button { padding: 10px 14px; font-size: 1em; }
-      .pick-btn { font-size: 1.2rem; }
-    }
-  
-  </style>
-</head>
- <body class="u-theme">
-  <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-  <main class="container">
-   <h1>📊 微分・増減表クイズ</h1>
-   <div id="modeSelection" class="mode-selection">
-    <h2>モードを選択してください</h2>
-    <div class="mode-buttons"><button onclick="startMode('basic')" class="mode-btn basic-mode">
-      <div class="mode-title">
-       📚 基本モード
-      </div>
-      <div class="mode-desc">
-       6問の基本問題で微分と増減表をマスター（極大・極小も）
-      </div></button> <button onclick="startMode('random')" class="mode-btn random-mode">
-      <div class="mode-title">
-       🎲 ランダムモード
-      </div>
-      <div class="mode-desc">
-       新しい問題を3問ランダムで出題
-      </div></button> <button onclick="startMode('advanced')" class="mode-btn advanced-mode">
-      <div class="mode-title">
-       🚀 発展問題モード
-      </div>
-      <div class="mode-desc">
-       定義域がある問題を段階的に学習
-      </div></button>
-    </div>
-   </div>
-   <div id="quizContainer" style="display: none;">
-    <div class="quiz-header">
-     <div class="mode-indicator" id="modeIndicator"></div>
-    </div>
-    <div class="progress">
-     <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="status" id="status">
-     問題 1/5
-    </div>
-    <div id="problemContainer"><!-- 問題がここに表示されます -->
-    </div>
-    <div class="controls"><button onclick="previousProblem()" onkeydown="handleButtonKey(event, previousProblem)" id="prevBtn" disabled>前の問題</button> <button onclick="nextProblem()" onkeydown="handleButtonKey(event, nextProblem)" id="nextBtn" disabled>次の問題</button> <button onclick="resetProblem()" onkeydown="handleButtonKey(event, resetProblem)" id="resetBtn">リセット</button> <button onclick="showAnswers()" onkeydown="handleButtonKey(event, showAnswers)" id="showAnswersBtn" style="background: linear-gradient(135deg, #ed8936, #dd6b20);">答えを見る</button> <button onclick="backToModeSelection()" onkeydown="handleButtonKey(event, backToModeSelection)" class="back-btn">モード選択</button>
-    </div>
-    <div class="completion" id="completion">
-     <h2>🎊 本当におめでとうございます！ 🎊</h2>
-     <p id="completionMessage">全問題を完璧に解きました！<br>
-      あなたは微分と増減表の真のマスターです！<br><br>
-      🌟 素晴らしい集中力と数学的思考力を発揮されました！ 🌟<br>
-      この調子で数学の学習を続けてください！</p><div class="result-nav" id="completionNav"></div>
-    </div>
-   </div>
-  </main>
-  <script>
-        const basicProblems = [
-            {
-                function: "f(x) = x² - 4x + 3",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='p0_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='p0_d2' maxlength='1' data-answer='4'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "2", 2: "-", 3: "0", 4: "+", 5: "↘", 6: "-1", 7: "↗"
-                },
-                hint: `<div class="formula-steps">
+      const basicProblems = [
+        {
+          function: "f(x) = x² - 4x + 3",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='p0_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='p0_d2' maxlength='1' data-answer='4'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "2",
+            2: "-",
+            3: "0",
+            4: "+",
+            5: "↘",
+            6: "-1",
+            7: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='p0_f1' maxlength='1' data-answer='2'>(x - <input type='text' class='formula-input' id='p0_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p0_s1' maxlength='1' data-answer='2'> である
-                </div>`
-            },
-            {
-                function: "f(x) = -x² + 6x - 5",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='p1_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='p1_d2' maxlength='1' data-answer='6'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "3", 2: "+", 3: "0", 4: "-", 5: "↗", 6: "4", 7: "↘"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = -x² + 6x - 5",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='p1_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='p1_d2' maxlength='1' data-answer='6'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "3",
+            2: "+",
+            3: "0",
+            4: "-",
+            5: "↗",
+            6: "4",
+            7: "↘",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='p1_f1' maxlength='1' data-answer='2'>(x - <input type='text' class='formula-input' id='p1_f2' maxlength='1' data-answer='3'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p1_s1' maxlength='1' data-answer='3'> である
-                </div>`
-            },
-            {
-                function: "f(x) = x³ - 3x² + 2",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='p2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p2_d2' maxlength='1' data-answer='6'>x",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "0", 2: "2", 3: "+", 4: "0", 5: "-", 6: "0", 7: "+", 8: "↗", 9: "2", 10: "↘", 11: "-2", 12: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = x³ - 3x² + 2",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='p2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p2_d2' maxlength='1' data-answer='6'>x",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "0",
+            2: "2",
+            3: "+",
+            4: "0",
+            5: "-",
+            6: "0",
+            7: "+",
+            8: "↗",
+            9: "2",
+            10: "↘",
+            11: "-2",
+            12: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='p2_f1' maxlength='1' data-answer='3'>x(x - <input type='text' class='formula-input' id='p2_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p2_s1' maxlength='1' data-answer='0'>, <input type='text' class='formula-input' id='p2_s2' maxlength='1' data-answer='2'> である
-                </div>`
-            },
-            {
-                function: "f(x) = x³ - 6x² + 9x + 1",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='p3_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p3_d2' maxlength='2' data-answer='12'>x + <input type='text' class='formula-input' id='p3_d3' maxlength='1' data-answer='9'>",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "1", 2: "3", 3: "+", 4: "0", 5: "-", 6: "0", 7: "+", 8: "↗", 9: "5", 10: "↘", 11: "1", 12: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = x³ - 6x² + 9x + 1",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='p3_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p3_d2' maxlength='2' data-answer='12'>x + <input type='text' class='formula-input' id='p3_d3' maxlength='1' data-answer='9'>",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "1",
+            2: "3",
+            3: "+",
+            4: "0",
+            5: "-",
+            6: "0",
+            7: "+",
+            8: "↗",
+            9: "5",
+            10: "↘",
+            11: "1",
+            12: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='p3_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='p3_f2' maxlength='1' data-answer='4'>x + <input type='text' class='formula-input' id='p3_f3' maxlength='1' data-answer='3'>)<br>
                     <span style="margin-left: 9.9em">= <input type='text' class='formula-input' id='p3_f4' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='p3_f5' maxlength='1' data-answer='1'>)(x - <input type='text' class='formula-input' id='p3_f6' maxlength='1' data-answer='3'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p3_s1' maxlength='1' data-answer='1'>, <input type='text' class='formula-input' id='p3_s2' maxlength='1' data-answer='3'> である
-                </div>`
-            },
-            {
-                function: "f(x) = -x³ - 3x² + 9x + 5",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='p4_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p4_d2' maxlength='1' data-answer='6'>x + <input type='text' class='formula-input' id='p4_d3' maxlength='1' data-answer='9'>",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "-3", 2: "1", 3: "-", 4: "0", 5: "+", 6: "0", 7: "-", 8: "↘", 9: "-22", 10: "↗", 11: "10", 12: "↘"   // 【ブラッシュアップ】f(-3) = -22, f(1) = 10
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = -x³ - 3x² + 9x + 5",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='p4_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p4_d2' maxlength='1' data-answer='6'>x + <input type='text' class='formula-input' id='p4_d3' maxlength='1' data-answer='9'>",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "-3",
+            2: "1",
+            3: "-",
+            4: "0",
+            5: "+",
+            6: "0",
+            7: "-",
+            8: "↘",
+            9: "-22",
+            10: "↗",
+            11: "10",
+            12: "↘", // 【ブラッシュアップ】f(-3) = -22, f(1) = 10
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='p4_f1' maxlength='1' data-answer='3'>(x² + <input type='text' class='formula-input' id='p4_f2' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='p4_f3' maxlength='1' data-answer='3'>)<br>
                     <span style="margin-left: 9.9em">= -<input type='text' class='formula-input' id='p4_f4' maxlength='1' data-answer='3'>(x + <input type='text' class='formula-input' id='p4_f5' maxlength='1' data-answer='3'>)(x - <input type='text' class='formula-input' id='p4_f6' maxlength='1' data-answer='1'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p4_s1' maxlength='2' data-answer='-3'>, <input type='text' class='formula-input' id='p4_s2' maxlength='1' data-answer='1'> である
-                </div>`
-            },
-            {   // 【ブラッシュアップ】極値をもたない関数（f′(x) ≧ 0）
-                function: "f(x) = x³ - 3x² + 3x + 1",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='p5_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p5_d2' maxlength='1' data-answer='6'>x + <input type='text' class='formula-input' id='p5_d3' maxlength='1' data-answer='3'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "1", 2: "+", 3: "0", 4: "+", 5: "↗", 6: "2", 7: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          // 【ブラッシュアップ】極値をもたない関数（f′(x) ≧ 0）
+          function: "f(x) = x³ - 3x² + 3x + 1",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='p5_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='p5_d2' maxlength='1' data-answer='6'>x + <input type='text' class='formula-input' id='p5_d3' maxlength='1' data-answer='3'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "1",
+            2: "+",
+            3: "0",
+            4: "+",
+            5: "↗",
+            6: "2",
+            7: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='p5_f1' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='p5_f2' maxlength='1' data-answer='1'>)²<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p5_s1' maxlength='1' data-answer='1'> である
-                </div>`
-            }
-        ];
+                </div>`,
+        },
+      ];
 
-        const randomProblems = [
-            {
-                function: "f(x) = x² + 2x - 8",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pr0_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='pr0_d2' maxlength='1' data-answer='2'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "-1", 2: "-", 3: "0", 4: "+", 5: "↘", 6: "-9", 7: "↗"
-                },
-                hint: `<div class="formula-steps">
+      const randomProblems = [
+        {
+          function: "f(x) = x² + 2x - 8",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pr0_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='pr0_d2' maxlength='1' data-answer='2'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "-1",
+            2: "-",
+            3: "0",
+            4: "+",
+            5: "↘",
+            6: "-9",
+            7: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pr0_f1' maxlength='1' data-answer='2'>(x + <input type='text' class='formula-input' id='pr0_f2' maxlength='1' data-answer='1'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr0_s1' maxlength='2' data-answer='-1'> である
-                </div>`
-            },
-            {
-                function: "f(x) = -2x² + 8x - 6",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr1_d1' maxlength='1' data-answer='4'>x + <input type='text' class='formula-input' id='pr1_d2' maxlength='1' data-answer='8'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "2", 2: "+", 3: "0", 4: "-", 5: "↗", 6: "2", 7: "↘"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = -2x² + 8x - 6",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr1_d1' maxlength='1' data-answer='4'>x + <input type='text' class='formula-input' id='pr1_d2' maxlength='1' data-answer='8'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "2",
+            2: "+",
+            3: "0",
+            4: "-",
+            5: "↗",
+            6: "2",
+            7: "↘",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pr1_f1' maxlength='1' data-answer='4'>(x - <input type='text' class='formula-input' id='pr1_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr1_s1' maxlength='1' data-answer='2'> である
-                </div>`
-            },
-            {
-                function: "f(x) = x³ - 12x + 16",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pr2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='pr2_d2' maxlength='2' data-answer='12'>",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "-2", 2: "2", 3: "+", 4: "0", 5: "-", 6: "0", 7: "+", 8: "↗", 9: "32", 10: "↘", 11: "0", 12: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = x³ - 12x + 16",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pr2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='pr2_d2' maxlength='2' data-answer='12'>",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "-2",
+            2: "2",
+            3: "+",
+            4: "0",
+            5: "-",
+            6: "0",
+            7: "+",
+            8: "↗",
+            9: "32",
+            10: "↘",
+            11: "0",
+            12: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pr2_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='pr2_f2' maxlength='1' data-answer='4'>)<br>
                     <span style="margin-left: 9.9em">= <input type='text' class='formula-input' id='pr2_f3' maxlength='1' data-answer='3'>(x + <input type='text' class='formula-input' id='pr2_f4' maxlength='1' data-answer='2'>)(x - <input type='text' class='formula-input' id='pr2_f5' maxlength='1' data-answer='2'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr2_s1' maxlength='2' data-answer='-2'>, <input type='text' class='formula-input' id='pr2_s2' maxlength='1' data-answer='2'> である
-                </div>`
-            },
-            {
-                function: "f(x) = 2x³ - 3x² - 12x + 20",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pr3_d1' maxlength='1' data-answer='6'>x² - <input type='text' class='formula-input' id='pr3_d2' maxlength='1' data-answer='6'>x - <input type='text' class='formula-input' id='pr3_d3' maxlength='2' data-answer='12'>",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "-1", 2: "2", 3: "+", 4: "0", 5: "-", 6: "0", 7: "+", 8: "↗", 9: "27", 10: "↘", 11: "0", 12: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = 2x³ - 3x² - 12x + 20",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pr3_d1' maxlength='1' data-answer='6'>x² - <input type='text' class='formula-input' id='pr3_d2' maxlength='1' data-answer='6'>x - <input type='text' class='formula-input' id='pr3_d3' maxlength='2' data-answer='12'>",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "-1",
+            2: "2",
+            3: "+",
+            4: "0",
+            5: "-",
+            6: "0",
+            7: "+",
+            8: "↗",
+            9: "27",
+            10: "↘",
+            11: "0",
+            12: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pr3_f1' maxlength='1' data-answer='6'>(x² - x - <input type='text' class='formula-input' id='pr3_f2' maxlength='1' data-answer='2'>)<br>
                     <span style="margin-left: 9.9em">= <input type='text' class='formula-input' id='pr3_f3' maxlength='1' data-answer='6'>(x + <input type='text' class='formula-input' id='pr3_f4' maxlength='1' data-answer='1'>)(x - <input type='text' class='formula-input' id='pr3_f5' maxlength='1' data-answer='2'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr3_s1' maxlength='2' data-answer='-1'>, <input type='text' class='formula-input' id='pr3_s2' maxlength='1' data-answer='2'> である
-                </div>`
-            },
-            {
-                function: "f(x) = -x³ + 6x² - 9x + 4",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr4_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pr4_d2' maxlength='2' data-answer='12'>x - <input type='text' class='formula-input' id='pr4_d3' maxlength='1' data-answer='9'>",
-                table: {
-                    x: ["x", "...", "", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "1", 2: "3", 3: "-", 4: "0", 5: "+", 6: "0", 7: "-", 8: "↘", 9: "0", 10: "↗", 11: "4", 12: "↘"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = -x³ + 6x² - 9x + 4",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr4_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pr4_d2' maxlength='2' data-answer='12'>x - <input type='text' class='formula-input' id='pr4_d3' maxlength='1' data-answer='9'>",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "1",
+            2: "3",
+            3: "-",
+            4: "0",
+            5: "+",
+            6: "0",
+            7: "-",
+            8: "↘",
+            9: "0",
+            10: "↗",
+            11: "4",
+            12: "↘",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pr4_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='pr4_f2' maxlength='1' data-answer='4'>x + <input type='text' class='formula-input' id='pr4_f3' maxlength='1' data-answer='3'>)<br>
                     <span style="margin-left: 9.9em">= -<input type='text' class='formula-input' id='pr4_f4' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='pr4_f5' maxlength='1' data-answer='1'>)(x - <input type='text' class='formula-input' id='pr4_f6' maxlength='1' data-answer='3'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr4_s1' maxlength='1' data-answer='1'>, <input type='text' class='formula-input' id='pr4_s2' maxlength='1' data-answer='3'> である
-                </div>`
-            },
-            {
-                function: "f(x) = x² - 6x + 5",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pr5_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='pr5_d2' maxlength='1' data-answer='6'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "3", 2: "-", 3: "0", 4: "+", 5: "↘", 6: "-4", 7: "↗"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          function: "f(x) = x² - 6x + 5",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pr5_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='pr5_d2' maxlength='1' data-answer='6'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "3",
+            2: "-",
+            3: "0",
+            4: "+",
+            5: "↘",
+            6: "-4",
+            7: "↗",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pr5_f1' maxlength='1' data-answer='2'>(x - <input type='text' class='formula-input' id='pr5_f2' maxlength='1' data-answer='3'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr5_s1' maxlength='1' data-answer='3'> である
-                </div>`
-            },
-            {   // 【ブラッシュアップ】極値をもたない関数（f′(x) ≦ 0）
-                function: "f(x) = -x³ + 3x² - 3x + 2",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr6_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pr6_d2' maxlength='1' data-answer='6'>x - <input type='text' class='formula-input' id='pr6_d3' maxlength='1' data-answer='3'>",
-                table: {
-                    x: ["x", "...", "", "..."],
-                    fprime: ["f'(x)", "", "", ""],
-                    f: ["f(x)", "", "", ""]
-                },
-                answers: {
-                    1: "1", 2: "-", 3: "0", 4: "-", 5: "↘", 6: "1", 7: "↘"
-                },
-                hint: `<div class="formula-steps">
+                </div>`,
+        },
+        {
+          // 【ブラッシュアップ】極値をもたない関数（f′(x) ≦ 0）
+          function: "f(x) = -x³ + 3x² - 3x + 2",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='pr6_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pr6_d2' maxlength='1' data-answer='6'>x - <input type='text' class='formula-input' id='pr6_d3' maxlength='1' data-answer='3'>",
+          table: {
+            x: ["x", "...", "", "..."],
+            fprime: ["f'(x)", "", "", ""],
+            f: ["f(x)", "", "", ""],
+          },
+          answers: {
+            1: "1",
+            2: "-",
+            3: "0",
+            4: "-",
+            5: "↘",
+            6: "1",
+            7: "↘",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pr6_f1' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='pr6_f2' maxlength='1' data-answer='1'>)²<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr6_s1' maxlength='1' data-answer='1'> である
-                </div>`
-            }
-        ];
+                </div>`,
+        },
+      ];
 
-        const advancedProblems = [
-            {
-                function: "f(x) = x² - 4x + 3",
-                domain: "定義域: 0 ≤ x ≤ 3",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pa0_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='pa0_d2' maxlength='1' data-answer='4'>",
-                table: {
-                    x: ["x", "0", "...", "", "...", "3"],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "2", 2: "/", 3: "-", 4: "0", 5: "+", 6: "/", 7: "3", 8: "↘", 9: "-1", 10: "↗", 11: "0"
-                },
-                hint: `<div class="formula-steps">
+      const advancedProblems = [
+        {
+          function: "f(x) = x² - 4x + 3",
+          domain: "定義域: 0 ≤ x ≤ 3",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pa0_d1' maxlength='1' data-answer='2'>x - <input type='text' class='formula-input' id='pa0_d2' maxlength='1' data-answer='4'>",
+          table: {
+            x: ["x", "0", "...", "", "...", "3"],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "2",
+            2: "/",
+            3: "-",
+            4: "0",
+            5: "+",
+            6: "/",
+            7: "3",
+            8: "↘",
+            9: "-1",
+            10: "↗",
+            11: "0",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pa0_f1' maxlength='1' data-answer='2'>(x - <input type='text' class='formula-input' id='pa0_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pa0_s1' maxlength='1' data-answer='2'> である
                 </div>`,
-                maxMin: {
-                    maxX: "0", maxValue: "3",
-                    minX: "2", minValue: "-1"
-                }
-            },
-            {
-                function: "f(x) = -x² + 4x - 3",
-                domain: "定義域: 1 ≤ x ≤ 4",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='pa1_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='pa1_d2' maxlength='1' data-answer='4'>",
-                table: {
-                    x: ["x", "1", "...", "", "...", "4"],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "2", 2: "/", 3: "+", 4: "0", 5: "-", 6: "/", 7: "0", 8: "↗", 9: "1", 10: "↘", 11: "-3"
-                },
-                hint: `<div class="formula-steps">
+          maxMin: {
+            maxX: "0",
+            maxValue: "3",
+            minX: "2",
+            minValue: "-1",
+          },
+        },
+        {
+          function: "f(x) = -x² + 4x - 3",
+          domain: "定義域: 1 ≤ x ≤ 4",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='pa1_d1' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='pa1_d2' maxlength='1' data-answer='4'>",
+          table: {
+            x: ["x", "1", "...", "", "...", "4"],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "2",
+            2: "/",
+            3: "+",
+            4: "0",
+            5: "-",
+            6: "/",
+            7: "0",
+            8: "↗",
+            9: "1",
+            10: "↘",
+            11: "-3",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pa1_f1' maxlength='1' data-answer='2'>(x - <input type='text' class='formula-input' id='pa1_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pa1_s1' maxlength='1' data-answer='2'> である
                 </div>`,
-                maxMin: {
-                    maxX: "2", maxValue: "1",
-                    minX: "4", minValue: "-3"
-                }
-            },
-            {
-                function: "f(x) = x³ - 6x² + 9x + 1",
-                domain: "定義域: 0 ≤ x ≤ 4",
-                derivative: "微分すると、f'(x) = <input type='text' class='formula-input' id='pa2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='pa2_d2' maxlength='2' data-answer='12'>x + <input type='text' class='formula-input' id='pa2_d3' maxlength='1' data-answer='9'>",
-                table: {
-                    x: ["x", "0", "...", "", "...", "", "...", "4"],
-                    fprime: ["f'(x)", "", "", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "1", 2: "3", 3: "/", 4: "+", 5: "0", 6: "-", 7: "0", 8: "+", 9: "/", 10: "1", 11: "↗", 12: "5", 13: "↘", 14: "1", 15: "↗", 16: "5"
-                },
-                hint: `<div class="formula-steps">
+          maxMin: {
+            maxX: "2",
+            maxValue: "1",
+            minX: "4",
+            minValue: "-3",
+          },
+        },
+        {
+          function: "f(x) = x³ - 6x² + 9x + 1",
+          domain: "定義域: 0 ≤ x ≤ 4",
+          derivative:
+            "微分すると、f'(x) = <input type='text' class='formula-input' id='pa2_d1' maxlength='1' data-answer='3'>x² - <input type='text' class='formula-input' id='pa2_d2' maxlength='2' data-answer='12'>x + <input type='text' class='formula-input' id='pa2_d3' maxlength='1' data-answer='9'>",
+          table: {
+            x: ["x", "0", "...", "", "...", "", "...", "4"],
+            fprime: ["f'(x)", "", "", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", "", "", ""],
+          },
+          answers: {
+            1: "1",
+            2: "3",
+            3: "/",
+            4: "+",
+            5: "0",
+            6: "-",
+            7: "0",
+            8: "+",
+            9: "/",
+            10: "1",
+            11: "↗",
+            12: "5",
+            13: "↘",
+            14: "1",
+            15: "↗",
+            16: "5",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = <input type='text' class='formula-input' id='pa2_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='pa2_f2' maxlength='1' data-answer='4'>x + <input type='text' class='formula-input' id='pa2_f3' maxlength='1' data-answer='3'>)<br>
                     <span style="margin-left: 9.9em">= <input type='text' class='formula-input' id='pa2_f4' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='pa2_f5' maxlength='1' data-answer='1'>)(x - <input type='text' class='formula-input' id='pa2_f6' maxlength='1' data-answer='3'>)</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pa2_s1' maxlength='1' data-answer='1'>, <input type='text' class='formula-input' id='pa2_s2' maxlength='1' data-answer='3'> である
                 </div>`,
-                maxMin: {
-                    maxX: "1", maxValue: "5", maxX2: "4",
-                    minX: "0", minValue: "1", minX2: "3"
-                }
-            },
-            {
-                function: "f(x) = -x³ + 3x² + 2",
-                domain: "定義域: -1 ≤ x ≤ 1",
-                derivative: "微分すると、f'(x) = -<input type='text' class='formula-input' id='pa3_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pa3_d2' maxlength='1' data-answer='6'>x",
-                table: {
-                    x: ["x", "-1", "...", "", "...", "1"],
-                    fprime: ["f'(x)", "", "", "", "", ""],
-                    f: ["f(x)", "", "", "", "", ""]
-                },
-                answers: {
-                    1: "0", 2: "/", 3: "-", 4: "0", 5: "+", 6: "/", 7: "6", 8: "↘", 9: "2", 10: "↗", 11: "4"
-                },
-                hint: `<div class="formula-steps">
+          maxMin: {
+            maxX: "1",
+            maxValue: "5",
+            maxX2: "4",
+            minX: "0",
+            minValue: "1",
+            minX2: "3",
+          },
+        },
+        {
+          function: "f(x) = -x³ + 3x² + 2",
+          domain: "定義域: -1 ≤ x ≤ 1",
+          derivative:
+            "微分すると、f'(x) = -<input type='text' class='formula-input' id='pa3_d1' maxlength='1' data-answer='3'>x² + <input type='text' class='formula-input' id='pa3_d2' maxlength='1' data-answer='6'>x",
+          table: {
+            x: ["x", "-1", "...", "", "...", "1"],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers: {
+            1: "0",
+            2: "/",
+            3: "-",
+            4: "0",
+            5: "+",
+            6: "/",
+            7: "6",
+            8: "↘",
+            9: "2",
+            10: "↗",
+            11: "4",
+          },
+          hint: `<div class="formula-steps">
                     因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pa3_f1' maxlength='1' data-answer='3'>x(x - <input type='text' class='formula-input' id='pa3_f2' maxlength='1' data-answer='2'>)<br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pa3_s1' maxlength='1' data-answer='0'>, <input type='text' class='formula-input' id='pa3_s2' maxlength='1' data-answer='2'> である<br>
                     x = 2 は定義域の外なので、表には入れない
                 </div>`,
-                maxMin: {
-                    maxX: "-1", maxValue: "6",
-                    minX: "0", minValue: "2"
-                }
-            }
-        ];
+          maxMin: {
+            maxX: "-1",
+            maxValue: "6",
+            minX: "0",
+            minValue: "2",
+          },
+        },
+      ];
 
-        let currentMode = 'basic';
-        let problems = [];
-        let currentProblem = 0;
-        let completedProblems = new Set();
-        let shownSet = new Set();   // 【ブラッシュアップ】「答えを見る」を使った問題
-        let missCount = {};         // 【ブラッシュアップ】問題ごとの、まちがえた回数
-        const isTouch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+      let currentMode = "basic";
+      let problems = [];
+      let currentProblem = 0;
+      let completedProblems = new Set();
+      let shownSet = new Set(); // 【ブラッシュアップ】「答えを見る」を使った問題
+      let missCount = {}; // 【ブラッシュアップ】問題ごとの、まちがえた回数
+      const isTouch =
+        window.matchMedia && matchMedia("(pointer: coarse)").matches;
 
-        function startMode(mode) {
-            currentMode = mode;
-            currentProblem = 0;
-            completedProblems.clear();
+      function startMode(mode) {
+        document.getElementById("problemToast")?.remove();
+        currentMode = mode;
+        currentProblem = 0;
+        completedProblems.clear();
 
-            // モードに応じて問題セットを選択
-            if (mode === 'basic') {
-                problems = [...basicProblems];
-            } else if (mode === 'random') {
-                // ランダムに3問選択
-                const shuffled = [...randomProblems].sort(() => 0.5 - Math.random());
-                problems = shuffled.slice(0, 3);
-            } else if (mode === 'advanced') {
-                problems = [...advancedProblems];
-            }
-
-            // UI切り替え
-            document.getElementById('modeSelection').style.display = 'none';
-            document.getElementById('quizContainer').style.display = 'block';
-            // 【ブラッシュアップ】
-            document.getElementById('completion').style.display = 'none';
-            document.getElementById('problemContainer').style.display = '';
-            document.querySelector('.controls').style.display = '';
-            shownSet = new Set();
-            missCount = {};
-            window.scrollTo(0, 0);
-
-            // モード表示を更新
-            const modeNames = {
-                'basic': '📚 基本モード',
-                'random': '🎲 ランダムモード',
-                'advanced': '🚀 発展問題モード'
-            };
-            document.getElementById('modeIndicator').textContent = modeNames[mode];
-
-            displayProblem(0);
-            updateButtons();
+        // モードに応じて問題セットを選択
+        if (mode === "basic") {
+          problems = [...basicProblems];
+        } else if (mode === "random") {
+          // ランダムに3問選択
+          const shuffled = [...randomProblems].sort(() => 0.5 - Math.random());
+          problems = shuffled.slice(0, 3);
+        } else if (mode === "advanced") {
+          problems = [...advancedProblems];
         }
 
-        function backToModeSelection() {
-            document.getElementById('modeSelection').style.display = 'block';
-            document.getElementById('quizContainer').style.display = 'none';
-            document.getElementById('completion').style.display = 'none';
-        }
+        // UI切り替え
+        document.getElementById("modeSelection").style.display = "none";
+        document.getElementById("quizContainer").style.display = "block";
+        // 【ブラッシュアップ】
+        document.getElementById("completion").style.display = "none";
+        document.getElementById("problemContainer").style.display = "";
+        document.querySelector(".controls").style.display = "";
+        shownSet = new Set();
+        missCount = {};
+        window.scrollTo(0, 0);
 
-        // 全角の数字・記号を半角に、いろいろな「ー」をマイナスにそろえる
-        function nz(v) {
-            return String(v).normalize('NFKC').replace(/[ー－−―‐]/g, '-').replace(/\s/g, '');
-        }
-
-        // タップでえらぶ欄の選択肢（値, ボタンの文字）
-        const PICK = {
-            sign: [['+', '+'], ['0', '0'], ['-', '−']],
-            arrow: [['↗', '↗ 増加'], ['↘', '↘ 減少']],
-            ext: [['極大', '極大'], ['極小', '極小'], ['なし', 'なし']]
+        // モード表示を更新
+        const modeNames = {
+          basic: " 基本モード",
+          random: " ランダムモード",
+          advanced: " 発展問題モード",
         };
-        const PICK_TITLE = {
-            sign: 'f′(x) の符号をえらぼう',
-            arrow: 'f(x) の増減をえらぼう',
-            ext: 'この x で f(x) は？'
-        };
-        function labelOf(kind, v) {
-            if (kind === 'sign') return v === '-' ? '−' : v;
-            return v;
-        }
+        document.getElementById("modeIndicator").textContent = modeNames[mode];
 
-        // x の値が入る列で、f′(x) の符号の変わり方から 極大・極小・なし を決める
-        function extremumAt(problem, index, col) {
-            const l = problem.answers[getAnswerKey(index, `t${index}_fprime_${col - 1}`)];
-            const r = problem.answers[getAnswerKey(index, `t${index}_fprime_${col + 1}`)];
-            if (l === '+' && r === '-') return '極大';
-            if (l === '-' && r === '+') return '極小';
-            return 'なし';
-        }
+        displayProblem(0);
+        updateButtons();
+      }
 
-        // 画面の文字を教科書の書き方にそろえる（- → −、' → ′、≤ → ≦）。入力欄の中身は変えない
-        function prettyText(root) {
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
-            const nodes = [];
-            while (walker.nextNode()) nodes.push(walker.currentNode);
-            nodes.forEach(n => {
-                n.nodeValue = n.nodeValue.replace(/'/g, '′').replace(/-/g, '−').replace(/≤/g, '≦').replace(/定義域:\s*/, '定義域：');
-            });
-        }
+      function backToModeSelection() {
+        document.getElementById("modeSelection").style.display = "block";
+        document.getElementById("quizContainer").style.display = "none";
+        document.getElementById("completion").style.display = "none";
+      }
 
-        function displayProblem(index) {
-            const problem = problems[index];
-            const container = document.getElementById('problemContainer');
-            const cols = problem.table.x.length;
-            const key = (row, col) => getAnswerKey(index, `t${index}_${row}_${col}`);
-            const num = (id, ans, label, extra = '') =>
-                `<input type="text" class="num ans" id="${id}" data-ans="${ans}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="${label}" ${extra}>`;
-            const tap = (id, ans, kind, label, cls = '') =>
-                `<button type="button" class="tap ans ${cls}" id="${id}" data-ans="${ans}" data-kind="${kind}" aria-label="${label}">${kind === 'ext' ? '極？' : '？'}</button>`;
+      // 全角の数字・記号を半角に、いろいろな「ー」をマイナスにそろえる
+      function nz(v) {
+        return String(v)
+          .normalize("NFKC")
+          .replace(/[ー－−―‐]/g, "-")
+          .replace(/\s/g, "");
+      }
 
-            let h = `
+      // タップでえらぶ欄の選択肢（値, ボタンの文字）
+      const PICK = {
+        sign: [
+          ["+", "+"],
+          ["0", "0"],
+          ["-", "−"],
+        ],
+        arrow: [
+          ["↗", "↗ 増加"],
+          ["↘", "↘ 減少"],
+        ],
+        ext: [
+          ["極大", "極大"],
+          ["極小", "極小"],
+          ["なし", "なし"],
+        ],
+      };
+      const PICK_TITLE = {
+        sign: "f′(x) の符号をえらぼう",
+        arrow: "f(x) の増減をえらぼう",
+        ext: "この x で f(x) は？",
+      };
+      function labelOf(kind, v) {
+        if (kind === "sign") return v === "-" ? "−" : v;
+        return v;
+      }
+
+      // x の値が入る列で、f′(x) の符号の変わり方から 極大・極小・なし を決める
+      function extremumAt(problem, index, col) {
+        const l =
+          problem.answers[getAnswerKey(index, `t${index}_fprime_${col - 1}`)];
+        const r =
+          problem.answers[getAnswerKey(index, `t${index}_fprime_${col + 1}`)];
+        if (l === "+" && r === "-") return "極大";
+        if (l === "-" && r === "+") return "極小";
+        return "なし";
+      }
+
+      // 画面の文字を教科書の書き方にそろえる（- → −、' → ′、≤ → ≦）。入力欄の中身は変えない
+      function prettyText(root) {
+        const walker = document.createTreeWalker(
+          root,
+          NodeFilter.SHOW_TEXT,
+          null,
+        );
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach((n) => {
+          n.nodeValue = n.nodeValue
+            .replace(/'/g, "′")
+            .replace(/-/g, "−")
+            .replace(/≤/g, "≦")
+            .replace(/定義域:\s*/, "定義域：");
+        });
+      }
+
+      function displayProblem(index) {
+        const problem = problems[index];
+        const container = document.getElementById("problemContainer");
+        const cols = problem.table.x.length;
+        const key = (row, col) =>
+          getAnswerKey(index, `t${index}_${row}_${col}`);
+        const num = (id, ans, label, extra = "") =>
+          `<input type="text" class="num ans" id="${id}" data-ans="${ans}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="${label}" ${extra}>`;
+        const tap = (id, ans, kind, label, cls = "") =>
+          `<button type="button" class="tap ans ${cls}" id="${id}" data-ans="${ans}" data-kind="${kind}" aria-label="${label}">${kind === "ext" ? "極？" : "？"}</button>`;
+
+        let h = `
                 <div class="problem-header">
                     <div class="function">${problem.function}</div>
-                    ${problem.domain ? `<div class="domain-info">${problem.domain}</div>` : ''}
-                    <div class="derivative">${problem.derivative}</div>
-                    ${problem.hint}
+                    ${problem.domain ? `<div class="domain-info">${problem.domain}</div>` : ""}
+                    <div id="formulaApp"></div><button id="stepsToggle" hidden onclick="toggleSteps()" aria-expanded="false">途中式を確認</button>
                 </div>
-                <div class="table-container"><table class="zt">`;
+                <section id="tableStage" hidden><div class="table-grid"><div><div class="table-container"><table class="zt">`;
 
-            // x の行
-            h += '<tr><th>x</th>';
-            for (let i = 1; i < cols; i++) {
-                const c = problem.table.x[i];
-                if (c === '...') h += '<td class="zt-dots">…</td>';
-                else if (c !== '') h += `<td class="zt-end">${c}</td>`;
-                else h += `<td class="input-cell">${num(`t${index}_x_${i}`, problem.answers[key('x', i)], 'x の値')}</td>`;
-            }
-            // f′(x) の行（定義域の端は「/」を書いておく）
-            h += "</tr><tr><th>f'(x)</th>";
-            for (let i = 1; i < cols; i++) {
-                const a = problem.answers[key('fprime', i)];
-                if (a === '/') h += '<td class="zt-slash">/</td>';
-                else h += `<td class="input-cell">${tap(`t${index}_fprime_${i}`, a, 'sign', 'f′(x) の符号')}</td>`;
-            }
-            // f(x) の行（x の値が入る列には、極大・極小をえらぶ欄も付ける）
-            h += '</tr><tr><th>f(x)</th>';
-            for (let i = 1; i < cols; i++) {
-                const a = problem.answers[key('f', i)];
-                if (a === '↗' || a === '↘') {
-                    h += `<td class="input-cell">${tap(`t${index}_f_${i}`, a, 'arrow', '増加・減少', 'arrow')}</td>`;
-                } else {
-                    const ext = problem.table.x[i] === '' ? tap(`e${index}_${i}`, extremumAt(problem, index, i), 'ext', '極大・極小', 'ext') : '';
-                    h += `<td class="input-cell">${ext}${num(`t${index}_f_${i}`, a, 'f(x) の値')}</td>`;
-                }
-            }
-            h += '</tr></table></div>';
-            h += '<p class="table-note">' +
-                (problem.domain ? '※ 定義域の端では f′(x) を考えないので「/」にしてある（空欄にする教科書もある）<br>' : '') +
-                '※ f′(x) の符号・増減・極大／極小は、欄をタップしてえらぼう' +
-                (isTouch ? '' : '（パソコンは + − 0 のキーでも入れられる）') + '</p>';
+        // x の行
+        h += "<tr><th>x</th>";
+        for (let i = 1; i < cols; i++) {
+          const c = problem.table.x[i];
+          if (c === "...") h += '<td class="zt-dots">…</td>';
+          else if (c !== "") h += `<td class="zt-end">${c}</td>`;
+          else
+            h += `<td class="input-cell">${num(`t${index}_x_${i}`, problem.answers[key("x", i)], "x の値")}</td>`;
+        }
+        // f′(x) の行（定義域の端は「/」を書いておく）
+        h += "</tr><tr><th>f'(x)</th>";
+        for (let i = 1; i < cols; i++) {
+          const a = problem.answers[key("fprime", i)];
+          if (a === "/") h += '<td class="zt-slash">/</td>';
+          else
+            h += `<td class="input-cell">${tap(`t${index}_fprime_${i}`, a, "sign", "f′(x) の符号")}</td>`;
+        }
+        // f(x) の行（x の値が入る列には、極大・極小をえらぶ欄も付ける）
+        h += "</tr><tr><th>f(x)</th>";
+        for (let i = 1; i < cols; i++) {
+          const a = problem.answers[key("f", i)];
+          if (a === "↗" || a === "↘") {
+            h += `<td class="input-cell">${tap(`t${index}_f_${i}`, a, "arrow", "増加・減少", "arrow")}</td>`;
+          } else {
+            const ext =
+              problem.table.x[i] === ""
+                ? tap(
+                    `e${index}_${i}`,
+                    extremumAt(problem, index, i),
+                    "ext",
+                    "極大・極小",
+                    "ext",
+                  )
+                : "";
+            h += `<td class="input-cell">${ext}${num(`t${index}_f_${i}`, a, "f(x) の値")}</td>`;
+          }
+        }
+        h += "</tr></table></div>";
+        h +=
+          '<button onclick="tableHint()">表のヒント</button><p id="tableHint" class="table-note" hidden>' +
+          (problem.domain
+            ? "※ 増減表では定義域の端の符号は省略するので「/」にしてある（空欄にする教科書もある）<br>"
+            : "") +
+          "※ f′(x) の符号・増減・極大／極小は、欄をタップしてえらぼう" +
+          (isTouch ? "" : "（パソコンは + − 0 のキーでも入れられる）") +
+          "</p>";
 
-            // 発展問題モード：最大値・最小値
-            if (currentMode === 'advanced' && problem.maxMin) {
-                const m = problem.maxMin;
-                const maxAlt = [m.maxX, m.maxX2].filter(Boolean).join('|');
-                const minAlt = [m.minX, m.minX2].filter(Boolean).join('|');
-                h += `
+        // 発展問題モード：最大値・最小値
+        if (currentMode === "advanced" && problem.maxMin) {
+          const m = problem.maxMin;
+          const maxAlt = [m.maxX, m.maxX2].filter(Boolean).join("|");
+          const minAlt = [m.minX, m.minX2].filter(Boolean).join("|");
+          h += `
                     <div class="max-min-question">
-                        <h4>📊 最大値・最小値を求めよう</h4>
+                        <h4> 最大値・最小値を求めよう</h4>
                         <div class="max-min-inputs">
-                            <div class="max-min-sentence">x = ${num(`maxX_${index}`, maxAlt, '最大となる x', m.maxX2 ? 'data-pair="max"' : '')}${m.maxX2 ? ', ' + num(`maxX2_${index}`, maxAlt, '最大となる x（2つ目）', 'data-pair="max"') : ''} のとき、最大値 ${num(`maxValue_${index}`, m.maxValue, '最大値')}</div>
-                            <div class="max-min-sentence">x = ${num(`minX_${index}`, minAlt, '最小となる x', m.minX2 ? 'data-pair="min"' : '')}${m.minX2 ? ', ' + num(`minX2_${index}`, minAlt, '最小となる x（2つ目）', 'data-pair="min"') : ''} のとき、最小値 ${num(`minValue_${index}`, m.minValue, '最小値')}</div>
+                            <div class="max-min-sentence">x = ${num(`maxX_${index}`, maxAlt, "最大となる x", m.maxX2 ? 'data-pair="max"' : "")}${m.maxX2 ? ", " + num(`maxX2_${index}`, maxAlt, "最大となる x（2つ目）", 'data-pair="max"') : ""} のとき、最大値 ${num(`maxValue_${index}`, m.maxValue, "最大値")}</div>
+                            <div class="max-min-sentence">x = ${num(`minX_${index}`, minAlt, "最小となる x", m.minX2 ? 'data-pair="min"' : "")}${m.minX2 ? ", " + num(`minX2_${index}`, minAlt, "最小となる x（2つ目）", 'data-pair="min"') : ""} のとき、最小値 ${num(`minValue_${index}`, m.minValue, "最小値")}</div>
                         </div>
                     </div>`;
+        }
+
+        h +=
+          '</div><aside id="pickPanel" class="pick-panel" aria-label="表に入れる値"></aside></div></section>';
+        container.innerHTML = lessonMath(h);
+        container
+          .querySelectorAll("input.num")
+          .forEach((inp) =>
+            inp.addEventListener("focus", () => openPicker(inp)),
+          );
+
+        // 式の穴うめ欄も、同じ判定のしかたにそろえる
+        container.querySelectorAll(".formula-input").forEach((inp) => {
+          inp.classList.add("ans", "num");
+          inp.dataset.ans = inp.dataset.answer;
+          inp.setAttribute("autocomplete", "off");
+          inp.setAttribute("enterkeyhint", "next");
+          inp.removeAttribute("maxlength"); // 全角で入れたときに切られないように
+        });
+        container.querySelectorAll("input.num").forEach((inp) => {
+          inp.addEventListener("input", () => onNumInput(inp));
+          inp.addEventListener("change", () => onNumCommit(inp));
+          inp.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" || e.isComposing) return;
+            e.preventDefault();
+            onNumCommit(inp);
+            focusNext(inp);
+          });
+        });
+        container.querySelectorAll("button.tap").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (!btn.disabled) openPicker(btn);
+          });
+          btn.addEventListener("keydown", (e) => {
+            if (btn.disabled || btn.dataset.kind !== "sign") return;
+            const k = nz(e.key);
+            if (k === "+" || k === "-" || k === "0") {
+              e.preventDefault();
+              choose(btn, k);
             }
+          });
+        });
+        prettyText(container);
+        mountFormula(problem, index);
 
-            container.innerHTML = h;
-
-            // 式の穴うめ欄も、同じ判定のしかたにそろえる
-            container.querySelectorAll('.formula-input').forEach(inp => {
-                inp.classList.add('ans', 'num');
-                inp.dataset.ans = inp.dataset.answer;
-                inp.setAttribute('autocomplete', 'off');
-                inp.setAttribute('enterkeyhint', 'next');
-                inp.removeAttribute('maxlength');   // 全角で入れたときに切られないように
-            });
-            container.querySelectorAll('input.num').forEach(inp => {
-                inp.addEventListener('input', () => onNumInput(inp));
-                inp.addEventListener('change', () => onNumCommit(inp));
-                inp.addEventListener('keydown', e => {
-                    if (e.key !== 'Enter' || e.isComposing) return;
-                    e.preventDefault();
-                    onNumCommit(inp);
-                    focusNext(inp);
-                });
-            });
-            container.querySelectorAll('button.tap').forEach(btn => {
-                btn.addEventListener('click', () => { if (!btn.disabled) openPicker(btn); });
-                btn.addEventListener('keydown', e => {
-                    if (btn.disabled || btn.dataset.kind !== 'sign') return;
-                    const k = nz(e.key);
-                    if (k === '+' || k === '-' || k === '0') { e.preventDefault(); choose(btn, k); }
-                });
-            });
-            prettyText(container);
-
-            // もう完成している問題にもどってきたときは、答えを入れた状態で見せる
-            if (completedProblems.has(index)) {
-                fillAnswers();
-                showSummary(index);
-            }
-
-            updateStatus();
-            updateProgress();
-
-            // スマホでは、いきなりキーボードが出ないようにする
-            const firstInput = container.querySelector('.formula-input:not(:disabled)');
-            if (firstInput && !isTouch) firstInput.focus();
+        // もう完成している問題にもどってきたときは、答えを入れた状態で見せる
+        if (completedProblems.has(index)) {
+          fillAnswers();
+          showSummary(index);
         }
 
-        function getInputId(problemIndex, row, col) {
-            return `t${problemIndex}_${row}_${col}`;
+        updateStatus();
+        updateProgress();
+
+        // スマホでは、いきなりキーボードが出ないようにする
+        const firstInput = container.querySelector(
+          ".formula-input:not(:disabled)",
+        );
+        if (firstInput && !isTouch) firstInput.focus();
+      }
+
+      function getInputId(problemIndex, row, col) {
+        return `t${problemIndex}_${row}_${col}`;
+      }
+
+      // 答えのデータ（answers）の何番目かを、表の場所から求める（先生の版のまま）
+      function getAnswerKey(problemIndex, inputId) {
+        const parts = inputId.split("_");
+        const row = parts[1];
+        const col = parseInt(parts[2]);
+        const problem = problems[problemIndex];
+
+        let keyIndex = 1;
+
+        if (row === "x") {
+          let inputCount = 0;
+          for (let i = 1; i < col; i++) {
+            if (problem.table.x[i] === "") inputCount++;
+          }
+          keyIndex = inputCount + 1;
+        } else if (row === "fprime") {
+          const xInputCount = problem.table.x.filter(
+            (cell) => cell === "",
+          ).length;
+          keyIndex = xInputCount + (col - 1) + 1;
+        } else if (row === "f") {
+          const xInputCount = problem.table.x.filter(
+            (cell) => cell === "",
+          ).length;
+          const fprimeInputCount = problem.table.fprime.filter(
+            (cell) => cell === "",
+          ).length;
+          keyIndex = xInputCount + fprimeInputCount + (col - 1) + 1;
         }
 
-        // 答えのデータ（answers）の何番目かを、表の場所から求める（先生の版のまま）
-        function getAnswerKey(problemIndex, inputId) {
-            const parts = inputId.split('_');
-            const row = parts[1];
-            const col = parseInt(parts[2]);
-            const problem = problems[problemIndex];
+        return keyIndex;
+      }
 
-            let keyIndex = 1;
+      // 次の、まだ答えていない欄へ
+      function focusNext(el) {
+        const all = Array.from(
+          document.querySelectorAll("#problemContainer .ans"),
+        );
+        const next = all.slice(all.indexOf(el) + 1).find((e) => !e.disabled);
+        if (next) next.focus();
+      }
 
-            if (row === 'x') {
-                let inputCount = 0;
-                for (let i = 1; i < col; i++) {
-                    if (problem.table.x[i] === "") inputCount++;
-                }
-                keyIndex = inputCount + 1;
-            } else if (row === 'fprime') {
-                const xInputCount = problem.table.x.filter(cell => cell === "").length;
-                keyIndex = xInputCount + (col - 1) + 1;
-            } else if (row === 'f') {
-                const xInputCount = problem.table.x.filter(cell => cell === "").length;
-                const fprimeInputCount = problem.table.fprime.filter(cell => cell === "").length;
-                keyIndex = xInputCount + fprimeInputCount + (col - 1) + 1;
-            }
+      // 数の欄：答えと同じになったら、すぐに正解にする
+      function answerMatches(inp, v) {
+        if (!inp.dataset.ans.split("|").includes(v)) return false;
+        if (inp.dataset.pair) {
+          // x を 2 つ答える欄に、同じ値を 2 回入れていたらまちがい
+          const others = document.querySelectorAll(
+            `#problemContainer [data-pair="${inp.dataset.pair}"]`,
+          );
+          if (
+            Array.from(others).some(
+              (o) =>
+                o !== inp &&
+                o.classList.contains("correct") &&
+                nz(o.value) === v,
+            )
+          )
+            return false;
+        }
+        return true;
+      }
+      function onNumInput(inp) {
+        inp.classList.remove("incorrect");
+        const v = nz(inp.value);
+        if (v !== "" && answerMatches(inp, v)) {
+          inp.value = v.replace(/-/g, "−");
+          markCorrect(inp);
+          focusNext(inp);
+        }
+      }
+      // Enter・欄をはなれたとき：まだ正解でなければ、まちがいを知らせる
+      function onNumCommit(inp) {
+        if (inp.disabled) return;
+        const v = nz(inp.value);
+        if (v === "") return;
+        if (answerMatches(inp, v)) {
+          markCorrect(inp);
+          return;
+        }
+        if (!inp.classList.contains("incorrect")) markWrong(inp);
+      }
 
-            return keyIndex;
-        }
+      function markCorrect(el) {
+        el.classList.remove("incorrect");
+        el.classList.add("correct");
+        el.disabled = true;
+        checkProblemCompletion(currentProblem);
+      }
+      function markWrong(el) {
+        missCount[currentProblem] = (missCount[currentProblem] || 0) + 1;
+        el.classList.remove("incorrect");
+        void el.offsetWidth; // もう一度ゆらすため
+        el.classList.add("incorrect");
+      }
 
-        // 次の、まだ答えていない欄へ
-        function focusNext(el) {
-            const all = Array.from(document.querySelectorAll('#problemContainer .ans'));
-            const next = all.slice(all.indexOf(el) + 1).find(e => !e.disabled);
-            if (next) next.focus();
-        }
-
-        // 数の欄：答えと同じになったら、すぐに正解にする
-        function answerMatches(inp, v) {
-            if (!inp.dataset.ans.split('|').includes(v)) return false;
-            if (inp.dataset.pair) {
-                // x を 2 つ答える欄に、同じ値を 2 回入れていたらまちがい
-                const others = document.querySelectorAll(`#problemContainer [data-pair="${inp.dataset.pair}"]`);
-                if (Array.from(others).some(o => o !== inp && o.classList.contains('correct') && nz(o.value) === v)) return false;
-            }
-            return true;
-        }
-        function onNumInput(inp) {
-            inp.classList.remove('incorrect');
-            const v = nz(inp.value);
-            if (v !== '' && answerMatches(inp, v)) {
-                inp.value = v.replace(/-/g, '−');
-                markCorrect(inp);
-                focusNext(inp);
-            }
-        }
-        // Enter・欄をはなれたとき：まだ正解でなければ、まちがいを知らせる
-        function onNumCommit(inp) {
-            if (inp.disabled) return;
-            const v = nz(inp.value);
-            if (v === '') return;
-            if (answerMatches(inp, v)) { markCorrect(inp); return; }
-            if (!inp.classList.contains('incorrect')) markWrong(inp);
-        }
-
-        function markCorrect(el) {
-            el.classList.remove('incorrect');
-            el.classList.add('correct');
-            el.disabled = true;
-            checkProblemCompletion(currentProblem);
-        }
-        function markWrong(el) {
-            missCount[currentProblem] = (missCount[currentProblem] || 0) + 1;
-            el.classList.remove('incorrect');
-            void el.offsetWidth;   // もう一度ゆらすため
-            el.classList.add('incorrect');
-        }
-
-        // タップでえらぶ画面
-        function closePicker() {
-            const m = document.getElementById('arrowModal');
-            if (m) { document.removeEventListener('keydown', m._keyHandler); m.remove(); }
-            document.querySelectorAll('.tap.picking').forEach(b => b.classList.remove('picking'));
-        }
-        function openPicker(btn) {
-            closePicker();
-            const kind = btn.dataset.kind;
-            const modal = document.createElement('div');
-            modal.id = 'arrowModal';
-            modal.className = 'pick-modal';
-            modal.innerHTML = `<div class="pick-box" role="dialog" aria-modal="true" aria-label="${PICK_TITLE[kind]}">
-                <p class="pick-title">${PICK_TITLE[kind]}</p>
-                <div class="pick-row">${PICK[kind].map(([v, label]) => `<button type="button" class="pick-btn" data-v="${v}">${label}</button>`).join('')}</div>
-                <button type="button" class="pick-close">やめる</button></div>`;
-            modal.addEventListener('click', e => {
-                const b = e.target.closest('.pick-btn');
-                if (b) { closePicker(); choose(btn, b.dataset.v); if (!isTouch) btn.focus(); return; }
-                if (e.target === modal || e.target.closest('.pick-close')) { closePicker(); if (!isTouch) btn.focus(); }
-            });
-            const choices = () => Array.from(modal.querySelectorAll('.pick-btn'));
-            modal._keyHandler = e => {
-                if (e.key === 'Escape') { closePicker(); btn.focus(); return; }
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    const list = choices();
-                    const i = list.indexOf(document.activeElement);
-                    const n = e.key === 'ArrowRight' ? (i + 1) % list.length : (i - 1 + list.length) % list.length;
-                    list[n].focus();
-                    return;
-                }
-                const k = nz(e.key);
-                if (kind === 'sign' && (k === '+' || k === '-' || k === '0')) { e.preventDefault(); closePicker(); choose(btn, k); btn.focus(); }
-            };
-            document.addEventListener('keydown', modal._keyHandler);
-            btn.classList.add('picking');   // どの欄をえらんでいるか、枠で示す
-            document.body.appendChild(modal);
-            if (!isTouch) choices()[0].focus();
-        }
-        function choose(btn, v) {
+      // タップでえらぶ画面
+      function choose(btn, v) {
+        if (btn.disabled) return;
+        btn.textContent = labelOf(btn.dataset.kind, v);
+        if (v === btn.dataset.ans) {
+          markCorrect(btn);
+        } else {
+          markWrong(btn);
+          setTimeout(() => {
             if (btn.disabled) return;
-            btn.textContent = labelOf(btn.dataset.kind, v);
-            if (v === btn.dataset.ans) {
-                markCorrect(btn);
-            } else {
-                markWrong(btn);
-                setTimeout(() => {
-                    if (btn.disabled) return;
-                    btn.classList.remove('incorrect');
-                    btn.textContent = btn.dataset.kind === 'ext' ? '極？' : '？';
-                }, 800);
+            btn.classList.remove("incorrect");
+            btn.textContent = btn.dataset.kind === "ext" ? "極？" : "？";
+          }, 800);
+        }
+      }
+
+      function checkProblemCompletion(problemIndex) {
+        const all = Array.from(
+          document.querySelectorAll("#problemContainer .ans"),
+        );
+        if (!formulaReady) return;
+        if (!all.length || all.some((e) => !e.classList.contains("correct")))
+          return;
+        if (completedProblems.has(problemIndex)) return;
+        completedProblems.add(problemIndex);
+        updateProgress();
+        updateButtons();
+        showSummary(problemIndex);
+        showProblemCompletionMessage(problemIndex);
+      }
+
+      // 完成したときの「まとめ」：極値（と、最大・最小）を文にする
+      function showSummary(index) {
+        const container = document.getElementById("problemContainer");
+        if (container.querySelector(".summary")) return;
+        const problem = problems[index];
+        const cols = problem.table.x.length;
+        const parts = [];
+        for (let i = 1; i < cols; i++) {
+          if (problem.table.x[i] !== "") continue;
+          const e = extremumAt(problem, index, i);
+          if (e === "なし") continue;
+          const x = problem.answers[getAnswerKey(index, `t${index}_x_${i}`)];
+          const y = problem.answers[getAnswerKey(index, `t${index}_f_${i}`)];
+          parts.push(`x = ${x} で${e}値 ${y}`);
+        }
+        let s;
+        if (parts.length) {
+          s = parts.join("、");
+        } else {
+          const arrows = Object.values(problem.answers).filter(
+            (a) => a === "↗" || a === "↘",
+          );
+          const up = arrows.every((a) => a === "↗"),
+            down = arrows.every((a) => a === "↘");
+          s =
+            "極値はない" +
+            (up ? "（つねに増加する）" : down ? "（つねに減少する）" : "");
+        }
+        if (problem.maxMin) {
+          const m = problem.maxMin;
+          s += `<br>x = ${[m.maxX, m.maxX2].filter(Boolean).join(", ")} のとき最大値 ${m.maxValue}、x = ${[m.minX, m.minX2].filter(Boolean).join(", ")} のとき最小値 ${m.minValue}`;
+        }
+        const div = document.createElement("div");
+        div.className = "summary";
+        div.innerHTML =
+          lessonMath("まとめ：" + s) + summaryGraph(problem, index);
+        container.appendChild(div);
+        prettyText(div);
+      }
+
+      function showProblemCompletionMessage(problemIndex) {
+        const existingMessage = document.getElementById("problemToast");
+        if (existingMessage) existingMessage.remove();
+
+        const message = document.createElement("div");
+        message.id = "problemToast";
+        message.className = "problem-toast";
+        message.innerHTML = ` 問題${problemIndex + 1} 完成！`;
+        document.body.appendChild(message);
+        setTimeout(() => {
+          if (message.parentNode) message.remove();
+        }, 1600);
+      }
+
+      function updateStatus() {
+        const status = document.getElementById("status");
+        status.textContent = `問題 ${currentProblem + 1}/${problems.length}`;
+      }
+
+      function updateProgress() {
+        const progressBar = document.getElementById("progressBar");
+        const progress = (completedProblems.size / problems.length) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+
+      function updateButtons() {
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+
+        prevBtn.disabled = currentProblem === 0;
+
+        // 次の問題ボタンは現在の問題が完了している場合のみ有効
+        const isCurrentProblemCompleted = completedProblems.has(currentProblem);
+        nextBtn.disabled = !isCurrentProblemCompleted;
+
+        // 最後の問題で全問題完了時はボタンテキストを変更
+        if (
+          currentProblem === problems.length - 1 &&
+          completedProblems.size === problems.length
+        ) {
+          nextBtn.textContent = "結果を見る";
+        } else {
+          nextBtn.textContent = "次の問題";
+        }
+      }
+
+      function previousProblem() {
+        if (currentProblem > 0) {
+          currentProblem--;
+          displayProblem(currentProblem);
+          updateButtons();
+        }
+      }
+
+      function nextProblem() {
+        if (currentProblem < problems.length - 1) {
+          currentProblem++;
+          displayProblem(currentProblem);
+          updateButtons();
+        } else if (completedProblems.size === problems.length) {
+          // 全問題完了時は完了画面を表示
+          showCompletion();
+        }
+      }
+
+      // 答えをすべて入れる（「答えを見る」と、完成ずみの問題にもどったとき）
+      function fillAnswers() {
+        document.querySelectorAll("#problemContainer .ans").forEach((el) => {
+          if (el.classList.contains("correct")) return;
+          const alts = el.dataset.ans.split("|");
+          if (el.tagName === "BUTTON") {
+            el.textContent = labelOf(el.dataset.kind, alts[0]);
+          } else {
+            let v = alts[0];
+            if (el.dataset.pair) {
+              const used = Array.from(
+                document.querySelectorAll(
+                  `#problemContainer [data-pair="${el.dataset.pair}"].correct`,
+                ),
+              ).map((o) => nz(o.value));
+              v = alts.find((a) => !used.includes(a)) || alts[0];
             }
+            el.value = v.replace(/-/g, "−");
+          }
+          el.classList.remove("incorrect");
+          el.classList.add("correct");
+          el.disabled = true;
+        });
+      }
+
+      function showAnswers() {
+        closePicker();
+        if (!completedProblems.has(currentProblem))
+          shownSet.add(currentProblem);
+        document.querySelector('#formulaApp [data-act="show"]')?.click();
+        formulaReady = true;
+        document.getElementById("tableStage").hidden = false;
+        fillAnswers();
+        completedProblems.add(currentProblem);
+        showSummary(currentProblem);
+        updateProgress();
+        updateButtons();
+      }
+
+      function resetProblem() {
+        closePicker();
+        completedProblems.delete(currentProblem);
+        displayProblem(currentProblem);
+        updateProgress();
+        updateButtons();
+      }
+
+      function showCompletion() {
+        const completionMessage = document.getElementById("completionMessage");
+        const n = problems.length;
+        const self = n - shownSet.size;
+        let clean = 0;
+        for (let i = 0; i < n; i++)
+          if (!shownSet.has(i) && !missCount[i]) clean++;
+
+        let msg;
+        if (clean === n)
+          msg = "全問ミスなし！増減表の作り方がしっかり身についています。";
+        else if (self === n)
+          msg =
+            "ぜんぶ自力で完成！まちがえたところ（符号・値・極大／極小）をもう一度たしかめておこう。";
+        else
+          msg =
+            "「答えを見る」を使った問題は、リセットしてもう一度自分で解いてみよう。";
+        document.querySelector("#completion h2").textContent =
+          clean === n ? " 全問ミスなし！" : " おつかれさま！";
+        completionMessage.innerHTML =
+          `<div class="final-score">自力で完成 ${self} / ${n} 問</div>` +
+          `<div class="sub-score">そのうちミスなし ${clean} 問</div>` +
+          msg;
+
+        const nextMode = { basic: "random", random: "advanced" }[currentMode];
+        const names = {
+          basic: "基本モード",
+          random: "ランダムモード",
+          advanced: "発展問題モード",
+        };
+        document.getElementById("completionNav").innerHTML =
+          (nextMode
+            ? `<button class="next" onclick="startMode('${nextMode}')">次は「${names[nextMode]}」へ ▶</button>`
+            : "") +
+          `<button class="again" onclick="startMode('${currentMode}')">同じモードでもう一度</button>` +
+          '<button class="plain" onclick="backToModeSelection()">モードをえらび直す</button>' +
+          '<a href="../index.html">ほかの教材をえらぶ</a>';
+        window.scrollTo(0, 0);
+        document.getElementById("completion").style.display = "block";
+        document.getElementById("problemContainer").style.display = "none";
+        document.querySelector(".controls").style.display = "none";
+      }
+
+      function handleButtonKey(event, callback) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          callback();
         }
+      }
 
-        function checkProblemCompletion(problemIndex) {
-            const all = Array.from(document.querySelectorAll('#problemContainer .ans'));
-            if (!all.length || all.some(e => !e.classList.contains('correct'))) return;
-            if (completedProblems.has(problemIndex)) return;
-            completedProblems.add(problemIndex);
-            updateProgress();
-            updateButtons();
-            showSummary(problemIndex);
-            showProblemCompletionMessage(problemIndex);
+      let formulaAPI = null,
+        formulaReady = false;
+      function mountFormula(problem, index) {
+        const source = problem.derivative + "<br>" + problem.hint;
+        const box = document.createElement("div");
+        box.innerHTML = source;
+        box
+          .querySelectorAll("span[style]")
+          .forEach((e) => e.removeAttribute("style"));
+        let rows = box.innerHTML
+          .replace(
+            /<input\b[^>]*data-answer=['"]([^'"]+)['"][^>]*>/g,
+            (_, v) => "[" + v.replace(/-/g, "−") + "]",
+          )
+          .replace(/<br\s*\/?\s*>/g, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/'/g, "′")
+          .replace(/-/g, "−")
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        rows = rows.map((s, ri) => {
+          let n = 0;
+          const blanks = (s.match(/\[/g) || []).length,
+            keep = Math.min(index + 1, blanks);
+          return {
+            t: s.replace(/\[([^\]]+)\]/g, (all, v) =>
+              ++n > blanks - keep ? all : v,
+            ),
+            h:
+              ri === 0
+                ? "1項ずつ微分しよう。定数の微分は0。"
+                : s.includes("解は")
+                  ? "因数のどちらかが0になる x を求めよう。"
+                  : "共通因数をくくり、かけて元の式になるか確かめよう。",
+          };
+        });
+        const used = [
+          ...new Set(
+            rows.flatMap((r) =>
+              [...r.t.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]),
+            ),
+          ),
+        ];
+        const ds = ["8", "11", "−5", "7"]
+          .filter((v) => !used.includes(v))
+          .slice(0, 2)
+          .map((v) => [v, "微分した係数や、因数分解の符号を確かめよう。"]);
+        const cards =
+          index === 0
+            ? [...used, ...ds]
+            : [...used.slice(0, 1), ds[0], ...used.slice(1), ds[1]];
+        rows.unshift({
+          t: "! (xⁿ)′ = n xⁿ⁻¹　定数の微分は 0",
+          h: "n は正の整数です。",
+        });
+        formulaReady = false;
+        formulaAPI = FillSteps.mount({
+          el: "#formulaApp",
+          problems: [
+            {
+              q: "微分して、増減表に必要な値を求めよう。",
+              rows,
+              cards,
+              ans: "途中式が完成。続いて増減表をうめよう。",
+            },
+          ],
+          after: (root, p, state) => {
+            formulaReady = state.done || state.shown;
+            root.classList.toggle("formula-complete", formulaReady);
+            document.getElementById("stepsToggle").hidden = !formulaReady;
+            document.getElementById("showAnswersBtn").hidden = !formulaReady;
+            if (state.shown && !completedProblems.has(index))
+              shownSet.add(index);
+            if (state.miss)
+              missCount[currentProblem] = Math.max(
+                missCount[currentProblem] || 0,
+                state.miss,
+              );
+            const table = document.getElementById("tableStage");
+            if (table) table.hidden = !formulaReady;
+            if (formulaReady) checkProblemCompletion(currentProblem);
+          },
+        });
+        if (completedProblems.has(index)) {
+          document.querySelector('#formulaApp [data-act="show"]')?.click();
+          formulaReady = true;
         }
-
-        // 完成したときの「まとめ」：極値（と、最大・最小）を文にする
-        function showSummary(index) {
-            const container = document.getElementById('problemContainer');
-            if (container.querySelector('.summary')) return;
-            const problem = problems[index];
-            const cols = problem.table.x.length;
-            const parts = [];
-            for (let i = 1; i < cols; i++) {
-                if (problem.table.x[i] !== '') continue;
-                const e = extremumAt(problem, index, i);
-                if (e === 'なし') continue;
-                const x = problem.answers[getAnswerKey(index, `t${index}_x_${i}`)];
-                const y = problem.answers[getAnswerKey(index, `t${index}_f_${i}`)];
-                parts.push(`x = ${x} で${e}値 ${y}`);
-            }
-            let s;
-            if (parts.length) {
-                s = parts.join('、');
-            } else {
-                const arrows = Object.values(problem.answers).filter(a => a === '↗' || a === '↘');
-                const up = arrows.every(a => a === '↗'), down = arrows.every(a => a === '↘');
-                s = '極値はない' + (up ? '（つねに増加する）' : down ? '（つねに減少する）' : '');
-            }
-            if (problem.maxMin) {
-                const m = problem.maxMin;
-                s += `<br>x = ${[m.maxX, m.maxX2].filter(Boolean).join(', ')} のとき最大値 ${m.maxValue}、x = ${[m.minX, m.minX2].filter(Boolean).join(', ')} のとき最小値 ${m.minValue}`;
-            }
-            const div = document.createElement('div');
-            div.className = 'summary';
-            div.innerHTML = '📝 まとめ：' + s;
-            container.appendChild(div);
-            prettyText(div);
+      }
+      function toggleSteps() {
+        const open = document
+          .getElementById("formulaApp")
+          .classList.toggle("show-completed");
+        const b = document.getElementById("stepsToggle");
+        b.textContent = open ? "途中式を閉じる" : "途中式を確認";
+        b.setAttribute("aria-expanded", String(open));
+      }
+      function tableHint() {
+        const el = document.getElementById("tableHint");
+        el.hidden = !el.hidden;
+      }
+      function closePicker() {
+        document.getElementById("pickPanel")?.replaceChildren();
+        document
+          .querySelectorAll(".picking")
+          .forEach((b) => b.classList.remove("picking"));
+      }
+      function openPicker(btn) {
+        if (btn.disabled) return;
+        closePicker();
+        btn.classList.add("picking");
+        const numeric = btn.tagName === "INPUT",
+          kind = btn.dataset.kind;
+        let options = numeric
+          ? [
+              [btn.dataset.ans.split("|")[0], btn.dataset.ans.split("|")[0]],
+              [
+                String(Number(btn.dataset.ans.split("|")[0]) + 1),
+                String(Number(btn.dataset.ans.split("|")[0]) + 1),
+              ],
+              [
+                String(Number(btn.dataset.ans.split("|")[0]) - 1),
+                String(Number(btn.dataset.ans.split("|")[0]) - 1),
+              ],
+            ]
+          : PICK[kind];
+        if (kind === "arrow") options = [...options, ["→", "→ 一定"]];
+        options = options
+          .map((v, i) => [v, (i + currentProblem + 1) % options.length])
+          .sort((a, b) => a[1] - b[1])
+          .map((x) => x[0]);
+        const panel = document.getElementById("pickPanel");
+        panel.innerHTML =
+          '<p class="pick-title">' +
+          (numeric ? "値を選ぶ・入力する" : PICK_TITLE[kind]) +
+          '</p><div class="pick-options">' +
+          options
+            .map(
+              ([v, label]) =>
+                '<button class="pick-btn" data-value="' +
+                v +
+                '">' +
+                lessonMath(label) +
+                "</button>",
+            )
+            .join("") +
+          '</div><p id="pickMessage" role="status"></p>';
+        function answer(v) {
+          if (numeric) {
+            btn.value = v;
+            onNumCommit(btn);
+          } else choose(btn, v);
+          if (!btn.disabled)
+            document.getElementById("pickMessage").textContent =
+              "符号・増減・代入した値をもう一度確認しよう。";
+          else closePicker();
         }
-
-        function showProblemCompletionMessage(problemIndex) {
-            const existingMessage = document.getElementById('problemToast');
-            if (existingMessage) existingMessage.remove();
-
-            const message = document.createElement('div');
-            message.id = 'problemToast';
-            message.className = 'problem-toast';
-            message.innerHTML = `🎉 問題${problemIndex + 1} 完成！`;
-            document.body.appendChild(message);
-            setTimeout(() => { if (message.parentNode) message.remove(); }, 1600);
-        }
-
-
-        function updateStatus() {
-            const status = document.getElementById('status');
-            status.textContent = `問題 ${currentProblem + 1}/${problems.length}`;
-        }
-
-        function updateProgress() {
-            const progressBar = document.getElementById('progressBar');
-            const progress = (completedProblems.size / problems.length) * 100;
-            progressBar.style.width = `${progress}%`;
-        }
-
-        function updateButtons() {
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-
-            prevBtn.disabled = currentProblem === 0;
-
-            // 次の問題ボタンは現在の問題が完了している場合のみ有効
-            const isCurrentProblemCompleted = completedProblems.has(currentProblem);
-            nextBtn.disabled = !isCurrentProblemCompleted;
-
-            // 最後の問題で全問題完了時はボタンテキストを変更
-            if (currentProblem === problems.length - 1 && completedProblems.size === problems.length) {
-                nextBtn.textContent = '結果を見る';
-            } else {
-                nextBtn.textContent = '次の問題';
-            }
-        }
-
-        function previousProblem() {
-            if (currentProblem > 0) {
-                currentProblem--;
-                displayProblem(currentProblem);
-                updateButtons();
-            }
-        }
-
-        function nextProblem() {
-            if (currentProblem < problems.length - 1) {
-                currentProblem++;
-                displayProblem(currentProblem);
-                updateButtons();
-            } else if (completedProblems.size === problems.length) {
-                // 全問題完了時は完了画面を表示
-                showCompletion();
-            }
-        }
-
-        // 答えをすべて入れる（「答えを見る」と、完成ずみの問題にもどったとき）
-        function fillAnswers() {
-            document.querySelectorAll('#problemContainer .ans').forEach(el => {
-                if (el.classList.contains('correct')) return;
-                const alts = el.dataset.ans.split('|');
-                if (el.tagName === 'BUTTON') {
-                    el.textContent = labelOf(el.dataset.kind, alts[0]);
-                } else {
-                    let v = alts[0];
-                    if (el.dataset.pair) {
-                        const used = Array.from(document.querySelectorAll(`#problemContainer [data-pair="${el.dataset.pair}"].correct`)).map(o => nz(o.value));
-                        v = alts.find(a => !used.includes(a)) || alts[0];
-                    }
-                    el.value = v.replace(/-/g, '−');
-                }
-                el.classList.remove('incorrect');
-                el.classList.add('correct');
-                el.disabled = true;
-            });
-        }
-
-        function showAnswers() {
-            closePicker();
-            if (!completedProblems.has(currentProblem)) shownSet.add(currentProblem);
-            fillAnswers();
-            completedProblems.add(currentProblem);
-            showSummary(currentProblem);
-            updateProgress();
-            updateButtons();
-        }
-
-        function resetProblem() {
-            closePicker();
-            completedProblems.delete(currentProblem);
-            displayProblem(currentProblem);
-            updateProgress();
-            updateButtons();
-        }
-
-        function showCompletion() {
-            const completionMessage = document.getElementById('completionMessage');
-            const n = problems.length;
-            const self = n - shownSet.size;
-            let clean = 0;
-            for (let i = 0; i < n; i++) if (!shownSet.has(i) && !missCount[i]) clean++;
-
-            let msg;
-            if (clean === n) msg = '全問ミスなし！増減表の作り方がしっかり身についています。';
-            else if (self === n) msg = 'ぜんぶ自力で完成！まちがえたところ（符号・値・極大／極小）をもう一度たしかめておこう。';
-            else msg = '「答えを見る」を使った問題は、リセットしてもう一度自分で解いてみよう。';
-            document.querySelector('#completion h2').textContent = clean === n ? '🎉 全問ミスなし！' : '👍 おつかれさま！';
-            completionMessage.innerHTML = `<div class="final-score">自力で完成 ${self} / ${n} 問</div>` +
-                `<div class="sub-score">そのうちミスなし ${clean} 問</div>` + msg;
-
-            const nextMode = { basic: 'random', random: 'advanced' }[currentMode];
-            const names = { basic: '基本モード', random: 'ランダムモード', advanced: '発展問題モード' };
-            document.getElementById('completionNav').innerHTML =
-                (nextMode ? `<button class="next" onclick="startMode('${nextMode}')">次は「${names[nextMode]}」へ ▶</button>` : '') +
-                `<button class="again" onclick="startMode('${currentMode}')">同じモードでもう一度</button>` +
-                '<button class="plain" onclick="backToModeSelection()">モードをえらび直す</button>' +
-                '<a href="../index.html">ほかの教材をえらぶ</a>';
-            window.scrollTo(0, 0);
-            document.getElementById('completion').style.display = 'block';
-            document.getElementById('problemContainer').style.display = 'none';
-            document.querySelector('.controls').style.display = 'none';
-        }
-
-        function handleButtonKey(event, callback) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                callback();
-            }
-        }
-
-        const MATH_RUN = /[A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*[A-Za-zαβ0-9∫][A-Za-zαβ0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉₋'′()=+\-−·×÷/.,<>[\]{}|∫≦≧ ]*/g;
-        function mathify(root) {
-            if (!root) return;
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-            const nodes = [];
-            while (walker.nextNode()) {
-                const n = walker.currentNode, p = n.parentElement;
-                if (!p || p.closest('.m, .no-math, .level-badge, script, style, svg, button.tap, .sign-btn, .nb-sign, .op-btn')) continue;
-                if (/[A-Za-zαβ0-9∫]/.test(n.nodeValue)) nodes.push(n);
-            }
-            nodes.forEach(n => {
-                const s = n.nodeValue, frag = document.createDocumentFragment();
-                let last = 0;
-                s.replace(MATH_RUN, (run, at) => {
-                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
-                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
-                    const span = document.createElement('span');
-                    span.className = 'm';
-                    text.split(/([A-Za-zαβ]+)/).forEach((part, k) => {
-                        if (!part) return;
-                        if (k % 2) {
-                            // dx の d は立体、x は斜体
-                            const dx = part.match(/^d([a-z])$/);
-                            if (dx) span.appendChild(document.createTextNode('d'));
-                            const i = document.createElement('i');
-                            i.textContent = dx ? dx[1] : part;
-                            span.appendChild(i);
-                        } else {
-                            span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
-                        }
-                    });
-                    frag.appendChild(span);
-                    last = at + lead + text.length;
-                    return run;
-                });
-                frag.appendChild(document.createTextNode(s.slice(last)));
-                n.parentNode.replaceChild(frag, n);
-            });
-        }
-        // 画面が書きかわるたびに、指定した場所の式を整える
-        function watchMath(selectors) {
-            let queued = false;
-            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
-            run();
-            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
-                .observe(document.body, { childList: true, subtree: true, characterData: true });
-        }
-        watchMath(['#problemContainer', '.pick-title']);   // 【ブラッシュアップ】式の書き方
-        // 初期化 - モード選択画面を表示
+        panel.querySelectorAll(".pick-btn").forEach((card) => {
+          let start = null,
+            moved = false;
+          card.addEventListener("pointerdown", (e) => {
+            start = [e.clientX, e.clientY];
+            moved = false;
+            card.setPointerCapture(e.pointerId);
+          });
+          card.addEventListener("pointermove", (e) => {
+            if (
+              start &&
+              Math.hypot(e.clientX - start[0], e.clientY - start[1]) > 8
+            )
+              moved = true;
+          });
+          card.addEventListener("pointerup", (e) => {
+            if (
+              moved &&
+              document
+                .elementFromPoint(e.clientX, e.clientY)
+                ?.closest(".ans") === btn
+            )
+              answer(card.dataset.value);
+            start = null;
+          });
+          card.addEventListener("click", () => {
+            if (!moved) answer(card.dataset.value);
+          });
+          card.addEventListener("pointercancel", () => {
+            start = null;
+            moved = false;
+          });
+        });
+      }
+      function functionTerms(problem) {
+        const s = problem.function
+          .replace(/^f\(x\)\s*=\s*/, "")
+          .replace(/\s/g, "")
+          .replace(/−/g, "-")
+          .replace(/²/g, "^2")
+          .replace(/³/g, "^3");
+        return (s.match(/[+-]?[^+-]+/g) || []).map((t) => {
+          const m = t.match(/^([+-]?)(\d*)(x(?:\^(\d+))?)?$/);
+          return [
+            (m[1] === "-" ? -1 : 1) * Number(m[2] || 1),
+            m[3] ? Number(m[4] || 1) : 0,
+          ];
+        });
+      }
+      function summaryGraph(problem, index) {
+        const terms = functionTerms(problem);
+        const f = (x) => terms.reduce((s, [c, n]) => s + c * x ** n, 0);
+        const points = [];
+        problem.table.x.forEach((v, i) => {
+          if (i && v !== "...") {
+            const x = Number(
+              v === ""
+                ? problem.answers[getAnswerKey(index, `t${index}_x_${i}`)]
+                : v,
+            );
+            points.push([x, f(x)]);
+          }
+        });
+        const range = problem.domain
+          ? [Number(problem.table.x[1]), Number(problem.table.x.at(-1))]
+          : undefined;
+        return graphSVG(f, points, [], range);
+      }
     </script>
- <script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    "h1": "u-title",
-    ".mode-btn": "u-choice",
-    "#prevBtn, #nextBtn": "u-btn u-btn-blue",
-    "#resetBtn": "u-btn u-btn-plain",
-    "#showAnswersBtn": "u-btn u-btn-plain",
-    ".back-btn": "u-btn u-btn-plain",
-    ".pick-btn": "u-choice",
-    ".pick-close": "u-btn u-btn-plain",
-    ".result-nav .next": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .plain": "u-btn u-btn-plain"
-  });
-</script>
-</body>
+  </body>
 </html>

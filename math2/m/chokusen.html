@@ -1,710 +1,1023 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-  <!--
-    数学Ⅱ 06. 直線の方程式（直線の方程式クイズ）
-    山﨑先生のキャンバ版をもとにブラッシュアップしたもの。
-    問題・画面の流れ・仕掛けは先生の版のまま。見た目は全教材共通のデザインにそろえた（【デザイン統一】）。直した箇所には【ブラッシュアップ】と書いてある。
-  -->
-  <link rel="stylesheet" href="../../assets/port.css">
-  <script src="../../assets/port.js"></script>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>直線の方程式クイズ</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>直線の方程式</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 20px;
-            min-height: 100%;
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 10px;
+        background: #f5f7fa;
+        color: #1f2328;
+        font:
+          17px/1.7 "BIZ UDPGothic",
+          sans-serif;
+      }
+      .port-back {
+        display: block;
+        max-width: 1120px;
+        margin: 0 auto 8px;
+        color: #5b6470;
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: auto;
+        background: white;
+        border: 1px solid #d0d7de;
+        border-top: 4px solid #1f4e8c;
+        border-radius: 8px;
+        padding: 14px;
+      }
+      .head {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .head small {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+      h2 {
+        font-size: 19px;
+      }
+      h3 {
+        font-size: 17px;
+      }
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .menu-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        text-align: left;
+        min-height: 135px;
+        padding: 12px !important;
+      }
+      .menu-card svg {
+        width: 70px;
+        height: 42px;
+      }
+      .menu-card small {
+        font-size: 12px;
+        color: #5b6470;
+        line-height: 1.7;
+      }
+      .menu-card b {
+        font-size: 16px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 6px 0 12px;
+        font-size: 13px;
+        color: #5b6470;
+      }
+      button {
+        font:
+          15px "BIZ UDPGothic",
+          sans-serif;
+        min-height: 44px;
+        padding: 8px 14px;
+        border: 1px solid #c5d3e4;
+        border-bottom: 3px solid #b6bfc9;
+        border-radius: 6px;
+        background: white;
+        color: #1f4e8c;
+        cursor: pointer;
+        transition: transform 0.08s;
+      }
+      button:not(:disabled):active {
+        transform: translateY(2px);
+        border-bottom-width: 1px;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.65;
+      }
+      .primary {
+        background: #1f4e8c;
+        color: white;
+        border-color: #1f4e8c;
+        border-bottom-color: #163a69;
+      }
+      .question-no {
+        background: #1f4e8c;
+        color: white;
+        padding: 2px 8px;
+      }
+      .problem {
+        font-size: 23px;
+        margin: 16px 0 8px;
+      }
+      .ask {
+        font-size: 17px;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+      }
+      .choice {
+        position: relative;
+        min-height: 76px;
+        font-size: 22px;
+        padding: 22px 8px 12px;
+        color: #1f2328;
+      }
+      .choice::before {
+        content: attr(data-label);
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font: 12px "BIZ UDPGothic";
+        color: #5b6470;
+      }
+      .choice.correct {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .choice.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .feedback,
+      .hint-box,
+      .explain-box {
+        padding: 12px;
+        border-left: 4px solid #1f4e8c;
+        background: #f1f6fc;
+        margin-top: 12px;
+        font-size: 16px;
+      }
+      .feedback.correct,
+      .explain-box.ok {
+        background: #ebfbee;
+        border-color: #2b8a3e;
+      }
+      .feedback.incorrect {
+        background: #fff5f5;
+        border-color: #c92a2a;
+      }
+      .hint-tag {
+        display: block;
+        font-size: 13px;
+        color: #1f4e8c;
+        margin-bottom: 4px;
+      }
+      .formula {
+        background: #f5f0ff;
+        border-left: 3px solid #9366d5;
+        padding: 8px;
+        margin: 8px 0;
+      }
+      .formula b {
+        font: 12px "BIZ UDPGothic";
+        color: #6e40c9;
+        margin-right: 10px;
+      }
+      .controls,
+      .result-nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .result-nav a {
+        font-size: 14px;
+        color: #1f4e8c;
+        padding: 10px;
+      }
+      .result-score {
+        font-size: 24px;
+        color: #1f4e8c;
+      }
+      .m {
+        font-family: "STIX Two Text", serif;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+      .m i {
+        font-style: italic;
+      }
+      sup {
+        font-size: 0.72em;
+        line-height: 0;
+        vertical-align: 0.55em;
+      }
+      .fraction {
+        display: inline-flex;
+        flex-direction: column;
+        vertical-align: middle;
+        text-align: center;
+        line-height: 1.15;
+        margin: 0 0.1em;
+        font-family: "STIX Two Text";
+        font-weight: 400;
+      }
+      .numerator {
+        border-bottom: 1px solid;
+        padding: 0 0.15em 0.1em;
+      }
+      .denominator {
+        padding: 0.12em 0.15em 0;
+      }
+      .equation {
+        font-size: 19px;
+        margin: 8px 0;
+        line-height: 1.9;
+      }
+      .eqpart {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .explain-title {
+        margin-bottom: 8px;
+        font-size: 17px;
+      }
+      .input-section {
+        margin: 16px 0;
+      }
+      input {
+        font: 21px "STIX Two Text";
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid #9db6d6;
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .input-tools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 8px 0;
+      }
+      .input-tools button {
+        min-width: 42px;
+        padding: 6px;
+      }
+      .input-feedback {
+        font-size: 15px;
+        margin-top: 8px;
+        color: #a61e1e;
+      }
+      .input-help {
+        font-size: 14px;
+        margin-top: 12px;
+      }
+      .review-item {
+        border-top: 1px solid #d0d7de;
+        padding: 14px 0;
+      }
+      .review-item svg {
+        display: block;
+        width: 300px;
+        max-width: 100%;
+        margin: 12px auto;
+      }
+      .review-item summary {
+        cursor: pointer;
+        color: #1f4e8c;
+      }
+      .formula .m {
+        font-size: 18px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .progress-track {
+        height: 3px;
+        background: #e6edf5;
+        margin: 10px 0;
+      }
+      .progress-track span {
+        display: block;
+        height: 3px;
+        background: #1f4e8c;
+      }
+      .level-label {
+        font-size: 14px;
+        color: #8056a1;
+      }
+      .keyboard-note {
+        font-size: 12px;
+        color: #5b6470;
+      }
+      .math-fit {
+        max-width: 100%;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .wrap {
+          max-width: 1120px;
+          padding: 20px;
         }
+        .quiz-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 370px;
+          gap: 24px;
+          align-items: start;
+        }
+        .answer-panel {
+          position: sticky;
+          top: 12px;
+        }
+        .choices {
+          margin-top: 0;
+        }
+        .menu-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .menu-grid.modes {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
 
-        html, body {
-            height: 100%;
+      .equal {
+        display: inline-block;
+        margin: 0 0.28em;
+      }
+      .figure svg {
+        width: 280px;
+        max-width: 100%;
+        height: 180px;
+        display: block;
+        margin: auto;
+      }
+      .point-labels {
+        text-align: center;
+        font-size: 14px;
+      }
+      .figure {
+        margin: 8px 0;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+      .menu-card {
+        min-height: 100px;
+      }
+      .menu-card .example {
+        font-size: 20px;
+      }
+      .equation .eqpart {
+        max-width: 100%;
+      }
+      .choices .choice .m {
+        display: inline-block;
+      }
+      .toolbar button {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+      #menu > p {
+        font-size: 14px;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .figure svg {
+          height: 220px;
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+        .menu-card {
+          max-width: 450px;
         }
-
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-
-        .header p {
-            margin: 10px 0 0 0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .quiz-container {
-            padding: 40px;
-        }
-
-        .question-card {
-            background: #f8f9ff;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-left: 5px solid #4facfe;
-            display: none;
-        }
-
-        .question-card.active {
-            display: block;
-        }
-
-        .question-number {
-            color: #4facfe;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-        }
-
-        .question-text {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .options {
-            display: grid;
-            gap: 15px;
-        }
-
-        .option {
-            background: white;
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .option:hover {
-            border-color: #4facfe;
-            background: #f0f8ff;
-            transform: translateY(-2px);
-        }
-
-        .option.selected {
-            border-color: #4facfe;
-            background: #e6f3ff;
-        }
-
-        .option.incorrect {
-            border-color: #dc3545;
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 25px;
-            display: none;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
-        }
-
-        .submit-btn.show {
-            display: inline-block;
-        }
-
-        .next-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 25px;
-            display: none;
-        }
-
-        .next-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
-        }
-
-        .next-btn.show {
-            display: inline-block;
-        }
-
-        .progress {
-            background: #e9ecef;
-            height: 8px;
-            border-radius: 4px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-            width: 20%;
-        }
-
-        .result-card {
-            background: #f8f9ff;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            display: none;
-        }
-
-        .result-card.show {
-            display: block;
-        }
-
-        .score {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #4facfe;
-            margin-bottom: 20px;
-        }
-
-        .restart-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-
-        .restart-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .retry-btn {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 25px;
-            margin-left: 15px;
-            display: none;
-        }
-
-        .retry-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
-        }
-
-        .retry-btn.show {
-            display: inline-block;
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: none;
-            animation: celebration 0.6s ease-out;
-        }
-
-        .success-message.show {
-            display: block;
-        }
-
-        @keyframes celebration {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .hint-buttons {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .hint-btn {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            color: #8b4513;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .hint-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(252, 182, 159, 0.3);
-        }
-
-        .hint-content {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .hint-content.show {
-            display: block;
-        }
-
-        .hint-content h5 {
-            color: #2d5016;
-            margin: 0 0 8px 0;
-            font-size: 1rem;
-        }
-
-        .hint-content p {
-            color: #2d5016;
-            margin: 0;
-            line-height: 1.4;
-            font-size: 0.95rem;
-        }
-
-        .explanation {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .explanation.show {
-            display: block;
-        }
-
-        .explanation h4 {
-            color: #856404;
-            margin: 0 0 10px 0;
-        }
-
-        .explanation p {
-            color: #856404;
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        .wrong-explanation {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .wrong-explanation.show {
-            display: block;
-        }
-
-        .wrong-explanation h4 {
-            color: #721c24;
-            margin: 0 0 10px 0;
-        }
-
-        .wrong-explanation p {
-            color: #721c24;
-            margin: 0;
-            line-height: 1.5;
-        }
+      }
     </style>
-  <!-- 【デザイン統一】全教材共通のデザイン（01. 文字式のルール がもと） -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
-  <link rel="stylesheet" href="../../assets/theme.css">
-  <style>
-    /* 【デザイン統一】この教材の部品を、共通デザインの色・形に塗り直す */
-
-    html, body { height: auto; }
-    body { padding: 12px; }
-    .container { overflow: visible; padding: 20px 16px; }
-    .header { background: none; color: var(--u-ink); padding: 4px 4px 0; }
-    .header h1 { font-size: min(2.3rem, 7vw); white-space: nowrap; margin: 0 0 6px; }
-    .header p { color: var(--u-sub); font-weight: 700; opacity: 1; }
-    .quiz-container { padding: 12px 4px; }
-    .question-card { background: #f8fafc; border: 3px solid var(--u-line); border-left-width: 3px; border-radius: 24px; }
-    .question-number { display: inline-block; background: var(--u-soft-yellow); color: var(--u-soft-yellow-text); padding: 4px 16px; border-radius: 999px; }
-    .question-text { color: var(--u-ink); font-weight: 800; }
-    .option { font-size: 1.25rem; font-weight: 700; text-align: center; width: 100%; }
-    /* 【ブラッシュアップ】式の中の文字は斜体・数字は立体、書体は数式用（日本語はふつうの書体） */
-    .m { font-family: var(--u-math-font); font-size: 1.08em; }
-    .m i { font-style: italic; padding-right: 0.04em; }
-
-    .option:disabled { cursor: default; }
-    .hint-btn:not(.plain) { background: #fbbf24 !important; border-bottom-color: #d97706 !important; color: #78350f !important; }
-    .hint-buttons { justify-content: center; }
-    .hint-content { background: var(--u-soft-blue); border: 2px solid var(--u-soft-blue-line); border-radius: 16px; }
-    .hint-content h5, .hint-content p { color: var(--u-title); }
-    .hint-content p { font-size: 1.02rem; font-weight: 700; line-height: 1.9; }
-    .success-message { background: var(--u-ok-soft); color: var(--u-ok); border: 3px solid var(--u-ok-line); border-radius: 16px; }
-    .answer-message { background: #fff; color: var(--u-ink); border: 3px dashed var(--u-line); border-radius: 16px; padding: 14px; margin-top: 20px; text-align: center; font-size: 1.2rem; font-weight: 700; }
-    .explanation { background: #fff; border: 3px dashed var(--u-line); border-radius: 16px; }
-    .explanation h4, .explanation p { color: var(--u-ink); }
-    .explanation p { line-height: 1.9; }
-    .wrong-explanation { background: var(--u-ng-soft); border: 3px solid var(--u-ng-line); border-radius: 16px; padding: 12px 16px; }
-    .wrong-explanation h4, .wrong-explanation p { color: var(--u-ng); }
-    .wrong-explanation h4 { margin-bottom: 4px; }
-    .next-btn, .retry-btn { margin-top: 14px; }
-    .next-btn.show { display: block; width: 100%; max-width: 360px; margin-left: auto; margin-right: auto; }
-    .progress-bar { width: 0%; }
-    .fraction { display: inline-block; vertical-align: middle; text-align: center; margin: 0 2px; font-size: 0.85em; line-height: 1.15; }
-    .fraction .numerator { display: block; border-bottom: 2px solid currentColor; padding: 0 2px; }
-    .fraction .denominator { display: block; padding: 0 2px; }
-    .result-card { background: #fff; border: 4px dashed var(--u-line); border-radius: 24px; }
-    .result-card h2 { color: var(--u-accent-text); white-space: nowrap; font-size: min(2rem, 7.5vw); }
-    .score { color: var(--u-title); }
-    .score-label { font-size: 1rem; color: var(--u-sub); }
-    #resultMessage { color: var(--u-ink); font-weight: 700; line-height: 1.8; }
-    .result-nav { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 16px auto 0; }
-    .result-nav button, .result-nav a.next { padding: 12px; margin: 0; }
-    .result-nav a { color: var(--u-sub); font-weight: 700; }
-    .result-nav a.next { display: block; color: #fff; text-decoration: none; }
-    @media (max-width: 640px) {
-      body { padding: 8px; }
-      .container { padding: 14px 10px; }
-      .question-card { padding: 16px 10px; }
-      .question-text { font-size: 1.1rem; margin-bottom: 14px; }
-      .options { gap: 10px; }
-      .option { padding: 12px 8px; font-size: 1.15rem; }
-      .hint-btn { padding: 10px 14px; font-size: 0.95rem; }
-    }
-  
-  </style>
-</head>
-<body class="u-theme">
+  </head>
+  <body>
     <a class="port-back" href="../index.html">← 教材の一覧へ</a>
-    <div class="container">
-        <header class="header">
-            <h1>📐 直線の方程式クイズ</h1>
-            <p>点と傾き・2 点から、直線の方程式を求めよう！（全11問）</p>
-        </header>
-
-        <main class="quiz-container">
-            <div class="progress">
-                <div class="progress-bar" id="progressBar"></div>
+    <main class="wrap">
+      <header class="head">
+        <small>数学Ⅱ　微分・積分</small>
+        <h1>直線の方程式</h1>
+      </header>
+      <section id="menu">
+        <p>点と傾き・2点・水平と垂直の直線を、全11問で練習します。</p>
+        <div class="menu-grid">
+          <button class="menu-card" onclick="start()">
+            <span class="example" id="menuExample"></span><b>練習を始める</b>
+          </button>
+        </div>
+      </section>
+      <section id="quiz" hidden>
+        <div class="toolbar">
+          <span id="status" class="question-no"></span
+          ><button onclick="start()">もう一度やり直す</button
+          ><button onclick="showMenu()">最初の画面へ</button>
+        </div>
+        <div class="quiz-grid">
+          <div>
+            <div id="question" class="ask"></div>
+            <div id="figure" class="figure"></div>
+            <div id="hints"></div>
+            <div id="feedback" hidden aria-live="polite"></div>
+          </div>
+          <div class="answer-panel">
+            <div id="choices" class="choices"></div>
+            <div id="help" class="controls">
+              <button onclick="showHint(1)">考え方</button
+              ><button onclick="showHint(2)">途中式</button
+              ><button onclick="showHint(3)">答えを見る</button>
             </div>
-
-            <!-- 【ブラッシュアップ】問題はスクリプトの questions から作る -->
-            <div id="cards"></div>
-
-            <!-- 結果画面 -->
-            <div class="result-card" id="result">
-                <h2>🎉 クイズ完了！</h2>
-                <div class="score" id="scoreDisplay">0/5</div>
-                <p id="resultMessage">お疲れさまでした！</p>
-                <!-- 【ブラッシュアップ】次の教材・ほかの教材も選べるようにした -->
-                <div class="result-nav">
-                    <button class="again" onclick="restartQuiz()">もう一度挑戦</button>
-                    <a class="next" href="sessen.html">つぎは「接線の方程式」へ ▶</a>
-                    <a href="../index.html">ほかの教材をえらぶ</a>
-                </div>
-            </div>
-        </main>
-    </div>
-
+            <button
+              id="next"
+              class="primary"
+              onclick="nextQuestion()"
+              hidden
+            ></button>
+          </div>
+        </div>
+      </section>
+      <section id="result" hidden>
+        <h2>学習の結果</h2>
+        <p id="score" class="result-score"></p>
+        <p>ヒントなしで正解した問題の数です。</p>
+        <div class="result-nav">
+          <button class="primary" onclick="start()">もう一度</button
+          ><button onclick="showMenu()">最初の画面へ</button
+          ><a href="sessen.html">次の教材へ</a
+          ><a href="../index.html">ほかの教材へ</a>
+        </div>
+      </section>
+    </main>
     <script>
-        // 【ブラッシュアップ】問題を 5 問 → 11 問にし、段階をつけた
-        //   1〜5 ：点と傾き（先生の 5 問）
-        //   6    ：傾きが分数
-        //   7・8 ：傾き 0（y = b）と、x 軸に垂直な直線（x = a）
-        //   9〜11：2 点を通る直線（11 は傾きが分数）
-        //   答えは y = mx + n（x 軸に垂直なときは x = a）にそろえた。数は [分子, 分母] でも書ける。
-        //   wrong は まちがいの選択肢：[傾き, 切片] か { x: 数 }（x = 数 の直線）
-        const questions = [
-            { type: 'ps', p: [1, 3], m: 4,        wrong: [[4, -11], [3, 1], [4, 3]] },
-            { type: 'ps', p: [-2, 5], m: -3,      wrong: [[-3, 11], [3, 11], [-3, 5]] },
-            { type: 'ps', p: [0, -1], m: 2,       wrong: [[2, 1], [-1, 2], [2, 0]] },
-            { type: 'ps', p: [3, -4], m: 3,       wrong: [[3, -5], [3, 13], [3, -9]] },
-            { type: 'ps', p: [-1, -2], m: -2,     wrong: [[-2, 4], [-2, -3], [2, 0]] },
-            { type: 'ps', p: [4, 1], m: [1, 2],   wrong: [[[1, 2], -3], [2, -7], [[1, 2], 1]] },
-            { type: 'ps', p: [2, -3], m: 0,       wrong: [{ x: 2 }, [-3, 0], { x: -3 }] },
-            { type: '2p', p: [2, 1], r: [2, 5],   wrong: [[0, 2], [0, 3], [4, -7]] },
-            { type: '2p', p: [1, 2], r: [3, 8],   wrong: [[[1, 3], [5, 3]], [3, 2], [-3, 5]] },
-            { type: '2p', p: [-1, 4], r: [3, -4], wrong: [[2, 6], [[-1, 2], [7, 2]], [-2, 6]] },
-            { type: '2p', p: [1, 3], r: [4, 5],   wrong: [[[3, 2], [3, 2]], [[2, 3], 3], [[2, 3], [11, 3]]] }
+      const TANGENT = false;
+      const questions = [
+        {
+          type: "ps",
+          p: [1, 3],
+          m: 4,
+          wrong: [
+            [4, -11],
+            [3, 1],
+            [4, 3],
+          ],
+        },
+        {
+          type: "ps",
+          p: [-2, 5],
+          m: -3,
+          wrong: [
+            [-3, 11],
+            [3, 11],
+            [-3, 5],
+          ],
+        },
+        {
+          type: "ps",
+          p: [0, -1],
+          m: 2,
+          wrong: [
+            [2, 1],
+            [-1, 2],
+            [2, 0],
+          ],
+        },
+        {
+          type: "ps",
+          p: [3, -4],
+          m: 3,
+          wrong: [
+            [3, -5],
+            [3, 13],
+            [3, -9],
+          ],
+        },
+        {
+          type: "ps",
+          p: [-1, -2],
+          m: -2,
+          wrong: [
+            [-2, 4],
+            [-2, -3],
+            [2, 0],
+          ],
+        },
+        {
+          type: "ps",
+          p: [4, 1],
+          m: [1, 2],
+          wrong: [
+            [[1, 2], -3],
+            [2, -7],
+            [[1, 2], 1],
+          ],
+        },
+        { type: "ps", p: [2, -3], m: 0, wrong: [{ x: 2 }, [-3, 0], { x: -3 }] },
+        {
+          type: "2p",
+          p: [2, 1],
+          r: [2, 5],
+          wrong: [
+            [0, 2],
+            [0, 3],
+            [4, -7],
+          ],
+        },
+        {
+          type: "2p",
+          p: [1, 2],
+          r: [3, 8],
+          wrong: [
+            [
+              [1, 3],
+              [5, 3],
+            ],
+            [3, 2],
+            [-3, 5],
+          ],
+        },
+        {
+          type: "2p",
+          p: [-1, 4],
+          r: [3, -4],
+          wrong: [
+            [2, 6],
+            [
+              [-1, 2],
+              [7, 2],
+            ],
+            [-2, 6],
+          ],
+        },
+        {
+          type: "2p",
+          p: [1, 3],
+          r: [4, 5],
+          wrong: [
+            [
+              [3, 2],
+              [3, 2],
+            ],
+            [[2, 3], 3],
+            [
+              [2, 3],
+              [11, 3],
+            ],
+          ],
+        },
+      ];
+
+      // ---- 分数の計算（[分子, 分母]） ----
+      const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
+      const F = (v) => {
+        let [p, q] = Array.isArray(v) ? v : [v, 1];
+        if (q < 0) {
+          p = -p;
+          q = -q;
+        }
+        const g = gcd(p, q) || 1;
+        return [p / g, q / g];
+      };
+      const add = (a, b) => F([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
+      const mul = (a, b) => F([a[0] * b[0], a[1] * b[1]]);
+      const neg = (a) => [-a[0], a[1]];
+      const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
+      const MINUS = "−";
+      const frac = (p, q) =>
+        `<span class="fraction"><span class="numerator">${p}</span><span class="denominator">${q}</span></span>`;
+      const absTxt = (a) =>
+        a[1] === 1 ? String(Math.abs(a[0])) : frac(Math.abs(a[0]), a[1]);
+      const numTxt = (a) => (a[0] < 0 ? MINUS : "") + absTxt(a);
+      const coefTxt = (a) =>
+        a[0] === 1 && a[1] === 1
+          ? ""
+          : a[0] === -1 && a[1] === 1
+            ? MINUS
+            : numTxt(a);
+      const plusTxt = (a) => (a[0] < 0 ? ` ${MINUS} ` : " + ") + absTxt(a); // 2 項目以降の「+ 3」「− 3」
+      const shift = (v, name) => (v[0] === 0 ? name : name + plusTxt(neg(v))); // x − a の形
+      const pt = (p) => `(${numTxt(F(p[0]))}, ${numTxt(F(p[1]))})`;
+
+      // 直線の表し方：{ m, n }（y = mx + n）か { x }（x = 数）
+      function lineTxt(L) {
+        if (L.x !== undefined) return "x = " + numTxt(L.x);
+        if (L.m[0] === 0) return "y = " + numTxt(L.n);
+        return "y = " + coefTxt(L.m) + "x" + (L.n[0] === 0 ? "" : plusTxt(L.n));
+      }
+      const toLine = (w) =>
+        Array.isArray(w) ? { m: F(w[0]), n: F(w[1]) } : { x: F(w.x) };
+      const sameLine = (a, b) =>
+        a.x !== undefined || b.x !== undefined
+          ? a.x !== undefined && b.x !== undefined && eq(a.x, b.x)
+          : eq(a.m, b.m) && eq(a.n, b.n);
+
+      // 問題ごとに、正解の直線・問題文・ヒント（方針 → 途中式 → 答え）を作る
+      function build(q) {
+        const a = F(q.p[0]),
+          b = F(q.p[1]);
+        let line, text, plan, mid;
+        if (q.type === "2p" && q.p[0] === q.r[0]) {
+          line = { x: a };
+          text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
+          plan =
+            "2 点の x 座標が同じだね。傾きの式の分母が 0 になるので、傾きは求められない。この直線は x 軸に垂直で、x = （一定の数）の形になるよ。";
+          mid = `どちらの点も x 座標が ${numTxt(a)} なので、この直線上の点はすべて x 座標が ${numTxt(a)}`;
+        } else {
+          let m;
+          if (q.type === "2p") {
+            const dy = add(F(q.r[1]), neg(b)),
+              dx = add(F(q.r[0]), neg(a));
+            m = mul(dy, [dx[1], dx[0]]);
+            text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
+            plan =
+              "まず傾き m = " +
+              frac("y の増加量", "x の増加量") +
+              " を求めよう。そのあと、点 (a, b) を通り傾き m の直線 y − b = m(x − a) に入れて、y = mx + n の形に整理しよう。";
+            mid = `傾きは ${frac(numTxt(F(q.r[1])) + " " + MINUS + " " + (q.p[1] < 0 ? "(" + numTxt(b) + ")" : numTxt(b)), numTxt(F(q.r[0])) + " " + MINUS + " " + (q.p[0] < 0 ? "(" + numTxt(a) + ")" : numTxt(a)))} = ${numTxt(m)}。点 ${pt(q.p)} を通るので `;
+          } else {
+            m = F(q.m);
+            text = `点 ${pt(q.p)} を通り、傾きが ${numTxt(m)} の直線の方程式はどれか？`;
+            plan =
+              m[0] === 0
+                ? "傾きが 0 の直線は x 軸に平行で、y = （一定の数）の形になるよ。公式 y − b = m(x − a) に入れてみよう。"
+                : "点 (a, b) を通り傾き m の直線は y − b = m(x − a)。代入してから、y = mx + n の形に整理しよう。";
+            mid = "";
+          }
+          const n = add(mul(neg(m), a), b);
+          line = { m, n };
+          if (m[0] === 0) {
+            mid += `${shift(b, "y")} = 0·(${shift(a, "x")})、つまり ${shift(b, "y")} = 0`;
+          } else {
+            const ma = mul(neg(m), a); // −ma
+            mid +=
+              `${shift(b, "y")} = ${a[0] === 0 ? coefTxt(m) + "x" : coefTxt(m) + "(" + shift(a, "x") + ")"}、` +
+              `y = ${coefTxt(m)}x${ma[0] === 0 ? "" : plusTxt(ma)}${b[0] === 0 ? "" : plusTxt(b)}`;
+          }
+        }
+        const answer = lineTxt(line);
+        const opts = [{ text: answer, ok: true }].concat(
+          q.wrong.map((w) => {
+            const L = toLine(w);
+            return { text: lineTxt(L), ok: sameLine(L, line) };
+          }),
+        );
+        return { text, plan, mid, answer, opts };
+      }
+
+      // 数式のHTMLは、文字だけ斜体・数字は立体。式の行と日本語の説明を分ける。
+      function mathHTML(html) {
+        return String(html)
+          .split(/(<[^>]+>)/g)
+          .map((part, i) =>
+            i % 2
+              ? part
+              : part.replace(
+                  /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()+−=×÷·.,^\- ]+/g,
+                  (run) => {
+                    if (!/[A-Za-z0-9ⁿ]/.test(run)) return run;
+                    let text = run
+                      .replace(/'/g, "′")
+                      .replace(/-/g, "−")
+                      .replace(/\^(\d+)/g, (_, n) => "<sup>" + n + "</sup>");
+                    text = text.replace(
+                      /[ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g,
+                      (x) =>
+                        "<sup>" +
+                        [...x]
+                          .map((c) =>
+                            c === "ⁿ"
+                              ? "n"
+                              : c === "⁻"
+                                ? "−"
+                                : "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c),
+                          )
+                          .join("") +
+                        "</sup>",
+                    );
+                    text = text
+                      .split(/(<[^>]+>)/g)
+                      .map((x, j) =>
+                        j % 2
+                          ? x
+                          : x.replace(/[A-Za-z]+/g, (letters) =>
+                              ["sin", "cos", "tan", "log"].includes(letters)
+                                ? letters
+                                : "<i>" + letters + "</i>",
+                            ),
+                      )
+                      .join("");
+                    return '<span class="m">' + text + "</span>";
+                  },
+                ),
+          )
+          .join("");
+      }
+      function fitMath() {
+        document
+          .querySelectorAll(".problem,.choice,.eqpart,.ask")
+          .forEach((e) => {
+            e.style.fontSize = "";
+            const max = e.classList.contains("eqpart")
+              ? e.parentElement.clientWidth
+              : e.clientWidth;
+            let size = parseFloat(getComputedStyle(e).fontSize);
+            while (e.scrollWidth > max + 1 && size > 15) {
+              size -= 0.5;
+              e.style.fontSize = size + "px";
+            }
+          });
+      }
+      // 等号を独立した要素にし、折り返しの前後でも左右の間隔を保つ。
+      function lessonMath(html) {
+        return mathHTML(html)
+          .split(/(<[^>]+>)/g)
+          .map((s, i) =>
+            i % 2 ? s : s.replace(/\s*=\s*/g, '<span class="equal">=</span>'),
+          )
+          .join("");
+      }
+      function lessonSteps(mid) {
+        return String(mid)
+          .replace(/<br\s*\/?\s*>/g, "。")
+          .split(/(?:。|、つまり |、(?=y =)| なので、?| なので | より )/)
+          .filter(Boolean)
+          .map(
+            (line) =>
+              '<div class="equation">' +
+              line
+                .split(" = ")
+                .map(
+                  (s, i) =>
+                    '<span class="eqpart">' +
+                    (i ? '<span class="equal">=</span>' : "") +
+                    lessonMath(s) +
+                    "</span>",
+                )
+                .join("<wbr>") +
+              "</div>",
+          )
+          .join("");
+      }
+      function graphSVG(fn, points = [], lines = [], range) {
+        const xs = points.map((p) => p[0]);
+        let xmin = range ? range[0] : Math.min(-3, ...xs) - 1,
+          xmax = range ? range[1] : Math.max(3, ...xs) + 1;
+        const samples = Array.from(
+          { length: 121 },
+          (_, i) => xmin + ((xmax - xmin) * i) / 120,
+        );
+        const ys = [
+          0,
+          ...points.map((p) => p[1]),
+          ...samples.map((x) => (fn ? fn(x) : 0)),
+          ...lines.flatMap((l) =>
+            l.x !== undefined ? [] : samples.map((x) => l.m * x + l.n),
+          ),
         ];
+        let ymin = Math.min(...ys),
+          ymax = Math.max(...ys),
+          pad = Math.max(1, (ymax - ymin) * 0.12);
+        ymin -= pad;
+        ymax += pad;
+        const X = (x) => 30 + ((x - xmin) / (xmax - xmin)) * 260,
+          Y = (y) => 185 - ((y - ymin) / (ymax - ymin)) * 160;
+        const path = (f) =>
+          samples
+            .map(
+              (x, i) =>
+                (i ? "L" : "M") + X(x).toFixed(2) + " " + Y(f(x)).toFixed(2),
+            )
+            .join(" ");
+        const text = (x, y, t, anchor = "middle") =>
+          '<text x="' +
+          x +
+          '" y="' +
+          y +
+          '" text-anchor="' +
+          anchor +
+          '" font-family="STIX Two Text,serif" font-size="13">' +
+          String(t).replace(/-/g, "−") +
+          "</text>";
+        return (
+          '<svg viewBox="0 0 320 215" role="img" aria-label="座標とグラフ"><path d="M30 ' +
+          Y(0) +
+          "H290" +
+          (xmin <= 0 && xmax >= 0 ? "M" + X(0) + " 20V190" : "") +
+          '" stroke="#aeb8c5" fill="none"/>' +
+          text(301, Y(0) + 4, "x") +
+          (xmin <= 0 && xmax >= 0 ? text(X(0) + 9, 15, "y") : "") +
+          text(30, 207, xmin) +
+          text(290, 207, xmax) +
+          text(25, Y(Math.floor(ymax)) + 4, Math.floor(ymax), "end") +
+          text(25, Y(Math.ceil(ymin)) + 4, Math.ceil(ymin), "end") +
+          (fn
+            ? '<path d="' +
+              path(fn) +
+              '" fill="none" stroke="#1f4e8c" stroke-width="2"/>'
+            : "") +
+          lines
+            .map(
+              (l) =>
+                '<path d="' +
+                (l.x !== undefined
+                  ? "M" + X(l.x) + " 25V185"
+                  : path((x) => l.m * x + l.n)) +
+                '" stroke="#d9480f" stroke-width="2" fill="none"/>',
+            )
+            .join("") +
+          points
+            .map(
+              (p, i) =>
+                '<circle cx="' +
+                X(p[0]) +
+                '" cy="' +
+                Y(p[1]) +
+                '" r="3" fill="#d9480f"/>' +
+                text(
+                  X(p[0]) + 9,
+                  Y(p[1]) - 8,
+                  String.fromCharCode(65 + i),
+                  "start",
+                ),
+            )
+            .join("") +
+          '</svg><div class="point-labels">' +
+          points
+            .map((p, i) =>
+              lessonMath(
+                String.fromCharCode(65 + i) + "(" + p[0] + ", " + p[1] + ")",
+              ),
+            )
+            .join("　") +
+          "</div>"
+        );
+      }
 
-        // ---- 分数の計算（[分子, 分母]） ----
-        const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
-        const F = (v) => { let [p, q] = Array.isArray(v) ? v : [v, 1]; if (q < 0) { p = -p; q = -q; } const g = gcd(p, q) || 1; return [p / g, q / g]; };
-        const add = (a, b) => F([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
-        const mul = (a, b) => F([a[0] * b[0], a[1] * b[1]]);
-        const neg = (a) => [-a[0], a[1]];
-        const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
-        const MINUS = '−';
-        const frac = (p, q) => `<span class="fraction"><span class="numerator">${p}</span><span class="denominator">${q}</span></span>`;
-        const absTxt = (a) => (a[1] === 1 ? String(Math.abs(a[0])) : frac(Math.abs(a[0]), a[1]));
-        const numTxt = (a) => (a[0] < 0 ? MINUS : '') + absTxt(a);
-        const coefTxt = (a) => (a[0] === 1 && a[1] === 1 ? '' : a[0] === -1 && a[1] === 1 ? MINUS : numTxt(a));
-        const plusTxt = (a) => (a[0] < 0 ? ` ${MINUS} ` : ' + ') + absTxt(a);   // 2 項目以降の「+ 3」「− 3」
-        const shift = (v, name) => (v[0] === 0 ? name : name + plusTxt(neg(v)));   // x − a の形
-        const pt = (p) => `(${numTxt(F(p[0]))}, ${numTxt(F(p[1]))})`;
-
-        // 直線の表し方：{ m, n }（y = mx + n）か { x }（x = 数）
-        function lineTxt(L) {
-            if (L.x !== undefined) return 'x = ' + numTxt(L.x);
-            if (L.m[0] === 0) return 'y = ' + numTxt(L.n);
-            return 'y = ' + coefTxt(L.m) + 'x' + (L.n[0] === 0 ? '' : plusTxt(L.n));
+      const $ = (id) => document.getElementById(id);
+      let currentQuestion = 0,
+        score = 0,
+        stage = 0,
+        answered = false,
+        built,
+        options;
+      function start() {
+        currentQuestion = score = 0;
+        $("menu").hidden = true;
+        $("result").hidden = true;
+        $("quiz").hidden = false;
+        renderQuestion();
+      }
+      function showMenu() {
+        $("menu").hidden = false;
+        $("quiz").hidden = true;
+        $("result").hidden = true;
+      }
+      function figure(reveal = false) {
+        const q = questions[currentQuestion];
+        if (TANGENT) {
+          let points =
+            q.type === "pt" || q.type === "x"
+              ? [[q.a, eva(q.f, q.a)]]
+              : q.p
+                ? [q.p]
+                : [];
+          if (reveal)
+            points = (q.xs || q.ts || [q.a]).map((x) => [x, eva(q.f, x)]);
+          return graphSVG(
+            (x) => eva(q.f, x),
+            points,
+            reveal ? built.lines.map((l) => ({ m: l[0], n: l[1] })) : [],
+          );
         }
-        const toLine = (w) => (Array.isArray(w) ? { m: F(w[0]), n: F(w[1]) } : { x: F(w.x) });
-        const sameLine = (a, b) => (a.x !== undefined || b.x !== undefined)
-            ? (a.x !== undefined && b.x !== undefined && eq(a.x, b.x))
-            : (eq(a.m, b.m) && eq(a.n, b.n));
-
-        // 問題ごとに、正解の直線・問題文・ヒント（方針 → 途中式 → 答え）を作る
-        function build(q) {
-            const a = F(q.p[0]), b = F(q.p[1]);
-            let line, text, plan, mid;
-            if (q.type === '2p' && q.p[0] === q.r[0]) {
-                line = { x: a };
-                text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
-                plan = '2 点の x 座標が同じだね。傾きの式の分母が 0 になるので、傾きは求められない。この直線は x 軸に垂直で、x = （一定の数）の形になるよ。';
-                mid = `どちらの点も x 座標が ${numTxt(a)} なので、この直線上の点はすべて x 座標が ${numTxt(a)}`;
-            } else {
-                let m;
-                if (q.type === '2p') {
-                    const dy = add(F(q.r[1]), neg(b)), dx = add(F(q.r[0]), neg(a));
-                    m = mul(dy, [dx[1], dx[0]]);
-                    text = `2 点 ${pt(q.p)}、${pt(q.r)} を通る直線の方程式はどれか？`;
-                    plan = 'まず傾き m = ' + frac('y の増加量', 'x の増加量') + ' を求めよう。そのあと、点 (a, b) を通り傾き m の直線 y − b = m(x − a) に入れて、y = mx + n の形に整理しよう。';
-                    mid = `傾きは ${frac(numTxt(F(q.r[1])) + ' ' + MINUS + ' ' + (q.p[1] < 0 ? '(' + numTxt(b) + ')' : numTxt(b)), numTxt(F(q.r[0])) + ' ' + MINUS + ' ' + (q.p[0] < 0 ? '(' + numTxt(a) + ')' : numTxt(a)))} = ${numTxt(m)}。点 ${pt(q.p)} を通るので `;
-                } else {
-                    m = F(q.m);
-                    text = `点 ${pt(q.p)} を通り、傾きが ${numTxt(m)} の直線の方程式はどれか？`;
-                    plan = m[0] === 0
-                        ? '傾きが 0 の直線は x 軸に平行で、y = （一定の数）の形になるよ。公式 y − b = m(x − a) に入れてみよう。'
-                        : '点 (a, b) を通り傾き m の直線は y − b = m(x − a)。代入してから、y = mx + n の形に整理しよう。';
-                    mid = '';
-                }
-                const n = add(mul(neg(m), a), b);
-                line = { m, n };
-                if (m[0] === 0) {
-                    mid += `${shift(b, 'y')} = 0·(${shift(a, 'x')})、つまり ${shift(b, 'y')} = 0`;
-                } else {
-                    const ma = mul(neg(m), a);   // −ma
-                    mid += `${shift(b, 'y')} = ${a[0] === 0 ? coefTxt(m) + 'x' : coefTxt(m) + '(' + shift(a, 'x') + ')'}、` +
-                        `y = ${coefTxt(m)}x${ma[0] === 0 ? '' : plusTxt(ma)}${b[0] === 0 ? '' : plusTxt(b)}`;
-                }
-            }
-            const answer = lineTxt(line);
-            const opts = [{ text: answer, ok: true }].concat(q.wrong.map(w => { const L = toLine(w); return { text: lineTxt(L), ok: sameLine(L, line) }; }));
-            return { text, plan, mid, answer, opts };
+        const points = [q.p, ...(q.r ? [q.r] : [])];
+        let lines = [];
+        if (reveal) {
+          if (q.r && q.r[0] === q.p[0]) lines = [{ x: q.p[0] }];
+          else {
+            const m =
+              q.type === "ps"
+                ? Array.isArray(q.m)
+                  ? q.m[0] / q.m[1]
+                  : q.m
+                : (q.r[1] - q.p[1]) / (q.r[0] - q.p[0]);
+            lines = [{ m, n: q.p[1] - m * q.p[0] }];
+          }
         }
-
-        let currentQuestion = 0;
-        let score = 0;
-        let stage = 0;       // 【ブラッシュアップ】この問題のヒントの段階（0：なし 1：方針 2：途中式 3：答え）
-        let answered = false;
-        let built = null;
-        let order = [];
-
-        function renderQuestion() {
-            built = build(questions[currentQuestion]);
-            order = built.opts.map((_, i) => i);
-            for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-            stage = 0;
-            answered = false;
-            document.getElementById('cards').innerHTML = `
-                <div class="question-card active">
-                    <div class="question-number">問題 ${currentQuestion + 1}/${questions.length}</div>
-                    <div class="question-text">${built.text}</div>
-                    <div class="options">
-                        ${order.map((o, i) => `<button class="option" id="opt${i}" onclick="selectOption(${i})">${built.opts[o].text}</button>`).join('')}
-                    </div>
-                    <div id="feedback"></div>
-                    <div class="hint-content" id="hint1"><h5>💡 ヒント1（方針）</h5><p>${built.plan}</p></div>
-                    <div class="hint-content" id="hint2"><h5>✏️ ヒント2（途中式）</h5><p>${built.mid}</p></div>
-                    <div class="hint-buttons" id="hintButtons">
-                        <button class="hint-btn" onclick="showHint(1)">💡 ヒント1（方針）</button>
-                        <button class="hint-btn" onclick="showHint(2)">✏️ ヒント2（途中式）</button>
-                        <button class="hint-btn plain" onclick="showHint(3)">👀 答えを見る</button>
-                    </div>
-                </div>`;
-            updateProgress();
-            window.scrollTo(0, 0);
+        return graphSVG(null, points, lines);
+      }
+      function renderQuestion() {
+        built = build(questions[currentQuestion]);
+        stage = 0;
+        answered = false;
+        options = built.opts
+          .map((o) => ({ ...o, r: Math.random() }))
+          .sort((a, b) => a.r - b.r);
+        $("status").textContent =
+          "問" +
+          (currentQuestion + 1) +
+          "　" +
+          (currentQuestion + 1) +
+          " / " +
+          questions.length;
+        $("question").innerHTML = lessonMath(built.text);
+        $("figure").innerHTML = figure();
+        $("hints").innerHTML = "";
+        $("feedback").hidden = true;
+        $("help").hidden = false;
+        $("next").hidden = true;
+        $("choices").innerHTML = options
+          .map(
+            (o, n) =>
+              '<button class="choice" data-label="' +
+              ["ア", "イ", "ウ", "エ"][n] +
+              '" onclick="selectAnswer(' +
+              n +
+              ')">' +
+              lessonMath(o.text) +
+              "</button>",
+          )
+          .join("");
+        fitMath();
+        window.scrollTo(0, 0);
+      }
+      function showHint(n) {
+        if (answered) return;
+        stage = Math.max(stage, n);
+        if (stage >= 3) {
+          finish(false);
+          return;
         }
-
-        // ヒントを見る（まちがえたときは自動で 1 段ずつすすむ）。3 段目は答え
-        function showHint(n) {
-            if (answered) return;
-            stage = Math.max(stage, n);
-            if (stage >= 3) { finish(false); return; }
-            for (let i = 1; i <= 2; i++) document.getElementById('hint' + i).classList.toggle('show', i <= stage);
+        $("hints").innerHTML =
+          '<div class="hint-box"><span class="hint-tag">' +
+          (stage === 1 ? "考え方" : "途中式") +
+          '</span><div class="formula"><b>公式</b>' +
+          lessonMath(TANGENT ? "y − f(a) = f′(a)(x − a)" : "y − b = m(x − a)") +
+          "</div>" +
+          (stage === 1 ? lessonMath(built.plan) : lessonSteps(built.mid)) +
+          "</div>";
+        fitMath();
+      }
+      function selectAnswer(n) {
+        if (answered) return;
+        if (options[n].ok) {
+          finish(true);
+          return;
         }
-
-        function selectOption(i) {
-            if (answered) return;
-            const btn = document.getElementById('opt' + i);
-            if (built.opts[order[i]].ok) { finish(true, btn); return; }
-            btn.classList.add('incorrect');
-            btn.disabled = true;
-            const next = stage + 1;
-            document.getElementById('feedback').innerHTML = next >= 3 ? '' :
-                `<div class="wrong-explanation show"><h4>ちがうよ</h4><p>すぐ下の${next === 1 ? 'ヒント1（方針）' : 'ヒント2（途中式）'}を見て、もう一度考えよう。</p></div>`;
-            showHint(next);
+        $("choices").children[n].disabled = true;
+        $("choices").children[n].classList.add("incorrect");
+        showHint(stage + 1);
+      }
+      function finish(ok) {
+        answered = true;
+        if (ok && stage === 0) score++;
+        $("help").hidden = true;
+        $("hints").innerHTML = "";
+        $("feedback").hidden = false;
+        $("feedback").className = "feedback " + (ok ? "correct" : "");
+        $("feedback").innerHTML =
+          "<strong>" +
+          (ok ? "正解" : "答え") +
+          "</strong>" +
+          lessonSteps(built.mid) +
+          '<div class="equation">' +
+          lessonMath(built.answer) +
+          "</div>";
+        $("figure").innerHTML = figure(true);
+        $("next").hidden = false;
+        $("next").textContent =
+          currentQuestion === questions.length - 1
+            ? "結果を見る"
+            : "次の問題へ";
+        [...$("choices").children].forEach((e, n) => {
+          e.disabled = true;
+          if (options[n].ok) e.classList.add("correct");
+        });
+        fitMath();
+      }
+      function nextQuestion() {
+        if (!answered) return;
+        if (++currentQuestion < questions.length) renderQuestion();
+        else {
+          $("quiz").hidden = true;
+          $("result").hidden = false;
+          $("score").textContent = score + " / " + questions.length + " 問";
+          window.scrollTo(0, 0);
         }
+      }
+      showMenu();
 
-        function finish(correct, btn) {
-            answered = true;
-            if (correct && stage === 0) score++;
-            document.querySelectorAll('#cards .option').forEach((b, i) => {
-                b.disabled = true;
-                if (built.opts[order[i]].ok) b.classList.add('correct');
-            });
-            document.getElementById('hintButtons').style.display = 'none';
-            document.getElementById('hint1').classList.remove('show');
-            document.getElementById('hint2').classList.remove('show');
-            const last = currentQuestion >= questions.length - 1;
-            document.getElementById('feedback').innerHTML = `
-                <div class="${correct ? 'success-message' : 'answer-message'} show">${correct ? '⭕ 正解！' : '👀 答え：' + built.answer}</div>
-                <div class="explanation show"><h4>解説</h4><p>${built.mid}。<br>よって <strong>${built.answer}</strong></p></div>
-                <button class="next-btn show" onclick="${last ? 'showResult()' : 'nextQuestion()'}">${last ? '結果を見る' : '次の問題へ'}</button>`;
-            updateProgress(true);
-        }
-
-        function nextQuestion() {
-            currentQuestion++;
-            renderQuestion();
-        }
-
-        function showResult() {
-            document.getElementById('cards').innerHTML = '';
-            document.getElementById('result').classList.add('show');
-            document.getElementById('scoreDisplay').innerHTML = `${score}/${questions.length}<div class="score-label">ヒントなしで一発正解した数</div>`;
-            let message = '';
-            if (score === questions.length) message = '🎊 全問、ヒントなしで一発正解！完璧です！';
-            else if (score >= Math.ceil(questions.length * 0.6)) message = 'よくできました！まちがえた問題は、解説の途中式をもう一度たどってみよう。';
-            else message = '「傾き → 公式 y − b = m(x − a) → 整理」の順番を確認して、もう一度挑戦しよう！';
-            document.getElementById('resultMessage').textContent = message;
-            updateProgress(true);
-            window.scrollTo(0, 0);
-        }
-
-        // 【ブラッシュアップ】元は最初から 20% になっていて、1 問目に正解しても 20% のままだった。解き終えた問題の数で進める
-        function updateProgress(done) {
-            const n = currentQuestion + (done ? 1 : 0);
-            document.getElementById('progressBar').style.width = (n / questions.length * 100) + '%';
-        }
-
-        function restartQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            document.getElementById('result').classList.remove('show');
-            renderQuestion();
-        }
-
-        // 【ブラッシュアップ】式の表記を教科書にそろえる：文字（x・f など）は斜体、数字は立体、書体は問題の式と同じ数式用。
-        //   選択肢・ヒント・解説の中の英数字のまとまりを <span class="m"> で包み、文字を <i> にする（日本語はふつうの書体のまま）
-        const MATH_RUN = /[A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*[A-Za-z0-9][A-Za-z0-9ⁿ⁰¹²³⁴⁵⁶⁷⁸⁹⁻'′()=+\-−·×÷\/.,<>\[\] ]*/g;
-        function mathify(root) {
-            if (!root) return;
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-            const nodes = [];
-            while (walker.nextNode()) {
-                const n = walker.currentNode, p = n.parentElement;
-                if (!p || p.closest('.m, .hint-tag, .no-math, script, style, .katex')) continue;
-                if (/[A-Za-z0-9]/.test(n.nodeValue)) nodes.push(n);
-            }
-            nodes.forEach(n => {
-                const s = n.nodeValue, frag = document.createDocumentFragment();
-                let last = 0;
-                s.replace(MATH_RUN, (run, at) => {
-                    const lead = run.match(/^\s*/)[0].length, text = run.trim();
-                    frag.appendChild(document.createTextNode(s.slice(last, at + lead)));
-                    const span = document.createElement('span');
-                    span.className = 'm';
-                    text.split(/([A-Za-z]+)/).forEach((part, k) => {
-                        if (!part) return;
-                        if (k % 2) { const i = document.createElement('i'); i.textContent = part; span.appendChild(i); }
-                        else span.appendChild(document.createTextNode(part.replace(/-/g, '−')));   // マイナスは数式の「−」に
-                    });
-                    frag.appendChild(span);
-                    last = at + lead + text.length;
-                    return run;
-                });
-                frag.appendChild(document.createTextNode(s.slice(last)));
-                n.parentNode.replaceChild(frag, n);
-            });
-        }
-        // 画面が書きかわるたびに、指定した場所の式を整える
-        function watchMath(selectors) {
-            let queued = false;
-            const run = () => { queued = false; selectors.forEach(sel => document.querySelectorAll(sel).forEach(mathify)); };
-            run();
-            new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } })
-                .observe(document.body, { childList: true, subtree: true, characterData: true });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => { renderQuestion(); watchMath(['.question-text', '.options', '#feedback', '.hint-content p']); });
+      $("menuExample").innerHTML = lessonMath("y − b = m(x − a)");
     </script>
-<script>
-  // 【デザイン統一】元の部品に、共通デザインのクラスを付ける
-  PortTheme.map({
-    ".container": "u-card",
-    ".header h1": "u-title",
-    ".option": "u-choice",
-    ".option.correct": "u-ok",
-    ".option.incorrect": "u-ng",
-    ".hint-btn:not(.plain)": "u-btn",
-    ".hint-btn.plain": "u-btn u-btn-plain",
-    ".next-btn": "u-btn u-btn-blue",
-    ".result-nav .again": "u-btn",
-    ".result-nav .next": "u-btn u-btn-blue"
-  });
-</script>
-</body>
+  </body>
 </html>

@@ -360,6 +360,20 @@
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
       }
+      .equal {
+        display: inline-block;
+        margin: 0 0.28em;
+      }
+      .menu-math {
+        display: flex;
+        align-items: center;
+        height: 52px;
+        font-size: 18px;
+      }
+      .menu-card svg {
+        width: 80px;
+        height: 52px;
+      }
     </style>
   </head>
   <body>
@@ -996,27 +1010,7 @@
           .join("");
       }
       function stepsHTML(mid) {
-        return String(mid)
-          .replace(/<br\s*\/?\s*>/g, "。")
-          .split(/(?:。| なので、?| なので | より )/)
-          .filter(Boolean)
-          .map((line) => {
-            const parts = line.split(" = ");
-            return (
-              '<div class="equation">' +
-              parts
-                .map(
-                  (s, i) =>
-                    '<span class="eqpart">' +
-                    (i ? " = " : "") +
-                    mathHTML(s) +
-                    "</span>",
-                )
-                .join("<wbr>") +
-              "</div>"
-            );
-          })
-          .join("");
+        return lessonSteps(mid);
       }
       function formulaHTML() {
         return (
@@ -1045,19 +1039,64 @@
           });
       }
       function menuIcon(kind) {
-        const paths = [
-          "M10 36L60 6",
-          "M10 8Q35 60 62 8",
-          "M10 35C24 35 30 5 40 9S55 33 66 10",
-          "M10 32L27 20L42 22L65 5",
-          "M12 30Q34 3 60 25",
+        const texts = [
+          "x³ → 3x²",
+          "2x³ → 6x²",
+          '<span class="fraction"><span class="numerator">1</span><span class="denominator">2</span></span>x²',
+          "x³ + 2x² − 3x",
+          "(x + 1)² → f′(a)",
+        ];
+        if (!ADVANCED)
+          return (
+            '<span class="menu-math">' + lessonMath(texts[kind]) + "</span>"
+          );
+        const drawings = [
+          '<rect x="10" y="6" width="25" height="16"/><rect x="43" y="6" width="25" height="16"/><rect x="10" y="29" width="25" height="16"/><rect x="43" y="29" width="25" height="16"/><text x="19" y="18">ア</text><text x="52" y="18">イ</text><text x="19" y="41">ウ</text><text x="52" y="41">エ</text>',
+          '<rect x="7" y="12" width="67" height="30"/><path d="M58 17V36"/><text x="14" y="32">2x²</text>',
+          '<circle cx="39" cy="29" r="18"/><path d="M39 11V5M32 5H46M39 29V17M39 29L49 34"/>',
+          '<path d="M18 46V7L62 7L51 18L62 29H18"/><path d="M31 12L43 24M43 12L31 24"/>',
         ];
         return (
-          '<svg viewBox="0 0 76 44" aria-hidden="true"><path d="M5 35H72M16 40V3" fill="none" stroke="#b6bfc9"/><path d="' +
-          paths[kind % paths.length] +
-          '" fill="none" stroke="#1f4e8c" stroke-width="2.5"/></svg>'
+          '<svg viewBox="0 0 80 52" aria-hidden="true"><g fill="none" stroke="#1f4e8c" stroke-width="1.6">' +
+          drawings[kind].replace(
+            /<text/g,
+            '<text fill="#1f4e8c" stroke="none" font-size="12"',
+          ) +
+          "</g></svg>"
         );
       }
+      // 等号を独立した要素にし、折り返しの前後でも左右の間隔を保つ。
+      function lessonMath(html) {
+        return mathHTML(html)
+          .split(/(<[^>]+>)/g)
+          .map((s, i) =>
+            i % 2 ? s : s.replace(/\s*=\s*/g, '<span class="equal">=</span>'),
+          )
+          .join("");
+      }
+      function lessonSteps(mid) {
+        return String(mid)
+          .replace(/<br\s*\/?\s*>/g, "。")
+          .split(/(?:。|、つまり |、(?=y =)| なので、?| なので | より )/)
+          .filter(Boolean)
+          .map(
+            (line) =>
+              '<div class="equation">' +
+              line
+                .split(" = ")
+                .map(
+                  (s, i) =>
+                    '<span class="eqpart">' +
+                    (i ? '<span class="equal">=</span>' : "") +
+                    lessonMath(s) +
+                    "</span>",
+                )
+                .join("<wbr>") +
+              "</div>",
+          )
+          .join("");
+      }
+
       window.addEventListener("resize", fitMath);
       // 出題内容は元の教材を保持。表示と進行をここでまとめる。
       const $ = (id) => document.getElementById(id);
@@ -1381,10 +1420,10 @@
           X(a) +
           '" cy="' +
           Y(val(a)) +
-          '" r="3" fill="#d9480f"/><text x="25" y="190" font-size="12">' +
-          (a - 2) +
-          '</text><text x="265" y="190" font-size="12">' +
-          (a + 2) +
+          '" r="3" fill="#d9480f"/><text x="25" y="190" font-size="12" font-family="STIX Two Text,serif">' +
+          String(a - 2).replace(/-/g, "−") +
+          '</text><text x="265" y="190" font-size="12" font-family="STIX Two Text,serif">' +
+          String(a + 2).replace(/-/g, "−") +
           "</text></svg><small>紺：関数のグラフ　橙：" +
           mathHTML("x = " + a) +
           " の接線（接点 " +
