@@ -630,6 +630,136 @@
         margin: 8px 0;
         font-size: 13px;
       }
+      .pr {
+        display: inline-block;
+        margin-left: 0.12em;
+      }
+      .question-box {
+        border: 1px solid #aebed2;
+        border-left: 4px solid #1f4e8c;
+        background: #f8faff;
+        border-radius: 6px;
+        padding: 14px;
+        text-align: center;
+        margin: 10px 0;
+      }
+      .question-box .function {
+        font-size: 26px;
+        background: none;
+        border: 0;
+        margin: 0 0 10px;
+        padding: 0;
+      }
+      .question-box > div:last-child {
+        font-size: 16px;
+      }
+      .graph-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .graph-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .graph-option {
+        border: 1px solid #aebed2;
+        border-radius: 6px;
+        padding: 5px;
+        background: white;
+        min-width: 0;
+      }
+      .graph-option svg {
+        width: 100%;
+        display: block;
+      }
+      .graph-option button {
+        font-size: 14px;
+        padding: 6px;
+        margin: 3px;
+        min-height: 42px;
+      }
+      .graph-option.correct {
+        border: 3px solid #2b8a3e;
+      }
+      .graph-option.incorrect {
+        border-color: #c92a2a;
+      }
+      .graph-figure {
+        width: 100%;
+        max-width: 560px;
+        margin: auto;
+      }
+      .graph-figure svg {
+        display: block;
+        width: 100%;
+      }
+      #graphStage {
+        margin: 16px 0;
+        border-top: 2px solid #d0d7de;
+        padding-top: 12px;
+      }
+      #graphFeedback {
+        min-height: 30px;
+        color: #1f4e8c;
+      }
+      dialog {
+        width: min(94vw, 650px);
+        border: 1px solid #aebed2;
+        border-radius: 8px;
+        padding: 14px;
+      }
+      dialog::backdrop {
+        background: #0006;
+      }
+      dialog svg {
+        width: 100%;
+        display: block;
+      }
+      .graph-heading {
+        font-size: 18px;
+        margin: 8px 0;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .container,
+        .wrap,
+        .port-back {
+          max-width: 1000px;
+        }
+        .table-grid {
+          gap: 26px;
+          grid-template-columns: minmax(0, 1fr) 300px;
+        }
+        .question-box .function {
+          font-size: 32px;
+        }
+        #problemContainer.graph-open {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 20px 26px;
+        }
+        #problemContainer.graph-open > .problem-header,
+        #problemContainer.graph-open > .summary {
+          grid-column: 1/-1;
+        }
+        #problemContainer.graph-open .table-grid {
+          display: block;
+        }
+        #problemContainer.graph-open #pickPanel {
+          display: none;
+        }
+        #problemContainer.graph-open #graphStage {
+          grid-column: 2;
+          grid-row: 2;
+          margin: 0;
+        }
+        #problemContainer.graph-open #tableStage {
+          grid-column: 1;
+          grid-row: 2;
+        }
+      }
     </style>
   </head>
   <body>
@@ -663,7 +793,7 @@
           ><button class="mode-btn" onclick="startMode('random')">
             <div class="mode-icon">①　③　②</div>
             <div class="mode-title">ランダムモード</div>
-            <div class="mode-desc">7問から3問を出題</div></button
+            <div class="mode-desc">毎回新しい数値で3問を出題</div></button
           ><button class="mode-btn" onclick="startMode('advanced')">
             <div class="mode-icon">
               <span class="m">a ≦ <i>x</i> ≦ b</span>
@@ -739,7 +869,14 @@
                             ),
                       )
                       .join("");
-                    return '<span class="m">' + text + "</span>";
+                    return (
+                      '<span class="m">' +
+                      text.replace(
+                        /(<i>[fyF]<\/i>)′/g,
+                        '$1<span class="pr">′</span>',
+                      ) +
+                      "</span>"
+                    );
                   },
                 ),
           )
@@ -1381,8 +1518,7 @@
           problems = [...basicProblems];
         } else if (mode === "random") {
           // ランダムに3問選択
-          const shuffled = [...randomProblems].sort(() => 0.5 - Math.random());
-          problems = shuffled.slice(0, 3);
+          problems = Array.from({ length: 3 }, makeRandomProblem);
         } else if (mode === "advanced") {
           problems = [...advancedProblems];
         }
@@ -1483,6 +1619,7 @@
       function displayProblem(index) {
         const problem = problems[index];
         const container = document.getElementById("problemContainer");
+        container.classList.remove("graph-open");
         const cols = problem.table.x.length;
         const key = (row, col) =>
           getAnswerKey(index, `t${index}_${row}_${col}`);
@@ -1493,7 +1630,7 @@
 
         let h = `
                 <div class="problem-header">
-                    <div class="function">${problem.function}</div>
+                    <div class="question-box"><div class="function">${problem.function}</div><div>増減表を完成させ、関数の変化を調べよ。</div></div>
                     ${problem.domain ? `<div class="domain-info">${problem.domain}</div>` : ""}
                     <div id="formulaApp"></div><button id="stepsToggle" hidden onclick="toggleSteps()" aria-expanded="false">途中式を確認</button>
                 </div>
@@ -1579,10 +1716,29 @@
           inp.removeAttribute("maxlength"); // 全角で入れたときに切られないように
         });
         container.querySelectorAll("input.num").forEach((inp) => {
-          inp.addEventListener("input", () => onNumInput(inp));
+          inp.addEventListener("compositionstart", () => {
+            inp._composing = true;
+            clearTimeout(inp._imeTimer);
+          });
+          inp.addEventListener("compositionend", () => {
+            inp._settling = true;
+            inp._composing = false;
+            inp._imeTimer = setTimeout(() => {
+              inp._settling = false;
+              if (inp.isConnected) onNumInput(inp);
+            }, 0);
+          });
+          inp.addEventListener("input", (e) => onNumInput(inp, e));
           inp.addEventListener("change", () => onNumCommit(inp));
           inp.addEventListener("keydown", (e) => {
-            if (e.key !== "Enter" || e.isComposing) return;
+            if (
+              !["Enter", "Tab"].includes(e.key) ||
+              e.shiftKey ||
+              e.isComposing ||
+              inp._composing ||
+              inp._settling
+            )
+              return;
             e.preventDefault();
             onNumCommit(inp);
             focusNext(inp);
@@ -1663,7 +1819,10 @@
           document.querySelectorAll("#problemContainer .ans"),
         );
         const next = all.slice(all.indexOf(el) + 1).find((e) => !e.disabled);
-        if (next) next.focus();
+        if (next) {
+          next.focus();
+          if (next.tagName === "BUTTON") openPicker(next);
+        }
       }
 
       // 数の欄：答えと同じになったら、すぐに正解にする
@@ -1686,7 +1845,14 @@
         }
         return true;
       }
-      function onNumInput(inp) {
+      function onNumInput(inp, event) {
+        if (
+          inp.disabled ||
+          inp._composing ||
+          inp._settling ||
+          event?.isComposing
+        )
+          return;
         inp.classList.remove("incorrect");
         const v = nz(inp.value);
         if (v !== "" && answerMatches(inp, v)) {
@@ -1697,7 +1863,7 @@
       }
       // Enter・欄をはなれたとき：まだ正解でなければ、まちがいを知らせる
       function onNumCommit(inp) {
-        if (inp.disabled) return;
+        if (inp.disabled || inp._composing || inp._settling) return;
         const v = nz(inp.value);
         if (v === "") return;
         if (answerMatches(inp, v)) {
@@ -1741,6 +1907,21 @@
           document.querySelectorAll("#problemContainer .ans"),
         );
         if (!formulaReady) return;
+        // Autofill, restored values, or IME confirmation can leave a valid value unmarked.
+        for (const e of all) {
+          if (
+            e.tagName === "INPUT" &&
+            !e._composing &&
+            !e._settling &&
+            nz(e.value) !== "" &&
+            answerMatches(e, nz(e.value))
+          ) {
+            e.value = nz(e.value).replace(/-/g, "−");
+            e.classList.remove("incorrect");
+            e.classList.add("correct");
+            e.disabled = true;
+          }
+        }
         if (!all.length || all.some((e) => !e.classList.contains("correct")))
           return;
         if (completedProblems.has(problemIndex)) return;
@@ -1786,8 +1967,14 @@
         const div = document.createElement("div");
         div.className = "summary";
         div.innerHTML =
-          lessonMath("まとめ：" + s) + summaryGraph(problem, index);
+          lessonMath("まとめ：" + s) +
+          '<div class="graph-actions"><button onclick="nextProblem()">次の問題へ</button><button onclick="showGraphChoices()">グラフを選ぶ（4択）</button><button onclick="showGraphAnswer()">グラフを見る</button></div>';
         container.appendChild(div);
+        closePicker();
+        const stage = document.createElement("section");
+        stage.id = "graphStage";
+        stage.hidden = true;
+        container.appendChild(stage);
         prettyText(div);
       }
 
@@ -1962,18 +2149,20 @@
         box
           .querySelectorAll("span[style]")
           .forEach((e) => e.removeAttribute("style"));
-        let rows = box.innerHTML
-          .replace(
-            /<input\b[^>]*data-answer=['"]([^'"]+)['"][^>]*>/g,
-            (_, v) => "[" + v.replace(/-/g, "−") + "]",
-          )
-          .replace(/<br\s*\/?\s*>/g, "\n")
-          .replace(/<[^>]+>/g, "")
-          .replace(/'/g, "′")
-          .replace(/-/g, "−")
-          .split("\n")
-          .map((s) => s.trim())
-          .filter(Boolean);
+        let rows =
+          problem.stepRows ||
+          box.innerHTML
+            .replace(
+              /<input\b[^>]*data-answer=['"]([^'"]+)['"][^>]*>/g,
+              (_, v) => "[" + v.replace(/-/g, "−") + "]",
+            )
+            .replace(/<br\s*\/?\s*>/g, "\n")
+            .replace(/<[^>]+>/g, "")
+            .replace(/'/g, "′")
+            .replace(/-/g, "−")
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean);
         rows = rows.map((s, ri) => {
           let n = 0;
           const blanks = (s.match(/\[/g) || []).length,
@@ -2035,6 +2224,7 @@
             const table = document.getElementById("tableStage");
             if (table) table.hidden = !formulaReady;
             if (formulaReady) checkProblemCompletion(currentProblem);
+            primeSpacing(root);
           },
         });
         if (completedProblems.has(index)) {
@@ -2053,6 +2243,23 @@
       function tableHint() {
         const el = document.getElementById("tableHint");
         el.hidden = !el.hidden;
+        const target =
+          document.querySelector("#problemContainer .ans:focus") ||
+          document.querySelector("#problemContainer .ans:not(.correct)");
+        if (target) {
+          const kind = target.dataset.kind;
+          el.innerHTML = lessonMath(
+            kind === "sign"
+              ? "因数分解した f′(x) の符号を、この区間の x で確かめよう。"
+              : kind === "arrow"
+                ? "f′(x) が正なら増加、負なら減少です。"
+                : kind === "ext"
+                  ? "前後が増加→減少なら極大、減少→増加なら極小。同じ向きなら極値はありません。"
+                  : target.id.includes("_x_")
+                    ? "f′(x) = 0 を解いて求めた x の値を、小さい順に入れよう。"
+                    : "元の f(x) に x を代入して高さを求めよう。最大・最小は端の値も比べます。",
+          );
+        }
       }
       function closePicker() {
         document.getElementById("pickPanel")?.replaceChildren();
@@ -2112,7 +2319,10 @@
           if (!btn.disabled)
             document.getElementById("pickMessage").textContent =
               "符号・増減・代入した値をもう一度確認しよう。";
-          else closePicker();
+          else {
+            closePicker();
+            focusNext(btn);
+          }
         }
         panel.querySelectorAll(".pick-btn").forEach((card) => {
           let start = null,
@@ -2181,6 +2391,344 @@
           ? [Number(problem.table.x[1]), Number(problem.table.x.at(-1))]
           : undefined;
         return graphSVG(f, points, [], range);
+      }
+      // この教材だけの表示。共通のカード処理には手を加えない。
+      function primeSpacing(root) {
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT),
+          ts = [];
+        while (w.nextNode())
+          if (
+            w.currentNode.textContent.includes("′") &&
+            !w.currentNode.parentElement.closest(".pr")
+          )
+            ts.push(w.currentNode);
+        ts.forEach((t) => {
+          const f = document.createDocumentFragment();
+          t.textContent.split("′").forEach((s, i) => {
+            if (i) {
+              const p = document.createElement("span");
+              p.className = "pr";
+              p.textContent = "′";
+              f.append(p);
+            }
+            f.append(document.createTextNode(s));
+          });
+          t.replaceWith(f);
+        });
+      }
+      const zn = (v) => String(v).replace(/-/g, "−");
+      const zshift = (v, x = "x") =>
+        v === 0 ? x : v < 0 ? x + " + " + -v : x + " − " + v;
+      function zpoly(cs) {
+        let s = "";
+        cs.forEach((c, i) => {
+          if (!c) return;
+          const p = cs.length - 1 - i,
+            t = p
+              ? (Math.abs(c) === 1 ? "" : Math.abs(c)) +
+                "x" +
+                ["", "", "²", "³"][p]
+              : Math.abs(c);
+          s += (s ? (c < 0 ? " − " : " + ") : c < 0 ? "−" : "") + t;
+        });
+        return s || "0";
+      }
+      function makeRandomProblem() {
+        const p = -3 + Math.floor(Math.random() * 5),
+          q = p + 2 + 2 * Math.floor(Math.random() * 2),
+          sign = Math.random() < 0.5 ? 1 : -1,
+          c = Math.floor(Math.random() * 11) - 5;
+        const cs = [sign, (-3 * sign * (p + q)) / 2, 3 * sign * p * q, c],
+          dc = [3 * sign, -3 * sign * (p + q), 3 * sign * p * q],
+          f = (x) => cs.reduce((s, v) => s * x + v, 0);
+        const vp = f(p),
+          vq = f(q);
+        if (![...cs, ...dc, vp, vq].every(Number.isInteger))
+          throw Error("整数でない問題");
+        const answers = {
+          1: String(p),
+          2: String(q),
+          3: sign > 0 ? "+" : "-",
+          4: "0",
+          5: sign > 0 ? "-" : "+",
+          6: "0",
+          7: sign > 0 ? "+" : "-",
+          8: sign > 0 ? "↗" : "↘",
+          9: String(vp),
+          10: sign > 0 ? "↘" : "↗",
+          11: String(vq),
+          12: sign > 0 ? "↗" : "↘",
+        };
+        return {
+          function: "f(x) = " + zpoly(cs),
+          derivative: "",
+          hint: "",
+          table: {
+            x: ["x", "...", "", "...", "", "..."],
+            fprime: ["f'(x)", "", "", "", "", ""],
+            f: ["f(x)", "", "", "", "", ""],
+          },
+          answers,
+          coefficients: cs,
+          stepRows: [
+            "#関数を微分する",
+            "f′(x) = [" + zpoly(dc) + "]",
+            "#共通因数をくくる",
+            "f′(x) = " + zn(3 * sign) + "(" + zpoly([1, -(p + q), p * q]) + ")",
+            "#因数分解すると",
+            "f′(x) = " +
+              zn(3 * sign) +
+              "(" +
+              zshift(p) +
+              ")(" +
+              zshift(q) +
+              ")",
+            "#f′(x) = 0 を解く",
+            "x = [" + zn(p) + "], [" + zn(q) + "]",
+          ],
+        };
+      }
+      function graphModel(problem, index) {
+        const terms = functionTerms(problem),
+          f = (x) => terms.reduce((s, [c, n]) => s + c * x ** n, 0),
+          pts = [];
+        problem.table.x.forEach((v, i) => {
+          if (i && v !== "...") {
+            const x = Number(
+              v === ""
+                ? problem.answers[getAnswerKey(index, `t${index}_x_${i}`)]
+                : v,
+            );
+            pts.push({
+              x,
+              y: f(x),
+              label: v === "" ? extremumAt(problem, index, i) : "端",
+            });
+          }
+        });
+        return {
+          f,
+          pts,
+          domain: problem.domain
+            ? [Number(problem.table.x[1]), Number(problem.table.x.at(-1))]
+            : null,
+        };
+      }
+      function graphDrawing(model, variant = 0) {
+        const shift = variant === 3 ? 1 : 0,
+          sign = variant === 1 ? -1 : 1,
+          offset = variant === 2 ? 2 : 0,
+          f = (x) => sign * model.f(x - shift) + offset;
+        const points = model.pts.map((p) => ({
+          ...p,
+          x: p.x + shift,
+          y: sign * p.y + offset,
+          label:
+            sign < 0
+              ? p.label === "極大"
+                ? "極小"
+                : p.label === "極小"
+                  ? "極大"
+                  : p.label
+              : p.label,
+        }));
+        const domain = model.domain;
+        let xmin = domain
+            ? Math.min(0, domain[0]) - 1
+            : Math.min(-0.5, Math.min(...points.map((p) => p.x)) - 1.2),
+          xmax = domain
+            ? Math.max(0, domain[1]) + 1
+            : Math.max(0.5, Math.max(...points.map((p) => p.x)) + 1.2);
+        const from = domain ? domain[0] : xmin,
+          to = domain ? domain[1] : xmax;
+        const vals = Array.from({ length: 101 }, (_, i) =>
+          f(from + ((to - from) * i) / 100),
+        );
+        let ymin = Math.min(0, ...vals),
+          ymax = Math.max(0, ...vals),
+          pad = Math.max(1, (ymax - ymin) * 0.18);
+        ymin -= pad;
+        ymax += pad;
+        const X = (x) => 64 + ((x - xmin) / (xmax - xmin)) * 284,
+          Y = (y) => 260 - ((y - ymin) / (ymax - ymin)) * 218;
+        const text = (x, y, t, anchor = "middle", italic = false) =>
+          '<text x="' +
+          x +
+          '" y="' +
+          y +
+          '" text-anchor="' +
+          anchor +
+          '" font-family="' +
+          (/[極最大小端]/.test(t)
+            ? "BIZ UDPGothic,sans-serif"
+            : "STIX Two Text,serif") +
+          '" font-size="15"' +
+          (italic ? ' font-style="italic"' : "") +
+          ">" +
+          t +
+          "</text>";
+        const line = (x1, y1, x2, y2, dash = false) =>
+          '<line x1="' +
+          x1 +
+          '" y1="' +
+          y1 +
+          '" x2="' +
+          x2 +
+          '" y2="' +
+          y2 +
+          '" stroke="' +
+          (dash ? "#98a7b7" : "#788491") +
+          '"' +
+          (dash ? ' stroke-dasharray="4 4"' : "") +
+          "/>";
+        let h =
+          '<svg viewBox="0 0 420 310" role="img" aria-label="増減表に対応するグラフ">' +
+          line(42, Y(0), 365, Y(0)) +
+          line(X(0), 275, X(0), 22) +
+          '<path d="M358 ' +
+          (Y(0) - 4) +
+          " L366 " +
+          Y(0) +
+          " L358 " +
+          (Y(0) + 4) +
+          " M" +
+          (X(0) - 4) +
+          " 29 L" +
+          X(0) +
+          " 21 L" +
+          (X(0) + 4) +
+          ' 29" fill="none" stroke="#788491"/>' +
+          text(379, Y(0) + 5, "x", "middle", true) +
+          text(X(0) + 12, 20, "y", "middle", true) +
+          text(X(0) + 12, Y(0) + 18, "O", "middle", true);
+        h +=
+          '<path d="' +
+          Array.from({ length: 181 }, (_, i) => {
+            const x = from + ((to - from) * i) / 180;
+            return (i ? "L" : "M") + X(x) + "," + Y(f(x));
+          }).join(" ") +
+          '" fill="none" stroke="#1f4e8c" stroke-width="2.6"/>';
+        const visible = points.filter(
+          (p) => !domain || (p.x >= from && p.x <= to),
+        );
+        const ys = [...new Set(visible.map((p) => p.y))];
+        if (
+          (!domain || (from <= 0 && to >= 0)) &&
+          !ys.some((y) => Math.abs(Y(y) - Y(f(0))) < 20)
+        )
+          ys.push(f(0));
+        const labels = ys.filter((y) => y !== 0).sort((a, b) => Y(a) - Y(b));
+        let last = -99;
+        for (const y of labels) {
+          const target = Math.max(Y(y) + 5, last + 18);
+          last = target;
+          h += line(X(0) - 4, Y(y), X(0) + 4, Y(y));
+          h += text(X(0) - 8, target, zn(y), "end");
+        }
+        const xs = [...new Set(visible.map((p) => p.x))].filter((x) => x !== 0);
+        for (const x of xs)
+          h +=
+            line(X(x), Y(0) - 3, X(x), Y(0) + 3) + text(X(x), Y(0) + 20, zn(x));
+        const max = Math.max(...visible.map((p) => p.y)),
+          min = Math.min(...visible.map((p) => p.y));
+        visible.forEach((p, i) => {
+          h +=
+            line(X(p.x), Y(p.y), X(p.x), Y(0), true) +
+            line(X(p.x), Y(p.y), X(0), Y(p.y), true) +
+            '<circle cx="' +
+            X(p.x) +
+            '" cy="' +
+            Y(p.y) +
+            '" r="4" fill="#d9480f"/>';
+          let label = p.label === "なし" ? "" : p.label;
+          if (domain) {
+            const extreme = p.y === max ? "最大" : p.y === min ? "最小" : "";
+            label = [p.label === "端" ? "" : label, extreme]
+              .filter(Boolean)
+              .join("・");
+          }
+          if (label) {
+            const above = p.label === "極大" || (domain && p.y === max);
+            const ly = above
+              ? Y(p.y) - 14
+              : Math.max(
+                  Y(p.y) + 25,
+                  Math.abs(Y(p.y) - Y(0)) < 25 ? Y(0) + 43 : 0,
+                );
+            h += text(X(p.x), ly, label);
+          }
+        });
+        return h + "</svg>";
+      }
+      let graphChoices = [];
+      function graphStage() {
+        const stage = document.getElementById("graphStage");
+        stage.hidden = false;
+        document.getElementById("problemContainer").classList.add("graph-open");
+        return stage;
+      }
+      function showGraphAnswer() {
+        const model = graphModel(problems[currentProblem], currentProblem);
+        graphStage().innerHTML =
+          '<h3 class="graph-heading">増減表とグラフを見比べよう</h3><div class="graph-figure">' +
+          graphDrawing(model) +
+          "</div>";
+      }
+      function showGraphChoices() {
+        const model = graphModel(problems[currentProblem], currentProblem);
+        graphChoices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+        graphStage().innerHTML =
+          '<h3 class="graph-heading">この増減表に合うグラフは？</h3><div class="graph-options">' +
+          graphChoices
+            .map(
+              (v, i) =>
+                '<div class="graph-option" id="graphOption' +
+                i +
+                '">' +
+                graphDrawing(model, v) +
+                '<button onclick="expandGraph(' +
+                i +
+                ')">拡大して確認</button><button onclick="pickGraph(' +
+                i +
+                ')">' +
+                ["ア", "イ", "ウ", "エ"][i] +
+                "を選ぶ</button></div>",
+            )
+            .join("") +
+          '</div><p id="graphFeedback" role="status"></p>';
+      }
+      function pickGraph(i) {
+        const v = graphChoices[i];
+        document
+          .getElementById("graphOption" + i)
+          .classList.add(v === 0 ? "correct" : "incorrect");
+        document.getElementById("graphFeedback").textContent =
+          v === 0
+            ? "正解。増減の向きと、極値・端の値が一致しています。"
+            : [
+                "",
+                "増加と減少が逆になっています。f′(x) の符号を見直そう。",
+                "グラフの高さが違います。元の f(x) に代入した値を確かめよう。",
+                "極値をとる x の位置がずれています。f′(x) = 0 の解を確かめよう。",
+              ][v];
+      }
+      function expandGraph(i) {
+        let d = document.getElementById("graphDialog");
+        if (!d) {
+          d = document.createElement("dialog");
+          d.id = "graphDialog";
+          document.body.appendChild(d);
+        }
+        d.innerHTML =
+          "<h3>" +
+          ["ア", "イ", "ウ", "エ"][i] +
+          "のグラフ</h3>" +
+          graphDrawing(
+            graphModel(problems[currentProblem], currentProblem),
+            graphChoices[i],
+          ) +
+          "<button onclick=\"document.getElementById('graphDialog').close()\">閉じる</button>";
+        d.showModal();
       }
     </script>
   </body>
