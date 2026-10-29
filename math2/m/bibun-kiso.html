@@ -374,6 +374,119 @@
         width: 80px;
         height: 52px;
       }
+
+      .pr {
+        display: inline-block;
+        margin-left: 0.12em;
+      }
+      .wrap {
+        max-width: 760px;
+      }
+      .question-box {
+        border: 1px solid #aebed2;
+        border-left: 4px solid #1f4e8c;
+        background: #f8faff;
+        border-radius: 6px;
+        padding: 14px 12px;
+        text-align: center;
+      }
+      .question-box .problem {
+        font-size: 26px;
+        margin: 4px 0 12px;
+      }
+      .question-box .ask-line {
+        font-size: 17px;
+        line-height: 1.8;
+      }
+      .question-box .m {
+        white-space: nowrap;
+      }
+      .input-tools button {
+        font-family: "STIX Two Text", serif;
+      }
+      .input-preview {
+        min-height: 42px;
+        font-size: 23px;
+        padding: 6px;
+        border-bottom: 1px solid #d0d7de;
+        overflow-wrap: anywhere;
+      }
+      .time-value {
+        font: 26px "BIZ UDPGothic";
+        font-variant-numeric: tabular-nums;
+        color: #1f4e8c;
+      }
+      .toolbar {
+        align-items: center;
+      }
+      .result-time {
+        font-size: 26px;
+      }
+      .answer-panel.flash-correct {
+        background: #ebfbee;
+      }
+      .answer-panel.flash-wrong {
+        background: #fff5f5;
+      }
+      .answer-panel {
+        border-radius: 6px;
+      }
+      .input-section {
+        margin-top: 8px;
+      }
+      .input-help {
+        font-size: 12px;
+      }
+      .input-tools {
+        margin: 6px 0;
+      }
+      .input-tools button {
+        min-height: 40px;
+      }
+      .review-item .question-box {
+        margin: 10px 0;
+      }
+      .review-item summary {
+        line-height: 1.8;
+      }
+      #reviewList[hidden] {
+        display: none !important;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .wrap {
+          max-width: 980px;
+        }
+        .quiz-grid {
+          grid-template-columns: minmax(0, 1fr) 340px;
+          gap: 26px;
+        }
+        .question-box .problem {
+          font-size: 32px;
+        }
+        .question-box {
+          padding: 18px 14px;
+        }
+      }
+      @media (max-width: 899px) {
+        .input-running .question-box {
+          padding: 8px;
+        }
+        .input-running .question-box .problem {
+          margin: 0 0 4px;
+        }
+        .input-running .toolbar {
+          margin: 3px 0 6px;
+        }
+        .input-running .head {
+          margin-bottom: 6px;
+        }
+        .input-running .input-section {
+          margin-top: 8px;
+        }
+        .input-running .input-help {
+          margin-top: 4px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -413,7 +526,8 @@
                 spellcheck="false"
               />
               <div class="input-tools">
-                <button onclick="insertText('x')">x</button
+                <button onclick="insertText('x')">
+                  <span class="m"><i>x</i></span></button
                 ><button onclick="insertText('²')">²</button
                 ><button onclick="insertText('³')">³</button
                 ><button onclick="insertText('−')">−</button
@@ -1003,6 +1117,10 @@
                             ),
                       )
                       .join("");
+                    text = text.replace(
+                      /(<i>[fyF]<\/i>)′/g,
+                      '$1<span class="pr">′</span>',
+                    );
                     return '<span class="m">' + text + "</span>";
                   },
                 ),
@@ -1181,6 +1299,43 @@
           ...b,
         };
       }
+
+      function escapeText(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function questionHTML(q) {
+        let expression, ask;
+        if (ADVANCED) {
+          expression = q.q;
+          if (q.custom) {
+            ask = q.q.includes("ax²")
+              ? "a は定数。f′(2) = 11 のとき、a を求めよ。"
+              : "a は定数。f′(1) = 5 のとき、a を求めよ。";
+          } else
+            ask =
+              q.at !== undefined
+                ? "f′(" + numTxt([q.at, 1]) + ") の値を求めよ。"
+                : "f′(x) を求めよ。";
+        } else {
+          const b = build(lev, q);
+          expression = "f(x) = " + b.fTxt;
+          ask =
+            q.at !== undefined
+              ? "f′(" + numTxt([q.at, 1]) + ") の値を求めよ。"
+              : "f′(x) を求めよ。";
+        }
+        return (
+          '<div class="question-box"><div class="problem">' +
+          mathHTML(expression) +
+          '</div><div class="ask-line">' +
+          mathHTML(ask) +
+          "</div></div>"
+        );
+      }
+
       function load() {
         stage = 0;
         done = false;
@@ -1192,7 +1347,7 @@
           " / " +
           questions.length;
         $("bar").style.width = (index / questions.length) * 100 + "%";
-        $("question").innerHTML = mathHTML(d.lead.replace(/<br><br>/g, "<br>"));
+        $("question").innerHTML = questionHTML(questions[index]);
         $("hints").innerHTML = "";
         $("feedback").hidden = true;
         $("next").hidden = true;

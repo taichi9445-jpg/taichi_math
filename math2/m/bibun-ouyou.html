@@ -374,6 +374,119 @@
         width: 80px;
         height: 52px;
       }
+
+      .pr {
+        display: inline-block;
+        margin-left: 0.12em;
+      }
+      .wrap {
+        max-width: 760px;
+      }
+      .question-box {
+        border: 1px solid #aebed2;
+        border-left: 4px solid #1f4e8c;
+        background: #f8faff;
+        border-radius: 6px;
+        padding: 14px 12px;
+        text-align: center;
+      }
+      .question-box .problem {
+        font-size: 26px;
+        margin: 4px 0 12px;
+      }
+      .question-box .ask-line {
+        font-size: 17px;
+        line-height: 1.8;
+      }
+      .question-box .m {
+        white-space: nowrap;
+      }
+      .input-tools button {
+        font-family: "STIX Two Text", serif;
+      }
+      .input-preview {
+        min-height: 42px;
+        font-size: 23px;
+        padding: 6px;
+        border-bottom: 1px solid #d0d7de;
+        overflow-wrap: anywhere;
+      }
+      .time-value {
+        font: 26px "BIZ UDPGothic";
+        font-variant-numeric: tabular-nums;
+        color: #1f4e8c;
+      }
+      .toolbar {
+        align-items: center;
+      }
+      .result-time {
+        font-size: 26px;
+      }
+      .answer-panel.flash-correct {
+        background: #ebfbee;
+      }
+      .answer-panel.flash-wrong {
+        background: #fff5f5;
+      }
+      .answer-panel {
+        border-radius: 6px;
+      }
+      .input-section {
+        margin-top: 8px;
+      }
+      .input-help {
+        font-size: 12px;
+      }
+      .input-tools {
+        margin: 6px 0;
+      }
+      .input-tools button {
+        min-height: 40px;
+      }
+      .review-item .question-box {
+        margin: 10px 0;
+      }
+      .review-item summary {
+        line-height: 1.8;
+      }
+      #reviewList[hidden] {
+        display: none !important;
+      }
+      @media (min-width: 900px) and (orientation: landscape) {
+        .wrap {
+          max-width: 980px;
+        }
+        .quiz-grid {
+          grid-template-columns: minmax(0, 1fr) 340px;
+          gap: 26px;
+        }
+        .question-box .problem {
+          font-size: 32px;
+        }
+        .question-box {
+          padding: 18px 14px;
+        }
+      }
+      @media (max-width: 899px) {
+        .input-running .question-box {
+          padding: 8px;
+        }
+        .input-running .question-box .problem {
+          margin: 0 0 4px;
+        }
+        .input-running .toolbar {
+          margin: 3px 0 6px;
+        }
+        .input-running .head {
+          margin-bottom: 6px;
+        }
+        .input-running .input-section {
+          margin-top: 8px;
+        }
+        .input-running .input-help {
+          margin-top: 4px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -389,7 +502,8 @@
       </section>
       <section id="quiz" hidden>
         <div class="toolbar">
-          <span class="question-no" id="status"></span><span id="timer"></span
+          <span class="question-no" id="status"></span
+          ><span id="timer" class="time-value" aria-label="経過時間"></span
           ><button onclick="menu()">選び直す</button
           ><button onclick="start(ADVANCED ? mode : lev)">
             もう一度やり直す
@@ -412,8 +526,15 @@
                 autocapitalize="off"
                 spellcheck="false"
               />
+              <div
+                id="inputPreview"
+                class="input-preview"
+                aria-label="入力した式の表示"
+                aria-live="polite"
+              ></div>
               <div class="input-tools">
-                <button onclick="insertText('x')">x</button
+                <button onclick="insertText('x')">
+                  <span class="m"><i>x</i></span></button
                 ><button onclick="insertText('²')">²</button
                 ><button onclick="insertText('³')">³</button
                 ><button onclick="insertText('−')">−</button
@@ -1099,40 +1220,56 @@
         });
       }
       // 難しさの目安（通常・入力モードでは、やさしい順に並べて出す）
+      const levelNumbers = [
+        [1, 5, 6, 7, 8, 40, 42, 54, 55, 56, 63, 74, 77],
+        [
+          2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 41, 43, 62,
+          64, 65,
+        ],
+        [21, 22, 23, 24, 48, 49, 50],
+        [
+          25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 44, 45,
+          46, 47, 51, 52, 53, 57, 58, 59, 60, 61, 66, 67, 68, 69, 70, 71, 72,
+          73, 75, 76, 78, 79, 80,
+        ],
+        [81, 82, 83, 84, 85, 86, 87, 88, 89],
+      ];
+      levelNumbers.forEach((ids, i) =>
+        ids.forEach((n) => (problemPool[n - 1].level = i + 1)),
+      );
       function level(q) {
-        if (q.custom) return 9;
-        if (q.at !== undefined) return 8;
-        if (q.f) return 7;
-        const t = readPoly(q.q) || [];
-        const frac = /fraction/.test(q.q) ? 3 : 0;
-        const neg = t.some(([c]) => c[0] < 0) ? 1 : 0;
-        const deg = Math.max(0, ...t.map(([, n]) => n));
-        return frac + t.length + neg + (deg >= 4 ? 1 : 0);
+        return q.level;
       }
-
-      const isConstant = (p) => /^f\(x\) = -?\d+$/.test(p.q);
+      function inputEligible(p) {
+        return (
+          !p.custom &&
+          !/fraction|\//.test(p.q) &&
+          !/fraction|\//.test(p.options[p.correct])
+        );
+      }
       function getRandomQuestions(count) {
-        let pool = problemPool;
-        if (currentMode === "input") {
-          pool = problemPool.filter(
-            (p) =>
-              !p.custom &&
-              !/fraction|\//.test(p.q) &&
-              !/fraction|\//.test(p.options[p.correct]),
-          );
+        const pool =
+          currentMode === "input"
+            ? problemPool.filter(inputEligible)
+            : problemPool;
+        const picked = [];
+        const gaps = [];
+        for (let l = 1; l <= 5; l++) {
+          const candidates = shuffleArray(pool.filter((q) => level(q) === l));
+          picked.push(...candidates.slice(0, 2));
+          for (let n = candidates.length; n < 2; n++) gaps.push(l);
         }
-        const constants = pool.filter(isConstant);
-        const others = shuffleArray([...pool.filter((p) => !isConstant(p))]);
-        const picked = [
-          constants[Math.floor(Math.random() * constants.length)],
-          ...others.slice(0, count - 1),
-        ];
-        return picked
-          .map((p, i) => [level(p) + Math.random() * 0.5, p])
-          .sort((a, b) => a[0] - b[0])
-          .map((x) => x[1]);
+        for (const missing of gaps) {
+          const rest = shuffleArray(
+            pool.filter((q) => !picked.includes(q)),
+          ).sort(
+            (a, b) =>
+              Math.abs(level(a) - missing) - Math.abs(level(b) - missing),
+          );
+          picked.push(rest[0]);
+        }
+        return picked.slice(0, count).sort((a, b) => level(a) - level(b));
       }
-
       function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -1232,6 +1369,10 @@
                             ),
                       )
                       .join("");
+                    text = text.replace(
+                      /(<i>[fyF]<\/i>)′/g,
+                      '$1<span class="pr">′</span>',
+                    );
                     return '<span class="m">' + text + "</span>";
                   },
                 ),
@@ -1340,6 +1481,7 @@
         wrong = [],
         started = 0,
         timer;
+      let answerDelay = null;
       const modeNames = {
         normal: "通常モード",
         input: "入力モード",
@@ -1353,20 +1495,26 @@
           .map((x) => x[1]);
       }
       function timed() {
-        return ADVANCED && (mode === "hundred" || mode === "hell");
+        return ADVANCED;
       }
       function menu() {
         clearInterval(timer);
+        clearTimeout(answerDelay);
         $("menu").hidden = false;
+        document.body.classList.remove("input-running");
         $("quiz").hidden = true;
         $("result").hidden = true;
       }
       function start(value) {
         clearInterval(timer);
+        clearTimeout(answerDelay);
         if (ADVANCED) {
           mode = value;
           currentMode = value;
-          questions = timed() ? shuffled(problemPool) : getRandomQuestions(10);
+          questions =
+            mode === "hundred" || mode === "hell"
+              ? shuffled(problemPool).sort((a, b) => level(a) - level(b))
+              : getRandomQuestions(10);
         } else {
           lev = value;
           questions = shuffled(LEVELS[lev - 1].problems);
@@ -1378,6 +1526,7 @@
         $("menu").hidden = true;
         $("result").hidden = true;
         $("quiz").hidden = false;
+        document.body.classList.toggle("input-running", mode === "input");
         timer = setInterval(() => {
           $("timer").textContent = timed() ? elapsed() : "";
         }, 250);
@@ -1410,6 +1559,43 @@
           ...b,
         };
       }
+
+      function escapeText(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function questionHTML(q) {
+        let expression, ask;
+        if (ADVANCED) {
+          expression = q.q;
+          if (q.custom) {
+            ask = q.q.includes("ax²")
+              ? "a は定数。f′(2) = 11 のとき、a を求めよ。"
+              : "a は定数。f′(1) = 5 のとき、a を求めよ。";
+          } else
+            ask =
+              q.at !== undefined
+                ? "f′(" + numTxt([q.at, 1]) + ") の値を求めよ。"
+                : "f′(x) を求めよ。";
+        } else {
+          const b = build(lev, q);
+          expression = "f(x) = " + b.fTxt;
+          ask =
+            q.at !== undefined
+              ? "f′(" + numTxt([q.at, 1]) + ") の値を求めよ。"
+              : "f′(x) を求めよ。";
+        }
+        return (
+          '<div class="question-box"><div class="problem">' +
+          mathHTML(expression) +
+          '</div><div class="ask-line">' +
+          mathHTML(ask) +
+          "</div></div>"
+        );
+      }
+
       function load() {
         stage = 0;
         done = false;
@@ -1421,7 +1607,7 @@
           " / " +
           questions.length;
         $("bar").style.width = (index / questions.length) * 100 + "%";
-        $("question").innerHTML = mathHTML(d.lead.replace(/<br><br>/g, "<br>"));
+        $("question").innerHTML = questionHTML(questions[index]);
         $("hints").innerHTML = "";
         $("feedback").hidden = true;
         $("next").hidden = true;
@@ -1429,6 +1615,10 @@
         $("inputSection").hidden = !(ADVANCED && mode === "input");
         $("choices").hidden = ADVANCED && mode === "input";
         $("answerInput").value = "";
+        $("inputPreview").innerHTML = "";
+        document
+          .querySelector(".answer-panel")
+          .classList.remove("flash-correct", "flash-wrong");
         $("inputFeedback").textContent = "";
         $("submit").disabled = false;
         $("answerInput").disabled = false;
@@ -1448,7 +1638,7 @@
         fitMath();
       }
       function hints() {
-        if (done) return;
+        if (done || timed()) return;
         stage++;
         if (stage >= 3) {
           finish(false);
@@ -1464,34 +1654,24 @@
           "</div>";
         fitMath();
       }
-      function choose(n) {
+      function recordAnswer(ok, chosen) {
         if (done) return;
-        const ok = options[n].ok;
-        if (timed()) {
-          if (ok) score++;
-          else
-            wrong.push({
-              q: questions[index],
-              number: index + 1,
-              chosen: options[n].text,
-            });
-          if (!ok && mode === "hell") {
-            results();
-            return;
-          }
-          advance();
-          return;
-        }
-        if (ok) {
-          finish(true);
-          return;
-        }
-        $("choices").children[n].classList.add("incorrect");
-        $("choices").children[n].disabled = true;
-        hints();
+        done = true;
+        if (ok) score++;
+        else wrong.push({ q: questions[index], number: index + 1, chosen });
+        document
+          .querySelector(".answer-panel")
+          .classList.add(ok ? "flash-correct" : "flash-wrong");
+        answerDelay = setTimeout(() => {
+          if (!ok && mode === "hell") results();
+          else advance();
+        }, 160);
+      }
+      function choose(n) {
+        if (!done) recordAnswer(options[n].ok, options[n].text);
       }
       function submit() {
-        if (done) return;
+        if (done || composing) return;
         const v = $("answerInput").value.trim();
         if (!v) {
           $("inputFeedback").textContent = "答えを入力してください。";
@@ -1499,19 +1679,24 @@
         }
         if (!parsePoly(v)) {
           $("inputFeedback").textContent =
-            "式を読み取れません。例：2x² + 3（2x^2 + 3 でも入力できます）";
+            "式を読み取れません。書き直してもう一度入力してください。";
           return;
         }
-        if (samePoly(v, questions[index].options[questions[index].correct]))
-          finish(true);
-        else {
-          $("inputFeedback").textContent =
-            "もう一度、下のヒントを見て考えよう。";
-          hints();
-        }
+        recordAnswer(
+          samePoly(v, questions[index].options[questions[index].correct]),
+          escapeText(v),
+        );
+      }
+      let composing = false;
+      function previewInput() {
+        if (composing) return;
+        const p = parsePoly($("answerInput").value);
+        $("inputPreview").innerHTML = p
+          ? mathHTML(polyTxt(Object.entries(p).map(([n, c]) => [c, Number(n)])))
+          : "";
       }
       function reveal() {
-        if (!done) {
+        if (!done && !timed()) {
           stage = 3;
           finish(false);
         }
@@ -1547,7 +1732,7 @@
         if (index >= questions.length) results();
         else {
           load();
-          window.scrollTo(0, 0);
+          if (mode !== "input") window.scrollTo(0, 0);
         }
       }
       function results() {
@@ -1562,7 +1747,7 @@
           score +
           " / " +
           (mode === "hell" && ADVANCED ? attempted : questions.length) +
-          " 問</p><p>" +
+          ' 問</p><p class="result-time">' +
           (timed()
             ? "記録：" +
               elapsed() +
@@ -1576,7 +1761,7 @@
           (ADVANCED ? "モード" : "レベル") +
           'を選ぶ</button><a href="../index.html">ほかの教材へ</a></div>' +
           (wrong.length
-            ? "<h3>間違えた問題を見直そう</h3>" +
+            ? '<button class="primary" onclick="toggleReview()" aria-expanded="false" id="reviewToggle">間違えた問題を確認する</button><div id="reviewList" hidden>' +
               wrong
                 .map(
                   (w, n) =>
@@ -1584,7 +1769,9 @@
                     w.number +
                     "：" +
                     mathHTML(w.q.q) +
-                    "</summary><p>選んだ答え：" +
+                    "</summary>" +
+                    questionHTML(w.q) +
+                    "<p>選んだ（入れた）答え：" +
                     mathHTML(w.chosen) +
                     "</p><p>正しい答え：" +
                     mathHTML(info(w.q).ans) +
@@ -1593,9 +1780,16 @@
                     graph(w.q) +
                     "</details></div>",
                 )
-                .join("")
-            : "");
+                .join("") +
+              "</div>"
+            : "<p>間違えた問題はありません。</p>");
         window.scrollTo(0, 0);
+        fitMath();
+      }
+      function toggleReview() {
+        const open = $("reviewList").hidden;
+        $("reviewList").hidden = !open;
+        $("reviewToggle").setAttribute("aria-expanded", String(open));
         fitMath();
       }
       function graph(q) {
@@ -1663,14 +1857,23 @@
       function insertText(s) {
         const e = $("answerInput");
         e.setRangeText(s, e.selectionStart, e.selectionEnd, "end");
+        previewInput();
         e.focus();
       }
       $("answerInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !e.isComposing && !composing) {
           e.preventDefault();
-          if (done) advance();
-          else submit();
+          if (!done) submit();
         }
+      });
+      $("answerInput").addEventListener("input", previewInput);
+      $("answerInput").addEventListener(
+        "compositionstart",
+        () => (composing = true),
+      );
+      $("answerInput").addEventListener("compositionend", () => {
+        composing = false;
+        previewInput();
       });
       $("menuGrid").innerHTML = ADVANCED
         ? Object.entries(modeNames)
@@ -1684,8 +1887,8 @@
                 name +
                 "</b><small>" +
                 [
-                  "10問・選択式",
-                  "10問・式を入力",
+                  "10問・選択式タイムアタック",
+                  "10問・入力タイムアタック",
                   "全" + problemPool.length + "問・時間を計測",
                   "全" + problemPool.length + "問・1回の間違いで終了",
                 ][i] +
