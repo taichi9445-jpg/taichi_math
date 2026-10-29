@@ -2066,18 +2066,22 @@
         btn.classList.add("picking");
         const numeric = btn.tagName === "INPUT",
           kind = btn.dataset.kind;
+        const used = btn.dataset.pair
+          ? Array.from(
+              document.querySelectorAll(
+                '[data-pair="' + btn.dataset.pair + '"].correct',
+              ),
+            ).map((e) => nz(e.value))
+          : [];
+        const nextValue =
+          btn.dataset.ans.split("|").find((v) => !used.includes(v)) ||
+          btn.dataset.ans.split("|")[0];
         let options = numeric
           ? [
-              [btn.dataset.ans.split("|")[0], btn.dataset.ans.split("|")[0]],
-              [
-                String(Number(btn.dataset.ans.split("|")[0]) + 1),
-                String(Number(btn.dataset.ans.split("|")[0]) + 1),
-              ],
-              [
-                String(Number(btn.dataset.ans.split("|")[0]) - 1),
-                String(Number(btn.dataset.ans.split("|")[0]) - 1),
-              ],
-            ]
+              nextValue,
+              String(Number(nextValue) + 1),
+              String(Number(nextValue) - 1),
+            ].map((v) => [v, v])
           : PICK[kind];
         if (kind === "arrow") options = [...options, ["→", "→ 一定"]];
         options = options
