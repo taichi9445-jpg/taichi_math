@@ -500,19 +500,19 @@
         return s || "0";
       }
       const line = (m, b) => "y = " + poly([m, b]);
-      const at = (f, a) =>
-        f
-          .map((c, i) =>
-            c === 0
-              ? ""
-              : par(c) +
-                (f.length - 1 - i
-                  ? " × " + par(a) + ["", "", "²", "³", "⁴"][f.length - 1 - i]
-                  : ""),
-          )
-          .filter(Boolean)
-          .join(" + ")
-          .replace(/\+ \(−(\d+)\)(?! ×)/g, "− $1");
+      // 教科書の書き方：f(2) = 2³ − 3 × 2（係数 1 は書かない、負の係数は − でつなぐ）
+      const at = (f, a) => {
+        let s = "";
+        f.forEach((c, i) => {
+          if (c === 0) return;
+          const k = f.length - 1 - i;
+          const pw = k ? par(a) + ["", "", "²", "³", "⁴"][k] : "";
+          const m = Math.abs(c);
+          const t = k ? (m === 1 ? pw : frac(m) + " × " + pw) : frac(m);
+          s += (s ? (c < 0 ? " − " : " + ") : c < 0 ? "−" : "") + t;
+        });
+        return s || "0";
+      };
       function row(t, h) {
         return { t, h };
       }
