@@ -1651,6 +1651,8 @@
       }
       function choose(n) {
         if (done) return;
+        // A hint is a review reason; keep the student's actual first choice too.
+        if(history[index]?.issue && ['ヒントを見ました','答えを見ました'].includes(history[index].chosen)) history[index].chosen=options[n].text;
         const ok = options[n].ok;
         if (timed()) {
           if (ok) score++;
