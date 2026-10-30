@@ -487,6 +487,133 @@
           margin-top: 4px;
         }
       }
+
+      .fn-gap {
+        display: inline-block;
+        width: 0.07em;
+      }
+      #questionTabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin: 12px 0;
+      }
+      #questionTabs button {
+        min-width: 34px;
+        min-height: 34px;
+        padding: 4px 8px;
+        border: 1px solid #b7c8dc;
+        border-radius: 7px;
+        background: #f4f7fb;
+        color: #263a54;
+      }
+      #questionTabs button[aria-current="step"] {
+        outline: 2px solid #e67e22;
+        outline-offset: 1px;
+      }
+      #questionTabs .answered {
+        background: #d9eee3;
+      }
+      #questionTabs .needs-review {
+        background: #ffe2dc;
+      }
+      #questionTabs button:disabled {
+        opacity: 0.4;
+      }
+      #menuGrid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 760px;
+        margin: auto;
+        gap: 16px;
+      }
+      .menu-card {
+        min-width: 0;
+        width: 100%;
+        aspect-ratio: 4/3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 12px;
+        gap: 10px;
+        background: #eaf2fd;
+      }
+      .menu-card:nth-child(2) {
+        background: #eaf6ee;
+      }
+      .menu-card:nth-child(3) {
+        background: #fff1df;
+      }
+      .menu-card:nth-child(4) {
+        background: #f1eafa;
+      }
+      .menu-card:nth-child(5) {
+        grid-column: 1/-1;
+        width: calc(50% - 8px);
+        justify-self: center;
+        background: #edf4f8;
+      }
+      .menu-card b {
+        font-size: clamp(16px, 2vw, 22px);
+      }
+      .menu-card small {
+        font-size: 12px;
+      }
+      .lesson-icon {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(18px, 3vw, 28px);
+        color: #254f82;
+        line-height: 1.1;
+      }
+      .lesson-icon em {
+        color: #c65a2b;
+        font-style: normal;
+      }
+      .input-icon {
+        border: 2px solid;
+        padding: 4px 12px;
+        border-radius: 5px;
+      }
+      .clock-icon {
+        border: 3px solid;
+        border-radius: 50%;
+        width: 58px;
+        height: 58px;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .clock-icon:before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        width: 14px;
+        border-top: 4px solid;
+      }
+      @media (max-width: 480px) {
+        #menuGrid {
+          gap: 10px;
+        }
+        .menu-card {
+          padding: 10px 7px !important;
+          gap: 6px;
+        }
+        .menu-card:nth-child(5) {
+          width: calc(50% - 5px);
+        }
+        .menu-card b {
+          font-size: 16px;
+        }
+        .lesson-icon {
+          font-size: 17px;
+          height: 54px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1373,6 +1500,10 @@
                       /(<i>[fyF]<\/i>)′/g,
                       '$1<span class="pr">′</span>',
                     );
+                    text = text.replace(
+                      /(<i>f<\/i>|<span class="pr">′<\/span>)(?=\()/g,
+                      '$1<span class="fn-gap"></span>',
+                    );
                     return '<span class="m">' + text + "</span>";
                   },
                 ),
@@ -1520,6 +1651,8 @@
           questions = shuffled(LEVELS[lev - 1].problems);
         }
         index = score = 0;
+        history = [];
+        frontier = 0;
         wrong = [];
         started = Date.now();
         $("timer").textContent = timed() ? "0分0秒" : "";
@@ -1532,6 +1665,130 @@
         }, 250);
         load();
         window.scrollTo(0, 0);
+      }
+      // Each tab owns its answer, shuffled choices and hint state.
+      let history = [],
+        frontier = 0;
+      function rememberIssue(chosen) {
+        const h = (history[index] ||= {});
+        if (!h.issue) {
+          h.issue = true;
+          h.chosen = chosen;
+        }
+        if (!wrong.some((w) => w.number === index + 1))
+          wrong.push({
+            q: questions[index],
+            number: index + 1,
+            chosen: h.chosen,
+          });
+      }
+      function saveQuestion() {
+        if (index >= questions.length || !questions.length || $("quiz").hidden)
+          return;
+        const h = (history[index] ||= {});
+        Object.assign(h, {
+          stage,
+          done,
+          options,
+          input: $("answerInput").value,
+          choices: $("choices").innerHTML,
+          hint: $("hints").innerHTML,
+          feedback: $("feedback").innerHTML,
+          feedbackClass: $("feedback").className,
+          feedbackHidden: $("feedback").hidden,
+          nextHidden: $("next").hidden,
+        });
+      }
+      function renderTabs() {
+        let tabs = $("questionTabs");
+        if (!tabs) {
+          tabs = document.createElement("nav");
+          tabs.id = "questionTabs";
+          tabs.setAttribute("aria-label", "問題番号");
+          $("question").before(tabs);
+        }
+        tabs.innerHTML = questions
+          .map(
+            (q, i) =>
+              "<button " +
+              (ADVANCED && i > frontier ? "disabled " : "") +
+              'aria-label="問題 ' +
+              (i + 1) +
+              '" aria-current="' +
+              (i === index ? "step" : "false") +
+              '" class="' +
+              (history[i]?.done
+                ? history[i].issue
+                  ? "needs-review"
+                  : "answered"
+                : "") +
+              '" onclick="visitQuestion(' +
+              i +
+              ')">' +
+              (i + 1) +
+              "</button>",
+          )
+          .join("");
+      }
+      function load() {
+        const h = history[index];
+        loadFresh();
+        if (h && h.options) {
+          stage = h.stage;
+          done = h.done;
+          options = h.options;
+          $("choices").innerHTML = h.choices;
+          $("hints").innerHTML = h.hint;
+          $("feedback").innerHTML = h.feedback;
+          $("feedback").className = h.feedbackClass;
+          $("feedback").hidden = h.feedbackHidden;
+          $("next").hidden = h.nextHidden;
+          $("answerInput").value = h.input;
+          $("answerInput").disabled = $("submit").disabled = done;
+          $("help").hidden = timed() || done;
+          if (ADVANCED && done) {
+            $("next").hidden = false;
+            $("next").textContent = "取り組み中の問題へ";
+          }
+        }
+        renderTabs();
+        fitMath();
+      }
+      function visitQuestion(n) {
+        if (ADVANCED && n > frontier) return;
+        if (ADVANCED && done && index === frontier) return; // 160 ms feedback before advancing
+        saveQuestion();
+        index = n;
+        load();
+      }
+      function reviewHTML() {
+        const items = history
+          .map((h, i) => ({ h, i }))
+          .filter(({ h }) => h?.issue);
+        if (!items.length) return "<p>間違えた問題はありません</p>";
+        return (
+          '<button onclick="toggleReview()" id="reviewToggle" aria-expanded="false">間違えた問題を確認する</button><div id="reviewList" hidden><h3>間違えた問題・ヒントを使った問題</h3>'  +
+          items
+            .map(({ h, i }) => {
+              const q = questions[i],
+                d = ADVANCED ? info(q) : build(lev, q);
+              return (
+                '<details class="review-item"><summary>問題 ' +
+                (i + 1) +
+                "</summary>" +
+                questionHTML(q) +
+                "<p>選んだ（入れた）答え：" +
+                mathHTML(h.chosen) +
+                "</p><p>正しい答え：" +
+                mathHTML(d.ans || d.answer) +
+                "</p>" +
+                stepsHTML(d.mid) +
+                (ADVANCED ? graph(q) : "") +
+                "</details>"
+              );
+            })
+            .join("") + "</div>"
+        );
       }
       function elapsed() {
         const s = Math.floor((Date.now() - started) / 1000);
@@ -1596,7 +1853,7 @@
         );
       }
 
-      function load() {
+      function loadFresh() {
         stage = 0;
         done = false;
         const d = details();
@@ -1639,6 +1896,7 @@
       }
       function hints() {
         if (done || timed()) return;
+        rememberIssue("ヒントを見ました");
         stage++;
         if (stage >= 3) {
           finish(false);
@@ -1656,19 +1914,39 @@
       }
       function recordAnswer(ok, chosen) {
         if (done) return;
+        const panel = document.querySelector(".answer-panel");
+        panel.classList.remove("flash-wrong", "flash-correct");
+        if (!ok) {
+          rememberIssue(chosen);
+          panel.classList.add("flash-wrong");
+          $("inputFeedback").textContent =
+            "もう一度考えてみよう。正解すると次に進みます。";
+          saveQuestion();
+          if (mode === "hell") {
+            done = true;
+            saveQuestion();
+            results();
+          }
+          return;
+        }
         done = true;
-        if (ok) score++;
-        else wrong.push({ q: questions[index], number: index + 1, chosen });
-        document
-          .querySelector(".answer-panel")
-          .classList.add(ok ? "flash-correct" : "flash-wrong");
-        answerDelay = setTimeout(() => {
-          if (!ok && mode === "hell") results();
-          else advance();
-        }, 160);
+        if (!history[index]?.issue) score++;
+        panel.classList.add("flash-correct");
+        [...$("choices").children].forEach((e, n) => {
+          e.disabled = true;
+          if (options[n].ok) e.classList.add("correct");
+        });
+        $("answerInput").disabled = $("submit").disabled = true;
+        saveQuestion();
+        answerDelay = setTimeout(advance, 160);
       }
       function choose(n) {
-        if (!done) recordAnswer(options[n].ok, options[n].text);
+        if (done || $("choices").children[n].disabled) return;
+        if (!options[n].ok) {
+          $("choices").children[n].classList.add("incorrect");
+          $("choices").children[n].disabled = true;
+        }
+        recordAnswer(options[n].ok, options[n].text);
       }
       function submit() {
         if (done || composing) return;
@@ -1697,6 +1975,7 @@
       }
       function reveal() {
         if (!done && !timed()) {
+          rememberIssue("答えを見ました");
           stage = 3;
           finish(false);
         }
@@ -1728,7 +2007,13 @@
         fitMath();
       }
       function advance() {
-        index++;
+        saveQuestion();
+        index = ADVANCED
+          ? index < frontier
+            ? frontier
+            : frontier + 1
+          : index + 1;
+        frontier = Math.max(frontier, index);
         if (index >= questions.length) results();
         else {
           load();
@@ -1736,6 +2021,7 @@
         }
       }
       function results() {
+        saveQuestion();
         clearInterval(timer);
         $("quiz").hidden = true;
         $("result").hidden = false;
@@ -1760,29 +2046,7 @@
           '<button onclick="menu()">' +
           (ADVANCED ? "モード" : "レベル") +
           'を選ぶ</button><a href="../index.html">ほかの教材へ</a></div>' +
-          (wrong.length
-            ? '<button class="primary" onclick="toggleReview()" aria-expanded="false" id="reviewToggle">間違えた問題を確認する</button><div id="reviewList" hidden>' +
-              wrong
-                .map(
-                  (w, n) =>
-                    '<div class="review-item"><details><summary>問題 ' +
-                    w.number +
-                    "：" +
-                    mathHTML(w.q.q) +
-                    "</summary>" +
-                    questionHTML(w.q) +
-                    "<p>選んだ（入れた）答え：" +
-                    mathHTML(w.chosen) +
-                    "</p><p>正しい答え：" +
-                    mathHTML(info(w.q).ans) +
-                    "</p>" +
-                    stepsHTML(info(w.q).mid) +
-                    graph(w.q) +
-                    "</details></div>",
-                )
-                .join("") +
-              "</div>"
-            : "<p>間違えた問題はありません。</p>");
+          reviewHTML();
         window.scrollTo(0, 0);
         fitMath();
       }
@@ -1875,46 +2139,57 @@
         composing = false;
         previewInput();
       });
-      $("menuGrid").innerHTML = ADVANCED
-        ? Object.entries(modeNames)
-            .map(
-              ([key, name], i) =>
-                '<button class="menu-card" onclick="start(\'' +
-                key +
-                "')\">" +
-                menuIcon(i) +
-                "<b>" +
-                name +
-                "</b><small>" +
-                [
-                  "10問・選択式タイムアタック",
-                  "10問・入力タイムアタック",
-                  "全" + problemPool.length + "問・時間を計測",
-                  "全" + problemPool.length + "問・1回の間違いで終了",
-                ][i] +
-                "</small></button>",
-            )
-            .join("")
-        : LEVELS.map(
-            (l, i) =>
-              '<button class="menu-card" onclick="start(' +
-              (i + 1) +
-              ')">' +
-              menuIcon(i) +
-              "<b>レベル " +
-              (i + 1) +
-              "</b><span>" +
-              [
-                "べきの微分",
-                "係数のある式",
-                "分数の係数",
-                "多項式",
-                "展開・微分係数",
-              ][i] +
-              "</span><small>" +
-              l.problems.length +
-              "問</small></button>",
-          ).join("");
+      const menuTitles = ADVANCED
+        ? [
+            "4択で10問",
+            "式を入力して10問",
+            "全89問タイムアタック",
+            "超鬼連チャン",
+          ]
+        : [
+            "xⁿの導関数",
+            "定数倍の導関数",
+            "係数が分数の関数",
+            "多項式の導関数",
+            "展開して微分・微分係数",
+          ];
+      const menuSymbols = ADVANCED
+        ? [
+            "▢ ▣<br>▢ ▢",
+            '<span class="input-icon">x²│</span>',
+            '<span class="clock-icon">89</span>',
+            "×",
+          ]
+        : [
+            "x³ → 3x²",
+            "5x³ → 15x²",
+            "{1|2}x² → x",
+            "x³ <em>+</em> 2x² <em>−</em> 3x",
+            "f′(a)",
+          ];
+      $("menuGrid").innerHTML = menuTitles
+        .map(
+          (title, i) =>
+            '<button class="menu-card" onclick="start(' +
+            (ADVANCED ? "'" + Object.keys(modeNames)[i] + "'" : i + 1) +
+            ')"><span class="lesson-icon" aria-hidden="true">' +
+            (ADVANCED
+              ? menuSymbols[i]
+              : mathHTML(menuSymbols[i].replace("{1|2}", frac("1", "2")))) +
+            "</span><b>" +
+            title +
+            "</b><small>" +
+            (ADVANCED
+              ? [
+                  "選んで解く・時間を計測",
+                  "キーボードで答える",
+                  "全部の問題に挑戦",
+                  "1回まちがえたら終わり",
+                ][i]
+              : LEVELS[i].problems.length + "問") +
+            "</small></button>",
+        )
+        .join("");
       menu();
     </script>
   </body>
