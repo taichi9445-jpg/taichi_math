@@ -386,6 +386,17 @@
         color: #5b6470;
         line-height: 1.7;
       }
+      /* PC：3つを横1列にして、1画面に入れる */
+      @media (min-width: 700px) {
+        .mode-buttons {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          max-width: 780px !important;
+        }
+        .mode-btn:nth-child(3) {
+          grid-column: auto !important;
+          width: 100% !important;
+        }
+      }
       .mode-icon {
         height: 65px;
         display: flex;
@@ -813,6 +824,7 @@
       }
       .mode-title {
         font-size: 22px;
+        word-break: keep-all;
       }
       .mode-desc {
         font-size: 13px;
@@ -3032,9 +3044,9 @@
           '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#1f4e8c" stroke-width="2" stroke-linecap="round">' +
           menuPics[i] +
           "</g></svg>";
-        e.querySelector(".mode-title").textContent = [
+        e.querySelector(".mode-title").innerHTML = [
           "増減表をかこう",
-          "増減表ランダム練習",
+          "増減表<wbr>ランダム練習",
           "定義域のある問題",
         ][i];
         e.querySelector(".mode-desc").textContent = [

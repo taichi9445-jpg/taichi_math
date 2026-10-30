@@ -86,6 +86,7 @@
         line-height: 1.7;
       }
       .menu-card b {
+        word-break: keep-all;
         font-size: 16px;
       }
       .toolbar button {
@@ -519,6 +520,37 @@
       }
       #questionTabs button:disabled {
         opacity: 0.4;
+      }
+      .mi {
+        font-family: "STIX Two Text", serif;
+        font-style: italic;
+        font-weight: 400;
+      }
+      .mi-sup {
+        font-family: "STIX Two Text", serif;
+        font-weight: 400;
+        font-size: 0.65em;
+      }
+      .input-icon .caret {
+        margin-left: 4px;
+        font-weight: 300;
+      }
+      /* PC：メニューが1画面に入る大きさに */
+      @media (min-width: 700px) {
+        .menu-grid.modes {
+          max-width: 560px !important;
+        }
+        #menuGrid:not(.modes) {
+          grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+          max-width: 780px !important;
+        }
+        #menuGrid:not(.modes) .menu-card {
+          grid-column: span 2 !important;
+          width: 100% !important;
+        }
+        #menuGrid:not(.modes) .menu-card:nth-child(4) {
+          grid-column: 2 / span 2 !important;
+        }
       }
       #menuGrid {
         display: grid;
@@ -2147,16 +2179,16 @@
             "超鬼連チャン",
           ]
         : [
-            "xⁿの導関数",
+            '<i class="mi">x</i><sup class="mi-sup">n</sup> の導関数',
             "定数倍の導関数",
             "係数が分数の関数",
             "多項式の導関数",
-            "展開して微分・微分係数",
+            '展開して微分・<wbr>微分係数',
           ];
       const menuSymbols = ADVANCED
         ? [
             "▢ ▣<br>▢ ▢",
-            '<span class="input-icon">x²│</span>',
+            '<span class="input-icon"><i class="mi">x</i><sup class="mi-sup">2</sup><span class="caret">│</span></span>',
             '<span class="clock-icon">89</span>',
             "×",
           ]

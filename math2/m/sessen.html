@@ -78,6 +78,20 @@
       .menu-nav {
         margin: 10px 0;
       }
+      /* PC：メニューが1画面に入る大きさに（3・2 の2段） */
+      @media (min-width: 700px) {
+        .menu-grid {
+          grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+          max-width: 780px !important;
+        }
+        .menu-card {
+          grid-column: span 2 !important;
+          width: 100% !important;
+        }
+        .menu-card:nth-child(4) {
+          grid-column: 2 / span 2 !important;
+        }
+      }
       .challenge-options {
         display: grid;
         gap: 10px;
