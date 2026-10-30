@@ -142,6 +142,146 @@
         min-height: 2.7em;
         padding: 0.12em 0.25em;
       }
+
+      .function-gap {
+        margin-right: 0.07em;
+      }
+      .fs-role {
+        color: #1f4e8c;
+        text-shadow:
+          -1px -1px white,
+          1px -1px white,
+          -1px 1px white,
+          1px 1px white;
+      }
+      .role-y1 {
+        color: #b33030;
+      }
+      .role-x2,
+      .role-m {
+        color: #207345;
+      }
+      .role-y2 {
+        color: #bd5916;
+      }
+      .fs-role .fs-blank.ok {
+        color: inherit;
+      }
+      .fs-card {
+        color: #222;
+        text-shadow: none;
+      }
+      .fs-blank.reviewed-wrong {
+        outline: 2px solid #e4a09a;
+        outline-offset: 2px;
+      }
+      .fs-cards {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px !important;
+      }
+      .fs-cards.numeric {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .fs-card {
+        min-width: 0 !important;
+        width: 100%;
+        padding: 7px 3px;
+      }
+      .fs-card.used {
+        visibility: hidden;
+        display: block !important;
+      }
+      .menu-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 760px;
+        margin: 18px auto;
+        gap: 14px;
+      }
+      .menu-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 4/3;
+        text-align: center;
+        gap: 10px;
+        background: #eaf2fd;
+        min-width: 0;
+        padding: 12px;
+      }
+      .menu-card:nth-child(2) {
+        background: #eaf6ee;
+      }
+      .menu-card:nth-child(3) {
+        background: #fff1df;
+      }
+      .menu-card:nth-child(4) {
+        background: #f1eafa;
+      }
+      .menu-card:nth-child(5) {
+        grid-column: 1/-1;
+        width: calc(50% - 7px);
+        justify-self: center;
+        background: #edf4f8;
+      }
+      .menu-card svg {
+        width: 64px;
+        height: 64px;
+      }
+      .menu-card b {
+        font-size: 21px;
+      }
+      .menu-card small {
+        font-size: 12px;
+      }
+      .challenge-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .challenge-options button {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .port-back a {
+        color: #596879;
+        text-decoration: none;
+      }
+      .answer-graph {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: start;
+        position: sticky;
+        top: 12px;
+        width: 100%;
+      }
+      @media (max-width: 899px) {
+        .answer-graph {
+          position: static;
+          grid-column: auto;
+          grid-row: auto;
+        }
+        .fs-cards.numeric {
+          grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+          gap: 4px !important;
+        }
+        .fs-cards.numeric .fs-card {
+          font-size: 15px;
+          padding: 5px 0;
+        }
+        .menu-card b {
+          font-size: 17px;
+        }
+        .menu-card small {
+          font-size: 11px;
+        }
+        .menu-card {
+          gap: 6px;
+          padding: 8px;
+        }
+        .challenge-options .fs-btn {
+          font-size: 18px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -501,12 +641,15 @@
       }
       const line = (m, b) => "y = " + poly([m, b]);
       // 教科書の書き方：f(2) = 2³ − 3 × 2（係数 1 は書かない、負の係数は − でつなぐ）
-      const at = (f, a) => {
+      const at = (f, a, roleName) => {
         let s = "";
         f.forEach((c, i) => {
           if (c === 0) return;
           const k = f.length - 1 - i;
-          const pw = k ? par(a) + ["", "", "²", "³", "⁴"][k] : "";
+          const pw = k
+            ? (roleName ? role(roleName, par(a)) : par(a)) +
+              ["", "", "²", "³", "⁴"][k]
+            : "";
           const m = Math.abs(c);
           const t = k ? (m === 1 ? pw : frac(m) + " × " + pw) : frac(m);
           s += (s ? (c < 0 ? " − " : " + ") : c < 0 ? "−" : "") + t;
@@ -516,33 +659,163 @@
       function row(t, h) {
         return { t, h };
       }
+      const role = (r, v) => "«" + r + "|" + v + "»";
       function complete(p, idx) {
-        // First examples keep the same calculation, but expose fewer blanks.
+        const q = p.source;
+        if (p.kind === "line") {
+          const [x, y] = q.p;
+          p.q = q.r
+            ? "2点 (" +
+              role("x1", n(x)) +
+              ", " +
+              role("y1", n(y)) +
+              "), (" +
+              role("x2", n(q.r[0])) +
+              ", " +
+              role("y2", n(q.r[1])) +
+              ") を通る直線の方程式を求めよ。"
+            : "点 (" +
+              role("x1", n(x)) +
+              ", " +
+              role("y1", n(y)) +
+              ") を通り、傾き " +
+              role("m", frac(value(q.m))) +
+              " の直線の方程式を求めよ。";
+          p.rows.forEach((r) => {
+            if (r.t.startsWith("x = ["))
+              r.t = r.t.replace(/\[[^\]]+\]/, (m) => role("x1", m));
+            if (r.t.startsWith("m = {[")) {
+              let i = 0;
+              r.t = r.t.replace(/\[[^\]]+\]/g, (m) =>
+                role(["y2", "y1", "x2", "x1"][i++], m),
+              );
+            }
+            if (r.t.startsWith("y − [") && r.t.includes("(x − [")) {
+              let i = 0;
+              r.t = r.t.replace(/\[[^\]]+\]/g, (m) => {
+                const k = ["y1", q.r ? null : "m", "x1"][i++];
+                return k ? role(k, m) : m;
+              });
+            }
+          });
+        } else {
+          let ask = p.q.split("　")[1];
+          if (q.type === "x")
+            ask = ask.replace("x = " + n(q.a), "x = " + role("x1", n(q.a)));
+          if (q.type === "pt")
+            ask = ask.replace(
+              "(" + n(q.a) + ", " + n(ev(q.f, q.a)) + ")",
+              "(" +
+                role("x1", n(q.a)) +
+                ", " +
+                role("y1", n(ev(q.f, q.a))) +
+                ")",
+            );
+          if (q.type === "slope") ask = ask.replace(n(q.k), role("m", n(q.k)));
+          if (q.p)
+            ask = ask.replace(
+              "(" + n(q.p[0]) + ", " + n(q.p[1]) + ")",
+              "(" + role("x1", n(q.p[0])) + ", " + role("y1", n(q.p[1])) + ")",
+            );
+          p.q = p.q.split("　")[0] + "　" + ask;
+          if (q.type === "pt" || q.type === "x")
+            p.rows.forEach((r) => {
+              r.t = r.t.replace(/f(′?)\(([^)]+)\)/g, (m, pr, x) =>
+                x === n(q.a) ? "f" + pr + "(" + role("x1", x) + ")" : m,
+              );
+              if (r.t.startsWith("y − [") && r.t.includes("(x − [")) {
+                let i = 0;
+                r.t = r.t.replace(/\[[^\]]+\]/g, (m) => {
+                  const k = [q.type === "pt" ? "y1" : null, null, "x1"][i++];
+                  return k ? role(k, m) : m;
+                });
+              }
+            });
+          if (q.p)
+            p.rows.forEach((r) => {
+              if (r.t.startsWith("−3 = 2a × [1]"))
+                r.t =
+                  role("y1", "−3") + " = 2a × " + role("x1", "[1]") + " − a²";
+            });
+          if (q.type === "slope")
+            p.rows.forEach((r) => {
+              if (r.t.startsWith(poly(der(q.f), "a") + " = ["))
+                r.t = r.t.replace(
+                  "[" + n(q.k) + "]",
+                  role("m", "[" + n(q.k) + "]"),
+                );
+            });
+        }
+        // Keep the shorter first example while preserving every calculation line.
         let seen = 0;
-        if (idx === 0)
+        if (idx === 0 && !q.r)
           p.rows = p.rows.map((r) => ({
             ...r,
             t: r.t.replace(/\[([^\]]+)\]/g, (m, v) =>
               ++seen % 3 === 1 ? m : v,
             ),
           }));
-        const used = [
-          ...new Set(
-            p.rows.flatMap((r) =>
-              [...r.t.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]),
-            ),
-          ),
-        ];
-        p.cards = [
-          ...used,
-          ...["0", "1", "−1", "2", "−2", "3", "−3", "4", "5", "6"]
-            .filter((x) => !used.includes(x))
-            .slice(0, 3)
-            .map((x) => [
-              x,
-              "符号と代入する値を確かめよう。傾き f′(a) と高さ f(a) は別の値です。",
-            ]),
-        ];
+        let answers = [],
+          expressions = [];
+        p.rows.forEach((r) => {
+          for (const m of r.t.matchAll(/\[([^\]]+)\]/g)) {
+            const i = answers.length;
+            answers.push(m[1]);
+            if (
+              /[a-z]/i.test(m[1]) ||
+              /^y = \[/.test(r.t) ||
+              /^f′\(x\) = \[/.test(r.t)
+            )
+              expressions.push(i);
+          }
+        });
+        p.expressionSlots = expressions;
+        p.cards = answers.filter((v, i) => !expressions.includes(i));
+        // Fixed order is numerical, not the order of the blanks; duplicates have their own slot.
+        const num = (v) =>
+          Number(
+            v
+              .replace(/[()]/g, "")
+              .replace("−", "-")
+              .split("/")
+              .reduce((a, b) => Number(a) / Number(b)),
+          );
+        p.cards.sort((a, b) => num(a) - num(b));
+        if (p.cards.length < 10)
+          for (const v of ["0", "1", "−1"])
+            if (!p.cards.includes(v) && p.cards.length < 10)
+              p.cards.push([v, "代入する値と符号を確認しよう。"]);
+        p.numericCards = p.cards.map((_, i) => i);
+        p.expressionCards = {};
+        for (const i of expressions) {
+          const v = answers[i],
+            vals = [v, v + " + 1", v + " − 1"];
+          const order = i % 2 ? [1, 0, 2] : [2, 1, 0];
+          p.expressionCards[i] = order.map((k) => {
+            const ci = p.cards.length;
+            p.cards.push(
+              k ? [vals[k], "符号と定数の計算を確認しよう。"] : vals[k],
+            );
+            return ci;
+          });
+        }
+        if (p.kind === "line" && q.r && q.p[0] !== q.r[0]) {
+          const alt = [...answers],
+            start = p.rows
+              .slice(
+                0,
+                p.rows.findIndex((r) => r.t.startsWith("m = {«")),
+              )
+              .reduce((n, r) => n + [...r.t.matchAll(/\[/g)].length, 0);
+          [alt[start], alt[start + 1], alt[start + 2], alt[start + 3]] = [
+            answers[start + 1],
+            answers[start],
+            answers[start + 3],
+            answers[start + 2],
+          ];
+          p.alts = [alt];
+          p.reverseStart = start;
+        }
         return p;
       }
       function straight(q, idx = 5) {
@@ -758,13 +1031,19 @@
           rows.push(
             row("#接点の x 座標 " + n(a) + " を代入し、傾きを求める", ""),
             row(
-              "f′(" + n(a) + ") = " + at(df, a),
+              "f′(" +
+                n(a) +
+                ") = " +
+                at(df, a, q.type === "pt" || q.type === "x" ? "x1" : null),
               "微分した式に x = " + n(a) + " を代入します。",
             ),
             row("f′(" + n(a) + ") = [" + n(m) + "]", "これは接線の傾きです。"),
             row("#接点の y 座標を求める", ""),
             row(
-              "f(" + n(a) + ") = " + at(q.f, a),
+              "f(" +
+                n(a) +
+                ") = " +
+                at(q.f, a, q.type === "pt" || q.type === "x" ? "x1" : null),
               "元の関数に代入します。微分した式ではありません。",
             ),
             row("f(" + n(a) + ") = [" + n(b) + "]", "接点の高さを計算しよう。"),
@@ -828,7 +1107,9 @@
           '" text-anchor="' +
           anchor +
           '" font-size="15" font-family="STIX Two Text,serif"' +
-          (italic ? ' font-style="italic"' : "") +
+          (italic
+            ? ' font-style="italic" paint-order="stroke" stroke="white" stroke-width="4" stroke-linejoin="round"'
+            : "") +
           ">" +
           s +
           "</text>";
@@ -909,7 +1190,7 @@
             '"/>' +
             txt(
               X(p[0]) + (p[0] > (lo + hi) / 2 ? -10 : 10),
-              Y(p[1]) - 10,
+              Y(p[1]) + (p[0] < 0 && p[1] < 0 ? 29 : -14),
               String.fromCharCode(65 + i) +
                 " (" +
                 n(p[0]) +
@@ -931,7 +1212,10 @@
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
         const nodes = [];
         while (walker.nextNode())
-          if (walker.currentNode.textContent.includes("′"))
+          if (
+            walker.currentNode.textContent.includes("′") &&
+            !walker.currentNode.parentElement.closest(".pr")
+          )
             nodes.push(walker.currentNode);
         for (const t of nodes) {
           const parts = t.textContent.split("′"),
@@ -947,6 +1231,17 @@
           });
           t.replaceWith(f);
         }
+        spaceFunctions(root);
+      }
+      function spaceFunctions(root) {
+        root.querySelectorAll("i,.pr").forEach((e) => {
+          if (
+            (e.textContent === "f" || e.classList.contains("pr")) &&
+            e.nextSibling?.nodeType === 3 &&
+            e.nextSibling.textContent.startsWith("(")
+          )
+            e.classList.add("function-gap");
+        });
       }
       const md = (s) => FillSteps.md(s);
       const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -1005,6 +1300,35 @@
                 );
         api = FillSteps.mount({
           el: "#app",
+          roleCards: true,
+          before: (p, st) => {
+            if (p.reverseStart !== undefined) {
+              const i = p.reverseStart,
+                q = p.source,
+                reverse = st.fill[i + 2] === p.alts[0][i + 2];
+              const substitution = p.rows.find((r) => r.t.startsWith("m = {«"));
+              if (substitution)
+                substitution.src = reverse
+                  ? substitution.t.replace(
+                      /«(x|y)(1|2)\|/g,
+                      (_, axis, i) =>
+                        "«" + axis + (i === "1" ? "2" : "1") + "|",
+                    )
+                  : substitution.t;
+              const r = p.rows.find(
+                (r) => r.t.startsWith("m = {") && !r.t.includes("«"),
+              );
+              if (r)
+                r.src =
+                  "m = {" +
+                  n((q.r[1] - q.p[1]) * (reverse ? -1 : 1)) +
+                  "|" +
+                  n((q.r[0] - q.p[0]) * (reverse ? -1 : 1)) +
+                  "} = [" +
+                  rat((q.r[1] - q.p[1]) / (q.r[0] - q.p[0])) +
+                  "]";
+            }
+          },
           problems: active,
           tabGroup: (p) => ({
             id: p.group,
@@ -1033,7 +1357,16 @@
               const box = document.createElement("div");
               box.className = "answer-graph";
               box.innerHTML = graph(p.graph);
-              root.querySelector(".fs-done").after(box);
+              root.querySelector(".fs-grid").append(box);
+            }
+            const cards = root.querySelector(".fs-cards");
+            if (cards) {
+              const numeric = !p.expressionSlots.includes(st.active);
+              cards.classList.toggle("numeric", numeric);
+              cards.style.setProperty(
+                "--columns",
+                Math.ceil(p.numericCards.length / 2),
+              );
             }
             decorate(root);
           },
@@ -1047,11 +1380,31 @@
             challengeScore +
             " / " +
             active.length +
-            ' 問正解</p><button class="fs-btn" onclick="start(\'challenge\')">もう一度</button>';
+            " 問正解</p>" +
+            challengeTabs() +
+            (active.some((p) => p.miss || p.hintCount)
+              ? "<h3>間違えた問題を確認する</h3>" +
+                active
+                  .map((p, i) =>
+                    p.miss || p.hintCount
+                      ? '<button class="fs-btn" onclick="challengeIndex=' +
+                        i +
+                        ';renderChallenge()">問' +
+                        (i + 1) +
+                        "・まちがい " +
+                        (p.miss || 0) +
+                        "回" +
+                        (p.hintCount ? "・ヒントを見た" : "") +
+                        "</button>"
+                      : "",
+                  )
+                  .join("")
+              : "<p>間違えた問題はありません</p>") +
+            '<button class="fs-btn" onclick="start(\'challenge\')">もう一度</button>';
           return;
         }
         const p = active[challengeIndex];
-        challengeDone = false;
+        challengeDone = !!p.savedDone;
         const correct = p.ans;
         const wrong = p.source.wrong.map((w) => {
           const ls = Array.isArray(w[0]) ? w : [w];
@@ -1060,13 +1413,19 @@
             (ls.length < p.graph.lines.length ? " のみ" : "")
           );
         });
-        const opts = [correct, ...wrong].sort(() => Math.random() - 0.5);
+        const opts =
+          p.options || [correct, ...wrong].sort(() => Math.random() - 0.5);
         p.options = opts;
         $("challenge").innerHTML =
+          challengeTabs() +
           "<p>ノートでチャレンジ " +
           (challengeIndex + 1) +
           ' / 5</p><div class="fs-q">' +
-          md(p.q) +
+          '<span class="big-formula">' +
+          md(p.q.split("　")[0]) +
+          '</span><span class="ask">' +
+          md(p.q.split("　")[1]) +
+          "</span>" +
           '</div><div class="challenge-options">' +
           opts
             .map(
@@ -1079,17 +1438,48 @@
             )
             .join("") +
           '</div><button class="fs-btn" onclick="challengeHint()">考え方・途中式のヒント</button><div id="challengeHint"></div><div id="challengeResult"></div>';
+        if (p.savedResult) $("challengeResult").innerHTML = p.savedResult;
+        if (p.savedHint) $("challengeHint").innerHTML = p.savedHint;
         decorate($("challenge"));
       }
+      function challengeTabs() {
+        return (
+          '<nav class="fs-tabs">' +
+          active
+            .map(
+              (p, i) =>
+                '<button class="fs-tab ' +
+                (i === challengeIndex ? "cur " : "") +
+                (p.savedDone ? "done" : "") +
+                '" onclick="challengeIndex=' +
+                i +
+                ';renderChallenge()">' +
+                (i + 1) +
+                "</button>",
+            )
+            .join("") +
+          "</nav>"
+        );
+      }
       function challengeHint() {
-        const p = active[challengeIndex];
-        $("challengeHint").innerHTML =
-          "<p>まず接点と傾きを求め、公式に代入します。</p>" +
-          p.rows
-            .filter((r) => !r.t.startsWith("#"))
-            .slice(0, 6)
-            .map((r) => "<p>" + md(r.t.replace(/^!/, "")) + "</p>")
-            .join("");
+        const p = active[challengeIndex],
+          i = p.hintCount || 0;
+        const steps = p.rows.filter((r) => !r.t.startsWith("#"));
+        if (i >= steps.length + 1) return;
+        $("challengeHint").insertAdjacentHTML(
+          "beforeend",
+          '<div class="fs-hint"><b>考え方' +
+            (i + 1) +
+            "</b><p>" +
+            (i < steps.length
+              ? md(steps[i].h || "この式を整理します。") +
+                "</p>" +
+                md(steps[i].t.replace(/^!/, ""))
+              : "計算をまとめると、答えは " + md(p.ans)) +
+            "</div>",
+        );
+        p.hintCount = i + 1;
+        p.savedHint = $("challengeHint").innerHTML;
         decorate($("challengeHint"));
       }
       function chooseChallenge(i) {
@@ -1098,6 +1488,8 @@
         const p = active[challengeIndex],
           ok = p.options[i] === p.ans;
         if (ok) challengeScore++;
+        p.savedDone = true;
+        p.miss = ok ? 0 : 1;
         $("challengeResult").innerHTML =
           "<h3>" +
           (ok ? "正解" : "途中式を確認しよう") +
@@ -1107,8 +1499,23 @@
             .join("") +
           graph(p.graph) +
           '<button class="fs-btn primary" onclick="challengeIndex++;renderChallenge()">次へ</button>';
+        p.savedResult = $("challengeResult").innerHTML;
         decorate($("challengeResult"));
       }
+      const icons = [
+        '<path d="M6 54L58 10M23 40H45V22"/><circle cx="23" cy="40" r="3" fill="#d9480f"/>',
+        '<path d="M6 10Q32 75 58 10M6 43H58"/><circle cx="32" cy="43" r="3" fill="#d9480f"/>',
+        '<rect x="10" y="6" width="34" height="50" rx="3"/><path d="M17 18H36M17 27H36M17 36H28M32 49L54 20L59 24L37 53Z"/>',
+        '<rect x="5" y="5" width="25" height="25" rx="4"/><circle cx="12" cy="12" r="1"/><circle cx="23" cy="23" r="1"/><path d="M20 58L58 30"/>',
+        '<rect x="5" y="5" width="25" height="25" rx="4"/><circle cx="12" cy="12" r="1"/><circle cx="23" cy="23" r="1"/><path d="M27 30Q41 72 60 30M25 49H61"/>',
+      ];
+      document.querySelectorAll(".menu-card svg").forEach((e, i) => {
+        e.setAttribute("viewBox", "0 0 64 64");
+        e.innerHTML =
+          '<g stroke="#1f4e8c" stroke-width="2" fill="none" stroke-linecap="round">' +
+          icons[i] +
+          "</g>";
+      });
     </script>
   </body>
 </html>
