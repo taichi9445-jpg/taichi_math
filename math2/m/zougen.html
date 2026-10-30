@@ -557,8 +557,8 @@
         height: 3px;
         background: #1f4e8c;
       }
-      .fs-tabs,
-      .fs-nav,
+      #formulaApp .fs-tabs,
+      #formulaApp .fs-nav,
       #formulaApp .fs-q {
         display: none;
       }
@@ -760,6 +760,99 @@
           grid-row: 2;
         }
       }
+
+      .fn-gap {
+        display: inline-block;
+        width: 0.07em;
+      }
+      .function-gap {
+        margin-right: 0.07em;
+      }
+      .reviewed-wrong {
+        outline: 2px solid #e4a09a !important;
+        outline-offset: 2px;
+      }
+      .mode-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 760px;
+        margin: 20px auto;
+        gap: 14px;
+      }
+      .mode-btn {
+        min-height: 150px;
+        width: 100%;
+        min-width: 0;
+        aspect-ratio: 4/3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 12px;
+        gap: 9px;
+        background: #eaf2fd;
+      }
+      .mode-btn:nth-child(2) {
+        background: #eaf6ee;
+      }
+      .mode-btn:nth-child(3) {
+        background: #fff1df;
+        grid-column: 1/-1;
+        width: calc(50% - 7px);
+        justify-self: center;
+      }
+      .mode-icon {
+        flex-shrink: 0;
+        margin: 0;
+        height: 64px;
+      }
+      .mode-icon svg {
+        width: 64px;
+        height: 64px;
+      }
+      .mode-title {
+        font-size: 22px;
+      }
+      .mode-desc {
+        font-size: 13px;
+      }
+      .graph-option {
+        position: relative;
+        cursor: pointer;
+        border-bottom-width: 4px;
+        transition: transform 0.08s;
+      }
+      .graph-option:active {
+        transform: translateY(2px);
+      }
+      .graph-letter {
+        position: absolute;
+        left: 10px;
+        top: 7px;
+        font-weight: bold;
+      }
+      .question-domain {
+        font-size: 18px;
+        margin: 6px 0;
+      }
+      @media (max-width: 600px) {
+        .mode-icon,
+        .mode-icon svg {
+          height: 48px;
+          width: 48px;
+        }
+        .mode-title {
+          font-size: 17px;
+        }
+        .mode-desc {
+          font-size: 12px;
+        }
+        .mode-btn {
+          padding: 9px;
+          gap: 6px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -871,10 +964,15 @@
                       .join("");
                     return (
                       '<span class="m">' +
-                      text.replace(
-                        /(<i>[fyF]<\/i>)′/g,
-                        '$1<span class="pr">′</span>',
-                      ) +
+                      text
+                        .replace(
+                          /(<i>[fyF]<\/i>)′/g,
+                          '$1<span class="pr">′</span>',
+                        )
+                        .replace(
+                          /(<i>f<\/i>|<span class="pr">′<\/span>)(?=\()/g,
+                          '$1<span class="fn-gap"></span>',
+                        ) +
                       "</span>"
                     );
                   },
@@ -1511,6 +1609,10 @@
         document.getElementById("problemToast")?.remove();
         currentMode = mode;
         currentProblem = 0;
+        savedProblems = [];
+        displayedIndex = null;
+        formulaWrong = {};
+        tableWrong = {};
         completedProblems.clear();
 
         // モードに応じて問題セットを選択
@@ -1617,6 +1719,9 @@
       }
 
       function displayProblem(index) {
+        saveCurrentProblem();
+        displayedIndex = index;
+        const saved = savedProblems[index];
         const problem = problems[index];
         const container = document.getElementById("problemContainer");
         container.classList.remove("graph-open");
@@ -1630,9 +1735,9 @@
 
         let h = `
                 <div class="problem-header">
-                    <div class="question-box"><div class="function">${problem.function}</div><div>増減表を完成させ、関数の変化を調べよ。</div></div>
-                    ${problem.domain ? `<div class="domain-info">${problem.domain}</div>` : ""}
-                    <div id="formulaApp"></div><button id="stepsToggle" hidden onclick="toggleSteps()" aria-expanded="false">途中式を確認</button>
+                    <div class="question-box"><div class="function">${problem.function}</div>${problem.domain ? `<div class="question-domain">${problem.domain}</div>` : ""}<div>${problem.domain ? "この関数の最大値と最小値を求めよ。" : "増減表を完成させ、関数の変化を調べよ。"}</div></div>
+
+                    <div id="formulaApp"></div><button id="stepsToggle" hidden onclick="toggleSteps()" aria-expanded="true">途中式を閉じる</button>
                 </div>
                 <section id="tableStage" hidden><div class="table-grid"><div><div class="table-container"><table class="zt">`;
 
@@ -1766,6 +1871,26 @@
           showSummary(index);
         }
 
+        if (saved) {
+          for (const [id, h] of Object.entries(saved.fields)) {
+            const e = document.getElementById(id);
+            if (!e) continue;
+            if (e.tagName === "INPUT") e.value = h.value;
+            else e.innerHTML = h.html;
+            e.className = h.cls;
+            e.disabled = h.disabled;
+          }
+          const graph = document.getElementById("graphStage");
+          if (graph && saved.graph) {
+            graph.innerHTML = saved.graph;
+            graph.hidden = false;
+            container.classList.add("graph-open");
+            graphChoices = [...saved.graphChoices];
+          }
+        }
+        primeSpacing(container);
+        markReviewFields();
+        renderProblemTabs();
         updateStatus();
         updateProgress();
 
@@ -1816,7 +1941,9 @@
       // 次の、まだ答えていない欄へ
       function focusNext(el) {
         const all = Array.from(
-          document.querySelectorAll("#problemContainer .ans"),
+          document.querySelectorAll(
+            "#tableStage .zt tr .ans, #tableStage .max-min-question .ans",
+          ),
         );
         const next = all.slice(all.indexOf(el) + 1).find((e) => !e.disabled);
         if (next) {
@@ -1877,9 +2004,11 @@
         el.classList.remove("incorrect");
         el.classList.add("correct");
         el.disabled = true;
+        markReviewFields();
         checkProblemCompletion(currentProblem);
       }
       function markWrong(el) {
+        (tableWrong[currentProblem] ||= {})[el.id] = true;
         missCount[currentProblem] = (missCount[currentProblem] || 0) + 1;
         el.classList.remove("incorrect");
         void el.offsetWidth; // もう一度ゆらすため
@@ -2026,6 +2155,7 @@
 
       function previousProblem() {
         if (currentProblem > 0) {
+          saveCurrentProblem();
           currentProblem--;
           displayProblem(currentProblem);
           updateButtons();
@@ -2034,6 +2164,7 @@
 
       function nextProblem() {
         if (currentProblem < problems.length - 1) {
+          saveCurrentProblem();
           currentProblem++;
           displayProblem(currentProblem);
           updateButtons();
@@ -2085,12 +2216,17 @@
       function resetProblem() {
         closePicker();
         completedProblems.delete(currentProblem);
+        delete savedProblems[currentProblem];
+        delete formulaWrong[currentProblem];
+        delete tableWrong[currentProblem];
+        displayedIndex = null;
         displayProblem(currentProblem);
         updateProgress();
         updateButtons();
       }
 
       function showCompletion() {
+        saveCurrentProblem();
         const completionMessage = document.getElementById("completionMessage");
         const n = problems.length;
         const self = n - shownSet.size;
@@ -2112,7 +2248,8 @@
         completionMessage.innerHTML =
           `<div class="final-score">自力で完成 ${self} / ${n} 問</div>` +
           `<div class="sub-score">そのうちミスなし ${clean} 問</div>` +
-          msg;
+          msg +
+          reviewListHTML();
 
         const nextMode = { basic: "random", random: "advanced" }[currentMode];
         const names = {
@@ -2199,6 +2336,7 @@
           h: "n は正の整数です。",
         });
         formulaReady = false;
+        let previousFormulaMiss = savedProblems[index]?.formula?.miss || 0;
         formulaAPI = FillSteps.mount({
           el: "#formulaApp",
           problems: [
@@ -2212,22 +2350,46 @@
           after: (root, p, state) => {
             formulaReady = state.done || state.shown;
             root.classList.toggle("formula-complete", formulaReady);
+            root.classList.toggle(
+              "show-completed",
+              savedProblems[index]?.stepsOpen !== false,
+            );
+            const toggle = document.getElementById("stepsToggle");
+            toggle.textContent = root.classList.contains("show-completed")
+              ? "途中式を閉じる"
+              : "途中式を確認";
+            toggle.setAttribute(
+              "aria-expanded",
+              String(root.classList.contains("show-completed")),
+            );
+            if (state.miss > previousFormulaMiss) {
+              (formulaWrong[index] ||= {})[state.active] = true;
+              missCount[index] =
+                (missCount[index] || 0) + (state.miss - previousFormulaMiss);
+            }
+            previousFormulaMiss = state.miss;
+            for (const b of Object.keys(formulaWrong[index] || {}))
+              root
+                .querySelector('[data-b="' + b + '"]')
+                ?.classList.add("reviewed-wrong");
             document.getElementById("stepsToggle").hidden = !formulaReady;
             document.getElementById("showAnswersBtn").hidden = !formulaReady;
             if (state.shown && !completedProblems.has(index))
               shownSet.add(index);
-            if (state.miss)
-              missCount[currentProblem] = Math.max(
-                missCount[currentProblem] || 0,
-                state.miss,
-              );
             const table = document.getElementById("tableStage");
             if (table) table.hidden = !formulaReady;
             if (formulaReady) checkProblemCompletion(currentProblem);
             primeSpacing(root);
           },
         });
-        if (completedProblems.has(index)) {
+        if (savedProblems[index]?.formula) {
+          previousFormulaMiss = savedProblems[index].formula.miss;
+          Object.assign(
+            formulaAPI.state()[0],
+            structuredClone(savedProblems[index].formula),
+          );
+          formulaAPI.go(0);
+        } else if (completedProblems.has(index)) {
           document.querySelector('#formulaApp [data-act="show"]')?.click();
           formulaReady = true;
         }
@@ -2239,6 +2401,7 @@
         const b = document.getElementById("stepsToggle");
         b.textContent = open ? "途中式を閉じる" : "途中式を確認";
         b.setAttribute("aria-expanded", String(open));
+        (savedProblems[currentProblem] ||= {}).stepsOpen = open;
       }
       function tableHint() {
         const el = document.getElementById("tableHint");
@@ -2415,6 +2578,14 @@
           });
           t.replaceWith(f);
         });
+        root.querySelectorAll("i,.pr").forEach((e) => {
+          if (
+            (e.textContent === "f" || e.classList.contains("pr")) &&
+            e.nextSibling?.nodeType === 3 &&
+            e.nextSibling.textContent.startsWith("(")
+          )
+            e.classList.add("function-gap");
+        });
       }
       const zn = (v) => String(v).replace(/-/g, "−");
       const zshift = (v, x = "x") =>
@@ -2562,7 +2733,7 @@
           (/[極最大小端]/.test(t)
             ? "BIZ UDPGothic,sans-serif"
             : "STIX Two Text,serif") +
-          '" font-size="15"' +
+          '" font-size="15" paint-order="stroke" stroke="white" stroke-width="3" stroke-linejoin="round"' +
           (italic ? ' font-style="italic"' : "") +
           ">" +
           t +
@@ -2628,7 +2799,8 @@
         const xs = [...new Set(visible.map((p) => p.x))].filter((x) => x !== 0);
         for (const x of xs)
           h +=
-            line(X(x), Y(0) - 3, X(x), Y(0) + 3) + text(X(x), Y(0) + 20, zn(x));
+            line(X(x), Y(0) - 3, X(x), Y(0) + 3) +
+            text(X(x) + 8, Y(0) + 22, zn(x));
         const max = Math.max(...visible.map((p) => p.y)),
           min = Math.min(...visible.map((p) => p.y));
         visible.forEach((p, i) => {
@@ -2676,7 +2848,9 @@
       }
       function showGraphChoices() {
         const model = graphModel(problems[currentProblem], currentProblem);
-        graphChoices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+        graphChoices = (savedProblems[currentProblem] ||= {}).graphOrder ||= [
+          0, 1, 2, 3,
+        ].sort(() => Math.random() - 0.5);
         graphStage().innerHTML =
           '<h3 class="graph-heading">この増減表に合うグラフは？</h3><div class="graph-options">' +
           graphChoices
@@ -2684,21 +2858,32 @@
               (v, i) =>
                 '<div class="graph-option" id="graphOption' +
                 i +
-                '">' +
-                graphDrawing(model, v) +
-                '<button onclick="expandGraph(' +
+                '" role="button" tabindex="0" onclick="pickGraph(' +
                 i +
-                ')">拡大して確認</button><button onclick="pickGraph(' +
+                ")\" onkeydown=\"if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();pickGraph(" +
                 i +
-                ')">' +
+                ')}"><span class="graph-letter">' +
                 ["ア", "イ", "ウ", "エ"][i] +
-                "を選ぶ</button></div>",
+                "</span>" +
+                graphDrawing(model, v) +
+                '<button onclick="event.stopPropagation();expandGraph(' +
+                i +
+                ')">拡大して確認</button></div>',
             )
             .join("") +
           '</div><p id="graphFeedback" role="status"></p>';
       }
       function pickGraph(i) {
         const v = graphChoices[i];
+        if (
+          document
+            .getElementById("graphOption" + i)
+            .classList.contains("incorrect") ||
+          document.querySelector(".graph-option.correct")
+        )
+          return;
+        if (v !== 0)
+          missCount[currentProblem] = (missCount[currentProblem] || 0) + 1;
         document
           .getElementById("graphOption" + i)
           .classList.add(v === 0 ? "correct" : "incorrect");
@@ -2730,6 +2915,134 @@
           "<button onclick=\"document.getElementById('graphDialog').close()\">閉じる</button>";
         d.showModal();
       }
+      let savedProblems = [],
+        displayedIndex = null,
+        formulaWrong = {},
+        tableWrong = {};
+      function saveCurrentProblem() {
+        if (displayedIndex === null || !document.getElementById("formulaApp"))
+          return;
+        const h = (savedProblems[displayedIndex] ||= {});
+        h.fields = Object.fromEntries(
+          [...document.querySelectorAll("#tableStage .ans")].map((e) => [
+            e.id,
+            {
+              value: e.value,
+              html: e.innerHTML,
+              cls: e.className,
+              disabled: e.disabled,
+            },
+          ]),
+        );
+        if (formulaAPI) h.formula = structuredClone(formulaAPI.state()[0]);
+        h.stepsOpen = document
+          .getElementById("formulaApp")
+          .classList.contains("show-completed");
+        const g = document.getElementById("graphStage");
+        h.graph = g && !g.hidden ? g.innerHTML : null;
+        h.graphChoices = [...graphChoices];
+      }
+      function goProblem(i) {
+        saveCurrentProblem();
+        currentProblem = i;
+        document.getElementById("completion").style.display = "none";
+        document.getElementById("problemContainer").style.display = "";
+        document.querySelector(".controls").style.display = "";
+        displayProblem(i);
+        updateButtons();
+        window.scrollTo(0, 0);
+      }
+      function renderProblemTabs() {
+        let el = document.getElementById("problemTabs");
+        if (!el) {
+          el = document.createElement("nav");
+          el.id = "problemTabs";
+          el.className = "fs-tabs";
+          el.setAttribute("aria-label", "問題番号");
+          document.getElementById("problemContainer").before(el);
+        }
+        el.innerHTML = problems
+          .map(
+            (p, i) =>
+              '<button class="fs-tab fs-group-' +
+              (currentMode === "advanced"
+                ? 2
+                : currentMode === "random"
+                  ? 1
+                  : 0) +
+              (i === currentProblem ? " cur" : "") +
+              (completedProblems.has(i) ? " done" : "") +
+              '" onclick="goProblem(' +
+              i +
+              ')">' +
+              (i + 1) +
+              "</button>",
+          )
+          .join("");
+      }
+      function markReviewFields() {
+        for (const id of Object.keys(tableWrong[currentProblem] || {}))
+          document.getElementById(id)?.classList.add("reviewed-wrong");
+      }
+      function reviewListHTML() {
+        const ids = problems
+          .map((p, i) => i)
+          .filter((i) => missCount[i] || shownSet.has(i));
+        return (
+          "<p>まちがえた回数：" +
+          Object.values(missCount).reduce((a, b) => a + b, 0) +
+          "回</p>" +
+          (ids.length
+            ? "<h3>間違えた問題を確認する</h3>" +
+              ids
+                .map(
+                  (i) =>
+                    '<button onclick="reviewProblem(' +
+                    i +
+                    ')">問題' +
+                    (i + 1) +
+                    "：まちがい " +
+                    (missCount[i] || 0) +
+                    "回" +
+                    (shownSet.has(i) ? "・答えを見た" : "") +
+                    "</button>",
+                )
+                .join("")
+            : "<p>間違えた問題はありません</p>")
+        );
+      }
+      function reviewProblem(i) {
+        goProblem(i);
+        if (!completedProblems.has(i)) showAnswers();
+        document.getElementById("formulaApp").classList.add("show-completed");
+        document.getElementById("stepsToggle").textContent = "途中式を閉じる";
+        document
+          .getElementById("stepsToggle")
+          .setAttribute("aria-expanded", "true");
+        (savedProblems[i] ||= {}).stepsOpen = true;
+        markReviewFields();
+      }
+      const menuPics = [
+        '<path d="M5 47C19 -5 34 69 59 17"/><path d="M7 13L19 25M13 25H19V19M40 40L53 27M47 27H53V33"/>',
+        '<rect x="4" y="5" width="24" height="24" rx="4"/><circle cx="11" cy="12" r="1"/><circle cx="21" cy="22" r="1"/><path d="M8 52C25 5 36 70 59 32"/>',
+        '<path d="M7 43Q28 4 57 43"/><circle cx="7" cy="43" r="3"/><circle cx="57" cy="43" r="3"/><text x="23" y="12" font-size="10" stroke="none" fill="#1f4e8c">最大</text><text x="40" y="60" font-size="10" stroke="none" fill="#1f4e8c">最小</text>',
+      ];
+      document.querySelectorAll(".mode-btn").forEach((e, i) => {
+        e.querySelector(".mode-icon").innerHTML =
+          '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#1f4e8c" stroke-width="2" stroke-linecap="round">' +
+          menuPics[i] +
+          "</g></svg>";
+        e.querySelector(".mode-title").textContent = [
+          "増減表をかこう",
+          "増減表ランダム練習",
+          "定義域のある問題",
+        ][i];
+        e.querySelector(".mode-desc").textContent = [
+          "基本6問",
+          "毎回ちがう数・3問",
+          "最大・最小・4問",
+        ][i];
+      });
     </script>
   </body>
 </html>

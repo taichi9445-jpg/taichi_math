@@ -24,6 +24,9 @@
      どれか1つの組と、それまでに入れたカードがすべて合っていれば正解にする。
    スマホなど（PC の横長の画面でないとき）は、今の空欄の答えとダミー2つの3枚だけを出す（fewCards: false でやめる）。
    ヒントは、同じ行の空欄をうめているあいだは開いたまま。次の行に進むか、閉じるボタンで閉じる。
+   06 の opt-in: roleCards:true は役割色・数カード固定/式3枚・復習を有効にする。
+   roles は «x1|内容» の形（x1/y1/x2/y2/m）。指定のない教材には影響しない。
+   expressionSlots は式を入れる空欄番号、expressionCards はその3択。
    ========================================================================= */
 (function (global) {
   'use strict';
@@ -79,8 +82,8 @@
     var out = [], depth = 0, last = 0;
     for (var i = 0; i < s.length; i++) {
       var ch = s[i];
-      if (ch === '{' || ch === '[' || ch === '⦅') depth++;
-      else if (ch === '}' || ch === ']' || ch === '⦆') depth--;
+      if (ch === '{' || ch === '[' || ch === '⦅' || ch === '«') depth++;
+      else if (ch === '}' || ch === ']' || ch === '⦆' || ch === '»') depth--;
       else if (depth === 0 && s.substr(i, sep.length) === sep) { out.push(s.slice(last, i)); last = i + sep.length; i += sep.length - 1; }
     }
     out.push(s.slice(last));
@@ -93,7 +96,12 @@
     function flush() { if (buf) { out += runHTML(buf); buf = ''; } }
     while (i < s.length) {
       var ch = s[i], j;
-      if (ch === '{') {
+      if (ch === '«') {
+        flush(); j = s.indexOf('»', i);
+        var roleEnd = s.indexOf('|', i), role = s.slice(i + 1, roleEnd);
+        out += '<span class="fs-role role-' + (/^(x1|y1|x2|y2|m)$/.test(role) ? role : 'none') + '">' + parse(s.slice(roleEnd + 1, j), ctx) + '</span>';
+        i = j + 1;
+      } else if (ch === '{') {
         flush(); j = closing(s, i, '{', '}');
         var parts = splitTop(s.slice(i + 1, j), '|');
         out += frac(parse(parts[0], ctx), parse(parts[1] || '', ctx));
@@ -164,7 +172,7 @@
     var wide = window.matchMedia ? matchMedia('(min-width:900px) and (orientation:landscape)') : { matches: true };
     if (wide.addEventListener) wide.addEventListener('change', function () { render(); });
 
-    function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0 }; }
+    function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0, wrongBlanks: {} }; }
     function firstEmpty(p, st) { for (var n = 0; n < p.blankOrder.length; n++) { var i = p.blankOrder[n]; if (st.fill[i] === undefined) return i; } return null; }
     function rowDone(p, st, ri) { return p.rows[ri].blanks.every(function (b) { return st.fill[b] !== undefined; }); }
 
@@ -219,6 +227,7 @@
       if (finalView) return renderFinal();
       var p = P[cur], st = S[cur];
       if (st.active === null || st.fill[st.active] !== undefined) st.active = firstEmpty(p, st);
+      if (o.before) o.before(p, st);
       var all = st.shown || st.done;
       var activeRow = st.active === null ? -1 : p.blanks[st.active].row;
       if (hintOpen && (all || activeRow !== hintRow)) hintOpen = false;
@@ -236,7 +245,7 @@
         var ctx = { k: 0, blank: function () {
           var i = row.blanks[ctx.k++], b = p.blanks[i], v = st.fill[i];
           var isFrac = /\//.test(b.a) && !/\s/.test(b.a);
-          var cls = 'fs-blank' + (isFrac ? ' frac' : '') + (v !== undefined ? ' ok' : '') + (i === st.active && !all ? ' active' : '');
+          var cls = 'fs-blank' + (isFrac ? ' frac' : '') + (v !== undefined ? ' ok' : '') + (i === st.active && !all ? ' active' : '') + (o.roleCards && st.wrongBlanks[i] ? ' reviewed-wrong' : '');
           return '<button type="button" class="' + cls + '" data-b="' + i + '" aria-label="空欄">' + (v !== undefined ? valHTML(v) : '') + '</button>';
         } };
         var body;
@@ -261,10 +270,18 @@
       }).join('');
 
       var few = o.fewCards !== false && !wide.matches && !all && st.active !== null ? fewCards(p, st, st.active) : null;
+      if (o.roleCards) {
+        few = p.expressionSlots.includes(st.active) ? p.expressionCards[st.active] : p.numericCards;
+      }
       var cards = (few || p.cards.map(function (_, ci) { return ci; })).map(function (ci) {
         var c = p.cards[ci];
         if (c.sep) return '<span class="fs-sep"></span>';
         var off = all || isOff(p, st, c.v);
+        if (o.roleCards && p.numericCards.includes(ci)) {
+          var occurrence = p.numericCards.filter(function(k){return k < ci && p.cards[k].v === c.v;}).length;
+          var used = Object.keys(st.fill).filter(function(k){return !p.expressionSlots.includes(+k) && st.fill[k] === c.v;}).length;
+          off = all || occurrence < used;
+        } else if (o.roleCards) off = all;
         return '<button type="button" class="fs-card' + (off ? ' used' : '') + '" data-c="' + ci + '"' + (off ? ' disabled' : '') + '>' + valHTML(c.v) + '</button>';
       }).join('');
 
@@ -303,6 +320,7 @@
         render(); follow();
       } else {
         st.miss++;
+        st.wrongBlanks[i] = true;
         var card = p.cards.filter(function (c) { return c.v === v; })[0];
         var row = p.rows[p.blanks[i].row];
         msg = (card && card.why) || (o.wrong && o.wrong(p, p.blanks[i], v)) || ('その空欄には入りません。' + (row.h ? '' : 'ヒントも見てみよう。'));
@@ -404,6 +422,13 @@
         '<p>自分で全部うめた問題　<b>' + self + '</b> / ' + P.length + '</p><p>答えを見た問題　' + shown + '</p><p>まちがえて入れた回数　' + miss + '</p>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-act="back">問題にもどる</button><button type="button" class="fs-btn primary" data-act="again">最初からやり直す</button></div>' +
         (o.finalExtra || '<p><a href="../index.html">教材の一覧へ</a></p>') + '</section>';
+      if (o.roleCards) {
+        var review = document.createElement('div');
+        var ids = S.map(function(s,i){return s.miss || s.shown ? i : -1;}).filter(function(i){return i>=0;});
+        review.innerHTML = ids.length ? '<h3>間違えた問題を確認する</h3>' + ids.map(function(i){return '<button class="fs-btn" data-review="'+i+'">問'+(i+1)+'：まちがい '+S[i].miss+'回'+(S[i].shown?'・答えを見た':'')+'</button>';}).join('') : '<p>間違えた問題はありません</p>';
+        root.querySelector('.fs-final').append(review);
+        review.querySelectorAll('[data-review]').forEach(function(b){b.onclick=function(){var i=+b.dataset.review;var sets=[P[i].blanks.map(function(b){return b.a;})].concat(P[i].alts||[]), chosen=sets.find(function(set){return Object.keys(S[i].fill).every(function(k){return set[k]===S[i].fill[k];});})||sets[0];P[i].blanks.forEach(function(x){if(S[i].fill[x.i]===undefined)S[i].fill[x.i]=chosen[x.i];});S[i].shown = S[i].shown || !S[i].done;go(i);};});
+      }
       root.querySelector('[data-act="back"]').onclick = function () { finalView = false; render(); };
       root.querySelector('[data-act="again"]').onclick = function () { S = P.map(fresh); go(0); };
     }
