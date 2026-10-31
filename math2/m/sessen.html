@@ -160,27 +160,6 @@
       .function-gap {
         margin-right: 0.07em;
       }
-      .fs-role {
-        color: #1f4e8c;
-        text-shadow:
-          -1px -1px white,
-          1px -1px white,
-          -1px 1px white,
-          1px 1px white;
-      }
-      .role-y1 {
-        color: #b33030;
-      }
-      .role-x2,
-      .role-m {
-        color: #207345;
-      }
-      .role-y2 {
-        color: #bd5916;
-      }
-      .fs-role .fs-blank.ok {
-        color: inherit;
-      }
       .fs-card {
         color: #222;
         text-shadow: none;
@@ -674,8 +653,45 @@
         return { t, h };
       }
       const role = (r, v) => "«" + r + "|" + v + "»";
+      const ratSafe=v=>{try{return Number.isFinite(v)?rat(v):null}catch{return null}};
+      function coefficients(text){
+        const source=text.replace(/\{([^|]+)\|([^}]+)\}/g,'$1/$2').replace(/\s/g,'').replace(/−/g,'-');
+        const parts=source.match(/[+-]?[^+-]+/g)||[],result=[];
+        for(const t of parts){const m=t.match(/^([+-]?)(?:(\d+(?:\/\d+)?))?([xa])?([²³⁴])?$/);if(!m)throw Error('式を整理できません: '+text);const c=m[2]?m[2].split('/').map(Number).reduce((a,b)=>a/b):1,power=m[3]?(m[4]?{'²':2,'³':3,'⁴':4}[m[4]]:1):0;result[power]=(result[power]||0)+(m[1]==='-'?-c:c);}
+        return Array.from({length:result.length||1},(_,i)=>result[i]||0).reverse();
+      }
+      function expressionMistakes(p,v){
+        const correct=coefficients(v),variable=v.includes('a')?'a':'x',candidates=[],q=p.source;
+        const add=cs=>{if(cs?.every(Number.isFinite))try{const t=poly(cs,variable);if(!candidates.includes(t))candidates.push(t)}catch{}};
+        for(let j=0;j<p.graph.lines.length;j++){
+          const l=p.graph.lines[j];if(!Array.isArray(l))continue;
+          const [m,z]=l,[a,b]=p.graph.points[j]||p.graph.points[0];
+          if(poly(l,variable)!==poly(correct,variable))continue;
+          add([m,-m*a-b]);add([m,m*a+b]);add([m,a-m*b]);
+          if(m!==0)add([1/m,b-a/m]);
+          if(p.kind==='tangent'){add([m,m-m*a]);add([b,b-b*a]);}
+          add([-m,b+m*a]);
+        }
+        if(p.kind==='tangent'){
+          const f=q.f,df=der(f);
+          if(poly(df,variable)===poly(correct,variable)){
+            add(f.slice(0,-1));add([...df,0]);add(df.map(c=>-c));
+          }
+        }
+        // A sign error or forgotten exponent produces a fully collected polynomial.
+        add(correct.map(c=>-c));
+        for(let i=0;i<correct.length;i++){if(!correct[i])continue;let cs=[...correct];cs[i]*=-1;add(cs);cs=[...correct];cs[i]*=2;add(cs);}
+        if(correct.length===1&&correct[0]===0){add([1,0]);add([-1,0]);}
+        const answer=poly(correct,variable),out=candidates.filter(t=>t!==answer).slice(0,2);
+        if(out.length!==2)throw Error('異なる誤答が不足: '+v);
+        return out;
+      }
       function complete(p, idx) {
         const q = p.source;
+        if(p.kind==='tangent'&&q.type==='pt'){
+          const i=p.rows.findIndex(r=>r.t==='#接点の y 座標を求める');
+          if(i>=0)p.rows.splice(i,3);
+        }
         if (p.kind === "line") {
           const [x, y] = q.p;
           p.q = q.r
@@ -795,15 +811,13 @@
               .reduce((a, b) => Number(a) / Number(b)),
           );
         p.cards.sort((a, b) => num(a) - num(b));
-        if (p.cards.length < 10)
-          for (const v of ["0", "1", "−1"])
-            if (!p.cards.includes(v) && p.cards.length < 10)
-              p.cards.push([v, "代入する値と符号を確認しよう。"]);
+        const wrongNumbers=[...new Set(p.cards.flatMap(c=>{const v=num(c);return [n(-v),ratSafe(v===0?NaN:1/v),ratSafe(v*2)];}).filter(v=>v!==null&&!p.cards.includes(v)))];
+        for(const v of wrongNumbers.slice(0,Math.max(0,Math.min(2,10-p.cards.length))))p.cards.push([v,'符号、変化量の順、傾きの分数を確かめよう。']);
         p.numericCards = p.cards.map((_, i) => i);
         p.expressionCards = {};
         for (const i of expressions) {
           const v = answers[i],
-            vals = [v, v + " + 1", v + " − 1"];
+            vals = [v, ...expressionMistakes(p,v)];
           const order = i % 2 ? [1, 0, 2] : [2, 1, 0];
           p.expressionCards[i] = order.map((k) => {
             const ci = p.cards.length;

@@ -143,3 +143,9 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
   .fs-tab{min-width:30px;padding:0 5px}
   .fs-tab.fs-group-start{margin-left:4px}
 }
+
+/* Annotated role values only: black outer edge, white inner edge, bright fill. */
+.fs-role{color:#2f6fd6;text-shadow:-1px -1px #fff,0 -1px #fff,1px -1px #fff,-1px 0 #fff,1px 0 #fff,-1px 1px #fff,0 1px #fff,1px 1px #fff,-2px -2px #222,0 -2px #222,2px -2px #222,-2px 0 #222,2px 0 #222,-2px 2px #222,0 2px #222,2px 2px #222}
+.fs-role.role-y1{color:#e03131}.fs-role.role-x2,.fs-role.role-m{color:#2f9e44}.fs-role.role-y2{color:#f08c00}
+.fs-role .fs-blank.ok{color:inherit;text-shadow:inherit}
+.fs-card{ text-shadow:none }
