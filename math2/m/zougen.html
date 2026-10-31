@@ -1874,6 +1874,14 @@
             }
           });
         });
+        container.querySelectorAll('input.num').forEach(e=>{if(isTouch)e.inputMode='none';e.addEventListener('pointerdown',()=>{if(isTouch){e.inputMode='text';e.focus();}});});
+        container.addEventListener('keydown',e=>{
+          if(e.key!=='Tab'||e.isComposing||e.target._composing||e.target._settling||!e.target.closest('#tableStage'))return;
+          const all=fieldOrder(),from=all.indexOf(e.target);if(from<0)return;
+          const next=(e.shiftKey?all.slice(0,from).reverse():all.slice(from+1)).find(v=>!v.disabled);
+          if(!next)return;
+          e.preventDefault();e.stopImmediatePropagation();if(e.target.tagName==='INPUT')onNumCommit(e.target);selectField(next);
+        },true);
         prettyText(container);
         mountFormula(problem, index);
 
@@ -1905,6 +1913,7 @@
         renderProblemTabs();
         updateStatus();
         updateProgress();
+        queueMicrotask(selectFirstField);
 
         // スマホでは、いきなりキーボードが出ないようにする
         const firstInput = container.querySelector(
@@ -1951,18 +1960,21 @@
       }
 
       // 次の、まだ答えていない欄へ
-      function focusNext(el) {
-        const all = Array.from(
-          document.querySelectorAll(
-            "#tableStage .zt tr .ans, #tableStage .max-min-question .ans",
-          ),
-        );
-        const next = all.slice(all.indexOf(el) + 1).find((e) => !e.disabled);
-        if (next) {
-          next.focus();
-          if (next.tagName === "BUTTON") openPicker(next);
-        }
+      function fieldOrder(){
+        const select=s=>[...document.querySelectorAll(s)];
+        return [...select('.zt tr:nth-child(1) .ans'),...select('.zt tr:nth-child(2) .ans'),...select('.zt tr:nth-child(3) [data-kind="arrow"]'),...select('.zt tr:nth-child(3) [data-kind="ext"]'),...select('.zt tr:nth-child(3) input.ans'),...select('.max-min-question .ans')];
       }
+      function selectField(e){
+        if(!e||e.disabled)return;
+        if(isTouch){if(document.activeElement?.tagName==='INPUT')document.activeElement.blur();if(e.tagName==='INPUT')e.inputMode='none';}
+        else e.focus();
+        openPicker(e);
+        e.style.scrollMarginBottom=matchMedia('(min-width:900px) and (orientation:landscape)').matches?'12px':(document.getElementById('pickPanel').offsetHeight+12)+'px';
+        e.style.scrollMarginTop='12px';
+        e.scrollIntoView({block:'nearest',behavior:'smooth'});
+      }
+      function selectFirstField(){if(formulaReady)selectField(fieldOrder().find(e=>!e.disabled));}
+      function focusNext(el){const all=fieldOrder();selectField(all.slice(all.indexOf(el)+1).find(e=>!e.disabled)||all.find(e=>!e.disabled));}
 
       // 数の欄：答えと同じになったら、すぐに正解にする
       function answerMatches(inp, v) {
@@ -2033,6 +2045,7 @@
         btn.textContent = labelOf(btn.dataset.kind, v);
         if (v === btn.dataset.ans) {
           markCorrect(btn);
+          focusNext(btn);
         } else {
           markWrong(btn);
           setTimeout(() => {
@@ -2335,18 +2348,15 @@
             ),
           ),
         ];
-        const ds = ["8", "11", "−5", "7"]
-          .filter((v) => !used.includes(v))
-          .slice(0, 2)
-          .map((v) => [v, "微分した係数や、因数分解の符号を確かめよう。"]);
+        const possibleMistakes=used.flatMap(v=>{const n=Number(v.replace('−','-'));return [-n,n*2,Number.isInteger(n/2)?n/2:n];});
+        for(const [c,power] of functionTerms(problem))possibleMistakes.push(c,-c,c*(power-1));
+        const ds=[...new Set(possibleMistakes.filter(Number.isFinite).map(zn))]
+          .filter(v=>!used.includes(v)).slice(0,2)
+          .map(v=>[v,'指数をかけたか、因数分解や解の符号が合っているか確かめよう。']);
         const cards =
           index === 0
             ? [...used, ...ds]
             : [...used.slice(0, 1), ds[0], ...used.slice(1), ds[1]];
-        rows.unshift({
-          t: "! (xⁿ)′ = n xⁿ⁻¹　定数の微分は 0",
-          h: "n は正の整数です。",
-        });
         formulaReady = false;
         let previousFormulaMiss = savedProblems[index]?.formula?.miss || 0;
         formulaAPI = FillSteps.mount({
@@ -2360,6 +2370,7 @@
             },
           ],
           after: (root, p, state) => {
+            const wasReady=formulaReady;
             formulaReady = state.done || state.shown;
             root.classList.toggle("formula-complete", formulaReady);
             root.classList.toggle(
@@ -2392,6 +2403,7 @@
             if (table) table.hidden = !formulaReady;
             if (formulaReady) checkProblemCompletion(currentProblem);
             primeSpacing(root);
+            if(formulaReady&&!wasReady)queueMicrotask(selectFirstField);
           },
         });
         if (savedProblems[index]?.formula) {
