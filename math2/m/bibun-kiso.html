@@ -647,7 +647,7 @@
           height: 54px;
         }
       }
-    
+
       #levelFiveSteps .fs-tabs,#levelFiveSteps .fs-q,#levelFiveSteps .fs-nav,#levelFiveSteps .fs-done{display:none}
       #levelFiveSteps .fs-grid{grid-template-columns:minmax(0,1fr)}
       #levelFiveSteps .fs-main{min-width:0}
@@ -1978,7 +1978,7 @@
         rows.forEach(r=>{
           const right=[...r.t.matchAll(/\[([^\]]+)\]/g)].map(m=>m[1].split('@')[0]);
           const candidates=right.flatMap(v=>[v.startsWith('−')?'+'+v.slice(1):'−'+v.replace(/^\+/,''),v.replace(/²/g,''),v.replace(/\d+/,n=>String(Number(n)*2)),v.replace(/\d+/,n=>String(Number(n)%2===0?Number(n)/2:Number(n)))]);
-          r.cards=[...new Set(right.concat(candidates.filter(v=>!right.includes(v)).slice(0,4)))];
+          r.cards=[...new Set(right.concat([...new Set(candidates.map(v=>v.replace(/^([+−]?)1(?=x)/,'$1')))].filter(v=>!right.includes(v)).slice(0,4)))];
         });
         return {q:'',rows,cards:[...new Set(rows.flatMap(r=>r.cards))],ans:build(5,q).answer};
       }
