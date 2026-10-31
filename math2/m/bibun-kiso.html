@@ -2015,7 +2015,7 @@
       }
       function completedStepHTML(q,h){
         const p=levelFiveProblem(q);let i=0;
-        return p.rows.map(r=>'<div class="review-step">'+mathHTML(r.t.replace(/^#/, '').replace(/\[([^\]]+)\]/g,(_,v)=>{const k=i++;return '<span class="'+(h.steps?.wrongBlanks?.[k]?'reviewed-wrong':'')+'">'+(h.steps?.fill?.[k]??v.split('@')[0])+'</span>';}))+'</div>').join('');
+        return p.rows.map(r=>'<div class="review-step">'+mathHTML(r.t.replace(/^#/, '').replace(/\] \[/g,'][').replace(/(=\s*)?\[([^\]]+)\]/g,(_,eq,v)=>{const k=i++;let t=h.steps?.fill?.[k]??v.split('@')[0];if(!eq&&/^[+−]/.test(t))t=' '+t[0]+' '+t.slice(1);return (eq||'')+'<span class="'+(h.steps?.wrongBlanks?.[k]?'reviewed-wrong':'')+'">'+t+'</span>';}))+'</div>').join('');
       }
 
       menu();
