@@ -8,6 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../../assets/fill-steps.css">
     <style>
       * {
         box-sizing: border-box;
@@ -646,6 +647,15 @@
           height: 54px;
         }
       }
+    
+      #levelFiveSteps .fs-tabs,#levelFiveSteps .fs-q,#levelFiveSteps .fs-nav,#levelFiveSteps .fs-done{display:none}
+      #levelFiveSteps .fs-grid{grid-template-columns:minmax(0,1fr)}
+      #levelFiveSteps .fs-main{min-width:0}
+      #levelFiveSteps .fs-bank{position:sticky;bottom:0;z-index:3}
+      #levelFiveSteps .fs-eq{font-size:22px} #levelFiveSteps .fs-blank{min-width:2.6em}
+      .reviewed-wrong{outline:2px solid #e4a09a;outline-offset:2px}
+      #levelFiveSteps .pr{margin-left:.12em;margin-right:.07em}
+      @media(min-width:900px) and (orientation:landscape){body.level-five #quiz .quiz-grid{display:block}#levelFiveSteps .fs-grid{grid-template-columns:minmax(0,1fr) 280px}#levelFiveSteps .fs-bank{position:sticky;top:10px;bottom:auto}}
     </style>
   </head>
   <body>
@@ -717,6 +727,7 @@
       </section>
       <section id="result" hidden></section>
     </main>
+    <script src="../../assets/fill-steps.js"></script>
     <script>
       const ADVANCED = false;
       const LEVELS = [
@@ -1457,6 +1468,7 @@
           });
       }
       function saveQuestion() {
+        if(lev===5 && stepAPI && index<questions.length && stepOwner===index){const h=history[index] ||= {};h.steps=structuredClone(stepAPI.state()[0]);}
         if (index >= questions.length || !questions.length || $("quiz").hidden)
           return;
         const h = (history[index] ||= {});
@@ -1525,6 +1537,7 @@
             $("next").textContent = "取り組み中の問題へ";
           }
         }
+        mountLevelFive();
         renderTabs();
         fitMath();
       }
@@ -1557,7 +1570,7 @@
                 "</p><p>正しい答え：" +
                 mathHTML(d.ans || d.answer) +
                 "</p>" +
-                stepsHTML(d.mid) +
+                (lev===5 ? completedStepHTML(q,h) : stepsHTML(d.mid)) +
                 (ADVANCED ? graph(q) : "") +
                 "</details>"
               );
@@ -1684,7 +1697,7 @@
         fitMath();
       }
       function choose(n) {
-        if (done) return;
+        if (done || lev===5 && !stepReady) return;
         // A hint is a review reason; keep the student's actual first choice too.
         if(history[index]?.issue && ['ヒントを見ました','答えを見ました'].includes(history[index].chosen)) history[index].chosen=options[n].text;
         const ok = options[n].ok;
@@ -1710,7 +1723,7 @@
         rememberIssue(options[n].text);
         $("choices").children[n].classList.add("incorrect");
         $("choices").children[n].disabled = true;
-        hints();
+        if(lev===5){stage=Math.max(stage,1);$('inputFeedback').textContent='もう一度考えてみよう。';saveQuestion();}else hints();
       }
       function submit() {
         if (done) return;
@@ -1733,6 +1746,7 @@
         }
       }
       function reveal() {
+        if(lev===5 && !stepReady){document.querySelector("#levelFiveSteps [data-act=show]")?.click();return;}
         if (!done) {
           rememberIssue("答えを見ました");
           stage = 3;
@@ -1939,6 +1953,71 @@
             "</small></button>",
         )
         .join("");
+      let stepAPI=null,stepOwner=-1,stepReady=false;
+      const signedTerms=f=>norm(f).map(([c,n],i)=>termTxt(c,n,i===0).replace(/\s/g,''));
+      function levelFiveProblem(q){
+        const rows=[],d=deriv(q.f),terms=signedTerms(q.f),dt=signedTerms(d);
+        const row=(t,h)=>({t,h});
+        if(q.show){
+          const expanded={
+            '(x + 1)²':['x²','+2x','+1'],
+            'x(x − 3)':['x²','−3x'],
+            '(2x − 1)(x + 3)':['2x²','+6x@s','−x@s','−3'],
+            '(x − 2)²':['x²','−4x','+4'],
+            '(x + 1)(x − 1)':['x²','−x@s','+x@s','−1']
+          }[q.show];
+          rows.push(row('#かっこを展開する',''),row('f(x) = '+expanded.map(t=>'['+t+']').join(' '),'分配法則で、それぞれの項をかけます。2乗は (a − b)² = a² − 2ab + b² を使おう。'));
+          if(expanded.some(t=>t.includes('@')))rows.push(row('#同類項をまとめる',''),row('f(x) = '+terms.map(t=>'['+t+']').join(' '),'x の項どうしをまとめます。'));
+        }
+        rows.push(row('#1つの項ずつ微分する',''),row('f′(x) = '+norm(q.f).map(([c,n],i)=>(c[0]<0?' − ':i?' + ':'')+'('+termTxt([Math.abs(c[0]),c[1]],n,true)+')′').join('')+' = '+dt.map(t=>'['+t+']').join(' '),'指数を前にかけ、指数を1つ下げよう。定数の微分は0です。'));
+        if(q.at!==undefined){
+          const a=q.at,A=a<0?'('+String(a).replace('-','−')+')':String(a);
+          const sub=norm(d).map(([c,n],i)=>(c[0]<0?' − ':i?' + ':'')+(n===0?absR(c):(Math.abs(c[0])===c[1]?'':absR(c)+' × ')+A+(n>1?sup(n):''))).join('');
+          rows.push(row('#x = '+String(a).replace('-','−')+' を代入する',''),row('f′('+String(a).replace('-','−')+') = '+sub,'f(a) ではなく f′(a)。先に微分してから代入します。'));
+        }
+        rows.forEach(r=>{
+          const right=[...r.t.matchAll(/\[([^\]]+)\]/g)].map(m=>m[1].split('@')[0]);
+          const candidates=right.flatMap(v=>[v.startsWith('−')?'+'+v.slice(1):'−'+v.replace(/^\+/,''),v.replace(/²/g,''),v.replace(/\d+/,n=>String(Number(n)*2)),v.replace(/\d+/,n=>String(Number(n)%2===0?Number(n)/2:Number(n)))]);
+          r.cards=[...new Set(right.concat(candidates.filter(v=>!right.includes(v)).slice(0,4)))];
+        });
+        return {q:'',rows,cards:[...new Set(rows.flatMap(r=>r.cards))],ans:build(5,q).answer};
+      }
+      function mountLevelFive(){
+        document.body.classList.toggle('level-five',lev===5&&!ADVANCED);
+        let root=$('levelFiveSteps');if(root)root.remove();stepAPI=null;stepOwner=index;stepReady=lev!==5;
+        if(lev!==5)return;
+        root=document.createElement('div');root.id='levelFiveSteps';$('question').after(root);
+        const saved=history[index]?.steps,owner=index,p=levelFiveProblem(questions[index]);
+        $('choices').hidden=true;
+        let lastMiss=saved?.miss||0;
+        stepAPI=FillSteps.mount({el:root,problems:[p],fewCards:false,before:(p,st)=>{
+          const b=st.active===null?p.blankOrder.find(i=>st.fill[i]===undefined):st.active;
+          if(b!==undefined&&b!==null)p.cards=p.rows[p.blanks[b].row].cards.map(v=>({v}));
+        },after:(r,p,st)=>{
+          if(owner!==index)return;
+          const h=history[index] ||= {};
+          if(st.miss>lastMiss){rememberIssue('途中式の空欄で間違えました');stage=Math.max(stage,1);}lastMiss=st.miss;
+          if(st.shown||r.querySelector('.fs-hint')){rememberIssue(st.shown?'途中式の答えを見ました':'ヒントを見ました');stage=Math.max(stage,1);}
+          if(!matchMedia('(min-width:900px) and (orientation:landscape)').matches && st.active!==null){
+            const b=p.blanks[st.active];let allowed=b.g?p.blanks.filter(x=>x.g===b.g).map(x=>x.a):[b.a];
+            if(b.g)for(const k in st.fill)if(p.blanks[k].g===b.g)allowed.splice(allowed.indexOf(st.fill[k]),1);
+            const buttons=[...r.querySelectorAll('[data-c]')],right=buttons.filter(e=>allowed.includes(p.cards[+e.dataset.c].v)&&!e.disabled),other=buttons.filter(e=>!allowed.includes(p.cards[+e.dataset.c].v)&&!e.disabled).sort((a,c)=>Number(p.blanks.some(x=>x.row===b.row&&x.a===p.cards[+a.dataset.c].v))-Number(p.blanks.some(x=>x.row===b.row&&x.a===p.cards[+c.dataset.c].v))).slice(0,3-right.length),visible=new Set([...right,...other]);
+            buttons.forEach(e=>e.hidden=!visible.has(e));r.querySelector('.fs-cards').classList.add('few');
+          }
+          h.steps=structuredClone(st);stepReady=st.done||st.shown;$('choices').hidden=!stepReady;
+          if(!stepReady)$('help').hidden=true;else $('help').hidden=done;
+          for(const b of Object.keys(st.wrongBlanks||{}))r.querySelector('[data-b="'+b+'"]')?.classList.add('reviewed-wrong');
+          const walker=document.createTreeWalker(r,NodeFilter.SHOW_TEXT),primes=[];while(walker.nextNode())if(walker.currentNode.textContent.includes('′')&&!walker.currentNode.parentElement.closest('.pr'))primes.push(walker.currentNode);
+          primes.forEach(t=>{const f=document.createDocumentFragment();t.textContent.split('′').forEach((part,i)=>{if(i){const e=document.createElement('span');e.className='pr';e.textContent='′';f.append(e);}f.append(document.createTextNode(part));});t.replaceWith(f);});
+          r.querySelectorAll('.fs-m i').forEach(e=>{if(e.textContent==='f'&&e.nextSibling?.textContent.startsWith('('))e.style.marginRight='.07em';});
+        }});
+        if(saved){Object.assign(stepAPI.state()[0],saved);lastMiss=saved.miss;stepAPI.go(0);}
+      }
+      function completedStepHTML(q,h){
+        const p=levelFiveProblem(q);let i=0;
+        return p.rows.map(r=>'<div class="review-step">'+mathHTML(r.t.replace(/^#/, '').replace(/\[([^\]]+)\]/g,(_,v)=>{const k=i++;return '<span class="'+(h.steps?.wrongBlanks?.[k]?'reviewed-wrong':'')+'">'+(h.steps?.fill?.[k]??v.split('@')[0])+'</span>';}))+'</div>').join('');
+      }
+
       menu();
     </script>
   </body>
