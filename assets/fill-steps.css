@@ -144,8 +144,14 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
   .fs-tab.fs-group-start{margin-left:4px}
 }
 
-/* Annotated role values only: black outer edge, white inner edge, bright fill. */
-.fs-role{color:#2f6fd6;text-shadow:-1px -1px #fff,0 -1px #fff,1px -1px #fff,-1px 0 #fff,1px 0 #fff,-1px 1px #fff,0 1px #fff,1px 1px #fff,-2px -2px #222,0 -2px #222,2px -2px #222,-2px 0 #222,2px 0 #222,-2px 2px #222,0 2px #222,2px 2px #222}
+/* 役わりの色（roleCards）：外から 黒 → 白 → 色。ふちは文字の形にそった線（-webkit-text-stroke）で描き、拡大してもギザギザにしない。
+   黒と白のふちは、同じ文字（data-t）を後ろに2枚重ねて作る（fill-steps.js が data-t を入れる）。 */
+.fs-role{color:#2f6fd6}
 .fs-role.role-y1{color:#e03131}.fs-role.role-x2,.fs-role.role-m{color:#2f9e44}.fs-role.role-y2{color:#f08c00}
-.fs-role .fs-blank.ok{color:inherit;text-shadow:inherit}
-.fs-card{ text-shadow:none }
+.fs-role .fs-m{font-weight:700}
+.fs-role .fs-blank.ok{color:inherit}
+.fs-role .fs-m[data-t]{display:inline-block;position:relative;isolation:isolate;padding:0 .14em;white-space:nowrap}
+.fs-role .fs-m[data-t]::before,.fs-role .fs-m[data-t]::after{content:attr(data-t);position:absolute;left:.14em;top:0;z-index:-1;pointer-events:none}
+.fs-role .fs-m[data-t]::before{color:#1f2328;-webkit-text-stroke:.3em #1f2328}
+.fs-role .fs-m[data-t]::after{color:#fff;-webkit-text-stroke:.17em #fff}
+.fs-card{text-shadow:none}

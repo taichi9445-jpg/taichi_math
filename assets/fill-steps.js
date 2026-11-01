@@ -304,6 +304,8 @@
       bind(p, st);
       layout();
       if (o.after) o.after(root, p, st);
+      // 役わりの色のふち用に、数の文字を data-t に写す（after で書きかえた問題文も。fill-steps.css の .fs-role）
+      if (o.roleCards) root.querySelectorAll('.fs-role .fs-m').forEach(function (e) { if (!e.children.length) e.setAttribute('data-t', e.textContent); });
     }
 
     function hintHTML(p, row) {
