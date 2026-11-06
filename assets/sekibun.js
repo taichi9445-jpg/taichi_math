@@ -1,0 +1,455 @@
+/* ===========================================================================
+   sekibun.js — 数学Ⅱ 積分 08〜10 で共通に使う仕組み
+   ---------------------------------------------------------------------------
+   Sek.P…   分数と多項式の計算（答えはいつも計算で出す）
+   Sek.indefinite / definite / area … 問題を作る（途中式の行・カード・4択・解説を1つのデータから）
+   Sek.quiz … 4択（ノートで解く・タイムアタック・超鬼連チャン）。まちがえたら正解を選ぶまで進まない
+   Sek.fill … 途中式をカードでうめる（fill-steps.js）
+   Sek.menu … メニュー（ポップで中央ぞろえ、正方形に近いカード）
+   Sek.fig  … 教科書のような図（座標軸・斜線・端の点線）
+   ========================================================================= */
+(function (global) {
+  'use strict';
+  var M = '−';
+
+  // ---- 分数 [分子, 分母] ----
+  var gcd = function (a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a; };
+  var R = function (n, d) { d = d === undefined ? 1 : d; if (d < 0) { n = -n; d = -d; } var g = gcd(n, d) || 1; return [n / g, d / g]; };
+  var add = function (a, b) { return R(a[0] * b[1] + b[0] * a[1], a[1] * b[1]); };
+  var sub = function (a, b) { return R(a[0] * b[1] - b[0] * a[1], a[1] * b[1]); };
+  var mul = function (a, b) { return R(a[0] * b[0], a[1] * b[1]); };
+  var div = function (a, b) { return R(a[0] * b[1], a[1] * b[0]); };
+  var neg = function (a) { return [-a[0], a[1]]; };
+  var same = function (a, b) { return a[0] === b[0] && a[1] === b[1]; };
+  var pow = function (a, n) { var r = [1, 1]; for (var i = 0; i < n; i++) r = mul(r, a); return r; };
+  // 数の文字：{8|3}、−{8|3}、3。par をつけると負の数に (−3)
+  function num(r, par) {
+    var s = r[1] === 1 ? String(Math.abs(r[0])) : '{' + Math.abs(r[0]) + '|' + r[1] + '}';
+    if (r[0] >= 0) return s;
+    return par ? '(' + M + s + ')' : M + s;
+  }
+
+  // ---- 多項式：[{ r: 分数, p: 指数 }, …]（指数の大きい順） ----
+  var SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  var sup = function (n) { return String(n).split('').map(function (c) { return SUP[+c]; }).join(''); };
+  var xp = function (p) { return p === 0 ? '' : p === 1 ? 'x' : 'x' + sup(p); };
+  // 符号なしの項
+  function mono(r, p) {
+    var a = [Math.abs(r[0]), r[1]];
+    if (p === 0) return num(a);
+    if (a[1] === 1) return (a[0] === 1 ? '' : a[0]) + xp(p);
+    return num(a) + xp(p);
+  }
+  function join(items) {   // items: [{ s: 文字, neg: 負か }]
+    return items.map(function (t, i) { return (i ? (t.neg ? ' ' + M + ' ' : ' + ') : (t.neg ? M : '')) + t.s; }).join('');
+  }
+  var polyS = function (ts) { return ts.length ? join(ts.map(function (t) { return { s: mono(t.r, t.p), neg: t.r[0] < 0 }; })) : '0'; };
+  function parse(str) {
+    var s = String(str).replace(/\s/g, '').replace(/−/g, '-'), out = {};
+    (s.match(/[+-]?[^+-]+/g) || []).forEach(function (t) {
+      var m = t.match(/^([+-]?)(\d*)(x?)([⁰¹²³⁴⁵⁶⁷⁸⁹]*)$/);
+      var k = (m[1] === '-' ? -1 : 1) * (m[2] ? +m[2] : 1);
+      var p = m[3] ? (m[4] ? +m[4].split('').map(function (c) { return SUP.indexOf(c); }).join('') : 1) : 0;
+      out[p] = add(out[p] || [0, 1], [k, 1]);
+    });
+    return norm(Object.keys(out).map(function (p) { return { r: out[p], p: +p }; }));
+  }
+  function norm(ts) {
+    var m = {};
+    ts.forEach(function (t) { m[t.p] = add(m[t.p] || [0, 1], t.r); });
+    return Object.keys(m).map(function (p) { return { r: m[p], p: +p }; }).filter(function (t) { return t.r[0] !== 0; }).sort(function (a, b) { return b.p - a.p; });
+  }
+  var plus = function (a, b) { return norm(a.concat(b)); };
+  var minus = function (a, b) { return norm(a.concat(b.map(function (t) { return { r: neg(t.r), p: t.p }; }))); };
+  var times = function (a, b) { var o = []; a.forEach(function (s) { b.forEach(function (t) { o.push({ r: mul(s.r, t.r), p: s.p + t.p }); }); }); return norm(o); };
+  var anti = function (ts) { return ts.map(function (t) { return { r: div(t.r, [t.p + 1, 1]), p: t.p + 1 }; }); };
+  var deriv = function (ts) { return ts.filter(function (t) { return t.p > 0; }).map(function (t) { return { r: mul(t.r, [t.p, 1]), p: t.p - 1 }; }); };
+  var at = function (ts, x) { return ts.reduce(function (s, t) { return add(s, mul(t.r, pow(x, t.p))); }, [0, 1]); };
+  var val = function (ts, x) { return ts.reduce(function (s, t) { return s + t.r[0] / t.r[1] * Math.pow(x, t.p); }, 0); };
+  var paren = function (ts) { return ts.length > 1 ? '(' + polyS(ts) + ')' : polyS(ts); };
+
+  var shuffle = function (a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  var uniq = function (a) { var seen = {}; return a.filter(function (v) { var k = Array.isArray(v) ? v[0] : v; if (seen[k]) return false; seen[k] = 1; return true; }); };
+  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  var rint = function (lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); };
+
+  // ---- 積分の項のカード ----
+  // そのまま積分した形（3 × {1|3}x³）と、計算した形（x³）
+  function rawTerm(t) {
+    var k = [Math.abs(t.r[0]), t.r[1]], q = t.p + 1;
+    if (t.p === 0) return mono(k, 1);
+    if (same(k, [1, 1])) return mono([1, q], q);
+    return num(k) + ' × ' + mono([1, q], q);
+  }
+  var simpTerm = function (t) { return mono(div([Math.abs(t.r[0]), t.r[1]], [t.p + 1, 1]), t.p + 1); };
+  function termDummies(t) {
+    var k = [Math.abs(t.r[0]), t.r[1]], o = [];
+    if (t.p > 0) {
+      o.push([mono(mul(k, [t.p, 1]), t.p - 1), '積分は微分の逆です。指数を 1 つふやします。']);
+      o.push([mono(k, t.p + 1), '指数に 1 を足したら、その数でわります。']);
+      o.push([mono(div(k, [t.p, 1]), t.p + 1), 'わる数は、もとの指数に 1 を足した数です。']);
+    } else {
+      o.push([mono(k, 0), '定数 k を積分すると kx です。']);
+      o.push([mono(div(k, [2, 1]), 2), '定数 k を積分すると kx です。']);
+    }
+    return o;
+  }
+
+  // 項ごとに積分する行。base：それまでの空欄の数
+  function integrateRows(ts, lhs, base, tail) {
+    var F = anti(ts), rows = [], cards = [], eqs = {}, n = base;
+    var raws = ts.map(rawTerm), simps = ts.map(simpTerm);
+    var two = raws.some(function (v, i) { return v !== simps[i]; });
+    var rawIdx = [];
+    var row1 = lhs + join(ts.map(function (t, i) { rawIdx.push(n++); return { s: '[' + raws[i] + ']', neg: t.r[0] < 0 }; })) + tail;
+    rows.push({ t: row1, h: '1 つの項ずつ、指数を 1 つふやして、その数でわります。定数 k は kx です。' });
+    if (two) {
+      var row2 = '= ' + join(ts.map(function (t, i) {
+        if (raws[i] === simps[i]) return { s: simps[i], neg: t.r[0] < 0 };
+        var b = n++; eqs[rawIdx[i]] = {}; eqs[rawIdx[i]][simps[i]] = b;
+        return { s: '[' + simps[i] + ']', neg: t.r[0] < 0 };
+      })) + tail;
+      rows.push({ t: row2, h: 'かけ算をして、約分します。' });
+    }
+    ts.forEach(function (t) { cards = cards.concat(termDummies(t)); });
+    cards = raws.concat(two ? simps : [], cards);
+    return { rows: rows, cards: cards, eqs: eqs, count: n - base, F: F };
+  }
+  function cleanCards(cards) {
+    var good = cards.filter(function (c) { return typeof c === 'string'; });
+    return uniq(cards.filter(function (c) { return typeof c === 'string' || good.indexOf(c[0]) < 0; }));
+  }
+  var blanks = function (rows) { return rows.reduce(function (n, r) { return n + ((r.t || r).match(/\[/g) || []).length; }, 0); };
+  var INT = '∫', DX = ' dx';
+
+  // ---- 08 不定積分 ----
+  // q: { f: '3x²-4x+1' } / { show: '(x+1)²', f: 'x²+2x+1' } / { f, at: 1, value: 5 }（F(1) = 5 の条件）
+  function indefinite(q) {
+    var ts = parse(q.f), rows = [], cards = [], n = 0, intg = paren(ts);
+    var lead = INT + ' ' + (q.show || intg) + DX;
+    if (q.at !== undefined) lead = 'F(x) = ' + INT + ' ' + intg + DX;
+    if (q.show) {
+      rows.push('#かっこを展開する');
+      var ex = lead + ' = ' + INT + ' (' + join(ts.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; })) + ')' + DX;
+      rows.push({ t: ex, h: '分配法則や乗法公式で、かっこをはずして同類項をまとめよう。' });
+      n += ts.length;
+      ts.forEach(function (t) {
+        cards.push(mono(t.r, t.p));
+        cards.push([mono(mul(t.r, [2, 1]), t.p), '係数をもう一度計算しよう。']);
+        if (t.p) cards.push([mono(t.r, t.p + 1), '指数をもう一度確かめよう。']);
+      });
+      rows.push('#1 つの項ずつ積分する');
+    }
+    var part = integrateRows(ts, q.show ? '= ' : lead + ' = ', n, ' + C');
+    rows = rows.concat(part.rows); cards = cards.concat(part.cards);
+    var F = part.F, ans = polyS(F) + ' + C', problem;
+    var eqs = part.eqs;
+    if (q.at !== undefined) {
+      var x = [q.at, 1], Fa = at(F, x), C = sub([q.value, 1], Fa);
+      rows.push('#F(' + num(x) + ') = ' + q.value + ' より');
+      rows.push({ t: 'F(' + num(x) + ') = [' + num(Fa, false) + '] + C = ' + q.value, h: 'F(x) の x に ' + num(x) + ' を代入して、計算しよう。' });
+      rows.push({ t: 'C = [' + num(C) + ']', h: '移項して C を求めよう。' });
+      var Full = norm(F.concat(C[0] ? [{ r: C, p: 0 }] : []));
+      rows.push('#したがって');
+      rows.push({ t: 'F(x) = [' + polyS(Full) + ']', h: '求めた C を、F(x) の式に入れよう。' });
+      cards.push(num(Fa), num(C), polyS(Full),
+        [num(neg(C)), '移項すると符号が変わります。'], [num(add(Fa, [1, 1])), 'もう一度代入して計算しよう。'],
+        [polyS(norm(F.concat([{ r: neg(C), p: 0 }]))), 'C の符号を確かめよう。']);
+      ans = 'F(x) = ' + polyS(Full);
+      problem = { big: 'F′(x) = ' + polyS(ts) + '、F(' + num(x) + ') = ' + q.value, q: 'を満たす関数 F(x) を求めよ。', rows: rows, cards: cleanCards(cards), ans: ans, eqs: eqs };
+    } else {
+      problem = { big: INT + ' ' + (q.show || intg) + DX, q: '不定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: ans, eqs: eqs };
+    }
+    problem.group = q.group;
+    problem.wrong = indefWrong(ts, F, q);
+    return problem;
+  }
+  function indefWrong(ts, F, q) {
+    if (q.at !== undefined) {
+      var C = sub([q.value, 1], at(F, [q.at, 1]));
+      var mk = function (c) { return 'F(x) = ' + polyS(norm(F.concat([{ r: c, p: 0 }]))); };
+      return uniq([mk(neg(C)), mk(add(C, [1, 1])), mk([q.value, 1]), mk(sub(C, [1, 1]))]).filter(function (v) { return v !== mk(C); }).slice(0, 3);
+    }
+    var C = ' + C', good = polyS(F) + C, o = [];
+    o.push(polyS(ts.map(function (t) { return { r: t.r, p: t.p + 1 }; })) + C);                     // わるのを忘れる
+    if (ts.some(function (t) { return t.p; })) o.push(polyS(deriv(ts)) + C);                        // 微分してしまう
+    o.push(polyS(ts.map(function (t) { return { r: t.p ? div(t.r, [t.p, 1]) : t.r, p: t.p + 1 }; })) + C);  // もとの指数でわる
+    o.push(polyS(F));                                                                               // C を忘れる
+    if (F.length > 1) o.push(polyS(F.map(function (t, i) { return i === F.length - 1 ? { r: neg(t.r), p: t.p } : t; })) + C);
+    o.push(polyS(F.map(function (t) { return { r: mul(t.r, [2, 1]), p: t.p }; })) + C);
+    o.push(polyS(ts) + C);                                                                          // そのまま
+    o.push(polyS(F.map(function (t) { return { r: t.r, p: t.p + 1 }; })) + C);
+    return uniq(o).filter(function (v) { return v !== good; }).slice(0, 3);
+  }
+
+  var lim = function (b, a) { return '{' + num([b, 1]) + '|' + num([a, 1]) + '}'; };
+  // ---- 09 定積分の計算の行 ----
+  // ts を a から b まで。lhs はその前の式。cards に足す
+  function subst(F, c) {   // 上端・下端を代入した形（代入する数が空欄）
+    var v = num([c, 1], true);
+    return join(F.map(function (t) {
+      var a = [Math.abs(t.r[0]), t.r[1]], x = '[' + v + ']' + (t.p > 1 ? sup(t.p) : '');
+      return { s: same(a, [1, 1]) ? x : num(a) + ' × ' + x, neg: t.r[0] < 0 };
+    }));
+  }
+  function evalRows(ts, a, b, lhs) {
+    var F = anti(ts), Fa = at(F, [a, 1]), Fb = at(F, [b, 1]), ans = sub(Fb, Fa), rows = [];
+    var terms = join(F.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; }));
+    rows.push({ t: lhs + '⟦' + terms + '⟧' + lim(b, a), h: '指数を 1 つふやして、その数でわります。定積分では C はいりません。' });
+    var one = F.length < 2;
+    var up = '(' + subst(F, b) + ')', lo = '(' + subst(F, a) + ')';
+    if (one) rows.push({ t: '= ' + up + ' − ' + lo, h: '[ ] の式に、上端を代入した式から、下端を代入した式をひきます。' });
+    else {
+      rows.push({ t: '= ' + up, h: 'まず、上端 ' + num([b, 1]) + ' を代入します。' });
+      rows.push({ t: '　 − ' + lo, h: '次に、下端 ' + num([a, 1]) + ' を代入して、ひきます。' });
+    }
+    rows.push({ t: '= [' + num(Fb) + '] − [' + num(Fa, true) + ']', h: 'それぞれ計算しよう。', sk: 1 });
+    rows.push({ t: '= [' + num(ans) + ']', h: 'ひき算をします。負の数をひくときは、たし算になります。' });
+    var cards = F.map(function (t) { return mono(t.r, t.p); });
+    ts.forEach(function (t) { termDummies(t).forEach(function (d) { cards.push(d); }); });
+    cards.push(num([b, 1], true), num([a, 1], true), num(Fb), num(Fa, true), num(ans));
+    [[neg([b, 1]), '代入する数を確かめよう。'], [add([a, 1], [1, 1]), '上端と下端を確かめよう。']].forEach(function (d) { cards.push([num(d[0], true), d[1]]); });
+    cards.push([num(add(Fb, [1, 1])), 'もう一度計算しよう。'], [num(neg(Fa), true), '符号を確かめよう。'],
+      [num(add(Fb, Fa)), '上端の値から、下端の値をひきます。'], [num(sub(Fa, Fb)), '上端の値 − 下端の値 の順です。']);
+    return { rows: rows, cards: cards, ans: ans, Fa: Fa, Fb: Fb };
+  }
+  function nearValues(ans, list) {
+    var o = list.slice(), k = 1;
+    while (k < 9 && uniq(o.map(function (r) { return num(r); })).filter(function (v) { return v !== num(ans); }).length < 3) { o.push(add(ans, [k, 1]), sub(ans, [k, 1])); k++; }
+    return uniq(o.map(function (r) { return num(r); })).filter(function (v) { return v !== num(ans); }).slice(0, 3);
+  }
+  // q: { f, a, b, show? }
+  function definite(q) {
+    var ts = parse(q.f), rows = [], cards = [], head = INT + lim(q.b, q.a) + ' ' + (q.show || paren(ts)) + DX;
+    if (q.show) {
+      rows.push('#かっこを展開する');
+      rows.push({ t: head + ' = ' + INT + lim(q.b, q.a) + ' (' + join(ts.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; })) + ')' + DX, h: 'かっこをはずして、同類項をまとめよう。' });
+      ts.forEach(function (t) { cards.push(mono(t.r, t.p), [mono(mul(t.r, [2, 1]), t.p), '係数をもう一度計算しよう。']); });
+    }
+    var e = evalRows(ts, q.a, q.b, q.show ? '= ' : head + ' = ');
+    rows = rows.concat(e.rows); cards = cards.concat(e.cards);
+    var F = anti(ts);
+    return { big: head, q: '定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: num(e.ans), group: q.group, value: e.ans,
+      wrong: nearValues(e.ans, [add(e.Fb, e.Fa), sub(e.Fa, e.Fb), e.Fb, at(ts, [q.b, 1]), sub(at(ts, [q.b, 1]), at(ts, [q.a, 1]))]) };
+  }
+
+  // ---- 解説（途中式の行を、空欄をうめた形で） ----
+  function workOf(p) {
+    return p.rows.map(function (r) {
+      var t = (r.t || r).replace(/^[!#]/, '');
+      return /^#/.test(r.t || r) ? '<p class="sk-w prose">' + FillSteps.md(t) + '</p>' : '<p class="sk-w">' + FillSteps.md(t) + '</p>';
+    }).join('');
+  }
+
+  // ---- 図 ----
+  // o: { curves: [{ ts, label, color? }], regions: [{ a, b, up, low }], xs: [{ x, label }], xr, yr, h }
+  var NAVY = '#1f4e8c', ORANGE = '#c2410c', INK = '#1f2328';
+  var uidN = 0;
+  function fig(o) {
+    var W = 340, H = o.h || 270, L = 22, T = 16, Rg = 22, B = 22;
+    var xr = o.xr, yr = o.yr;
+    var X = function (x) { return L + (x - xr[0]) / (xr[1] - xr[0]) * (W - L - Rg); };
+    var Y = function (y) { return H - B - (y - yr[0]) / (yr[1] - yr[0]) * (H - T - B); };
+    var f1 = function (v) { return Math.round(v * 10) / 10; };
+    var id = 'skh' + (++uidN), s = '';
+    s += '<svg class="sk-fig" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (o.alt || 'グラフと面積の図') + '"><defs>' +
+      '<pattern id="' + id + '" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#dfeaf7"/><path d="M0 0V7" stroke="#6f97c6" stroke-width="1.3"/></pattern>' +
+      '<clipPath id="' + id + 'c"><rect x="' + L + '" y="' + T + '" width="' + (W - L - Rg) + '" height="' + (H - T - B) + '"/></clipPath></defs>';
+    // 斜線の部分
+    (o.regions || []).forEach(function (g) {
+      var pts = [], n = 60, i, x;
+      for (i = 0; i <= n; i++) { x = g.a + (g.b - g.a) * i / n; pts.push(f1(X(x)) + ',' + f1(Y(val(g.up, x)))); }
+      for (i = n; i >= 0; i--) { x = g.a + (g.b - g.a) * i / n; pts.push(f1(X(x)) + ',' + f1(Y(val(g.low, x)))); }
+      s += '<polygon points="' + pts.join(' ') + '" fill="url(#' + id + ')" stroke="none"/>';
+    });
+    // 座標軸
+    var ox = X(0), oy = Y(0);
+    s += '<path d="M' + (L - 10) + ' ' + f1(oy) + 'H' + (W - 12) + '" stroke="' + INK + '" stroke-width="1.4"/><path d="M' + (W - 12) + ' ' + f1(oy) + 'l-8 -3.6v7.2z" fill="' + INK + '"/>';
+    s += '<path d="M' + f1(ox) + ' ' + (H - 8) + 'V8" stroke="' + INK + '" stroke-width="1.4"/><path d="M' + f1(ox) + ' 8l-3.6 8h7.2z" fill="' + INK + '"/>';
+    var txt = function (x, y, t, anchor, it, size, color) {
+      return '<text x="' + f1(x) + '" y="' + f1(y) + '" text-anchor="' + (anchor || 'middle') + '" font-family="STIX Two Text, serif" font-size="' + (size || 17) + '"' + (it ? ' font-style="italic"' : '') + ' fill="' + (color || INK) + '" paint-order="stroke" stroke="#fff" stroke-width="3.5" stroke-linejoin="round">' + t + '</text>';
+    };
+    var marks = [];
+    // 端の点線と目もり
+    (o.xs || []).forEach(function (m) {
+      var below = m.below === undefined ? false : m.below, yv = m.y === undefined ? 0 : m.y;
+      if (Math.abs(yv) > 1e-9) s += '<path d="M' + f1(X(m.x)) + ' ' + f1(oy) + 'V' + f1(Y(yv)) + '" stroke="' + INK + '" stroke-width="1.1" stroke-dasharray="4 3"/>';
+      s += '<circle cx="' + f1(X(m.x)) + '" cy="' + f1(oy) + '" r="2" fill="' + INK + '"/>';
+      marks.push(txt(X(m.x) + (m.dx || 0), oy + (below ? 19 : -7) + (m.up ? -13 : 0), String(m.label).replace(/-/g, M), 'middle', /[a-zαβ]/i.test(m.label), 16));
+    });
+    (o.ys || []).forEach(function (m) {
+      s += '<path d="M' + f1(ox) + ' ' + f1(Y(m.y)) + 'H' + f1(X(m.x)) + '" stroke="' + INK + '" stroke-width="1.1" stroke-dasharray="4 3"/>';
+      marks.push(txt(ox - 6, Y(m.y) + 5, String(m.label).replace(/-/g, M), 'end', false, 16));
+    });
+    // 曲線
+    var boxes = [];
+    (o.curves || []).forEach(function (c, ci) {
+      var d = [], n = 160, col = c.color || (ci ? ORANGE : NAVY);
+      for (var i = 0; i <= n; i++) { var x = xr[0] + (xr[1] - xr[0]) * i / n; d.push((i ? 'L' : 'M') + f1(X(x)) + ' ' + f1(Y(val(c.ts, x)))); }
+      s += '<path d="' + d.join('') + '" fill="none" stroke="' + col + '" stroke-width="2.4" clip-path="url(#' + id + 'c)"/>';
+    });
+    s += marks.join('');
+    s += txt(ox - 8, oy + 17, 'O', 'end', true, 16) + txt(W - 14, oy - 8, 'x', 'middle', true, 18) + txt(ox + 11, 19, 'y', 'middle', true, 18);
+    // 式の名前：線にかからない場所をさがす
+    (o.curves || []).forEach(function (c, ci) {
+      if (!c.label) return;
+      var col = c.color || (ci ? ORANGE : NAVY), w = c.label.length * 7.6 + 8, h = 18, best = null, bestScore = -1e9;
+      var pts = [];
+      (o.curves || []).forEach(function (k) { for (var i = 0; i <= 80; i++) { var x = xr[0] + (xr[1] - xr[0]) * i / 80; pts.push([X(x), Y(val(k.ts, x))]); } });
+      for (var i = 0; i <= 60; i++) {
+        var x = xr[0] + (xr[1] - xr[0]) * (1 - i / 60), cy = Y(val(c.ts, x));
+        if (cy < T + 4 || cy > H - B - 2) continue;
+        [[8, -12], [8, 18], [-w - 8, -12], [-w - 8, 18]].forEach(function (off) {
+          var lx = X(x) + off[0], ly = cy + off[1];
+          if (lx < 4 || lx + w > W - 4 || ly - h < 4 || ly > H - 4) return;
+          var hit = pts.some(function (q) { return q[0] > lx - 2 && q[0] < lx + w + 2 && q[1] > ly - h - 1 && q[1] < ly + 4; });
+          var axis = (oy > ly - h - 2 && oy < ly + 5) || (ox > lx - 2 && ox < lx + w + 2);
+          var other = boxes.some(function (b) { return lx < b[0] + b[2] && lx + w > b[0] && ly - h < b[1] && ly > b[1] - b[3]; });
+          var inReg = (o.regions || []).some(function (g) { var xa = X(g.a), xb = X(g.b); return lx + w > xa && lx < xb && (function () { var xm = g.a + (g.b - g.a) * Math.min(1, Math.max(0, ((lx + w / 2) - xa) / (xb - xa))), yu = Y(val(g.up, xm)), yl = Y(val(g.low, xm)); return ly > yu && ly - h < yl; })(); });
+          var score = (hit ? -100 : 0) + (axis ? -40 : 0) + (other ? -200 : 0) + (inReg ? -60 : 0) - i * 0.2;
+          if (score > bestScore) { bestScore = score; best = [lx, ly]; }
+        });
+      }
+      if (!best) best = [W - w - 6, T + 16];
+      boxes.push([best[0], best[1], w, h]);
+      s += labelMath(best[0], best[1], c.label, col);
+    });
+    return s + '</svg>';
+  }
+  // 図の中の式：x・y は斜体、数字は立体、² は小さく上に
+  function labelMath(x, y, t, col) {
+    var out = t.replace(/[a-zA-Zαβ]/g, function (m) { return '<tspan font-style="italic">' + m + '</tspan>'; })
+      .replace(/([²³⁴])/g, function (m) { return '<tspan dy="-6" font-size="11">' + (SUP.indexOf(m)) + '</tspan><tspan dy="6"> </tspan>'; });
+    return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-family="STIX Two Text, serif" font-size="16" fill="' + col + '" paint-order="stroke" stroke="#fff" stroke-width="3.5" stroke-linejoin="round">' + out + '</text>';
+  }
+
+  // ---- メニュー ----
+  function menu(el, cards, lead) {
+    el.innerHTML = (lead ? '<p class="sk-lead">' + lead + '</p>' : '') + '<div class="sk-menu n' + cards.length + '">' + cards.map(function (c, i) {
+      return '<button type="button" class="sk-card c' + (i % 6) + '" data-i="' + i + '"><span class="ic">' + c.icon + '</span><b>' + c.name + '</b><small>' + c.sub + '</small></button>';
+    }).join('') + '</div>';
+    el.querySelectorAll('.sk-card').forEach(function (b) { b.onclick = function () { cards[+b.dataset.i].go(); }; });
+    window.scrollTo(0, 0);
+  }
+
+  // ---- 途中式 ----
+  function fill(el, problems, o) {
+    o = o || {};
+    if (typeof el === 'string') el = document.querySelector(el);
+    var tb = '<button type="button" class="fs-btn zm-back" data-home>メニューへ</button>';
+    var api = FillSteps.mount({
+      el: el, problems: problems, review: true,
+      tabsBefore: tb, top: o.top, hint: o.hint, tabGroup: o.tabGroup,
+      after: function (root) {
+        var h = root.querySelector('[data-home]'); if (h) h.onclick = o.home;
+        root.querySelectorAll('.fs-card').forEach(function (e) { if (e.querySelector('.fs-fr')) e.classList.add('frac'); });
+        alignEq(root);
+      },
+      finalExtra: '<p><button type="button" class="fs-btn" id="skHome">メニューにもどる</button></p>'
+    });
+    // 最後の画面のボタン
+    new MutationObserver(function () { var b = el.querySelector('#skHome'); if (b) b.onclick = o.home; var h = el.querySelector('[data-home]'); if (h) h.onclick = o.home; }).observe(el, { childList: true, subtree: true });
+    return api;
+  }
+  // = で始まる行は、上の行の = の下にそろえる
+  function alignEq(root) {
+    var rows = [].slice.call(root.querySelectorAll('.fs-row')), lastEq = null;
+    rows.forEach(function (row) {
+      var eq = row.querySelector('.fs-eq');
+      if (!eq) return;
+      eq.style.marginLeft = '';
+      var txt = eq.textContent.trim();
+      if (txt[0] !== '=' && !/^[　 ]*−/.test(eq.textContent)) { var m = eq.querySelector('.fs-eqs'); lastEq = m ? m.getBoundingClientRect().left : null; return; }
+      if (lastEq === null) return;
+      var gap = lastEq - eq.getBoundingClientRect().left;
+      if (gap <= 0) return;
+      var room = eq.clientWidth - eq.scrollWidth;
+      eq.style.marginLeft = Math.min(gap, gap + Math.min(0, room + gap - 4 > 0 ? 0 : room)) + 'px';
+      if (eq.scrollWidth > eq.clientWidth + 1) eq.style.marginLeft = Math.max(0, gap - (eq.scrollWidth - eq.clientWidth)) + 'px';
+    });
+  }
+
+  // ---- 4択 ----
+  // list: [{ big, q, ans, wrong:[3], p?（途中式の問題）, fig? }]
+  // o: { name, timed, oni, home, again }
+  function quiz(el, list, o) {
+    var S = list.map(function (q) { return { ch: shuffle([q.ans].concat(q.wrong.slice(0, 3))), tried: [], done: false, hint: 0 }; });
+    var i = 0, front = 0, t0 = Date.now(), timer = null, lock = false, ended = false;
+    var md = FillSteps.md, LBL = ['ア', 'イ', 'ウ', 'エ'];
+    var fmt = function (ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + '分' + (s % 60) + '秒'; };
+    function tick() { var e = el.querySelector('#skTime'); if (e) e.textContent = fmt(Date.now() - t0); }
+    function draw() {
+      var q = list[i], st = S[i], tabs = '';
+      if (list.length <= 20) tabs = '<nav class="sk-tabs">' + list.map(function (_, k) {
+        var c = k === i ? ' cur' : S[k].done ? (S[k].tried.length ? ' ng' : ' ok') : '';
+        return '<button type="button" class="sk-tab' + c + '" data-go="' + k + '"' + (k > front ? ' disabled' : '') + '>' + (k + 1) + '</button>';
+      }).join('') + '</nav>';
+      var hints = '';
+      if (!o.timed && q.p) {
+        var rows = q.p.rows.filter(function (r) { return !/^#/.test(r.t || r); });
+        hints = '<div class="sk-hints">' + rows.slice(0, st.hint).map(function (r, k) { return '<div class="sk-hint"><b>考え方' + (k + 1) + '</b>' + (r.h ? '<span>' + md(r.h) + '</span>' : '') + '<p>' + md((r.t || r).replace(/^!/, '')) + '</p></div>'; }).join('') + '</div>' +
+          (st.done ? '' : '<div class="sk-ctrl"><button type="button" class="fs-btn" data-hint' + (st.hint >= rows.length ? ' disabled' : '') + '>' + (st.hint ? '次のヒント' : 'ヒント') + '</button></div>');
+      }
+      el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(Date.now() - t0) + '</span>' : '') + '</div>' +
+        '<div class="sk-bar"><span style="width:' + (front / list.length * 100) + '%"></span></div>' + tabs +
+        '<div class="sk-body' + (q.fig ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q"><span class="big-formula">' + md(q.big) + '</span><span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') + '</div>' +
+        '<div class="sk-right"><div class="sk-opts">' + st.ch.map(function (v, k) {
+          var bad = st.tried.indexOf(v) >= 0, good = st.done && v === q.ans;
+          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + (v.length > 22 ? ' long' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + md(v) + '</span></button>';
+        }).join('') + '</div>' + hints +
+        (st.done && !o.timed ? '<div class="sk-ans"><b>' + (st.tried.length ? '答え' : '正解') + '</b>' + (q.p ? workOf(q.p) : '<p>' + md(q.ans) + '</p>') + '</div>' : '') +
+        (st.done && (!o.timed || i < front) ? '<div class="sk-ctrl"><button type="button" class="fs-btn primary" data-next>' + (front >= list.length ? '結果を見る' : i < front - 1 ? '取り組み中の問題へ' : '次の問題へ') + '</button></div>' : '') +
+        '</div></div>';
+      el.querySelector('[data-home]').onclick = function () { clearInterval(timer); o.home(); };
+      el.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { i = +b.dataset.go; draw(); }; });
+      el.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { choose(st.ch[+b.dataset.k], b); }; });
+      var h = el.querySelector('[data-hint]'); if (h) h.onclick = function () { st.hint++; draw(); };
+      var n = el.querySelector('[data-next]'); if (n) n.onclick = function () { if (front >= list.length) finish(); else { i = front; draw(); window.scrollTo(0, 0); } };
+    }
+    function choose(v, b) {
+      var q = list[i], st = S[i];
+      if (lock || st.done) return;
+      if (v === q.ans) {
+        st.done = true;
+        if (i === front) front = Math.min(list.length, front + 1);
+        if (o.timed) {
+          lock = true; b.classList.add('ok');
+          setTimeout(function () { lock = false; if (i >= list.length - 1) finish(); else { i = front; draw(); } }, 220);
+        } else draw();
+        return;
+      }
+      st.tried.push(v);
+      if (o.oni) { st.done = true; finish(); return; }
+      draw();
+    }
+    function finish() {
+      if (ended) return; ended = true; clearInterval(timer);
+      var ms = Date.now() - t0, solved = S.filter(function (s) { return s.done && !s.tried.length; }).length, bad = [];
+      S.forEach(function (s, k) { if (s.tried.length) bad.push(k); });
+      var head = o.oni ? '<h2>連続 ' + solved + ' 問 正解！</h2>' : '<h2>' + o.name + '　おわり</h2><p class="sk-score">一発で正解　<b>' + solved + '</b> / ' + list.length + '</p>';
+      el.innerHTML = '<section class="sk-result">' + head + (o.timed ? '<p class="sk-big">' + fmt(ms) + '</p>' : '') +
+        (bad.length ? '<p><button type="button" class="fs-btn primary" data-rev>間違えた問題を確認する（' + bad.length + '問）</button></p>' : '<p>間違えた問題はありません</p>') +
+        '<div id="skRev" hidden>' + bad.map(function (k) {
+          var q = list[k];
+          return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q"><span class="big-formula">' + md(q.big) + '</span><span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
+            '<p>選んだ答え：' + S[k].tried.map(md).join('、') + '</p><p>正しい答え：' + md(q.ans) + '</p>' + (q.p ? workOf(q.p) : '') + '</div>';
+        }).join('') + '</div>' +
+        '<div class="fs-nav"><button type="button" class="fs-btn" data-home>メニューへ</button><button type="button" class="fs-btn" data-again>もう一度</button></div></section>';
+      el.querySelector('[data-home]').onclick = o.home;
+      el.querySelector('[data-again]').onclick = o.again;
+      var r = el.querySelector('[data-rev]'); if (r) r.onclick = function () { el.querySelector('#skRev').hidden = false; r.hidden = true; };
+      window.scrollTo(0, 0);
+    }
+    if (o.timed) timer = setInterval(tick, 500);
+    draw(); window.scrollTo(0, 0);
+    return { state: S, list: list, cur: function () { return i; } };
+  }
+
+  global.Sek = {
+    R: R, add: add, sub: sub, mul: mul, div: div, neg: neg, pow: pow, num: num, same: same,
+    parse: parse, polyS: polyS, norm: norm, plus: plus, minus: minus, times: times, anti: anti, at: at, val: val, paren: paren, mono: mono, join: join,
+    shuffle: shuffle, uniq: uniq, pick: pick, rint: rint, cleanCards: cleanCards, blanks: blanks,
+    lim: lim, indefinite: indefinite, definite: definite, evalRows: evalRows, nearValues: nearValues, workOf: workOf,
+    fig: fig, menu: menu, fill: fill, quiz: quiz, alignEq: alignEq
+  };
+})(window);
