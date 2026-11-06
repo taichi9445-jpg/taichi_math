@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>直線と接線の方程式</title>
-    <link rel="stylesheet" href="../../assets/fill-steps.css" />
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap"
@@ -367,7 +367,7 @@
         <div id="challenge" hidden></div>
       </section>
     </main>
-    <script src="../../assets/fill-steps.js"></script>
+    <script src="../../assets/fill-steps.js?v=20261106"></script>
     <script>
       const TANGENTS = [
         {
@@ -530,7 +530,6 @@
             [[1, 2], 1],
           ],
         },
-        { type: "ps", p: [2, -3], m: 0, wrong: [{ x: 2 }, [-3, 0], { x: -3 }] },
         {
           type: "2p",
           p: [2, 1],
@@ -985,7 +984,7 @@
             q: prompt,
             rows,
             ans: vertical ? "x = " + n(a) : line(m, z),
-            group: vertical ? 2 : q.r ? 1 : 0,
+            group: vertical || horizontal ? 2 : q.r ? 1 : 0,
             source: q,
             kind: "line",
             graph: {

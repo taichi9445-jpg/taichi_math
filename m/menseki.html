@@ -11,7 +11,7 @@
 -->
 <link rel="stylesheet" href="../assets/port.css">
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/fill-steps.css">
+<link rel="stylesheet" href="../assets/fill-steps.css?v=20261106">
 <style>
 .ms-formula{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:6px 12px;background:#f4f8fd;border:1px solid #d6e2f0;border-radius:8px}
 .ms-formula svg{flex:none;width:112px;height:auto}
@@ -31,7 +31,7 @@
   <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>面積の計算</h1></header>
   <div id="app"></div>
 </main>
-<script src="../assets/fill-steps.js"></script>
+<script src="../assets/fill-steps.js?v=20261106"></script>
 <script src="../assets/hint-fig.js"></script>
 <script>
 const BLUE = '#1f4e8c', ORANGE = '#d9480f';
@@ -286,6 +286,6 @@ function hintFig(p, row) {
   return p.deg < 90 ? HintFig.trace(p.deg, 'sin') : HintFig.semi(p.deg);
 }
 
-FillSteps.mount({ tabGroup: (p,i) => ({id:i<3?0:i<5?1:i<7?2:3,label:i<3?'基本':i<5?'有理化':i<7?'鈍角':'鈍角＋有理化'}), el: "#app", problems, hint, hintFig, top: formulaBox });
+FillSteps.mount({ tabGroup: (p,i) => ({id:i<3?0:i<5?1:i<7?2:3,label:i<3?'基本':i<5?'有理化':i<7?'鈍角':'鈍角＋有理化'}), el: "#app", problems, hint, hintFig, top: formulaBox, skipAhead: true, softTrig: true, tabsBefore: '<a class="fs-btn zm-back" href="../index.html">メニューへ</a>' });
 </script>
 </body></html>

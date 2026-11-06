@@ -8,7 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../../assets/fill-steps.css" />
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106" />
     <style>
       * {
         box-sizing: border-box;
@@ -865,6 +865,12 @@
           gap: 6px;
         }
       }
+      .top-menu {
+        margin-right: 8px;
+        padding: 3px 10px;
+        min-height: 32px;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
@@ -909,7 +915,8 @@
         </div>
       </section>
       <section id="quizContainer" style="display: none">
-        <span id="modeIndicator" class="mode-indicator"></span
+        <button class="top-menu" onclick="backToModeSelection()">メニューへ</button
+        ><span id="modeIndicator" class="mode-indicator"></span
         ><span id="status" class="status"></span>
         <div class="progress">
           <div id="progressBar" class="progress-bar"></div>
@@ -930,7 +937,7 @@
         </section>
       </section>
     </main>
-    <script src="../../assets/fill-steps.js"></script>
+    <script src="../../assets/fill-steps.js?v=20261106"></script>
     <script>
       // 数式のHTMLは、文字だけ斜体・数字は立体。式の行と日本語の説明を分ける。
       function mathHTML(html) {
@@ -1271,7 +1278,8 @@
             7: "↗",
           },
           hint: `<div class="formula-steps">
-                    因数分解すると、f'(x) = <input type='text' class='formula-input' id='p5_f1' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='p5_f2' maxlength='1' data-answer='1'>)²<br>
+                    因数分解すると、f'(x) = <input type='text' class='formula-input' id='p5_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='p5_f3' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='p5_f4' maxlength='1' data-answer='1'>)<br>
+                    <span>= <input type='text' class='formula-input' id='p5_f5' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='p5_f2' maxlength='1' data-answer='1'>)²</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='p5_s1' maxlength='1' data-answer='1'> である
                 </div>`,
         },
@@ -1454,7 +1462,8 @@
             7: "↘",
           },
           hint: `<div class="formula-steps">
-                    因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pr6_f1' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='pr6_f2' maxlength='1' data-answer='1'>)²<br>
+                    因数分解すると、f'(x) = -<input type='text' class='formula-input' id='pr6_f1' maxlength='1' data-answer='3'>(x² - <input type='text' class='formula-input' id='pr6_f3' maxlength='1' data-answer='2'>x + <input type='text' class='formula-input' id='pr6_f4' maxlength='1' data-answer='1'>)<br>
+                    <span>= -<input type='text' class='formula-input' id='pr6_f5' maxlength='1' data-answer='3'>(x - <input type='text' class='formula-input' id='pr6_f2' maxlength='1' data-answer='1'>)²</span><br>
                     f'(x) = 0の解は、x = <input type='text' class='formula-input' id='pr6_s1' maxlength='1' data-answer='1'> である
                 </div>`,
         },
@@ -2304,6 +2313,24 @@
 
       let formulaAPI = null,
         formulaReady = false;
+      // 「= −3(x + 3)(x − 1)」のように = で始まる行は、上の行の = の下にそろえる
+      function alignEquals(root) {
+        const rows = [...root.querySelectorAll(".fs-row")];
+        rows.forEach((row, i) => {
+          const eq = row.querySelector(".fs-eq");
+          if (!eq || !eq.textContent.trim().startsWith("=")) return;
+          const up = rows[i - 1]?.querySelector(".fs-eqs");
+          if (!up) return;
+          eq.style.marginLeft = "";
+          eq.style.fontSize = "";
+          const gap = up.getBoundingClientRect().left - eq.getBoundingClientRect().left;
+          eq.style.marginLeft = Math.max(0, gap) + "px";
+          let size = parseFloat(getComputedStyle(eq).fontSize);
+          const base = size;
+          while (eq.scrollWidth > eq.clientWidth + 1 && size > base * 0.75)
+            eq.style.fontSize = --size + "px";
+        });
+      }
       function mountFormula(problem, index) {
         const source = problem.derivative + "<br>" + problem.hint;
         const box = document.createElement("div");
@@ -2403,6 +2430,7 @@
             if (table) table.hidden = !formulaReady;
             if (formulaReady) checkProblemCompletion(currentProblem);
             primeSpacing(root);
+            alignEquals(root);
             if(formulaReady&&!wasReady)queueMicrotask(selectFirstField);
           },
         });
@@ -2454,6 +2482,20 @@
           .querySelectorAll(".picking")
           .forEach((b) => b.classList.remove("picking"));
       }
+      // x の行の選択肢：その行の答えぜんぶ＋ダミー。小さい順にして、行の間は場所を変えない
+      function xRowOptions() {
+        const vals = [
+          ...new Set(
+            [...document.querySelectorAll(".zt tr:nth-child(1) .ans")].map(
+              (e) => e.dataset.ans.split("|")[0],
+            ),
+          ),
+        ];
+        for (const v of [...vals])
+          for (const d of [String(-Number(v)), String(Number(v) + 1), String(Number(v) - 1)])
+            if (vals.length < 3 && !vals.includes(d)) vals.push(d);
+        return vals.sort((a, b) => Number(a) - Number(b)).map((v) => [v, v]);
+      }
       function openPicker(btn) {
         if (btn.disabled) return;
         closePicker();
@@ -2470,18 +2512,22 @@
         const nextValue =
           btn.dataset.ans.split("|").find((v) => !used.includes(v)) ||
           btn.dataset.ans.split("|")[0];
-        let options = numeric
-          ? [
-              nextValue,
-              String(Number(nextValue) + 1),
-              String(Number(nextValue) - 1),
-            ].map((v) => [v, v])
-          : PICK[kind];
+        const xRow = numeric && /^t\d+_x_/.test(btn.id);
+        let options = xRow
+          ? xRowOptions()
+          : numeric
+            ? [
+                nextValue,
+                String(Number(nextValue) + 1),
+                String(Number(nextValue) - 1),
+              ].map((v) => [v, v])
+            : PICK[kind];
         if (kind === "arrow") options = [...options, ["→", "→ 一定"]];
-        options = options
-          .map((v, i) => [v, (i + currentProblem + 1) % options.length])
-          .sort((a, b) => a[1] - b[1])
-          .map((x) => x[0]);
+        if (numeric && !xRow)
+          options = options
+            .map((v, i) => [v, (i + currentProblem + 1) % options.length])
+            .sort((a, b) => a[1] - b[1])
+            .map((x) => x[0]);
         const panel = document.getElementById("pickPanel");
         panel.innerHTML =
           '<p class="pick-title">' +
@@ -2506,7 +2552,7 @@
           if (!btn.disabled)
             document.getElementById("pickMessage").textContent =
               "符号・増減・代入した値をもう一度確認しよう。";
-          else {
+          else if (!document.querySelector("#tableStage .picking:not(:disabled)")) {
             closePicker();
             focusNext(btn);
           }

@@ -24,6 +24,10 @@
      どれか1つの組と、それまでに入れたカードがすべて合っていれば正解にする。
    スマホなど（PC の横長の画面でないとき）は、今の空欄の答えとダミー2つの3枚だけを出す（fewCards: false でやめる）。
    ヒントは、同じ行の空欄をうめているあいだは開いたまま。次の行に進むか、閉じるボタンで閉じる。
+   skipAhead:true … 「S = [24/√2]」のような行で、同じ左辺のあとの行の答え（S = [12√2]）を入れても正解にして、とばした行は自動でうめる。
+   softTrig:true … [sin 30°] の空欄に値 1/2 を入れても正解にして、sin 30° を入れ、ひとこと説明を出す。
+   行に note: '式', noteAfter: 行番号 をつけると、その行が出たときに、この行の横に（式）を出す。
+   行に cg: '名前' をつけると、同じ名前の行はスマホのカードの並びを同じにする（行の中でもカードの場所は変わらない）。
    06 の opt-in: roleCards:true は役割色・数カード固定/式3枚・復習を有効にする。
    roles は «x1|内容» の形（x1/y1/x2/y2/m）。指定のない教材には影響しない。
    expressionSlots は式を入れる空欄番号、expressionCards はその3択。
@@ -47,12 +51,13 @@
   // 数式の部分：sin・cos・tan は立体、A や x などの文字は斜体、² は右上の小さい 2
   function mathRun(s) {
     var h = '';
-    s.replace(/(\d*)√(\d+)|(sin|cos|tan)|(²)|([A-Za-zθ])|([^A-Za-zθ²√]+?(?=\d*√|sin|cos|tan|²|[A-Za-zθ]|$))/g,
-      function (m, c, d, fn, sq, letter) {
+    s.replace(/(\d*)√(\d+)|(sin|cos|tan)|(²)|([A-Za-zθ])|(√)|([^A-Za-zθ²√]+?(?=\d*√|√|sin|cos|tan|²|[A-Za-zθ]|$))/g,
+      function (m, c, d, fn, sq, letter, root) {
         if (d !== undefined) h += '<span class="fs-rt">' + (c || '') + radicalSVG(d) + '</span>';
         else if (fn) h += '<span class="fs-fn">' + fn + '</span>';
         else if (sq) h += '<sup>2</sup>';
         else if (letter) h += '<i>' + letter + '</i>';
+        else if (root) h += '√';
         else h += esc(m);
         return '';
       });
@@ -145,7 +150,8 @@
     return walk(src);
   }
 
-  function prepare(p) {
+  var SIN_VALUE = { 30: '1/2', 45: '1/√2', 60: '√3/2', 90: '1', 120: '√3/2', 135: '1/√2', 150: '1/2' };
+  function prepare(p, o) {
     p.rows = p.rows.map(rowObj);
     p.blanks = [];
     p.blankOrder = [];
@@ -161,18 +167,35 @@
       } });
     });
     p.cards = p.cards.map(function (c) { return c === null ? { sep: true } : Array.isArray(c) ? { v: c[0], why: c[1] } : { v: c }; });
+    if (o.softTrig) p.blanks.forEach(function (b) {
+      var m = b.a.match(/^sin (\d+)°$/), val = m && SIN_VALUE[m[1]];
+      if (!val || p.rows[b.row].blanks.some(function (i) { return p.blanks[i].a === val; })) return;
+      if (p.cards.some(function (c) { return c.v === val; })) b.soft = [val];
+    });
+    if (o.skipAhead) {
+      var ends = [];
+      p.rows.forEach(function (row) {
+        if (row.prose || row.formula || !row.blanks.length) return;
+        var segs = splitTop(row.src, ' = ');
+        if (segs.length > 1 && /^\[[^\]]+\]$/.test(segs[segs.length - 1])) ends.push({ lhs: segs[0], b: row.blanks[row.blanks.length - 1] });
+      });
+      ends.forEach(function (e, k) {
+        var later = ends.slice(k + 1).filter(function (x) { return x.lhs === e.lhs; }).map(function (x) { return x.b; });
+        if (later.length) p.blanks[e.b].jump = later;
+      });
+    }
   }
 
   function mount(o) {
     var root = typeof o.el === 'string' ? document.querySelector(o.el) : o.el;
     var P = o.problems;
-    P.forEach(prepare);
+    P.forEach(function (p) { prepare(p, o); });
     var S = P.map(function () { return fresh(); });
     var cur = 0, hintOpen = false, hintRow = -1, msg = '', finalView = false;
     var wide = window.matchMedia ? matchMedia('(min-width:900px) and (orientation:landscape)') : { matches: true };
     if (wide.addEventListener) wide.addEventListener('change', function () { render(); });
 
-    function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0, wrongBlanks: {} }; }
+    function fresh() { return { fill: {}, active: null, shown: false, done: false, miss: 0, wrongBlanks: {}, says: {} }; }
     function firstEmpty(p, st) { for (var n = 0; n < p.blankOrder.length; n++) { var i = p.blankOrder[n]; if (st.fill[i] === undefined) return i; } return null; }
     function rowDone(p, st, ri) { return p.rows[ri].blanks.every(function (b) { return st.fill[b] !== undefined; }); }
 
@@ -202,25 +225,49 @@
     function usedCount(p, st, v) { var n = 0; for (var k in st.fill) if (st.fill[k] === v) n++; return n; }
     function isOff(p, st, v) { var need = needCount(p, v); return need > 0 && usedCount(p, st, v) >= need; }
 
-    // スマホ：今の空欄に入るカード1枚と、なるべく同じ種類のダミー2枚（毎回同じ並びになるように、問題と空欄の番号で決める）
+    // スマホ：その行（cg の行）の答えのカードと、なるべく同じ種類のダミー。
+    //   行の中ではカードの場所を変えない（同じカードを続けて押せるように、問題と行の番号だけで並びを決める）
     function kind(v) { v = String(v); return /^(sin|cos|tan)/.test(v) ? 't' : /[A-Za-zθ]/.test(v) ? 'v' : /\//.test(v) ? 'f' : /√/.test(v) ? 'r' : /°/.test(v) ? 'd' : 'n'; }
+    function fewRows(p, ri) {
+      var cg = p.rows[ri].cg, out = [];
+      if (!cg) return [ri];
+      p.rows.forEach(function (r, k) { if (r.cg === cg) out.push(k); });
+      return out;
+    }
     function fewCards(p, st, i) {
-      var seed = (cur + 1) * 7919 + i * 104729 + 17;
+      var ri = p.blanks[i].row, key = p.rows[ri].cg || 'r' + ri;
+      p.fewSets = p.fewSets || {};
+      if (p.fewSets[key] !== undefined) return p.fewSets[key];
+      var seed = (P.indexOf(p) + 1) * 7919 + (fewRows(p, ri)[0] + 1) * 104729 + 17;
       var rnd = function () { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
-      var ok = null, others = [], seen = {};
-      p.cards.forEach(function (c, ci) {
-        if (c.sep || isOff(p, st, c.v) || seen[c.v]) return;
-        seen[c.v] = true;
-        if (accepts(p, st, i, c.v)) { if (ok === null || c.v === p.blanks[i].a) ok = ci; }
-        else others.push(ci);
+      var vals = [], miss = false, first = {}, others = [];
+      p.cards.forEach(function (c, ci) { if (!c.sep && first[c.v] === undefined) first[c.v] = ci; });
+      function add(v, must) { if (first[v] === undefined) { if (must) miss = true; return; } if (vals.indexOf(v) < 0) vals.push(v); }
+      fewRows(p, ri).forEach(function (r) {
+        p.rows[r].blanks.forEach(function (bi) {
+          var b = p.blanks[bi];
+          add(b.a, true);
+          (b.soft || []).forEach(function (v) { add(v); });
+          if (b.jump) add(p.blanks[b.jump[b.jump.length - 1]].a);
+        });
       });
-      if (ok === null) return null;
-      var k = kind(p.cards[ok].v);
+      if (miss) return (p.fewSets[key] = null);
+      Object.keys(first).forEach(function (v) { if (vals.indexOf(v) < 0) others.push(first[v]); });
+      var k = kind(vals[0]), letters = vals.every(function (v) { return kind(v) === 'v'; });
+      var want = letters && vals.length >= 3 ? 0 : Math.max(1, 3 - vals.length);
       others = others.map(function (ci) { return { ci: ci, w: (kind(p.cards[ci].v) === k ? 0 : 1) + rnd() }; })
-        .sort(function (a, b) { return a.w - b.w; }).slice(0, 2).map(function (x) { return x.ci; });
-      var three = [ok].concat(others);
-      for (var n = three.length - 1; n > 0; n--) { var j = Math.floor(rnd() * (n + 1)), t = three[n]; three[n] = three[j]; three[j] = t; }
-      return three;
+        .sort(function (a, b) { return a.w - b.w; }).slice(0, want).map(function (x) { return x.ci; });
+      var set = vals.map(function (v) { return first[v]; }).concat(others);
+      for (var n = set.length - 1; n > 0; n--) { var j = Math.floor(rnd() * (n + 1)), t = set[n]; set[n] = set[j]; set[j] = t; }
+      return (p.fewSets[key] = set);
+    }
+    // スマホのカード：その行で使い切ったカードだけうすくする（場所はそのまま）
+    function fewOff(p, st, v) {
+      var need = 0, used = 0;
+      fewRows(p, p.blanks[st.active].row).forEach(function (r) {
+        p.rows[r].blanks.forEach(function (bi) { if (p.blanks[bi].a === v) need++; if (st.fill[bi] === v) used++; });
+      });
+      return need > 0 && used >= need;
     }
 
     function render() {
@@ -252,9 +299,10 @@
         if (row.prose) body = '<div class="fs-prose">' + parse(row.src, ctx) + '</div>';
         else body = '<div class="fs-eq">' + splitTop(row.src, ' = ').map(function (g, gi) {
           return '<span class="fs-g">' + (gi ? '<span class="fs-m fs-eqs">=</span>' : '') + parse(g, ctx) + '</span>';
-        }).join('') + '</div>';
+        }).join('') + (row.note && stop > row.noteAfter ? '<span class="fs-g fs-rnote">（' + md(row.note) + '）</span>' : '') + '</div>';
         rows += '<li class="fs-row' + (row.prose ? ' prose' : '') + (row.formula ? ' formula' : '') + (ri === activeRow && !all ? ' now' : '') + '">' +
           (row.prose ? '<span class="fs-no"></span>' : '<span class="fs-no">' + (++no) + '</span>') + (row.formula ? '<span class="fs-ftag">公式</span>' : '') + body + '</li>';
+        if (st.says[ri]) rows += '<li class="fs-say">' + md(st.says[ri]) + '</li>';
         if (hintOpen && ri === activeRow && !all) rows += '<li class="fs-hint"><b>ヒント</b><button type="button" class="fs-hx" data-act="hint" aria-label="ヒントを閉じる">×</button>' + hintHTML(p, row) + '</li>';
       });
       if (sec) rows += '</ol></li>';
@@ -276,7 +324,7 @@
       var cards = (few || p.cards.map(function (_, ci) { return ci; })).map(function (ci) {
         var c = p.cards[ci];
         if (c.sep) return '<span class="fs-sep"></span>';
-        var off = all || isOff(p, st, c.v);
+        var off = all || (few ? fewOff(p, st, c.v) : isOff(p, st, c.v));
         if (o.roleCards && p.numericCards.includes(ci)) {
           var occurrence = p.numericCards.filter(function(k){return k < ci && p.cards[k].v === c.v;}).length;
           var used = Object.keys(st.fill).filter(function(k){return !p.expressionSlots.includes(+k) && st.fill[k] === c.v;}).length;
@@ -299,7 +347,7 @@
         ((all || Object.keys(st.fill).length) ? '<button type="button" class="fs-btn" data-act="reset">やり直す</button>' : '') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-act="prev"' + (cur ? '' : ' disabled') + '>前の問題</button>' +
         '<button type="button" class="fs-btn' + (all ? ' primary' : '') + '" data-act="next">' + (cur === P.length - 1 ? '結果を見る' : '次の問題') + '</button></div>' +
-        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards' + (few ? ' few' : '') + '">' + cards + '</div></aside></div>';
+        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards' + (few ? ' few' + (few.length > 4 ? ' many' : '') : '') + '">' + cards + '</div></aside></div>';
 
       bind(p, st);
       layout();
@@ -313,10 +361,32 @@
       return '<div>' + md(h) + '</div>' + (o.hintFig ? (o.hintFig(p, row) || '') : '');
     }
 
+    // 値を入れても正解にする空欄（@ の組は、まだ入っていない空欄をさがす）
+    function softOwner(p, st, i, v) {
+      var b = p.blanks[i], list = b.g ? p.blanks.filter(function (x) { return x.g === b.g && st.fill[x.i] === undefined; }) : [b];
+      for (var n = 0; n < list.length; n++) if ((list[n].soft || []).indexOf(v) >= 0) return list[n];
+      return null;
+    }
+    function jumpTo(p, i, v) {
+      var t = (p.blanks[i].jump || []).filter(function (k) { return p.blanks[k].a === v; });
+      return t.length ? t[0] : null;
+    }
+
     function place(i, v) {
       var p = P[cur], st = S[cur];
       if (st.done || st.shown || st.fill[i] !== undefined) return;
-      if (accepts(p, st, i, v)) {
+      var good = accepts(p, st, i, v), soft = good ? null : softOwner(p, st, i, v), jump = good || soft ? null : jumpTo(p, i, v);
+      if (soft !== null) {
+        st.fill[i] = soft.a; msg = ''; st.active = null;
+        st.says[p.blanks[i].row] = '（' + v + ' でも正解。ここは公式どおり ' + soft.a + ' と書いて、値はあとの行で入れよう）';
+        render(); follow();
+      } else if (jump !== null) {
+        p.blanks.forEach(function (x) { if (x.i <= jump && st.fill[x.i] === undefined) st.fill[x.i] = x.a; });
+        msg = ''; st.active = null;
+        st.says[p.blanks[jump].row] = '（途中をとばしても正解。とばした行も見ておこう）';
+        if (firstEmpty(p, st) === null) st.done = true;
+        render(); follow();
+      } else if (good) {
         st.fill[i] = v; msg = ''; st.active = null;
         if (firstEmpty(p, st) === null) st.done = true;
         render(); follow();
@@ -405,12 +475,12 @@
     // 式が横に入りきらないとき：まず少し小さくする → それでも入らなければ「＝」の前で改行 → さらに小さく
     function layout() {
       root.querySelectorAll('.fs-eq').forEach(function (e) {
-        e.classList.remove('wrap'); e.style.fontSize = '';
+        e.classList.remove('fs-wrapeq'); e.style.fontSize = '';
         var base = parseFloat(getComputedStyle(e).fontSize), size = base;
         var over = function () { return e.scrollWidth > e.clientWidth + 1; };
         while (over() && size > base * 0.78) { size -= 1; e.style.fontSize = size + 'px'; }
         if (!over()) return;
-        e.style.fontSize = ''; size = base; e.classList.add('wrap');
+        e.style.fontSize = ''; size = base; e.classList.add('fs-wrapeq');
         while (over() && size > base * 0.72) { size -= 1; e.style.fontSize = size + 'px'; }
       });
     }

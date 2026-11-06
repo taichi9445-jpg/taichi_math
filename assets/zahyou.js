@@ -140,11 +140,11 @@ function problemFor(deg, mode) {
   const rats = new Set([sn, cs, tn]); [sn, cs, tn].forEach(v => { const f = flip(v); if (f && rats.size < 6) rats.add(f); });
   for (const v of ['1/2', '√3/2', '1/√3', '√3', '−1/2', '−√3/2']) if (rats.size < 6) rats.add(v);
   // ゴールは sin・cos・tan の値。枠で囲み、公式（sin θ = y/r など）の行と値の行を分ける（先生の要望）
-  const G = 'ゴール：三角比の値', goal = t => ({ t, sec: G });
-  const rows = [`P([${x}], [${y}])`, `r = OP = [${r}]`,
-    goal('!sin θ = {[y]|[r]}'), goal(`sin ${deg}° = [${sn}]`),
-    goal('!cos θ = {[x]|[r]}'), goal(`cos ${deg}° = [${cs}]`),
-    goal('!tan θ = {[y]|[x]}'), goal(tn === 'なし' ? `#x = 0 なので、tan ${deg}° の値は [なし]` : `tan ${deg}° = [${tn}]`)];
+  const G = 'ゴール：三角比の値', goal = (t, cg) => ({ t, sec: G, cg });
+  const rows = [{ t: `P([${x}], [${y}])`, cg: 'p' }, { t: `r = OP = [${r}]`, cg: 'p' },
+    goal('!sin θ = {[y]|[r]}', 'f'), goal(`sin ${deg}° = [${sn}]`),
+    goal('!cos θ = {[x]|[r]}', 'f'), goal(`cos ${deg}° = [${cs}]`),
+    goal('!tan θ = {[y]|[x]}', 'f'), goal(tn === 'なし' ? `#x = 0 なので、tan ${deg}° の値は [なし]` : `tan ${deg}° = [${tn}]`)];
   // 半径 1（単位円）や半径 2 で考えた P の座標・r も正解にする（座標の値がそのまま cos・sin になる）
   const main = [x, y, r, 'y', 'r', sn, 'x', 'r', cs, 'y', 'x', tn];
   const val = c => { const neg = c[0] === '−', [n, d] = c.replace('−', '').split('/'); return (neg ? -1 : 1) * num(n) / (d ? num(d) : 1); };

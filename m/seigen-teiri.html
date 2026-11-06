@@ -11,7 +11,7 @@
 -->
 <link rel="stylesheet" href="../assets/port.css">
 <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/fill-steps.css">
+<link rel="stylesheet" href="../assets/fill-steps.css?v=20261106">
 <style>
 .st-formula{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px;padding:5px 10px;background:#eef4fb;border-radius:6px;font-size:17px}
 .st-formula small{font-size:12px;color:#5b6470}
@@ -29,7 +29,7 @@
   <header class="fs-head"><small>数学Ⅰ　図形と計量</small><h1>正弦定理</h1></header>
   <div id="app"></div>
 </main>
-<script src="../assets/fill-steps.js"></script>
+<script src="../assets/fill-steps.js?v=20261106"></script>
 <script src="../assets/hint-fig.js"></script>
 <script>
 const NAVY = '#1f4e8c', ORANGE = '#d9480f', INK = '#1f2328';
@@ -135,13 +135,13 @@ const problems = [
       ['a = 6 ÷ {1|2} × {1|√2}','put'],
       ['#÷ 分数 は、逆数をかける'],
       ['a = 6 × [2] × {1|√2}','inv'],
-      ['a = {12|√2}','prod'],
+      ['a = [12/√2]','prod'],
       ['#分母にルートがあるので有理化すると、'],
       ['a = {12 × [√2]|√2 × [√2]}','rat'],
       ['a = {12√2|2}','rat2'],
       ['a = [6√2]','red']
     ],
-    cards:['6','1/√2','1/2','2','√2','6√2',['sin 60°','辺 a と向かい合う角は A = 45° です。'],['3√2','12 ÷ 2 を計算します。√の中の数は変わりません。']],
+    cards:['6','1/√2','1/2','2','12/√2','√2','6√2',['sin 60°','辺 a と向かい合う角は A = 45° です。'],['3√2','12 ÷ 2 を計算します。√の中の数は変わりません。']],
     ans:'a = 6√2'
   },
   { // 問2
@@ -246,7 +246,7 @@ const problems = [
     triangle: { A: 105, B: 45, C: 30, angles: { A: '105°', B: '45°', C: '?' }, sides: { b: '4', c: 'c' }, known: 'b', target: 'c' },
     pair: ['b', 'B', 'c', 'C'],
     rows: [
-      ['C = 180° − [105°] − [45°]', 'csum'],
+      ['C = 180° − [105°@c] − [45°@c]', 'csum'],
       ['C = [30°]', 'ccalc'],
       ['!{c|sin C} = {b|sin B}'],
       ['{c|[sin 30°]} = {[4]|[sin 45°]}', 'sub'],
@@ -291,7 +291,7 @@ const problems = [
       ['{a|[sin 45°]} = 2 × [3]', 'sub3'],
       ['{a|sin 45°} = [6]', 'mul2'],
       ['#両辺に sin 45° をかけて'],
-      ['a = [6] × [sin 45°]', 'mul'],
+      ['a = [6@m] × [sin 45°@m]', 'mul'],
       ['sin 45° = [1/√2]', 'sin'],
       ['#を代入すると'],
       ['a = 6 × [1/√2]', 'put'],
@@ -333,9 +333,17 @@ function hintText(p, kind, row) {
 problems.forEach(p => {
   p.fig = drawTriangle(p.triangle);
   p.rows = p.rows.map(([t, k]) => ({ t, k }));
+  // 「÷」の行が出たら、もとの分数の行の横に、同じ式を ÷ で書いて見せる（どこから来た式か分かるように）
+  const put = p.rows.findIndex(r => r.k === 'put' || r.k === 'put2'), from = p.rows.find(r => (r.k === 'mul' || r.k === 'sub2') && r.t.includes('{'));
+  if (put >= 0 && from && p.rows[put].t.includes('÷')) {
+    const plain = s => s.replace(/\[([^\]@]+)(@\w+)?\]/g, '$1');
+    const t = plain(from.t), lhs = from.k === 'sub2' ? '' : t.split(' = ')[1];
+    from.note = '= ' + (from.k === 'sub2' ? t.split(' = ')[0] : lhs).replace(/\{([^|]+)\|([^}]+)\}/, '$1 ÷ $2');
+    from.noteAfter = put;
+  }
 });
 FillSteps.mount({ tabGroup: (p,i) => ({id:i<5?0:i===5?1:2,label:i<5?'辺を求める':i===5?'まず角Cを求める':'外接円2R'}),
-  el: '#app', problems,
+  el: '#app', problems, skipAhead: true, softTrig: true, tabsBefore: '<a class="fs-btn zm-back" href="../index.html">メニューへ</a>',
   top: () => '<div class="st-formula"><span>' + FillSteps.md('{a|sin A} = {b|sin B} = {c|sin C} = 2R') + '</span><small>R は外接円の半径</small></div>',
   hint: (p, row) => hintText(p, row.k, row),
   hintFig: (p, row) => row.k === 'sin' ? HintFig.trace(+row.t.match(/sin (\d+)°/)[1], 'sin') : ''

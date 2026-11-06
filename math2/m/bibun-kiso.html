@@ -8,7 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../../assets/fill-steps.css">
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106">
     <style>
       * {
         box-sizing: border-box;
@@ -727,7 +727,7 @@
       </section>
       <section id="result" hidden></section>
     </main>
-    <script src="../../assets/fill-steps.js"></script>
+    <script src="../../assets/fill-steps.js?v=20261106"></script>
     <script>
       const ADVANCED = false;
       const LEVELS = [
@@ -1990,7 +1990,7 @@
         const saved=history[index]?.steps,owner=index,p=levelFiveProblem(questions[index]);
         $('choices').hidden=true;
         let lastMiss=saved?.miss||0;
-        stepAPI=FillSteps.mount({el:root,problems:[p],fewCards:false,before:(p,st)=>{
+        stepAPI=FillSteps.mount({el:root,problems:[p],before:(p,st)=>{
           const b=st.active===null?p.blankOrder.find(i=>st.fill[i]===undefined):st.active;
           if(b!==undefined&&b!==null)p.cards=p.rows[p.blanks[b].row].cards.map(v=>({v}));
         },after:(r,p,st)=>{
@@ -1998,12 +1998,6 @@
           const h=history[index] ||= {};
           if(st.miss>lastMiss){rememberIssue('途中式の空欄で間違えました');stage=Math.max(stage,1);}lastMiss=st.miss;
           if(st.shown||r.querySelector('.fs-hint')){rememberIssue(st.shown?'途中式の答えを見ました':'ヒントを見ました');stage=Math.max(stage,1);}
-          if(!matchMedia('(min-width:900px) and (orientation:landscape)').matches && st.active!==null){
-            const b=p.blanks[st.active];let allowed=b.g?p.blanks.filter(x=>x.g===b.g).map(x=>x.a):[b.a];
-            if(b.g)for(const k in st.fill)if(p.blanks[k].g===b.g)allowed.splice(allowed.indexOf(st.fill[k]),1);
-            const buttons=[...r.querySelectorAll('[data-c]')],right=buttons.filter(e=>allowed.includes(p.cards[+e.dataset.c].v)&&!e.disabled),other=buttons.filter(e=>!allowed.includes(p.cards[+e.dataset.c].v)&&!e.disabled).sort((a,c)=>Number(p.blanks.some(x=>x.row===b.row&&x.a===p.cards[+a.dataset.c].v))-Number(p.blanks.some(x=>x.row===b.row&&x.a===p.cards[+c.dataset.c].v))).slice(0,3-right.length),visible=new Set([...right,...other]);
-            buttons.forEach(e=>e.hidden=!visible.has(e));r.querySelector('.fs-cards').classList.add('few');
-          }
           h.steps=structuredClone(st);stepReady=st.done||st.shown;$('choices').hidden=!stepReady;
           if(!stepReady)$('help').hidden=true;else $('help').hidden=done;
           for(const b of Object.keys(st.wrongBlanks||{}))r.querySelector('[data-b="'+b+'"]')?.classList.add('reviewed-wrong');
