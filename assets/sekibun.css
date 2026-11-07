@@ -23,7 +23,7 @@
 /* 問題の箱 */
 .fs-q,.sk-q{border:1px solid #aebed2;border-left:4px solid #1f4e8c;border-radius:6px;background:#f8faff;padding:14px;text-align:center}
 .fs-badge{display:none}
-.big-formula{display:block;font-size:27px;line-height:1.7}
+.big-formula{display:block;font-size:27px;line-height:1.7;white-space:nowrap}
 .ask{display:block;font-size:17px;margin-top:4px}
 .sk-q .big-formula{font-size:27px}
 @media (max-width:480px){.big-formula,.sk-q .big-formula{font-size:23px}.ask{font-size:16px}}
@@ -37,7 +37,7 @@
 /* 4択 */
 .sk-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
 .sk-count{font-size:15px;font-weight:700;color:#1f4e8c}
-.sk-time{margin-left:auto;font-size:24px;font-weight:700;color:#1f4e8c;font-variant-numeric:tabular-nums}
+.sk-time{margin-left:auto;min-width:4.2em;text-align:right;font-size:24px;font-weight:700;color:#1f4e8c;font-variant-numeric:tabular-nums}
 .sk-bar{height:6px;border-radius:3px;background:#e7edf5;overflow:hidden;margin-bottom:8px}
 .sk-bar span{display:block;height:100%;background:#1f4e8c;transition:width .2s}
 .sk-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -46,7 +46,9 @@
 .sk-tab:disabled{opacity:.45}
 .sk-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
 .sk-opt{position:relative;display:flex;align-items:center;justify-content:center;min-height:82px;padding:10px 6px 8px;border:1px solid #c5d3e4;border-bottom:3px solid #b6bfc9;border-radius:8px;background:#fff;color:#1f2328;font:inherit;font-size:19px;cursor:pointer}
-.sk-opt>span{white-space:nowrap}
+.sk-opt>span{display:block;max-width:100%;min-width:0;white-space:nowrap}
+.sk-opts.stack{grid-template-columns:minmax(0,1fr)}
+.sk-opts.stack .sk-opt{min-height:66px;padding-left:26px}
 .sk-opt.long{font-size:15px;padding-left:2px;padding-right:2px}
 .sk-opt small{position:absolute;left:8px;top:4px;font-size:12px;color:#5b6470}
 .sk-opt:active{transform:translateY(2px);border-bottom-width:1px}
@@ -56,7 +58,7 @@
 .sk-ctrl{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .sk-hints{margin-top:10px}
 .sk-hint{margin-top:8px;padding:8px 10px;border-left:3px solid #9366d5;border-radius:4px;background:#f6f3fd;font-size:17px;overflow-x:auto}
-.sk-hint b{display:block;font-size:14px;color:#6741a8}.sk-hint span{display:block;font-size:14px;color:#5b6470}.sk-hint p{margin:4px 0 0}
+.sk-hint b{display:block;font-size:14px;color:#6741a8}.sk-hint .say{font-size:14px;color:#5b6470}.sk-hint p{margin:4px 0 0;white-space:nowrap}
 .sk-ans{margin-top:12px;padding:10px 12px;border-left:4px solid #2b8a3e;border-radius:4px;background:#ebfbee;overflow-x:auto}
 .sk-w{margin:4px 0;font-size:18px;line-height:2;white-space:nowrap}
 .sk-w.prose{white-space:normal;font-size:15px;color:#1f4e8c}

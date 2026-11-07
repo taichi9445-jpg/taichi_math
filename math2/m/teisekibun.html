@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>定積分の練習</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261107">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261107">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261108">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261108">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,8 +11,8 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>定積分の練習</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261107"></script>
-<script src="../../assets/sekibun.js?v=20261107"></script>
+<script src="../../assets/fill-steps.js?v=20261108"></script>
+<script src="../../assets/sekibun.js?v=20261108"></script>
 <script>
 const md = s => FillSteps.md(s), { num, parse, polyS, sub, add, neg, R, lim, evalRows, cleanCards, nearValues, times } = Sek;
 // 1. 定積分の計算
@@ -33,13 +33,13 @@ const EXPOOL = [xmul(1, 0, 1), xmul(2, 0, 3), xmul(-1, 0, 3), xmul(-2, 1, 3), pr
 // 3. レベルアップ：定積分の性質と 1/6 公式
 function sameEnds() {
   return { big: '∫{2|2} (x² + 1) dx', q: '定積分を求めよ。', ans: '0', value: [0, 1],
-    rows: ['#上端と下端が同じ定積分は 0', { t: '∫{2|2} (x² + 1) dx = [0]', h: '∫{a|a} f(x) dx = 0 です。' }],
+    rows: ['#上端と下端が同じ定積分は 0', { t: '= [0]', h: '∫{a|a} f(x) dx = 0 です。' }],
     cards: ['0', ['2', '上端と下端が同じです。'], ['5', '上端と下端が同じです。']], wrong: ['5', '2', '{14|3}'] };
 }
 function joinRange(f, a, c, b) {
   const ts = parse(f), e = evalRows(ts, a, b, '= '), I = (x, y) => '∫' + lim(y, x) + ' ' + Sek.paren(ts) + ' dx';
   return { big: I(a, c) + ' + ' + I(c, b), q: '定積分を求めよ。', ans: num(e.ans), value: e.ans,
-    rows: ['#積分する区間をつなぐ', { t: I(a, c) + ' + ' + I(c, b) + ' = ∫{[' + num([b, 1]) + ']|[' + num([a, 1]) + ']} ' + Sek.paren(ts) + ' dx', h: num([a, 1]) + ' から ' + num([c, 1]) + ' と ' + num([c, 1]) + ' から ' + num([b, 1]) + ' をつなごう。' }, ...e.rows],
+    rows: ['#積分する区間をつなぐ', { t: '= ∫{[' + num([b, 1]) + ']|[' + num([a, 1]) + ']} ' + Sek.paren(ts) + ' dx', h: num([a, 1]) + ' から ' + num([c, 1]) + ' と ' + num([c, 1]) + ' から ' + num([b, 1]) + ' をつなごう。' }, ...e.rows],
     cards: cleanCards([num([b, 1]), num([a, 1]), [num([c, 1]), '区間をつなぐと、はしの2つが残ります。'], ...e.cards]), wrong: nearValues(e.ans, [add(e.ans, [1, 1]), e.Fb, sub(e.ans, [2, 1])]) };
 }
 function sumSame(op, f, g, a, b) {
@@ -47,7 +47,7 @@ function sumSame(op, f, g, a, b) {
   const A = '∫' + lim(b, a) + ' ' + Sek.paren(F) + ' dx', B = '∫' + lim(b, a) + ' ' + Sek.paren(G) + ' dx', w = ts.length > 1 ? '(' + Sek.join(ts.map(t => ({ s: '[' + Sek.mono(t.r, t.p) + ']', neg: t.r[0] < 0 }))) + ')' : (ts[0].r[0] < 0 ? '−' : '') + '[' + Sek.mono(ts[0].r, ts[0].p) + ']';
   const dm = ts.map(t => [[Sek.mono(Sek.mul(t.r, [2, 1]), t.p), '同類項をもう一度まとめよう。'], [Sek.mono(t.r, t.p ? t.p + 1 : 1), '指数は変わりません。']]);
   return { big: A + ' ' + (op === '+' ? '+' : '−') + ' ' + B, q: '定積分を求めよ。', ans: num(e.ans), value: e.ans,
-    rows: ['#区間が同じなので、1 つの定積分にまとめる', { t: A + ' ' + (op === '+' ? '+' : '−') + ' ' + B + ' = ∫' + lim(b, a) + ' ' + w + ' dx', h: 'かっこをはずして、同類項をまとめよう。', pb: dm.map(d => d.map(x => x[0])) }, ...e.rows],
+    rows: ['#区間が同じなので、1 つの定積分にまとめる', { t: '= ∫' + lim(b, a) + ' ' + w + ' dx', h: 'かっこをはずして、同類項をまとめよう。', pb: dm.map(d => d.map(x => x[0])) }, ...e.rows],
     cards: cleanCards([...ts.map(t => Sek.mono(t.r, t.p)), ...dm.flat(), ...e.cards]), wrong: nearValues(e.ans, [add(e.ans, [1, 1]), neg(e.ans)]) };
 }
 function reversed(f, a, b) { return Sek.definite({ f, a, b }); }
@@ -55,7 +55,7 @@ function sixth(show, al, be) {
   const n3 = Math.pow(be - al, 3), ans = R(-n3, 6), A = num([al, 1], true), B = num([be, 1], true);
   return { big: '∫' + lim(be, al) + ' ' + show + ' dx', q: '定積分を求めよ。', ans: num(ans), value: ans,
     rows: [{ t: '!∫{β|α} (x − α)(x − β) dx = −{1|6}(β − α)³' }, { t: 'α = [' + num([al, 1]) + ']、β = [' + num([be, 1]) + ']', h: '(x − α)(x − β) = 0 の解が α、β です。下端が α、上端が β です。' },
-      { t: '与式 = −{1|6}([' + B + '] − [' + A + '])³', h: 'β − α を公式に入れよう。' },
+      { t: '= −{1|6}([' + B + '] − [' + A + '])³', h: 'β − α を公式に入れよう。' },
       { t: '= −{1|6} × [' + n3 + ']', h: '(β − α)³ を計算しよう。', sk: 1 }, { t: '= [' + num(ans) + ']', h: 'かけ算をして、約分しよう。' }],
     cards: cleanCards([num([al, 1]), num([be, 1]), B, A, String(n3), num(ans), [num(neg(ans)), '公式の先頭の − を忘れずに。'], [String(n3 * 2), '(β − α)³ をもう一度計算しよう。'], [num(R(-n3, 3)), '分母は 6 です。']]),
     wrong: nearValues(ans, [neg(ans), R(-n3, 3), R(n3, 3)]) };
@@ -101,7 +101,7 @@ function showMenu() {
   Sek.menu(menuEl(), [
     { name: '定積分の計算', sub: '上端 − 下端を計算する', icon: tile('∫{2|0} x dx'), go: () => practice('定積分の計算', { steps: def(CALC), detail: def(CALC, true), icon: '∫{2|0} x dx', rand: () => Sek.definite(randCalc()), ta: () => levelOrder([2, 3, 3, 2]), all: allCalc, count: POOL.length }) },
     { name: '展開して定積分', sub: 'かっこをはずしてから計算する', icon: tile('∫{1|0} (x + 1)² dx'), go: () => practice('展開して定積分', { steps: def(EXPAND), detail: def(EXPAND, true), icon: '∫{1|0} (x + 1)² dx', rand: () => Sek.definite(randExpand()), ta: () => Sek.shuffle(EXPOOL).slice(0, 10).sort((a, b) => hardness(a) - hardness(b)).map(asQ), all: allExpand, count: EXPOOL.length }) },
-    { name: 'レベルアップ', sub: '定積分の性質と {1|6} 公式', icon: tile('−{1|6}(β − α)³'), go: () => practice('レベルアップ（定積分の性質と 1/6 公式）', { steps: UP, icon: '−{1|6}(β − α)³', rand: randUp, note: () => Array.from({ length: 5 }, () => asQ(randUp())) }) }
+    { name: 'レベルアップ', sub: '定積分の性質で工夫して計算', icon: tile('∫{a|a} f(x) dx = 0'), go: () => practice('レベルアップ（定積分の性質）', { steps: UP, icon: '∫{a|a} f(x) dx = 0', rand: randUp, note: () => Array.from({ length: 5 }, () => asQ(randUp())) }) }
   ].map(c => (c.sub = md(c.sub), c)), '練習する内容を選ぼう。');
 }
 showMenu();

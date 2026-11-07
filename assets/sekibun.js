@@ -40,8 +40,8 @@
     if (a[1] === 1) return (a[0] === 1 ? '' : a[0]) + xp(p);
     return num(a) + xp(p);
   }
-  function join(items) {   // items: [{ s: 文字, neg: 負か }]
-    return items.map(function (t, i) { return (i ? (t.neg ? ' ' + M + ' ' : ' + ') : (t.neg ? M : '')) + t.s; }).join('');
+  function join(items, brk) {   // items: [{ s: 文字, neg: 負か }]。brk：4 項以上は入らないとき途中で改行してよい
+    return items.map(function (t, i) { return (brk && i === 2 && items.length > 3 ? ' ⏎' : '') + (i ? (t.neg ? ' ' + M + ' ' : ' + ') : (t.neg ? M : '')) + t.s; }).join('');
   }
   var polyS = function (ts) { return ts.length ? join(ts.map(function (t) { return { s: mono(t.r, t.p), neg: t.r[0] < 0 }; })) : '0'; };
   function parse(str) {
@@ -109,7 +109,7 @@
       return { rows: rows, cards: simps.concat(cards), eqs: eqs, count: n - base, F: F };
     }
     var rawIdx = [];
-    rows.push({ t: lhs + join(ts.map(function (t, i) { rawIdx.push(n++); return { s: '[' + raws[i] + ']', neg: t.r[0] < 0 }; })) + tail, pb: pb,
+    rows.push({ t: lhs + join(ts.map(function (t, i) { rawIdx.push(n++); return { s: '[' + raws[i] + ']', neg: t.r[0] < 0 }; }), true) + tail, pb: pb,
       h: '指数を 1 つふやして、その数でわります。係数はそのままかけておきます。' });
     var pb2 = [];
     var row2 = '= ' + join(ts.map(function (t, i) {
@@ -139,15 +139,15 @@
   function indefinite(q, detail) {
     var ts = q.ts || parse(q.f), rows = [], cards = [], n = 0, intg = paren(ts);
     var lead = INT + ' ' + (q.show || intg) + DX;
-    if (q.at !== undefined) lead = 'F(x) = ' + INT + ' ' + intg + DX;
+    if (q.at !== undefined) rows.push('F(x) = ' + INT + ' ' + intg + DX);
     if (q.show) {
       rows.push('#かっこを展開する');
-      var ex = expandRow(ts, lead + ' = ' + INT + ' ', DX);
+      var ex = expandRow(ts, '= ' + INT + ' ', DX);
       rows.push({ t: ex.t, pb: ex.pb, h: ex.h });
       cards = cards.concat(ex.cards); n += ts.length;
       rows.push('#1 つの項ずつ積分する');
     }
-    var part = integrateRows(ts, q.show ? '= ' : lead + ' = ', n, ' + C', detail);
+    var part = integrateRows(ts, '= ', n, ' + C', detail);
     rows = rows.concat(part.rows); cards = cards.concat(part.cards);
     var F = part.F, ans = polyS(F) + ' + C', problem, eqs = part.eqs;
     if (q.at !== undefined) {
@@ -200,6 +200,12 @@
       return { s: same(a, [1, 1]) ? x : num(a) + ' × ' + x, neg: t.r[0] < 0 };
     }));
   }
+  // 代入して計算した項の値：(4 + 6)
+  function termVals(F, c) {
+    return F.map(function (t) { return mul(t.r, pow([c, 1], t.p)); });
+  }
+  var valsRow = function (vs) { return join(vs.map(function (v) { return { s: '[' + num([Math.abs(v[0]), v[1]]) + ']', neg: v[0] < 0 }; })); };
+  var hasFrac = function (vs) { return vs.some(function (v) { return v[1] !== 1; }); };
   function evalRows(ts, a, b, lhs, detail) {
     var F = anti(ts), Fa = at(F, [a, 1]), Fb = at(F, [b, 1]), ans = sub(Fb, Fa), rows = [];
     var terms = join(F.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; }));
@@ -207,16 +213,23 @@
     rows.push({ t: lhs + '⟦' + terms + '⟧' + lim(b, a), pb: pb, h: '指数を 1 つふやして、その数でわります。定積分では C はいりません。' });
     var cards = F.map(function (t) { return mono(t.r, t.p); });
     dums.forEach(function (d) { cards = cards.concat(d); });
+    var br = ' ⏎ ', zero = termVals(F, a).every(function (v) { return v[0] === 0; });
+    var P = function (s, big) { return (big ? '⦅' : '(') + s + (big ? '⦆' : ')'); };
     if (detail) {
-      var up = '(' + subst(F, b) + ')', lo = '(' + subst(F, a) + ')';
-      if (F.length < 2) rows.push({ t: '= ' + up + ' − ' + lo, h: '[ ] の式に、上端を代入した式から、下端を代入した式をひきます。' });
-      else {
-        rows.push({ t: '= ' + up, h: 'まず、上端 ' + num([b, 1]) + ' を代入します。' });
-        rows.push({ t: '　 − ' + lo, h: '次に、下端 ' + num([a, 1]) + ' を代入して、ひきます。' });
-      }
+      var coef = F.some(function (t) { return t.r[1] !== 1; });
+      rows.push({ t: '= ' + P(subst(F, b), coef) + br + '− ' + P(subst(F, a), coef), h: '[ ] の式の x に、上端を代入した式から、下端を代入した式をひきます。' });
       cards.push(num([b, 1], true), num([a, 1], true), [num(neg([b, 1]), true), '代入する数を確かめよう。'], [num(add([a, 1], [1, 1]), true), '上端と下端を確かめよう。']);
     }
-    rows.push({ t: '= [' + num(Fb) + '] − [' + num(Fa, true) + ']', h: '上端を代入した値から、下端を代入した値をひきます。', sk: 1 });
+    if (F.length > 1) {
+      var vb = termVals(F, b), va = termVals(F, a), big = hasFrac(vb) || hasFrac(va), all = vb.concat(zero ? [] : va);
+      var rowV = { t: '= ' + P(valsRow(vb), big) + br + '− ' + (zero ? '0' : P(valsRow(va), big)), h: '代入して、1 つの項ずつ計算します。' };
+      var abs = all.map(function (v) { return num([Math.abs(v[0]), v[1]]); });
+      if (uniq(abs).length > 3) rowV.pb = abs.map(function (s, i) { return [num(add([Math.abs(all[i][0]), all[i][1]], [1, 1])), num(add([Math.abs(all[i][0]), all[i][1]], [2, 1]))]; });
+      rows.push(rowV);
+      cards = cards.concat(abs);
+      all.forEach(function (v) { var w = [Math.abs(v[0]), v[1]]; [add(w, [1, 1]), add(w, [2, 1])].forEach(function (d) { cards.push([num(d), 'もう一度計算しよう。']); }); });
+    }
+    rows.push({ t: '= [' + num(Fb) + '] − ' + (zero ? '0' : '[' + num(Fa, true) + ']'), h: 'かっこの中を計算します。', sk: 1 });
     rows.push({ t: '= [' + num(ans) + ']', h: 'ひき算をします。負の数をひくときは、たし算になります。' });
     cards.push(num(Fb), num(Fa, true), num(ans));
     cards.push([num(add(Fb, [1, 1])), 'もう一度計算しよう。'], [num(neg(Fa), true), '符号を確かめよう。'],
@@ -233,11 +246,11 @@
     var ts = q.ts || parse(q.f), rows = [], cards = [], head = INT + lim(q.b, q.a) + ' ' + (q.show || paren(ts)) + DX;
     if (q.show) {
       rows.push('#かっこを展開する');
-      var ex = expandRow(ts, head + ' = ' + INT + lim(q.b, q.a) + ' ', DX);
+      var ex = expandRow(ts, '= ' + INT + lim(q.b, q.a) + ' ', DX);
       rows.push({ t: ex.t, pb: ex.pb, h: ex.h });
       cards = cards.concat(ex.cards);
     }
-    var e = evalRows(ts, q.a, q.b, q.show ? '= ' : head + ' = ', detail);
+    var e = evalRows(ts, q.a, q.b, '= ', detail);
     rows = rows.concat(e.rows); cards = cards.concat(e.cards);
     return { big: head, q: '定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: num(e.ans), group: q.group, value: e.ans,
       wrong: nearValues(e.ans, [add(e.Fb, e.Fa), sub(e.Fa, e.Fb), e.Fb, at(ts, [q.b, 1]), sub(at(ts, [q.b, 1]), at(ts, [q.a, 1]))]) };
@@ -355,7 +368,6 @@
         var h = root.querySelector('[data-home]'); if (h) h.onclick = o.home;
         figGate(root, p, function () { api.go(problems.indexOf(p)); });
         root.querySelectorAll('.fs-card').forEach(function (e) { if (e.querySelector('.fs-fr')) e.classList.add('frac'); });
-        alignEq(root);
       },
       finalExtra: '<p><button type="button" class="fs-btn" id="skHome">メニューにもどる</button></p>'
     });
@@ -398,51 +410,66 @@
   // ---- 4択 ----
   // list: [{ big, q, ans, wrong:[3], p?（途中式の問題）, fig? }]
   // o: { name, timed, oni, home, again }
+  var liveTimer = null;
   function quiz(el, list, o) {
+    clearInterval(liveTimer);
     var S = list.map(function (q) { return { ch: shuffle([q.ans].concat(q.wrong.slice(0, 3))), tried: [], done: false, hint: 0 }; });
-    var i = 0, front = 0, t0 = Date.now(), timer = null, lock = false, ended = false;
+    var i = 0, t0 = performance.now(), lock = false, ended = false;
     var md = FillSteps.md, LBL = ['ア', 'イ', 'ウ', 'エ'];
     var show = function (v) { return /^<svg/.test(v) ? v : md(v); };
-    var fmt = function (ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + '分' + (s % 60) + '秒'; };
-    function tick() { var e = el.querySelector('#skTime'); if (e) e.textContent = fmt(Date.now() - t0); }
+    var doneN = function () { return S.filter(function (s) { return s.done; }).length; };
+    var fmt = function (ms) { var s = Math.floor(ms / 1000), d = Math.floor(ms % 1000 / 100); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + '.' + d; };
+    function tick() { var e = el.querySelector('#skTime'); if (e) e.textContent = fmt(performance.now() - t0); }
+    function nextOpen() { for (var k = 1; k <= list.length; k++) { var c = (i + k) % list.length; if (!S[c].done) return c; } return -1; }
+    function fit() {
+      el.querySelectorAll('.big-formula,.sk-opt>span').forEach(function (e) {
+        if (e.querySelector('svg.sk-fig')) return;
+        e.style.fontSize = '';
+        var size = parseFloat(getComputedStyle(e).fontSize);
+        while (e.scrollWidth > e.clientWidth + 1 && size > 11) { size -= 1; e.style.fontSize = size + 'px'; }
+      });
+    }
     function draw() {
       var q = list[i], st = S[i], tabs = '', hideNow = q.figHide && !st.see && !st.done;
-      if (list.length <= 20) tabs = '<nav class="sk-tabs">' + list.map(function (_, k) {
-        var c = k === i ? ' cur' : S[k].done ? (S[k].tried.length ? ' ng' : ' ok') : '';
-        return '<button type="button" class="sk-tab' + c + '" data-go="' + k + '"' + (k > front ? ' disabled' : '') + '>' + (k + 1) + '</button>';
+      if (list.length <= 24 && !o.oni) tabs = '<nav class="sk-tabs">' + list.map(function (_, k) {
+        var c = (k === i ? ' cur' : '') + (S[k].done ? (S[k].tried.length ? ' ng' : ' ok') : '');
+        return '<button type="button" class="sk-tab' + c + '" data-go="' + k + '">' + (k + 1) + '</button>';
       }).join('') + '</nav>';
       var hints = '';
       if (!o.timed && q.p) {
         var rows = q.p.rows.filter(function (r) { return !/^#/.test(r.t || r); });
-        hints = '<div class="sk-hints">' + rows.slice(0, st.hint).map(function (r, k) { return '<div class="sk-hint"><b>考え方' + (k + 1) + '</b>' + (r.h ? '<span>' + md(r.h) + '</span>' : '') + '<p>' + md((r.t || r).replace(/^!/, '')) + '</p></div>'; }).join('') + '</div>' +
+        hints = '<div class="sk-hints">' + rows.slice(0, st.hint).map(function (r, k) { return '<div class="sk-hint"><b>考え方' + (k + 1) + '</b>' + (r.h ? '<div class="say">' + md(r.h) + '</div>' : '') + '<p>' + md((r.t || r).replace(/^!/, '')) + '</p></div>'; }).join('') + '</div>' +
           (st.done ? '' : '<div class="sk-ctrl"><button type="button" class="fs-btn" data-hint' + (st.hint >= rows.length ? ' disabled' : '') + '>' + (st.hint ? '次のヒント' : 'ヒント') + '</button></div>');
       }
-      el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(Date.now() - t0) + '</span>' : '') + '</div>' +
-        '<div class="sk-bar"><span style="width:' + (front / list.length * 100) + '%"></span></div>' + tabs +
+      var stack = st.ch.some(function (v) { return !/^<svg/.test(v) && v.length > 24; });
+      var ans = q.say ? '<p>' + md(q.say) + '</p>' + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : q.p ? workOf(q.p) : '<p>' + show(q.ans) + '</p>';
+      var allDone = doneN() >= list.length;
+      el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(performance.now() - t0) + '</span>' : '') + '</div>' +
+        '<div class="sk-bar"><span style="width:' + (doneN() / list.length * 100) + '%"></span></div>' + tabs +
         '<div class="sk-body' + (q.fig && !hideNow ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? (hideNow ? '<div class="sk-ctrl"><button type="button" class="fs-btn" data-see>図を見る</button></div>' : '<div class="sk-figbox">' + q.fig + '</div>') : '') + '</div>' +
-        '<div class="sk-right"><div class="sk-opts' + (q.figOpts ? ' figs' : '') + '">' + st.ch.map(function (v, k) {
+        '<div class="sk-right"><div class="sk-opts' + (q.figOpts ? ' figs' : '') + (stack ? ' stack' : '') + '">' + st.ch.map(function (v, k) {
           var bad = st.tried.indexOf(v) >= 0, good = st.done && v === q.ans;
-          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + (v.length > 22 ? ' long' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + show(v) + '</span></button>';
+          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + show(v) + '</span></button>';
         }).join('') + '</div>' + hints +
-        (st.done && !o.timed ? '<div class="sk-ans"><b>' + (st.tried.length ? '答え' : '正解') + '</b>' + (q.p ? workOf(q.p) : '<p>' + md(q.ans) + '</p>') + '</div>' : '') +
-        (st.done && (!o.timed || i < front) ? '<div class="sk-ctrl"><button type="button" class="fs-btn primary" data-next>' + (front >= list.length ? '結果を見る' : i < front - 1 ? '取り組み中の問題へ' : '次の問題へ') + '</button></div>' : '') +
+        (st.done && !o.timed ? '<div class="sk-ans"><b>' + (st.tried.length ? '答え' : '正解') + '</b>' + ans + '</div>' : '') +
+        (st.done && (!o.timed || allDone) ? '<div class="sk-ctrl"><button type="button" class="fs-btn primary" data-next>' + (allDone ? '結果を見る' : '次の問題へ') + '</button></div>' : '') +
         '</div></div>';
-      el.querySelector('[data-home]').onclick = function () { clearInterval(timer); o.home(); };
+      el.querySelector('[data-home]').onclick = function () { clearInterval(liveTimer); o.home(); };
       el.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { i = +b.dataset.go; draw(); }; });
       el.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { choose(st.ch[+b.dataset.k], b); }; });
       var see = el.querySelector('[data-see]'); if (see) see.onclick = function () { st.see = true; draw(); };
       var h = el.querySelector('[data-hint]'); if (h) h.onclick = function () { st.hint++; draw(); };
-      var n = el.querySelector('[data-next]'); if (n) n.onclick = function () { if (front >= list.length) finish(); else { i = front; draw(); window.scrollTo(0, 0); } };
+      var n = el.querySelector('[data-next]'); if (n) n.onclick = function () { if (doneN() >= list.length) finish(); else { i = nextOpen(); draw(); window.scrollTo(0, 0); } };
+      fit();
     }
     function choose(v, b) {
       var q = list[i], st = S[i];
       if (lock || st.done) return;
       if (v === q.ans) {
         st.done = true;
-        if (i === front) front = Math.min(list.length, front + 1);
         if (o.timed) {
           lock = true; b.classList.add('ok');
-          setTimeout(function () { lock = false; if (i >= list.length - 1) finish(); else { i = front; draw(); } }, 220);
+          setTimeout(function () { lock = false; if (doneN() >= list.length) finish(); else { i = nextOpen(); draw(); } }, 220);
         } else draw();
         return;
       }
@@ -451,8 +478,8 @@
       draw();
     }
     function finish() {
-      if (ended) return; ended = true; clearInterval(timer);
-      var ms = Date.now() - t0, solved = S.filter(function (s) { return s.done && !s.tried.length; }).length, bad = [];
+      if (ended) return; ended = true; clearInterval(liveTimer);
+      var ms = performance.now() - t0, solved = S.filter(function (s) { return s.done && !s.tried.length; }).length, bad = [];
       S.forEach(function (s, k) { if (s.tried.length) bad.push(k); });
       var head = o.oni ? '<h2>連続 ' + solved + ' 問 正解！</h2>' : '<h2>' + o.name + '　おわり</h2><p class="sk-score">一発で正解　<b>' + solved + '</b> / ' + list.length + '</p>';
       el.innerHTML = '<section class="sk-result">' + head + (o.timed ? '<p class="sk-big">' + fmt(ms) + '</p>' : '') +
@@ -460,7 +487,7 @@
         '<div id="skRev" hidden>' + bad.map(function (k) {
           var q = list[k];
           return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
-            (q.figOpts ? '' : '<p>選んだ答え：' + S[k].tried.map(md).join('、') + '</p>') + '<p>正しい答え：' + (q.figOpts ? '</p><div class="sk-figbox">' + q.ans + '</div>' : md(q.ans) + '</p>') + (q.p ? workOf(q.p) : '') + '</div>';
+            (q.figOpts ? '' : '<p>選んだ答え：' + S[k].tried.map(show).join('、') + '</p><p>正しい答え：' + show(q.ans) + '</p>') + (q.say ? '<p>' + md(q.say) + '</p>' + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : '') + (q.p ? workOf(q.p) : '') + '</div>';
         }).join('') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-home>メニューへ</button><button type="button" class="fs-btn" data-again>もう一度</button></div></section>';
       el.querySelector('[data-home]').onclick = o.home;
@@ -468,8 +495,9 @@
       var r = el.querySelector('[data-rev]'); if (r) r.onclick = function () { el.querySelector('#skRev').hidden = false; r.hidden = true; };
       window.scrollTo(0, 0);
     }
-    if (o.timed) timer = setInterval(tick, 500);
+    if (o.timed) liveTimer = setInterval(tick, 100);
     draw(); window.scrollTo(0, 0);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
     return { state: S, list: list, cur: function () { return i; } };
   }
 

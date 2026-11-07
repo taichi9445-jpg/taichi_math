@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>面積を求めよう</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261107">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261107">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261108">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261108">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,8 +11,8 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>面積を求めよう</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261107"></script>
-<script src="../../assets/sekibun.js?v=20261107"></script>
+<script src="../../assets/fill-steps.js?v=20261108"></script>
+<script src="../../assets/sekibun.js?v=20261108"></script>
 <script>
 const md = s => FillSteps.md(s), { num, parse, polyS, minus, plus, add, sub, neg, mul, lim, paren, val, evalRows, cleanCards, nearValues, fig, mono, join, times, shuffle, uniq } = Sek;
 const M = '−';
@@ -108,8 +108,8 @@ function area(q) {
     const leftUp = val(ts, (a + c) / 2) > 0, Lf = leftUp ? ts : flip(ts), Rt = leftUp ? flip(ts) : ts;
     rows.push('#x 軸と交わる点で、2 つに分ける', { t: 'x 軸との交点は x = [' + num([c, 1]) + ']', h: polyS(ts) + ' = 0 を解こう。', pb: [[num([c + 1, 1]), num([c - 1, 1])]] });
     rows.push('#左の部分の面積 S₁');
-    const e1 = evalRows(Lf, a, c, 'S₁ = ∫' + lim(c, a) + ' ' + paren(Lf) + ' dx = '), e2 = evalRows(Rt, c, b, 'S₂ = ∫' + lim(b, c) + ' ' + paren(Rt) + ' dx = ');
-    rows.push(...e1.rows, '#右の部分の面積 S₂', ...e2.rows);
+    const e1 = evalRows(Lf, a, c, '= '), e2 = evalRows(Rt, c, b, '= ');
+    rows.push('S₁ = ∫' + lim(c, a) + ' ' + paren(Lf) + ' dx', ...e1.rows, '#右の部分の面積 S₂', 'S₂ = ∫' + lim(b, c) + ' ' + paren(Rt) + ' dx', ...e2.rows);
     value = add(e1.ans, e2.ans);
     rows.push('#2 つをたす', { t: 'S = S₁ + S₂ = [' + num(e1.ans) + '] + [' + num(e2.ans) + ']', h: 'どちらも正の値です。たし算をします。', sk: 1 }, { t: '= [' + num(value) + ']', h: 'たし算をしよう。約分できるときは約分します。' });
     cards.push(num([c, 1]), [num([c + 1, 1]), polyS(ts) + ' = 0 を解こう。'], [num([c - 1, 1]), polyS(ts) + ' = 0 を解こう。'], ...e1.cards, ...e2.cards, num(value), [num(sub(e1.ans, e2.ans)), '面積はどちらも正の値でたします。']);
@@ -164,7 +164,19 @@ const FORMULA = () => '<div class="sk-formula">' + md('S = ∫{b|a} (上の式 �
 function fillMode(P, home) { menuEl().innerHTML = ''; Sek.fill(app(), P, { top: FORMULA, home }); }
 function quizMode(make, o) { menuEl().innerHTML = ''; const go = () => Sek.quiz(app(), make(), Object.assign({ home: showMenu, again: go }, o)); go(); }
 const exprQ = q => { const p = area(q); return { big: '', q: '斜線の部分の面積 S を表す式はどれか。', ans: p.expr, wrong: p.exprWrong, p, fig: figOf(p.spec) }; };
-const pickFigQ = q => { const p = area(q), c = figChoices(p.spec); return { big: '', q: p.q.replace('の面積 S を求めよ。', 'を表す図はどれか。'), ans: c[0].svg, wrong: c.slice(1).map(x => x.svg), figOpts: true }; };
+// 図を選ぶ問題の解説
+function figSay(s) {
+  const one = ts => {
+    const d = ts[0].p, k = num(ts[0].r), c0 = ts.find(t => t.p === 0);
+    if (d === 0) return yname(ts) + ' は x 軸に平行な直線。';
+    if (d === 1) return yname(ts) + ' は傾き ' + k + '、y 切片 ' + (c0 ? num(c0.r) : '0') + ' の直線。';
+    if (d === 2) return yname(ts) + ' は x² の係数が ' + (ts[0].r[0] > 0 ? '正なので下に凸' : '負なので上に凸') + 'の放物線。';
+    return yname(ts) + ' は 3 次関数のグラフ。';
+  };
+  if (s.ts) return one(s.ts) + 'x = ' + num([s.a, 1]) + ' から x = ' + num([s.b, 1]) + ' までの、グラフと x 軸の間が斜線の部分です。';
+  return one(s.U) + one(s.L) + 'x = ' + num([s.a, 1]) + ' から x = ' + num([s.b, 1]) + ' までは ' + yname(s.U) + ' が上にあります。';
+}
+const pickFigQ = q => { const p = area(q), c = figChoices(p.spec); return { big: '', q: p.q.replace('の面積 S を求めよ。', 'を表す図はどれか。'), ans: c[0].svg, wrong: c.slice(1).map(x => x.svg), figOpts: true, say: figSay(p.spec), ansFig: figOf(p.spec) }; };
 const noteQ = q => { const p = area(q); return { big: '', q: p.q, ans: p.ans, wrong: p.wrong, p, fig: p.fig, figHide: true }; };
 const icon = d => `<svg viewBox="0 0 70 50" width="66" height="47" aria-hidden="true">${d}</svg>`;
 const AX = '<path d="M8 44H64M14 48V4" stroke="#5b6470" fill="none"/>';

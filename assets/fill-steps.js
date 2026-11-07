@@ -28,7 +28,7 @@
    softTrig:true … [sin 30°] の空欄に値 1/2 を入れても正解にして、sin 30° を入れ、ひとこと説明を出す。
    行に note: '式', noteAfter: 行番号 をつけると、その行が出たときに、この行の横に（式）を出す。
    行に cg: '名前' をつけると、同じ名前の行はスマホのカードの並びを同じにする（行の中でもカードの場所は変わらない）。
-   ∫{上端|下端} 定積分の記号、⟦式⟧{上端|下端} 定積分の [ ]。² のほか ³⁴… や ′ も書ける。カードの値に {分子|分母} を使ってよい。
+   ⏎ は、式が横に入らないときだけ改行してよい場所。∫{上端|下端} 定積分の記号、⟦式⟧{上端|下端} 定積分の [ ]。² のほか ³⁴… や ′ も書ける。カードの値に {分子|分母} を使ってよい。
    行に sk: 1 をつけると、その行の空欄に次の行の答えを入れても正解にする（とばした行は自動でうめる）。
    p.eqs = { 空欄番号: { 値: つながる空欄番号 } } … 約分した値を先に入れてもよい空欄（次の行の同じ項も一緒にうまる）。
    p.big に式を入れると、問題の箱に大きく出す（p.q はその下の小さい文）。review:true で最後に「間違えた問題」の一覧を出す。
@@ -155,7 +155,7 @@
     return out;
   }
   // 空欄のない式（問題文・答え・解説など）を HTML にする
-  function md(s) { return parse(bigParens(String(s)), { blank: function (v) { return valHTML(v.split('@')[0]); } }); }
+  function md(s) { return parse(bigParens(String(s).replace(/\s*⏎\s*/g, ' ')), { blank: function (v) { return valHTML(v.split('@')[0]); } }); }
 
   function rowObj(r) { return typeof r === 'string' ? { t: r } : r; }
 
@@ -334,7 +334,7 @@
         var body;
         if (row.prose) body = '<div class="fs-prose">' + parse(row.src, ctx) + '</div>';
         else body = '<div class="fs-eq">' + splitTop(row.src, ' = ').map(function (g, gi) {
-          return '<span class="fs-g">' + (gi ? '<span class="fs-m fs-eqs">=</span>' : '') + parse(g, ctx) + '</span>';
+          return splitTop(g, '⏎').map(function (x, xi) { return '<span class="fs-g">' + (gi && !xi ? '<span class="fs-m fs-eqs">=</span>' : '') + parse(x, ctx) + '</span>'; }).join('');
         }).join('') + (row.note && stop > row.noteAfter ? '<span class="fs-g fs-rnote">（' + md(row.note) + '）</span>' : '') + '</div>';
         rows += '<li class="fs-row' + (row.prose ? ' prose' : '') + (row.formula ? ' formula' : '') + (ri === activeRow && !all ? ' now' : '') + '">' +
           (row.prose ? '<span class="fs-no"></span>' : '<span class="fs-no">' + (++no) + '</span>') + (row.formula ? '<span class="fs-ftag">公式</span>' : '') + body + '</li>';
@@ -384,8 +384,18 @@
       bind(p, st);
       layout();
       if (o.after) o.after(root, p, st);
+      fitOne(root);
       // 役わりの色のふち用に、数の文字を data-t に写す（after で書きかえた問題文も。fill-steps.css の .fs-role）
       if (o.roleCards) root.querySelectorAll('.fs-role .fs-m').forEach(function (e) { if (!e.children.length) e.setAttribute('data-t', e.textContent); });
+    }
+
+    // 問題の式は1行のまま、枠に入る大きさにする
+    function fitOne(r) {
+      r.querySelectorAll('.big-formula').forEach(function (e) {
+        e.style.fontSize = '';
+        var size = parseFloat(getComputedStyle(e).fontSize);
+        while (e.scrollWidth > e.clientWidth + 1 && size > 13) { size -= 1; e.style.fontSize = size + 'px'; }
+      });
     }
 
     function hintHTML(p, row) {
