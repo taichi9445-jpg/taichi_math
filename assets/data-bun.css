@@ -1,0 +1,57 @@
+/* 数学Ⅰ データの分析（data-bun.js）。fill-steps.css・sekibun.css のあとに読む */
+.db-say{margin-top:8px}
+.db-note{margin:6px 0;font-size:14px;color:#5b6470;text-align:center}
+.db-q2{margin:12px 0 0;font-size:17px;text-align:center}
+.db-then{margin-top:10px}
+.db-data{margin:8px 0;padding:8px 10px;border-radius:6px;background:#f1f6fc;font-size:18px;line-height:1.8;text-align:center;font-family:'STIX Two Text',serif}
+/* ならべる */
+.db-slots,.db-pool,.db-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.db-slot{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:42px;border:1.5px dashed #9db6d6;border-radius:6px;background:#fff;font-family:'STIX Two Text',serif;font-size:19px}
+.db-slot.now{border:2px solid #e8930c;background:#fff6e6}
+.db-slot.on{border:1px solid #8fcda3;background:#e8f6ec}
+.db-num{min-width:50px;min-height:48px;font-size:20px}
+.fs-card.ng,.fs-card.db-bad{border-color:#c92a2a;background:#fff0f0}
+.fs-card.used{visibility:hidden}
+/* ドットプロット */
+.db-chip{min-width:30px;padding:2px 6px;border-radius:5px;background:#eef1f4;text-align:center;font-family:'STIX Two Text',serif;font-size:17px}
+.db-chip.now{background:#ffe0b0;outline:2px solid #e8930c}
+.db-chip.on{opacity:.4}
+.db-dots{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));margin-top:8px}
+.db-col{display:flex;flex-direction:column;align-items:center;padding:0;border:0;background:none;font:inherit;cursor:pointer}
+.db-col .st{display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;gap:3px;width:100%;padding-bottom:4px;border-bottom:2px solid #1f2328}
+.db-col .st i{width:11px;height:11px;border-radius:50%;background:#1f4e8c}
+.db-col b{font-weight:400;font-family:'STIX Two Text',serif;font-size:16px;padding:3px 0}
+.db-col:active .st{background:#eef4fb}
+.db-col.ng .st{background:#fdeaea}
+/* ヒストグラム */
+.db-hwrap{display:flex;gap:4px;max-width:420px;margin:8px auto 0}
+.db-hy{display:flex;flex-direction:column;font-size:13px;color:#5b6470;text-align:right}
+.db-hy span{height:30px;line-height:30px;transform:translateY(-15px)}
+.db-hist{flex:1;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));border-left:2px solid #1f2328;border-bottom:2px solid #1f2328}
+.db-hcol{display:flex;flex-direction:column}
+.db-hc{height:30px;padding:0;border:0;border-top:1px solid #dbe2ea;border-right:1px solid #eef1f4;background:#fff}
+.db-hc.now{background:#fff6e6}
+.db-hc.on{background:#c7daf0;border-color:#1f4e8c}
+.db-hc.ng{background:#fdeaea}
+.db-hx{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr)) 0;max-width:420px;margin:2px auto 0;padding-left:24px;font-size:13px}
+.db-hx span{transform:translateX(-50%);text-align:center;white-space:nowrap}
+.db-hx span:first-child{justify-self:start}
+/* 表 */
+.db-tw{overflow-x:auto;margin:8px 0}
+.db-t{border-collapse:collapse;margin:0 auto;font-size:16px;font-family:'STIX Two Text','BIZ UDPGothic',serif}
+.db-t th,.db-t td{min-width:38px;height:40px;padding:2px 6px;border:1px solid #aeb8c5;background:#fff;text-align:center;white-space:nowrap}
+.db-t th{background:#eef4fb;font-weight:400;font-size:14px;white-space:normal}
+.db-t td.off{background:#eef1f4}
+.db-t td.fill{background:#fbfcfe;border-style:dashed;cursor:pointer}
+.db-t td.now{background:#fff6e6;outline:2px solid #e8930c;outline-offset:-2px}
+.db-t td.ok{background:#e8f6ec;border-style:solid}
+.db-t .hl{background:#ffe0b0}
+.db-b{margin-top:8px}
+.db-cards{position:sticky;bottom:0;z-index:3;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:56px;margin-top:8px;padding:8px 0;background:rgba(255,255,255,.96);border-top:1px solid #e3e8ee}
+.db-cards .fs-card{flex:1 1 18%;min-width:52px;max-width:120px;min-height:50px}
+.db-ic{font-size:20px;font-family:'STIX Two Text','BIZ UDPGothic',serif;white-space:nowrap}
+.sk-menu.n7,.sk-menu.n8,.sk-menu.n9{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.sk-menu.n7,.sk-menu.n8,.sk-menu.n9{grid-template-columns:repeat(3,minmax(0,1fr));max-width:760px}}
+.db-cards:empty{display:none}
+@media (max-width:480px){.db-t th,.db-t td{min-width:30px;height:36px;padding:1px 3px;font-size:14px}.db-t th{font-size:12px}}
+.sk-figbox .db-t{margin:0 auto}

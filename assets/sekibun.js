@@ -441,7 +441,7 @@
         hints = '<div class="sk-hints">' + rows.slice(0, st.hint).map(function (r, k) { return '<div class="sk-hint"><b>考え方' + (k + 1) + '</b>' + (r.h ? '<div class="say">' + md(r.h) + '</div>' : '') + '<p>' + md((r.t || r).replace(/^!/, '')) + '</p></div>'; }).join('') + '</div>' +
           (st.done ? '' : '<div class="sk-ctrl"><button type="button" class="fs-btn" data-hint' + (st.hint >= rows.length ? ' disabled' : '') + '>' + (st.hint ? '次のヒント' : 'ヒント') + '</button></div>');
       }
-      var stack = st.ch.some(function (v) { return !/^<svg/.test(v) && v.length > 24; });
+      var stack = q.stack || st.ch.some(function (v) { return !/^<svg/.test(v) && v.length > 24; });
       var ans = q.say ? '<p>' + md(q.say) + '</p>' + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : q.p ? workOf(q.p) : '<p>' + show(q.ans) + '</p>';
       var allDone = doneN() >= list.length;
       el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(performance.now() - t0) + '</span>' : '') + '</div>' +
