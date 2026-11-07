@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>にげきれ！夜の街</title>
+<meta name="theme-color" content="#101a33">
+<style>
+  :root { --bg:#0d1630; --panel:#17234a; --line:#2c3b6b; --ink:#eef2ff; --sub:#9fb0d9; --road:#1c2747; --gold:#ffd166; --green:#3ddc97; --red:#ff6b6b; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; min-height:100%; }
+  body { background:radial-gradient(120% 80% at 50% 0%, #1b2a5c 0%, var(--bg) 60%); color:var(--ink); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","BIZ UDPGothic",sans-serif; padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  button { font:inherit; color:inherit; border:0; cursor:pointer; touch-action:manipulation; }
+  .wrap { max-width:520px; margin:0 auto; padding:10px 12px 120px; }
+  h1 { margin:18px 0 4px; font-size:30px; text-align:center; letter-spacing:.06em; }
+  h1 small { display:block; font-size:13px; font-weight:400; color:var(--sub); letter-spacing:0; }
+  .moon { display:block; margin:16px auto 0; width:76px; height:76px; }
+  .card { margin:12px 0; padding:14px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+  .btn { display:block; width:100%; min-height:52px; margin:10px 0; padding:10px 14px; border-radius:12px; background:#2a3b72; font-size:18px; font-weight:700; }
+  .btn.main { background:linear-gradient(180deg,#ffd166,#f4a63a); color:#2a1a00; }
+  .btn.good { background:linear-gradient(180deg,#46e3a2,#22b37a); color:#032417; }
+  .btn.ghost { background:none; border:1px solid var(--line); font-weight:400; font-size:16px; min-height:44px; }
+  .btn:disabled { opacity:.4; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  input.code { width:100%; height:58px; border-radius:12px; border:2px solid var(--line); background:#0e1838; color:var(--ink); font-size:30px; text-align:center; letter-spacing:.4em; }
+  .muted { color:var(--sub); font-size:14px; }
+  .center { text-align:center; }
+  .bar { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--sub); }
+  .bar b { color:var(--ink); }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--red); display:inline-block; }
+  .dot.on { background:var(--green); }
+  .role { padding:2px 10px; border-radius:20px; font-weight:700; font-size:14px; color:#111; }
+  .role.thief { background:var(--gold); } .role.police { background:#7cc4ff; }
+  .pips { display:flex; gap:4px; margin:8px 0 2px; }
+  .pip { flex:1; height:9px; border-radius:5px; background:#2a3866; }
+  .pip.done { background:#5b6ea8; } .pip.now { background:var(--gold); box-shadow:0 0 8px var(--gold); }
+  .pip.six { outline:1px solid #ff8b8b; outline-offset:1px; }
+  .say { margin:6px 0 0; font-size:19px; font-weight:700; }
+  .say.wait { color:var(--sub); font-weight:400; font-size:16px; }
+  svg.board { display:block; width:100%; height:auto; margin:10px 0 0; border-radius:14px; background:var(--road); box-shadow:0 10px 30px rgba(0,0,0,.35); user-select:none; -webkit-user-select:none; }
+  .act { position:fixed; left:0; right:0; bottom:0; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:rgba(13,22,48,.96); border-top:1px solid var(--line); }
+  .act .in { max-width:520px; margin:0 auto; }
+  .act p { margin:0 0 8px; font-size:16px; text-align:center; }
+  .act .btn { margin:0; }
+  .chips { display:flex; gap:8px; margin-bottom:8px; }
+  .chip { flex:1; min-height:44px; border-radius:10px; border:2px solid transparent; background:#22305e; font-weight:700; }
+  .chip.sel { border-color:#fff; } .chip.used { opacity:.35; text-decoration:line-through; }
+  .log { margin:10px 0 0; padding:0; list-style:none; font-size:14px; color:var(--sub); }
+  .log li { padding:4px 0; border-bottom:1px solid #22305e; }
+  .log li b { color:var(--ink); font-weight:400; }
+  .big { font-size:44px; font-weight:800; letter-spacing:.3em; text-align:center; margin:4px 0; }
+  .result { text-align:center; font-size:26px; font-weight:800; margin:6px 0; }
+  .modal { position:fixed; inset:0; z-index:9; background:rgba(5,9,20,.8); display:flex; align-items:flex-end; justify-content:center; }
+  .modal .sheet { width:100%; max-width:520px; max-height:88vh; overflow:auto; padding:16px 16px 24px; border-radius:18px 18px 0 0; background:var(--panel); }
+  .modal h2 { margin:4px 0 8px; font-size:20px; }
+  .modal ol { padding-left:22px; margin:6px 0; } .modal li { margin:6px 0; }
+  .toast { position:fixed; left:50%; top:16px; transform:translateX(-50%); z-index:8; padding:10px 18px; border-radius:30px; background:#fff; color:#111; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.4); }
+  @keyframes pulse { 0%,100% { opacity:.35; } 50% { opacity:1; } }
+  .pulse { animation:pulse 1.1s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="act"></div>
+<div id="modal"></div>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+/* ===========================================================================
+   にげきれ！夜の街 — 泥棒（1人）と警察ヘリ3機（1人）の、かくれて追いかけるゲーム。
+   2台のスマホで同じ部屋番号に入って遊ぶ。通信は公開の MQTT ブローカー（2か所に同時接続）。
+   - 泥棒の今いるビルと通った道は、泥棒のスマホの中だけにある（相手の画面には送らない）
+   - 警察がビルを調べると、泥棒のスマホが自動で答えを返す
+   ?net=bc を付けると、同じパソコンの中だけで通信する（動作確認用）。?id=xx で自分の番号を決める（同上）
+   ========================================================================= */
+const N = 5, Q = 4, ROUNDS = 11, TOPIC = 'nigekire-tm1/';
+const HELI = [['青', '#3d8bff'], ['橙', '#ff9f43'], ['紫', '#b07cff']];
+const COLS = 'ABCDE';
+const BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+const qs = new URLSearchParams(location.search);
+const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const me = qs.get('id') || ls.get('nk.id') || (() => { const v = 'p' + Math.random().toString(36).slice(2, 10); ls.set('nk.id', v); return v; })();
+
+// ---- 盤：ビル 5×5（A1〜E5）、交差点 4×4（ビルとビルの間の十字路） ----
+const bName = b => COLS[b % N] + (Math.floor(b / N) + 1);
+const bNbr = b => { const x = b % N, y = Math.floor(b / N), o = []; if (x > 0) o.push(b - 1); if (x < N - 1) o.push(b + 1); if (y > 0) o.push(b - N); if (y < N - 1) o.push(b + N); return o; };
+const xBld = k => { const i = k % Q + 1, j = Math.floor(k / Q) + 1; return [(j - 1) * N + i - 1, (j - 1) * N + i, j * N + i - 1, j * N + i]; };
+const xNbr = k => { const i = k % Q, j = Math.floor(k / Q), o = []; if (i > 0) o.push(k - 1); if (i < Q - 1) o.push(k + 1); if (j > 0) o.push(k - Q); if (j < Q - 1) o.push(k + Q); return o; };
+const xPos = k => [(k % Q + 1) * 100, (Math.floor(k / Q) + 1) * 100];
+
+// ---- 通信 ----
+const Net = {
+  room: null, cl: [], seen: new Set(), up: false,
+  open(room, onMsg, onStatus) {
+    this.room = room; const base = TOPIC + room;
+    const deliver = d => { if (!d || !d.id || this.seen.has(d.id)) return; this.seen.add(d.id); onMsg(d); };
+    if (qs.get('net') === 'bc') {
+      const ch = new BroadcastChannel(base); ch.onmessage = e => deliver(e.data); this.cl = [{ bc: ch }];
+      this.up = true; onStatus(true); setTimeout(() => this.onConnect && this.onConnect(), 50); return;
+    }
+    const upd = () => { const u = this.cl.some(x => x.m && x.m.connected); if (u !== this.up) { this.up = u; onStatus(u); } };
+    if (!window.mqtt) { onStatus(false); return; }
+    BROKERS.forEach(url => {
+      let c; try { c = mqtt.connect(url, { clientId: 'nk' + Math.random().toString(36).slice(2, 12), clean: true, connectTimeout: 9000, reconnectPeriod: 3000, keepalive: 30 }); } catch (e) { return; }
+      c.on('connect', () => { c.subscribe(base + '/#', { qos: 1 }, () => { upd(); this.onConnect && this.onConnect(); }); });
+      ['close', 'offline', 'end'].forEach(ev => c.on(ev, upd)); c.on('error', () => {});
+      c.on('message', (t, p) => { try { deliver(JSON.parse(p.toString())); } catch (e) {} });
+      this.cl.push({ m: c });
+    });
+  },
+  send(kind, obj) {
+    const d = Object.assign({ id: me + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7), from: me, t: kind }, obj);
+    this.seen.add(d.id);
+    const topic = TOPIC + this.room + '/' + (kind === 'state' ? 'state' : 'msg');
+    this.cl.forEach(x => { if (x.bc) x.bc.postMessage(d); else if (x.m.connected) x.m.publish(topic, JSON.stringify(d), { qos: 1, retain: kind === 'state' }); });
+  }
+};
+
+// ---- ゲームの状態（両方の画面に同じものがある。泥棒の場所は入れない） ----
+let S = null, room = null, creating = false, joinTimer = null, notFound = false;
+let place = [], selH = null, pick = null, toastT = null, lastTurn = false, showLog = false;
+function fresh(players, gid) {
+  return { v: 1, seq: 0, by: '', gid: gid || 1, phase: 'lobby', players: players, roles: null, round: 0, helis: [null, null, null], acted: [false, false, false], pending: null, found: [], empty: [], log: [], winner: null, reason: '', reveal: null, last: null };
+}
+const trailKey = () => 'nk.trail.' + room + '.' + (S ? S.gid : 0);
+const trail = () => ls.get(trailKey()) || [];
+const setTrail = t => ls.set(trailKey(), t);
+const myRole = () => !S || !S.roles ? null : S.roles.thief === me ? 'thief' : S.roles.police === me ? 'police' : null;
+const inRoom = () => S && S.players.indexOf(me) >= 0;
+const log = (s, t) => { s.log.push({ r: s.round, t: t }); if (s.log.length > 60) s.log.shift(); };
+
+function adopt(s) {
+  if (!s || s.v !== 1) return;
+  if (S && (s.seq < S.seq || (s.seq === S.seq && s.by <= S.by))) return;
+  const before = S; S = s; ls.set('nk.state.' + room, S);
+  if (before && before.phase !== S.phase) { pick = null; selH = null; }
+  if (before && S.last && (!before.last || before.seq !== S.seq) && S.last.seq === S.seq) showResult(S.last);
+  render(); react();
+}
+function commit(fn) {
+  const s = JSON.parse(JSON.stringify(S)); fn(s); s.seq = S.seq + 1; s.by = me;
+  if (s.last && s.last.fresh) { s.last.seq = s.seq; delete s.last.fresh; }
+  S = s; ls.set('nk.state.' + room, S); Net.send('state', { s: S }); pick = null;
+  if (S.last && S.last.seq === S.seq && myRole() === 'police') showResult(S.last);
+  render(); react();
+}
+function onMsg(d) {
+  if (d.t === 'state') adopt(d.s);
+  else if (d.t === 'hello' && S && d.from !== me) Net.send('state', { s: S });
+}
+
+// 自分の画面がすること（泥棒のスマホが、調べられたビルに答える など）
+function react() {
+  if (!S) return;
+  if (S.phase === 'lobby' && !inRoom() && S.players.length < 2) { commit(s => { s.players.push(me); log(s, '2人そろいました'); }); return; }
+  const role = myRole();
+  if (role !== 'thief') return;
+  const t = trail();
+  if (S.phase === 'police' && S.pending) {
+    const p = S.pending, cur = t[t.length - 1], idx = t.indexOf(p.b), hn = 'ヘリ' + HELI[p.h][0];
+    commit(s => {
+      s.pending = null; s.acted[p.h] = true;
+      if (p.b === cur) { s.phase = 'over'; s.winner = 'police'; s.reason = hn + 'が ' + bName(p.b) + ' で泥棒を見つけた！'; s.reveal = t; s.last = { fresh: 1, b: p.b, res: 'car' }; log(s, hn + '：' + bName(p.b) + ' を調べた → 泥棒を発見！'); return; }
+      if (idx >= 0) {
+        const kind = idx === 0 ? 'start' : idx === 5 ? 'mid' : 'trace';
+        if (!s.found.some(f => f.b === p.b)) s.found.push({ b: p.b, kind: kind });
+        s.last = { fresh: 1, b: p.b, res: 'trace', kind: kind };
+        log(s, hn + '：' + bName(p.b) + ' を調べた → ' + (kind === 'start' ? 'スタート地点の足あと！' : kind === 'mid' ? '6ラウンド目の足あと！' : '足あとがあった！'));
+      } else { s.empty.push({ b: p.b, r: s.round }); s.last = { fresh: 1, b: p.b, res: 'none' }; log(s, hn + '：' + bName(p.b) + ' を調べた → なにもなし'); }
+      endIfDone(s);
+    });
+    return;
+  }
+  if (S.phase === 'thief' && S.round > 1 && t.length && legal().length === 0) { commit(s => { s.phase = 'over'; s.winner = 'police'; s.reason = '泥棒がかこまれて、動けるビルがなくなった'; s.reveal = t; log(s, '泥棒は動けなくなった'); }); return; }
+  if (S.phase === 'over' && !S.reveal && t.length) commit(s => { s.reveal = t; });
+}
+function endIfDone(s) {
+  if (s.phase === 'over' || !s.acted.every(Boolean)) return;
+  if (s.round >= ROUNDS) { s.phase = 'over'; s.winner = 'thief'; s.reason = ROUNDS + 'ラウンド、にげきった！'; log(s, '泥棒がにげきった'); return; }
+  s.round++; s.phase = 'thief'; s.acted = [false, false, false]; s.pending = null;
+}
+// 泥棒が今かくれられるビル（となりのビル。ななめは不可。自分の足あとのビルは不可）
+function legal() {
+  const t = trail();
+  if (S.round === 1 || !t.length) return Array.from({ length: N * N }, (_, i) => i);
+  return bNbr(t[t.length - 1]).filter(b => t.indexOf(b) < 0);
+}
+
+// ---- 部屋 ----
+function openRoom(r, isNew) {
+  room = r; creating = !!isNew; notFound = false;
+  const saved = ls.get('nk.state.' + room); if (saved && !isNew) S = saved;
+  Net.onConnect = () => {
+    Net.send('hello', {});
+    if (creating) setTimeout(() => { if (!creating) return; creating = false; const s = fresh([me], (S ? S.gid : 0) + 1); s.seq = (S ? S.seq : 0) + 1; s.by = me; S = null; adopt(s); Net.send('state', { s: S }); history.replaceState(null, '', location.pathname + location.search + '#r=' + room); }, 1500);
+    else { if (S) react(); clearTimeout(joinTimer); joinTimer = setTimeout(() => { if (!S) { notFound = true; render(); } }, 7000); }
+  };
+  Net.open(room, onMsg, up => { render(); if (up && Net.onConnect && !Net.cl.some(x => x.bc)) {} });
+  render();
+}
+function leave() { location.hash = ''; location.reload(); }
+
+// ---- 画面 ----
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function toast(t) { if (!t) return; clearTimeout(toastT); document.querySelectorAll('.toast').forEach(e => e.remove()); $('modal').insertAdjacentHTML('beforeend', '<div class="toast" id="toast">' + esc(t) + '</div>'); toastT = setTimeout(() => { const e = $('toast'); if (e) e.remove(); }, 2200); }
+function showResult(l) {
+  if (myRole() !== 'police' && myRole() !== 'thief') return;
+  if (l.res === 'none') toast(bName(l.b) + '：なにもなかった');
+  else if (l.res === 'trace') toast(bName(l.b) + '：' + (l.kind === 'start' ? 'スタート地点の足あと！' : l.kind === 'mid' ? '6ラウンド目の足あと！' : '足あと発見！'));
+}
+const MOON = '<svg class="moon" viewBox="0 0 80 80"><defs><mask id="mn"><rect width="80" height="80" fill="#fff"/><circle cx="54" cy="30" r="26" fill="#000"/></mask></defs><circle cx="40" cy="40" r="30" fill="#ffe7a3" mask="url(#mn)"/><circle cx="18" cy="16" r="2" fill="#fff"/><circle cx="66" cy="62" r="1.6" fill="#fff"/><circle cx="70" cy="18" r="1.2" fill="#fff"/></svg>';
+
+function render() {
+  const app = $('app'), act = $('act');
+  if (!room) {
+    app.innerHTML = MOON + '<h1>にげきれ！夜の街<small>泥棒 1 人 と 警察ヘリ 3 機 の、かくれんぼ対戦</small></h1>' +
+      '<div class="card"><button class="btn main" id="mk">部屋をつくる</button><p class="muted center">4 けたの番号が出るので、相手に伝えます。</p></div>' +
+      '<div class="card"><input class="code" id="code" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off"><button class="btn good" id="join">番号で部屋に入る</button></div>' +
+      '<button class="btn ghost" id="rules">あそびかた</button>';
+    act.innerHTML = '';
+    $('mk').onclick = () => { const r = String(Math.floor(1000 + Math.random() * 9000)); location.hash = 'r=' + r + '&new'; openRoom(r, true); };
+    $('join').onclick = () => { const v = $('code').value.replace(/\D/g, ''); if (v.length !== 4) { toast('4 けたの番号を入れてください'); return; } location.hash = 'r=' + v; openRoom(v, false); };
+    $('code').onkeydown = e => { if (e.key === 'Enter') $('join').click(); };
+    $('rules').onclick = rules;
+    return;
+  }
+  const role = myRole(), conn = '<span class="dot' + (Net.up ? ' on' : '') + '"></span>';
+  const head = '<div class="bar">' + conn + '<span>部屋 <b>' + room + '</b></span>' + (role ? '<span class="role ' + role + '">' + (role === 'thief' ? 'あなたは泥棒' : 'あなたは警察') + '</span>' : '') + '<span style="flex:1"></span><button class="btn ghost" style="width:auto;min-height:34px;margin:0;padding:0 10px" id="rules">？</button></div>';
+  if (!S || !inRoom() && S.players.length >= 2 && S.phase === 'lobby') {
+    app.innerHTML = head + '<div class="card center">' + (!S ? (notFound ? '<p>部屋 ' + room + ' が見つかりません。</p><p class="muted">番号を確かめるか、相手に部屋をつくってもらってください。</p><button class="btn" id="retry">もう一度さがす</button>' : '<p class="pulse">' + (creating ? '部屋をつくっています…' : '部屋をさがしています…') + '</p>' + (Net.up ? '' : '<p class="muted">通信につないでいます</p>')) : '<p>この部屋は、もう 2 人そろっています。</p>') + '<button class="btn ghost" id="home">はじめの画面へ</button></div>';
+    act.innerHTML = '';
+    if ($('retry')) $('retry').onclick = () => { notFound = false; Net.send('hello', {}); render(); clearTimeout(joinTimer); joinTimer = setTimeout(() => { if (!S) { notFound = true; render(); } }, 7000); };
+    $('home').onclick = leave; $('rules').onclick = rules; return;
+  }
+  if (S.phase === 'lobby') {
+    const two = S.players.length >= 2;
+    app.innerHTML = head + '<div class="card center"><p class="muted">部屋の番号</p><p class="big">' + room + '</p>' +
+      (two ? '<p>2 人そろいました。役を決めよう。</p>' : '<p class="pulse">相手を待っています（1 / 2 人）</p><button class="btn" id="share">相手に番号を送る</button>') + '</div>' +
+      (two ? '<div class="card"><button class="btn main" data-role="thief">わたしが泥棒</button><button class="btn" data-role="police">わたしが警察</button><button class="btn ghost" data-role="rand">おまかせ（くじ引き）</button></div>' : '') +
+      '<button class="btn ghost" id="home">部屋を出る</button>';
+    act.innerHTML = '';
+    if ($('share')) $('share').onclick = share;
+    app.querySelectorAll('[data-role]').forEach(b => b.onclick = () => {
+      const other = S.players.find(p => p !== me), want = b.dataset.role === 'rand' ? (Math.random() < .5 ? 'thief' : 'police') : b.dataset.role;
+      commit(s => { s.roles = want === 'thief' ? { thief: me, police: other } : { thief: other, police: me }; s.phase = 'setup'; log(s, '役が決まりました'); });
+    });
+    $('home').onclick = leave; $('rules').onclick = rules; return;
+  }
+  // ---- ゲーム中 ----
+  const r = S.round, myTurn = isMyTurn();
+  if (S.phase === 'police' && role === 'police' && (selH === null || S.acted[selH])) { const f = S.acted.indexOf(false); selH = f >= 0 ? f : null; }
+  if (myTurn && !lastTurn) { try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} }
+  lastTurn = myTurn;
+  document.title = (myTurn ? '● あなたの番 - ' : '') + 'にげきれ！夜の街';
+  const pips = '<div class="pips">' + Array.from({ length: ROUNDS }, (_, i) => '<span class="pip' + (i + 1 < r || S.phase === 'over' && i + 1 <= r ? ' done' : i + 1 === r ? ' now' : '') + (i === 5 ? ' six' : '') + '"></span>').join('') + '</div>';
+  let say = '';
+  if (S.phase === 'setup') say = role === 'police' ? '<p class="say">ヘリを 3 機、交差点に置こう</p>' : '<p class="say wait pulse">警察がヘリを置いています…</p>';
+  else if (S.phase === 'thief') say = role === 'thief' ? '<p class="say">' + (r === 1 ? 'かくれるビルを選ぼう（どこでもOK）' : 'となりのビルへにげよう') + '</p>' : '<p class="say wait pulse">泥棒がにげています…</p>';
+  else if (S.phase === 'police') say = role === 'police' ? (S.pending ? '<p class="say wait pulse">' + bName(S.pending.b) + ' を調べています…</p>' : '<p class="say">ヘリを動かすか、ビルを調べよう</p>') : (S.pending ? '<p class="say wait pulse">警察が ' + bName(S.pending.b) + ' を調べています…</p>' : '<p class="say wait pulse">警察のヘリが動いています…</p>');
+  else if (S.phase === 'over') say = '<p class="result">' + (S.winner === 'police' ? '警察の勝ち！' : '泥棒の勝ち！') + '</p><p class="center muted">' + esc(S.reason) + '</p>';
+  const logs = S.log.slice().reverse().slice(0, showLog ? 40 : 4).map(l => '<li>' + (l.r ? 'R' + l.r + '　' : '') + '<b>' + esc(l.t) + '</b></li>').join('');
+  app.innerHTML = head + '<div class="card" style="padding:10px 14px">' + (S.phase === 'setup' ? '<p class="muted" style="margin:0">準備</p>' : '<p class="muted" style="margin:0">ラウンド <b style="color:var(--ink);font-size:18px">' + Math.min(r, ROUNDS) + '</b> / ' + ROUNDS + '</p>' + pips) + say + '</div>' +
+    board() + '<ul class="log">' + logs + '</ul>' + (S.log.length > 4 ? '<button class="btn ghost" id="more">' + (showLog ? '記録をとじる' : '記録をぜんぶ見る') + '</button>' : '') +
+    (S.phase === 'over' ? '<button class="btn main" id="again">もう一回（役を交代）</button><button class="btn ghost" id="home">部屋を出る</button>' : '');
+  $('rules').onclick = rules;
+  if ($('more')) $('more').onclick = () => { showLog = !showLog; render(); };
+  if ($('again')) $('again').onclick = () => commit(s => { const n = fresh(s.players, s.gid + 1); n.roles = { thief: s.roles.police, police: s.roles.thief }; n.phase = 'setup'; n.log = [{ r: 0, t: '新しいゲーム（役を交代）' }]; Object.keys(n).forEach(k => { if (k !== 'seq' && k !== 'by') s[k] = n[k]; }); });
+  if ($('home')) $('home').onclick = leave;
+  const svg = app.querySelector('svg.board'); if (svg) svg.onclick = tap;
+  act.innerHTML = actionBar();
+  bindAct();
+}
+function isMyTurn() {
+  const role = myRole();
+  return S && ((S.phase === 'setup' && role === 'police') || (S.phase === 'thief' && role === 'thief') || (S.phase === 'police' && role === 'police' && !S.pending));
+}
+function share() {
+  const url = location.origin + location.pathname + '#r=' + room, text = 'にげきれ！夜の街　部屋の番号 ' + room;
+  if (navigator.share) navigator.share({ title: 'にげきれ！夜の街', text: text, url: url }).catch(() => {});
+  else { try { navigator.clipboard.writeText(text + '\n' + url); toast('コピーしました'); } catch (e) { toast(url); } }
+}
+
+// ---- 盤の絵 ----
+function shade(b) { const p = ['#34416a', '#3b3f6e', '#2f4766', '#3f3a63', '#36456e', '#2e3d63']; return p[(b * 7 + 3) % p.length]; }
+function board() {
+  const role = myRole(), t = role === 'thief' ? trail() : [], cur = t[t.length - 1];
+  const rev = S.phase === 'over' && S.reveal ? S.reveal : null;
+  const L = role === 'thief' && S.phase === 'thief' ? legal() : [];
+  let s = '<svg class="board" viewBox="-6 -6 512 512" role="img" aria-label="盤">';
+  // 道の中央線
+  for (let i = 1; i < N; i++) s += '<path d="M' + i * 100 + ' 0V500M0 ' + i * 100 + 'H500" stroke="#2b3966" stroke-width="2" stroke-dasharray="8 10"/>';
+  // ビル
+  for (let b = 0; b < N * N; b++) {
+    const x = (b % N) * 100 + 13, y = Math.floor(b / N) * 100 + 13, w = 74;
+    s += '<g data-b="' + b + '"><rect x="' + (x + 4) + '" y="' + (y + 6) + '" width="' + w + '" height="' + w + '" rx="9" fill="#0a1024" opacity=".5"/>';
+    s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + w + '" rx="9" fill="' + shade(b) + '" stroke="#4b5a8c" stroke-width="1.5"/>';
+    for (let wy = 0; wy < 3; wy++) for (let wx = 0; wx < 3; wx++) { const lit = ((b * 13 + wx * 5 + wy * 7) % 5) < 2; s += '<rect x="' + (x + 12 + wx * 20) + '" y="' + (y + 12 + wy * 18) + '" width="10" height="9" rx="1.5" fill="' + (lit ? '#ffd98a' : '#22305a') + '" opacity="' + (lit ? .85 : 1) + '"/>'; }
+    s += '<text x="' + (x + 6) + '" y="' + (y + w - 6) + '" font-size="12" fill="#9fb0d9">' + bName(b) + '</text>';
+    s += '</g>';
+  }
+  // 調べてなにもなかったビル（このラウンドと前のラウンドだけ）
+  S.empty.filter(e => e.r >= S.round - 1).forEach(e => { const [x, y] = bc(e.b); s += '<g opacity="' + (e.r === S.round ? 1 : .5) + '"><path d="M' + (x - 14) + ' ' + (y - 14) + 'L' + (x + 14) + ' ' + (y + 14) + 'M' + (x + 14) + ' ' + (y - 14) + 'L' + (x - 14) + ' ' + (y + 14) + '" stroke="#c9d3f0" stroke-width="5" stroke-linecap="round"/></g>'; });
+  // 見つかった足あと
+  S.found.forEach(f => { const [x, y] = bc(f.b), col = f.kind === 'start' ? '#ffd166' : f.kind === 'mid' ? '#ff6b6b' : '#5aa9ff'; s += foot(x, y, col, f.kind === 'start' ? 'S' : f.kind === 'mid' ? '6' : ''); });
+  // 泥棒の通った道（泥棒の画面だけ・おわったら両方）
+  const path = rev || t;
+  if (path.length) {
+    s += '<path d="' + path.map((b, i) => { const [x, y] = bc(b); return (i ? 'L' : 'M') + x + ' ' + y; }).join('') + '" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".55" stroke-dasharray="2 9"/>';
+    path.forEach((b, i) => { if (i === path.length - 1) return; const [x, y] = bc(b); s += '<circle cx="' + (x + 24) + '" cy="' + (y - 24) + '" r="11" fill="#1a1405" stroke="#ffd166" stroke-width="2"/><text x="' + (x + 24) + '" y="' + (y - 19.5) + '" font-size="12" text-anchor="middle" fill="#ffd166" font-weight="700">' + (i + 1) + '</text>'; });
+    const [tx, ty] = bc(path[path.length - 1]); s += thiefIcon(tx, ty);
+  }
+  // 泥棒がかくれられるビル
+  L.forEach(b => { const x = (b % N) * 100 + 13, y = Math.floor(b / N) * 100 + 13; s += '<rect x="' + (x - 3) + '" y="' + (y - 3) + '" width="80" height="80" rx="11" fill="none" stroke="' + (pick && pick.b === b ? '#fff' : '#3ddc97') + '" stroke-width="' + (pick && pick.b === b ? 6 : 4) + '" class="' + (pick && pick.b === b ? '' : 'pulse') + '" pointer-events="none"/>'; });
+  // 警察：調べられるビルと、動ける交差点
+  const pol = role === 'police' && S.phase === 'police' && !S.pending && selH !== null && !S.acted[selH];
+  if (pol) {
+    const hk = S.helis[selH], col = HELI[selH][1];
+    xBld(hk).forEach(b => { const x = (b % N) * 100 + 13, y = Math.floor(b / N) * 100 + 13, on = pick && pick.b === b; s += '<rect x="' + (x - 3) + '" y="' + (y - 3) + '" width="80" height="80" rx="11" fill="' + (on ? col : 'none') + '" fill-opacity=".25" stroke="' + col + '" stroke-width="' + (on ? 6 : 3.5) + '" stroke-dasharray="' + (on ? '' : '9 6') + '" pointer-events="none"/>'; });
+    xNbr(hk).filter(k => S.helis.indexOf(k) < 0).forEach(k => { const [x, y] = xPos(k), on = pick && pick.k === k; s += '<circle cx="' + x + '" cy="' + y + '" r="15" fill="' + (on ? col : 'none') + '" stroke="' + col + '" stroke-width="3" class="' + (on ? '' : 'pulse') + '" pointer-events="none"/>'; });
+  }
+  if (S.pending) { const [x, y] = bc(S.pending.b); s += '<circle cx="' + x + '" cy="' + y + '" r="30" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="12 8" class="pulse" pointer-events="none"/>'; }
+  // 交差点
+  for (let k = 0; k < Q * Q; k++) { const [x, y] = xPos(k); s += '<circle cx="' + x + '" cy="' + y + '" r="5" fill="#5a6aa0"/><circle data-k="' + k + '" cx="' + x + '" cy="' + y + '" r="20" fill="transparent"/>'; }
+  // ヘリ（準備中は置いているところ）
+  const hs = S.phase === 'setup' && role === 'police' ? place : S.helis;
+  hs.forEach((k, h) => { if (k === null || k === undefined) return; const [x, y] = xPos(k); s += heli(x, y, h, S.phase === 'police' && S.acted[h], role === 'police' && S.phase === 'police' && selH === h); });
+  return s + '</svg>';
+}
+const bc = b => [(b % N) * 100 + 50, Math.floor(b / N) * 100 + 50];
+function foot(x, y, col, label) { return '<g pointer-events="none"><ellipse cx="' + (x - 9) + '" cy="' + (y + 6) + '" rx="7" ry="11" fill="' + col + '" transform="rotate(-12 ' + (x - 9) + ' ' + (y + 6) + ')"/><ellipse cx="' + (x + 9) + '" cy="' + (y - 7) + '" rx="7" ry="11" fill="' + col + '" transform="rotate(12 ' + (x + 9) + ' ' + (y - 7) + ')"/>' + (label ? '<circle cx="' + (x + 22) + '" cy="' + (y + 20) + '" r="11" fill="' + col + '"/><text x="' + (x + 22) + '" y="' + (y + 24.5) + '" font-size="13" font-weight="800" text-anchor="middle" fill="#111">' + label + '</text>' : '') + '</g>'; }
+function thiefIcon(x, y) { return '<g pointer-events="none"><circle cx="' + x + '" cy="' + y + '" r="22" fill="#111827" stroke="#ffd166" stroke-width="3"/><path d="M' + (x - 15) + ' ' + (y - 3) + 'q15 -9 30 0q-2 9 -9 8l-6 -4l-6 4q-7 1 -9 -8z" fill="#ffd166"/><circle cx="' + (x - 7) + '" cy="' + (y - 1) + '" r="2.4" fill="#111827"/><circle cx="' + (x + 7) + '" cy="' + (y - 1) + '" r="2.4" fill="#111827"/></g>'; }
+function heli(x, y, h, used, sel) {
+  const c = HELI[h][1];
+  return '<g data-h="' + h + '" opacity="' + (used ? .55 : 1) + '">' + (sel ? '<circle cx="' + x + '" cy="' + y + '" r="27" fill="none" stroke="#fff" stroke-width="3"/>' : '') +
+    '<circle cx="' + x + '" cy="' + y + '" r="20" fill="' + c + '" stroke="#0b1226" stroke-width="3"/>' +
+    '<path d="M' + (x - 19) + ' ' + (y - 19) + 'L' + (x + 19) + ' ' + (y + 19) + 'M' + (x + 19) + ' ' + (y - 19) + 'L' + (x - 19) + ' ' + (y + 19) + '" stroke="#e9eefc" stroke-width="3" stroke-linecap="round" opacity=".8"/>' +
+    '<circle cx="' + x + '" cy="' + y + '" r="9" fill="#0b1226"/><text x="' + x + '" y="' + (y + 4.5) + '" font-size="12" font-weight="800" text-anchor="middle" fill="#fff">' + (h + 1) + '</text></g>';
+}
+
+// ---- さわったとき ----
+function tap(e) {
+  const g = e.target.closest('[data-b],[data-k],[data-h]'); if (!g || !S) return;
+  const role = myRole();
+  const b = g.dataset.b !== undefined ? +g.dataset.b : null, k = g.dataset.k !== undefined ? +g.dataset.k : null, h = g.dataset.h !== undefined ? +g.dataset.h : null;
+  if (S.phase === 'setup' && role === 'police') {
+    const kk = k !== null ? k : h !== null ? place[h] : null; if (kk === null) return;
+    const at = place.indexOf(kk);
+    if (at >= 0) place.splice(at, 1); else if (place.length < 3) place.push(kk); else toast('ヘリは 3 機です。置いたヘリを押すと、とり消せます');
+    render(); return;
+  }
+  if (S.phase === 'thief' && role === 'thief' && b !== null) { if (legal().indexOf(b) >= 0) { pick = { b: b }; render(); } else toast(S.round === 1 ? '' : 'となり（たて・よこ）のビルで、まだ通っていないところだけ'); return; }
+  if (S.phase === 'police' && role === 'police' && !S.pending) {
+    if (h !== null) { if (S.acted[h]) { toast('ヘリ' + HELI[h][0] + 'はこのラウンド、もう動きました'); return; } selH = h; pick = null; render(); return; }
+    if (selH === null) return;
+    const hk = S.helis[selH];
+    if (k !== null) { if (xNbr(hk).indexOf(k) >= 0 && S.helis.indexOf(k) < 0) { pick = { k: k }; render(); } else toast('となり（たて・よこ）の、あいている交差点に動けます'); return; }
+    if (b !== null) { if (xBld(hk).indexOf(b) >= 0) { pick = { b: b }; render(); } else toast('ヘリのまわりの 4 つのビルを調べられます'); }
+  }
+}
+function actionBar() {
+  if (!S) return '';
+  const role = myRole(), wrap = x => '<div class="act"><div class="in">' + x + '</div></div>';
+  if (S.phase === 'setup' && role === 'police') return wrap('<p>' + (place.length < 3 ? '交差点を押してヘリを置こう（' + place.length + ' / 3）' : 'この場所でよければスタート') + '</p><button class="btn good" id="go"' + (place.length < 3 ? ' disabled' : '') + '>ヘリを置いてスタート</button>');
+  if (S.phase === 'thief' && role === 'thief') return wrap(pick ? '<p><b>' + bName(pick.b) + '</b> に' + (S.round === 1 ? 'かくれる' : 'にげる') + '？</p><div class="row"><button class="btn ghost" id="no">やめる</button><button class="btn main" id="go">決定</button></div>' : '<p>光っているビルを押そう</p>');
+  if (S.phase === 'police' && role === 'police' && !S.pending) {
+    if (selH === null || S.acted[selH]) { const f = S.acted.indexOf(false); selH = f >= 0 ? f : null; }
+    const chips = '<div class="chips">' + HELI.map((c, h) => '<button class="chip' + (h === selH ? ' sel' : '') + (S.acted[h] ? ' used' : '') + '" data-ch="' + h + '" style="background:' + c[1] + '33;color:' + c[1] + '"' + (S.acted[h] ? ' disabled' : '') + '>' + (h + 1) + ' ' + c[0] + '</button>').join('') + '</div>';
+    if (selH === null) return '';
+    const nm = 'ヘリ' + HELI[selH][0];
+    return wrap(chips + (pick ? '<p>' + nm + 'で ' + (pick.k !== undefined ? '移動する' : '<b>' + bName(pick.b) + '</b> を調べる') + '？</p><div class="row"><button class="btn ghost" id="no">やめる</button><button class="btn good" id="go">決定</button></div>' : '<p>' + nm + '：となりの交差点へ移動するか、まわりのビルを 1 つ調べる</p>'));
+  }
+  return '';
+}
+function bindAct() {
+  const go = $('go'), no = $('no');
+  if (no) no.onclick = () => { pick = null; render(); };
+  document.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { selH = +b.dataset.ch; pick = null; render(); });
+  if (!go) return;
+  go.onclick = () => {
+    const role = myRole();
+    if (S.phase === 'setup' && role === 'police' && place.length === 3) { const p = place.slice(); place = []; commit(s => { s.helis = p; s.phase = 'thief'; s.round = 1; log(s, 'ヘリを置いてスタート'); }); return; }
+    if (S.phase === 'thief' && role === 'thief' && pick && legal().indexOf(pick.b) >= 0) { const t = trail(); t.push(pick.b); setTrail(t); commit(s => { s.phase = 'police'; s.acted = [false, false, false]; s.pending = null; log(s, s.round === 1 ? '泥棒がかくれた' : '泥棒がとなりのビルへにげた'); }); return; }
+    if (S.phase === 'police' && role === 'police' && pick && selH !== null) {
+      const h = selH, nm = 'ヘリ' + HELI[h][0];
+      if (pick.k !== undefined) { const k = pick.k; commit(s => { s.helis[h] = k; s.acted[h] = true; log(s, nm + '：移動'); endIfDone(s); }); }
+      else { const b = pick.b; commit(s => { s.pending = { h: h, b: b }; }); }
+    }
+  };
+}
+function rules() {
+  $('modal').innerHTML = '<div class="modal" id="mm"><div class="sheet"><h2>あそびかた</h2>' +
+    '<p>泥棒 1 人と警察 1 人の対戦です。それぞれ自分のスマホで遊びます。泥棒のいる場所は、警察の画面には出ません。</p>' +
+    '<h2>じゅんび</h2><ol><li>1 人が「部屋をつくる」を押して、出てきた 4 けたの番号を相手に伝えます。</li><li>相手は番号を入れて部屋に入ります。</li><li>役を決めたら、警察がヘリ 3 機を交差点に置きます（1 つの交差点に 1 機まで）。</li></ol>' +
+    '<h2>1 ラウンドの流れ（全 ' + ROUNDS + ' ラウンド）</h2><ol><li><b>泥棒の番</b>：1 ラウンド目は好きなビルにかくれます。2 ラウンド目からは、たて・よこにとなりのビルへ必ず 1 つ動きます（ななめは×）。一度かくれたビルには足あとが残るので、もう入れません。</li>' +
+    '<li><b>警察の番</b>：ヘリ 3 機が 1 回ずつ動きます。どのヘリからでもOK。<br>・<b>移動</b>：たて・よことなりの交差点へ（ほかのヘリがいる所は×）<br>・<b>調べる</b>：ヘリのまわりの 4 つのビルから 1 つを調べる</li></ol>' +
+    '<h2>調べると</h2><ol><li>泥棒がいた → 警察の勝ち！</li><li>足あとがあった → 足あとが盤に出ます。<span style="color:#ffd166">S</span> はスタート地点、<span style="color:#ff6b6b">6</span> は 6 ラウンド目にいたビルです。</li><li>なにもない → × がつきます（このラウンドと前のラウンドの分を表示）。</li></ol>' +
+    '<h2>勝ち負け</h2><ol><li>警察：' + ROUNDS + ' ラウンドが終わるまでに泥棒を見つける。泥棒が動けるビルがなくなったときも警察の勝ち。</li><li>泥棒：' + ROUNDS + ' ラウンドにげきる。</li></ol>' +
+    '<p class="muted">通信が切れても、同じ部屋の番号で開き直せば続きから遊べます（泥棒は、同じスマホ・同じブラウザで開いてください）。</p>' +
+    '<button class="btn" id="mc">とじる</button></div></div>';
+  $('mc').onclick = () => { $('modal').innerHTML = ''; };
+  $('mm').onclick = e => { if (e.target.id === 'mm') $('modal').innerHTML = ''; };
+}
+
+// ---- はじめ ----
+(function () {
+  const m = location.hash.match(/r=(\d{4})/);
+  if (m) openRoom(m[1], /&new/.test(location.hash)); else render();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && room && Net.up) Net.send('hello', {}); });
+})();
+</script>
+</body>
+</html>
