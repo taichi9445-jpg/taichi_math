@@ -95,25 +95,37 @@
     return o;
   }
 
-  // 項ごとに積分する行。base：それまでの空欄の数
-  function integrateRows(ts, lhs, base, tail) {
+  var valsOf = function (ds) { return ds.map(function (d) { return d[0]; }); };
+  // 項ごとに積分する行。base：それまでの空欄の数。detail：かけ算の形を1度書いてから約分する
+  function integrateRows(ts, lhs, base, tail, detail) {
     var F = anti(ts), rows = [], cards = [], eqs = {}, n = base;
-    var raws = ts.map(rawTerm), simps = ts.map(simpTerm);
-    var two = raws.some(function (v, i) { return v !== simps[i]; });
-    var rawIdx = [];
-    var row1 = lhs + join(ts.map(function (t, i) { rawIdx.push(n++); return { s: '[' + raws[i] + ']', neg: t.r[0] < 0 }; })) + tail;
-    rows.push({ t: row1, h: '1 つの項ずつ、指数を 1 つふやして、その数でわります。定数 k は kx です。' });
-    if (two) {
-      var row2 = '= ' + join(ts.map(function (t, i) {
-        if (raws[i] === simps[i]) return { s: simps[i], neg: t.r[0] < 0 };
-        var b = n++; eqs[rawIdx[i]] = {}; eqs[rawIdx[i]][simps[i]] = b;
-        return { s: '[' + simps[i] + ']', neg: t.r[0] < 0 };
-      })) + tail;
-      rows.push({ t: row2, h: 'かけ算をして、約分します。' });
+    var raws = ts.map(rawTerm), simps = ts.map(simpTerm), dums = ts.map(termDummies);
+    var pb = dums.map(valsOf);
+    ts.forEach(function (t, i) { cards = cards.concat(dums[i]); });
+    var two = detail && raws.some(function (v, i) { return v !== simps[i]; });
+    if (!two) {
+      rows.push({ t: lhs + join(ts.map(function (t, i) { n++; return { s: '[' + simps[i] + ']', neg: t.r[0] < 0 }; })) + tail, pb: pb,
+        h: '1 つの項ずつ、指数を 1 つふやして、その数でわります。定数 k は kx です。' });
+      return { rows: rows, cards: simps.concat(cards), eqs: eqs, count: n - base, F: F };
     }
-    ts.forEach(function (t) { cards = cards.concat(termDummies(t)); });
-    cards = raws.concat(two ? simps : [], cards);
-    return { rows: rows, cards: cards, eqs: eqs, count: n - base, F: F };
+    var rawIdx = [];
+    rows.push({ t: lhs + join(ts.map(function (t, i) { rawIdx.push(n++); return { s: '[' + raws[i] + ']', neg: t.r[0] < 0 }; })) + tail, pb: pb,
+      h: '指数を 1 つふやして、その数でわります。係数はそのままかけておきます。' });
+    var pb2 = [];
+    var row2 = '= ' + join(ts.map(function (t, i) {
+      if (raws[i] === simps[i]) return { s: simps[i], neg: t.r[0] < 0 };
+      var b = n++; eqs[rawIdx[i]] = {}; eqs[rawIdx[i]][simps[i]] = b; pb2.push(pb[i]);
+      return { s: '[' + simps[i] + ']', neg: t.r[0] < 0 };
+    })) + tail;
+    rows.push({ t: row2, pb: pb2, h: 'かけ算をして、約分します。' });
+    return { rows: rows, cards: raws.concat(simps, cards), eqs: eqs, count: n - base, F: F };
+  }
+  // かっこを展開した形の空欄（単項式のカード）
+  function expandRow(ts, pre, post) {
+    var ds = ts.map(function (t) { return [[mono(mul(t.r, [2, 1]), t.p), '係数をもう一度計算しよう。'], [mono(t.r, t.p ? t.p + 1 : 1), '指数をもう一度確かめよう。']]; });
+    var cards = ts.map(function (t) { return mono(t.r, t.p); });
+    ds.forEach(function (d) { cards = cards.concat(d); });
+    return { t: pre + '(' + join(ts.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; })) + ')' + post, pb: ds.map(valsOf), cards: cards, h: '分配法則や乗法公式で、かっこをはずして同類項をまとめよう。' };
   }
   function cleanCards(cards) {
     var good = cards.filter(function (c) { return typeof c === 'string'; });
@@ -123,38 +135,34 @@
   var INT = '∫', DX = ' dx';
 
   // ---- 08 不定積分 ----
-  // q: { f: '3x²-4x+1' } / { show: '(x+1)²', f: 'x²+2x+1' } / { f, at: 1, value: 5 }（F(1) = 5 の条件）
-  function indefinite(q) {
-    var ts = parse(q.f), rows = [], cards = [], n = 0, intg = paren(ts);
+  // q: { f: '3x²-4x+1' } / { show: '(x+1)²', ts } / { f, at: 1, value: 5 }（F(1) = 5 の条件）。detail：かけ算の形を書く
+  function indefinite(q, detail) {
+    var ts = q.ts || parse(q.f), rows = [], cards = [], n = 0, intg = paren(ts);
     var lead = INT + ' ' + (q.show || intg) + DX;
     if (q.at !== undefined) lead = 'F(x) = ' + INT + ' ' + intg + DX;
     if (q.show) {
       rows.push('#かっこを展開する');
-      var ex = lead + ' = ' + INT + ' (' + join(ts.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; })) + ')' + DX;
-      rows.push({ t: ex, h: '分配法則や乗法公式で、かっこをはずして同類項をまとめよう。' });
-      n += ts.length;
-      ts.forEach(function (t) {
-        cards.push(mono(t.r, t.p));
-        cards.push([mono(mul(t.r, [2, 1]), t.p), '係数をもう一度計算しよう。']);
-        if (t.p) cards.push([mono(t.r, t.p + 1), '指数をもう一度確かめよう。']);
-      });
+      var ex = expandRow(ts, lead + ' = ' + INT + ' ', DX);
+      rows.push({ t: ex.t, pb: ex.pb, h: ex.h });
+      cards = cards.concat(ex.cards); n += ts.length;
       rows.push('#1 つの項ずつ積分する');
     }
-    var part = integrateRows(ts, q.show ? '= ' : lead + ' = ', n, ' + C');
+    var part = integrateRows(ts, q.show ? '= ' : lead + ' = ', n, ' + C', detail);
     rows = rows.concat(part.rows); cards = cards.concat(part.cards);
-    var F = part.F, ans = polyS(F) + ' + C', problem;
-    var eqs = part.eqs;
+    var F = part.F, ans = polyS(F) + ' + C', problem, eqs = part.eqs;
     if (q.at !== undefined) {
       var x = [q.at, 1], Fa = at(F, x), C = sub([q.value, 1], Fa);
       rows.push('#F(' + num(x) + ') = ' + q.value + ' より');
-      rows.push({ t: 'F(' + num(x) + ') = [' + num(Fa, false) + '] + C = ' + q.value, h: 'F(x) の x に ' + num(x) + ' を代入して、計算しよう。' });
-      rows.push({ t: 'C = [' + num(C) + ']', h: '移項して C を求めよう。' });
+      rows.push({ t: 'F(' + num(x) + ') = [' + num(Fa) + '] + C = ' + q.value, h: 'F(x) の x に ' + num(x) + ' を代入して、計算しよう。', pb: [[num(add(Fa, [1, 1])), num(neg(Fa))]] });
+      rows.push({ t: 'C = [' + num(C) + ']', h: '移項して C を求めよう。', pb: [[num(neg(C)), num(add(C, [1, 1]))]] });
       var Full = norm(F.concat(C[0] ? [{ r: C, p: 0 }] : []));
       rows.push('#したがって');
-      rows.push({ t: 'F(x) = [' + polyS(Full) + ']', h: '求めた C を、F(x) の式に入れよう。' });
-      cards.push(num(Fa), num(C), polyS(Full),
-        [num(neg(C)), '移項すると符号が変わります。'], [num(add(Fa, [1, 1])), 'もう一度代入して計算しよう。'],
-        [polyS(norm(F.concat([{ r: neg(C), p: 0 }]))), 'C の符号を確かめよう。']);
+      var tailC = C[0] === 0 ? '' : (C[0] < 0 ? ' ' + M + ' ' : ' + ') + '[' + num([Math.abs(C[0]), C[1]]) + ']';
+      if (tailC) rows.push({ t: 'F(x) = ' + polyS(F) + tailC, h: '求めた C を、F(x) の式に入れよう。', pb: [[num(add([Math.abs(C[0]), C[1]], [1, 1])), num(add([Math.abs(C[0]), C[1]], [2, 1]))]] });
+      else rows.push('F(x) = ' + polyS(F));
+      cards.push(num(Fa), num(C), num([Math.abs(C[0]), C[1]]),
+        [num(neg(C)), '移項すると符号が変わります。'], [num(add(Fa, [1, 1])), 'もう一度代入して計算しよう。'], [num(neg(Fa)), 'もう一度代入して計算しよう。'], [num(add(C, [1, 1])), '移項して計算しよう。'],
+        [num(add([Math.abs(C[0]), C[1]], [1, 1])), '上の行の C を見よう。'], [num(add([Math.abs(C[0]), C[1]], [2, 1])), '上の行の C を見よう。']);
       ans = 'F(x) = ' + polyS(Full);
       problem = { big: 'F′(x) = ' + polyS(ts) + '、F(' + num(x) + ') = ' + q.value, q: 'を満たす関数 F(x) を求めよ。', rows: rows, cards: cleanCards(cards), ans: ans, eqs: eqs };
     } else {
@@ -168,7 +176,7 @@
     if (q.at !== undefined) {
       var C = sub([q.value, 1], at(F, [q.at, 1]));
       var mk = function (c) { return 'F(x) = ' + polyS(norm(F.concat([{ r: c, p: 0 }]))); };
-      return uniq([mk(neg(C)), mk(add(C, [1, 1])), mk([q.value, 1]), mk(sub(C, [1, 1]))]).filter(function (v) { return v !== mk(C); }).slice(0, 3);
+      return uniq([mk(neg(C)), mk(add(C, [1, 1])), mk([q.value, 1]), mk(sub(C, [1, 1])), mk(add(C, [2, 1]))]).filter(function (v) { return v !== mk(C); }).slice(0, 3);
     }
     var C = ' + C', good = polyS(F) + C, o = [];
     o.push(polyS(ts.map(function (t) { return { r: t.r, p: t.p + 1 }; })) + C);                     // わるのを忘れる
@@ -192,23 +200,25 @@
       return { s: same(a, [1, 1]) ? x : num(a) + ' × ' + x, neg: t.r[0] < 0 };
     }));
   }
-  function evalRows(ts, a, b, lhs) {
+  function evalRows(ts, a, b, lhs, detail) {
     var F = anti(ts), Fa = at(F, [a, 1]), Fb = at(F, [b, 1]), ans = sub(Fb, Fa), rows = [];
     var terms = join(F.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; }));
-    rows.push({ t: lhs + '⟦' + terms + '⟧' + lim(b, a), h: '指数を 1 つふやして、その数でわります。定積分では C はいりません。' });
-    var one = F.length < 2;
-    var up = '(' + subst(F, b) + ')', lo = '(' + subst(F, a) + ')';
-    if (one) rows.push({ t: '= ' + up + ' − ' + lo, h: '[ ] の式に、上端を代入した式から、下端を代入した式をひきます。' });
-    else {
-      rows.push({ t: '= ' + up, h: 'まず、上端 ' + num([b, 1]) + ' を代入します。' });
-      rows.push({ t: '　 − ' + lo, h: '次に、下端 ' + num([a, 1]) + ' を代入して、ひきます。' });
-    }
-    rows.push({ t: '= [' + num(Fb) + '] − [' + num(Fa, true) + ']', h: 'それぞれ計算しよう。', sk: 1 });
-    rows.push({ t: '= [' + num(ans) + ']', h: 'ひき算をします。負の数をひくときは、たし算になります。' });
+    var dums = ts.map(termDummies), pb = dums.map(valsOf);
+    rows.push({ t: lhs + '⟦' + terms + '⟧' + lim(b, a), pb: pb, h: '指数を 1 つふやして、その数でわります。定積分では C はいりません。' });
     var cards = F.map(function (t) { return mono(t.r, t.p); });
-    ts.forEach(function (t) { termDummies(t).forEach(function (d) { cards.push(d); }); });
-    cards.push(num([b, 1], true), num([a, 1], true), num(Fb), num(Fa, true), num(ans));
-    [[neg([b, 1]), '代入する数を確かめよう。'], [add([a, 1], [1, 1]), '上端と下端を確かめよう。']].forEach(function (d) { cards.push([num(d[0], true), d[1]]); });
+    dums.forEach(function (d) { cards = cards.concat(d); });
+    if (detail) {
+      var up = '(' + subst(F, b) + ')', lo = '(' + subst(F, a) + ')';
+      if (F.length < 2) rows.push({ t: '= ' + up + ' − ' + lo, h: '[ ] の式に、上端を代入した式から、下端を代入した式をひきます。' });
+      else {
+        rows.push({ t: '= ' + up, h: 'まず、上端 ' + num([b, 1]) + ' を代入します。' });
+        rows.push({ t: '　 − ' + lo, h: '次に、下端 ' + num([a, 1]) + ' を代入して、ひきます。' });
+      }
+      cards.push(num([b, 1], true), num([a, 1], true), [num(neg([b, 1]), true), '代入する数を確かめよう。'], [num(add([a, 1], [1, 1]), true), '上端と下端を確かめよう。']);
+    }
+    rows.push({ t: '= [' + num(Fb) + '] − [' + num(Fa, true) + ']', h: '上端を代入した値から、下端を代入した値をひきます。', sk: 1 });
+    rows.push({ t: '= [' + num(ans) + ']', h: 'ひき算をします。負の数をひくときは、たし算になります。' });
+    cards.push(num(Fb), num(Fa, true), num(ans));
     cards.push([num(add(Fb, [1, 1])), 'もう一度計算しよう。'], [num(neg(Fa), true), '符号を確かめよう。'],
       [num(add(Fb, Fa)), '上端の値から、下端の値をひきます。'], [num(sub(Fa, Fb)), '上端の値 − 下端の値 の順です。']);
     return { rows: rows, cards: cards, ans: ans, Fa: Fa, Fb: Fb };
@@ -218,17 +228,17 @@
     while (k < 9 && uniq(o.map(function (r) { return num(r); })).filter(function (v) { return v !== num(ans); }).length < 3) { o.push(add(ans, [k, 1]), sub(ans, [k, 1])); k++; }
     return uniq(o.map(function (r) { return num(r); })).filter(function (v) { return v !== num(ans); }).slice(0, 3);
   }
-  // q: { f, a, b, show? }
-  function definite(q) {
-    var ts = parse(q.f), rows = [], cards = [], head = INT + lim(q.b, q.a) + ' ' + (q.show || paren(ts)) + DX;
+  // q: { f or ts, a, b, show? }。detail：代入の行も書く
+  function definite(q, detail) {
+    var ts = q.ts || parse(q.f), rows = [], cards = [], head = INT + lim(q.b, q.a) + ' ' + (q.show || paren(ts)) + DX;
     if (q.show) {
       rows.push('#かっこを展開する');
-      rows.push({ t: head + ' = ' + INT + lim(q.b, q.a) + ' (' + join(ts.map(function (t) { return { s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 }; })) + ')' + DX, h: 'かっこをはずして、同類項をまとめよう。' });
-      ts.forEach(function (t) { cards.push(mono(t.r, t.p), [mono(mul(t.r, [2, 1]), t.p), '係数をもう一度計算しよう。']); });
+      var ex = expandRow(ts, head + ' = ' + INT + lim(q.b, q.a) + ' ', DX);
+      rows.push({ t: ex.t, pb: ex.pb, h: ex.h });
+      cards = cards.concat(ex.cards);
     }
-    var e = evalRows(ts, q.a, q.b, q.show ? '= ' : head + ' = ');
+    var e = evalRows(ts, q.a, q.b, q.show ? '= ' : head + ' = ', detail);
     rows = rows.concat(e.rows); cards = cards.concat(e.cards);
-    var F = anti(ts);
     return { big: head, q: '定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: num(e.ans), group: q.group, value: e.ans,
       wrong: nearValues(e.ans, [add(e.Fb, e.Fa), sub(e.Fa, e.Fb), e.Fb, at(ts, [q.b, 1]), sub(at(ts, [q.b, 1]), at(ts, [q.a, 1]))]) };
   }
@@ -292,7 +302,7 @@
     s += txt(ox - 8, oy + 17, 'O', 'end', true, 16) + txt(W - 14, oy - 8, 'x', 'middle', true, 18) + txt(ox + 11, 19, 'y', 'middle', true, 18);
     // 式の名前：線にかからない場所をさがす
     (o.curves || []).forEach(function (c, ci) {
-      if (!c.label) return;
+      if (!c.label || o.noLabel) return;
       var col = c.color || (ci ? ORANGE : NAVY), w = c.label.length * 7.6 + 8, h = 18, best = null, bestScore = -1e9;
       var pts = [];
       (o.curves || []).forEach(function (k) { for (var i = 0; i <= 80; i++) { var x = xr[0] + (xr[1] - xr[0]) * i / 80; pts.push([X(x), Y(val(k.ts, x))]); } });
@@ -324,11 +334,12 @@
   }
 
   // ---- メニュー ----
-  function menu(el, cards, lead) {
-    el.innerHTML = (lead ? '<p class="sk-lead">' + lead + '</p>' : '') + '<div class="sk-menu n' + cards.length + '">' + cards.map(function (c, i) {
-      return '<button type="button" class="sk-card c' + (i % 6) + '" data-i="' + i + '"><span class="ic">' + c.icon + '</span><b>' + c.name + '</b><small>' + c.sub + '</small></button>';
+  function menu(el, cards, lead, back) {
+    el.innerHTML = (back ? '<button type="button" class="fs-btn zm-back sk-mback" data-back>← もどる</button>' : '') + (lead ? '<p class="sk-lead">' + lead + '</p>' : '') + '<div class="sk-menu n' + cards.length + '">' + cards.map(function (c, i) {
+      return '<button type="button" class="sk-card c' + ((c.c === undefined ? i : c.c) % 6) + '" data-i="' + i + '"><span class="ic">' + c.icon + '</span><b>' + c.name + '</b><small>' + c.sub + '</small></button>';
     }).join('') + '</div>';
     el.querySelectorAll('.sk-card').forEach(function (b) { b.onclick = function () { cards[+b.dataset.i].go(); }; });
+    var bk = el.querySelector('[data-back]'); if (bk) bk.onclick = back;
     window.scrollTo(0, 0);
   }
 
@@ -338,10 +349,11 @@
     if (typeof el === 'string') el = document.querySelector(el);
     var tb = '<button type="button" class="fs-btn zm-back" data-home>メニューへ</button>';
     var api = FillSteps.mount({
-      el: el, problems: problems, review: true,
+      el: el, problems: problems, review: true, rowCards: true,
       tabsBefore: tb, top: o.top, hint: o.hint, tabGroup: o.tabGroup,
-      after: function (root) {
+      after: function (root, p) {
         var h = root.querySelector('[data-home]'); if (h) h.onclick = o.home;
+        figGate(root, p, function () { api.go(problems.indexOf(p)); });
         root.querySelectorAll('.fs-card').forEach(function (e) { if (e.querySelector('.fs-fr')) e.classList.add('frac'); });
         alignEq(root);
       },
@@ -350,6 +362,20 @@
     // 最後の画面のボタン
     new MutationObserver(function () { var b = el.querySelector('#skHome'); if (b) b.onclick = o.home; var h = el.querySelector('[data-home]'); if (h) h.onclick = o.home; }).observe(el, { childList: true, subtree: true });
     return api;
+  }
+  // 後半の問題：図をかくす。図を選ぶ（または 図を見る を押す）と、途中式に進める
+  function figGate(root, p, redraw) {
+    var box = root.querySelector('.fs-fig');
+    root.classList.toggle('sk-wait', !!(p.figHide && !p.figOpen));
+    if (!box || !p.figHide || p.figOpen) return;
+    p.figTried = p.figTried || {};
+    box.innerHTML = '<p class="sk-figask">この問題の図はどれかな。図を選んでから、式を作ろう。</p><div class="sk-opts figs">' + p.figOpts.map(function (v, k) {
+      return '<button type="button" class="sk-opt' + (p.figTried[k] ? ' ng' : '') + '" data-fo="' + k + '"' + (p.figTried[k] ? ' disabled' : '') + '><span>' + v.svg + '</span></button>';
+    }).join('') + '</div><div class="sk-ctrl"><button type="button" class="fs-btn" data-fsee>図を見る</button></div>';
+    box.querySelectorAll('[data-fo]').forEach(function (b) {
+      b.onclick = function () { var k = +b.dataset.fo; if (p.figOpts[k].ok) { p.figOpen = true; redraw(); } else { p.figTried[k] = true; figGate(root, p, redraw); } };
+    });
+    box.querySelector('[data-fsee]').onclick = function () { p.figOpen = true; redraw(); };
   }
   // = で始まる行は、上の行の = の下にそろえる
   function alignEq(root) {
@@ -376,10 +402,11 @@
     var S = list.map(function (q) { return { ch: shuffle([q.ans].concat(q.wrong.slice(0, 3))), tried: [], done: false, hint: 0 }; });
     var i = 0, front = 0, t0 = Date.now(), timer = null, lock = false, ended = false;
     var md = FillSteps.md, LBL = ['ア', 'イ', 'ウ', 'エ'];
+    var show = function (v) { return /^<svg/.test(v) ? v : md(v); };
     var fmt = function (ms) { var s = Math.floor(ms / 1000); return Math.floor(s / 60) + '分' + (s % 60) + '秒'; };
     function tick() { var e = el.querySelector('#skTime'); if (e) e.textContent = fmt(Date.now() - t0); }
     function draw() {
-      var q = list[i], st = S[i], tabs = '';
+      var q = list[i], st = S[i], tabs = '', hideNow = q.figHide && !st.see && !st.done;
       if (list.length <= 20) tabs = '<nav class="sk-tabs">' + list.map(function (_, k) {
         var c = k === i ? ' cur' : S[k].done ? (S[k].tried.length ? ' ng' : ' ok') : '';
         return '<button type="button" class="sk-tab' + c + '" data-go="' + k + '"' + (k > front ? ' disabled' : '') + '>' + (k + 1) + '</button>';
@@ -392,10 +419,10 @@
       }
       el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(Date.now() - t0) + '</span>' : '') + '</div>' +
         '<div class="sk-bar"><span style="width:' + (front / list.length * 100) + '%"></span></div>' + tabs +
-        '<div class="sk-body' + (q.fig ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q"><span class="big-formula">' + md(q.big) + '</span><span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') + '</div>' +
-        '<div class="sk-right"><div class="sk-opts">' + st.ch.map(function (v, k) {
+        '<div class="sk-body' + (q.fig && !hideNow ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? (hideNow ? '<div class="sk-ctrl"><button type="button" class="fs-btn" data-see>図を見る</button></div>' : '<div class="sk-figbox">' + q.fig + '</div>') : '') + '</div>' +
+        '<div class="sk-right"><div class="sk-opts' + (q.figOpts ? ' figs' : '') + '">' + st.ch.map(function (v, k) {
           var bad = st.tried.indexOf(v) >= 0, good = st.done && v === q.ans;
-          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + (v.length > 22 ? ' long' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + md(v) + '</span></button>';
+          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + (v.length > 22 ? ' long' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + show(v) + '</span></button>';
         }).join('') + '</div>' + hints +
         (st.done && !o.timed ? '<div class="sk-ans"><b>' + (st.tried.length ? '答え' : '正解') + '</b>' + (q.p ? workOf(q.p) : '<p>' + md(q.ans) + '</p>') + '</div>' : '') +
         (st.done && (!o.timed || i < front) ? '<div class="sk-ctrl"><button type="button" class="fs-btn primary" data-next>' + (front >= list.length ? '結果を見る' : i < front - 1 ? '取り組み中の問題へ' : '次の問題へ') + '</button></div>' : '') +
@@ -403,6 +430,7 @@
       el.querySelector('[data-home]').onclick = function () { clearInterval(timer); o.home(); };
       el.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { i = +b.dataset.go; draw(); }; });
       el.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { choose(st.ch[+b.dataset.k], b); }; });
+      var see = el.querySelector('[data-see]'); if (see) see.onclick = function () { st.see = true; draw(); };
       var h = el.querySelector('[data-hint]'); if (h) h.onclick = function () { st.hint++; draw(); };
       var n = el.querySelector('[data-next]'); if (n) n.onclick = function () { if (front >= list.length) finish(); else { i = front; draw(); window.scrollTo(0, 0); } };
     }
@@ -431,8 +459,8 @@
         (bad.length ? '<p><button type="button" class="fs-btn primary" data-rev>間違えた問題を確認する（' + bad.length + '問）</button></p>' : '<p>間違えた問題はありません</p>') +
         '<div id="skRev" hidden>' + bad.map(function (k) {
           var q = list[k];
-          return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q"><span class="big-formula">' + md(q.big) + '</span><span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
-            '<p>選んだ答え：' + S[k].tried.map(md).join('、') + '</p><p>正しい答え：' + md(q.ans) + '</p>' + (q.p ? workOf(q.p) : '') + '</div>';
+          return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
+            (q.figOpts ? '' : '<p>選んだ答え：' + S[k].tried.map(md).join('、') + '</p>') + '<p>正しい答え：' + (q.figOpts ? '</p><div class="sk-figbox">' + q.ans + '</div>' : md(q.ans) + '</p>') + (q.p ? workOf(q.p) : '') + '</div>';
         }).join('') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-home>メニューへ</button><button type="button" class="fs-btn" data-again>もう一度</button></div></section>';
       el.querySelector('[data-home]').onclick = o.home;
@@ -449,7 +477,7 @@
     R: R, add: add, sub: sub, mul: mul, div: div, neg: neg, pow: pow, num: num, same: same,
     parse: parse, polyS: polyS, norm: norm, plus: plus, minus: minus, times: times, anti: anti, at: at, val: val, paren: paren, mono: mono, join: join,
     shuffle: shuffle, uniq: uniq, pick: pick, rint: rint, cleanCards: cleanCards, blanks: blanks,
-    lim: lim, indefinite: indefinite, definite: definite, evalRows: evalRows, nearValues: nearValues, workOf: workOf,
+    lim: lim, integrateRows: integrateRows, expandRow: expandRow, indefinite: indefinite, definite: definite, evalRows: evalRows, nearValues: nearValues, workOf: workOf,
     fig: fig, menu: menu, fill: fill, quiz: quiz, alignEq: alignEq
   };
 })(window);

@@ -117,7 +117,7 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
 
 /* スマホ：今の空欄のカード3枚だけ */
 .fs-cards.few{flex-wrap:nowrap;justify-content:center;max-height:none;overflow:visible}
-.fs-cards.few .fs-card{flex:1 1 0;max-width:150px;min-height:58px;padding:4px 6px}
+.fs-cards.few .fs-card{flex:1 1 0;min-width:0;max-width:150px;min-height:58px;padding:4px 6px;overflow:hidden}
 
 /* PC・Chromebook の横長の画面：カードを右に置き、右から左へドラッグする */
 @media (min-width:900px) and (orientation:landscape){
@@ -163,8 +163,8 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
 .fs-m .pr{display:inline-block;margin-left:.12em}
 .fs-m .fs-fl{margin-right:.07em}
 .fs-int{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .06em;font-family:'STIX Two Text',serif}
-.fs-ig{font-size:1.6em;line-height:1;font-style:italic;font-weight:300;margin-right:-.08em}
-.fs-lim{display:inline-flex;flex-direction:column;justify-content:space-between;align-self:stretch;font-size:.68em;line-height:1.05;margin-left:.1em;min-height:2.6em;text-align:left}
+.fs-igs{display:block;width:.76em;height:2.2em;flex:none}
+.fs-lim{display:inline-flex;flex-direction:column;justify-content:space-between;align-self:stretch;font-size:.66em;line-height:1.05;margin-left:.12em;min-height:3.2em;text-align:left}
 .fs-lim .fs-blank{min-width:1.9em;min-height:1.5em;font-size:1.2em;margin:1px 0}
 .fs-ev{display:inline-flex;align-items:center;vertical-align:middle}
 .fs-evb{font-family:'STIX Two Text',serif;font-size:1.7em;line-height:1;font-weight:300}

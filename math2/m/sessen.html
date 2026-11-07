@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>直線と接線の方程式</title>
-    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106" />
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261107" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap"
@@ -367,7 +367,7 @@
         <div id="challenge" hidden></div>
       </section>
     </main>
-    <script src="../../assets/fill-steps.js?v=20261106"></script>
+    <script src="../../assets/fill-steps.js?v=20261107"></script>
     <script>
       const TANGENTS = [
         {
@@ -818,6 +818,8 @@
           const m = (q.r[1] - q.p[1]) / (q.r[0] - q.p[0]);
           p.cards.push(par(q.r[1]), par(q.r[0]), ratP(m * q.r[0]));
         }
+        // 同じ数のカードは1枚だけ（何回でも使える）
+        p.cards = [...new Set(p.cards)];
         p.cards.sort((a, b) => num(a) - num(b));
         const wrongNumbers=[...new Set(p.cards.flatMap(c=>{const v=num(c);return [ratSafe(-v),ratSafe(v===0?NaN:1/v),ratSafe(v*2)];}).filter(v=>v!==null&&!p.cards.includes(v)))];
         for(const v of wrongNumbers.slice(0,Math.max(0,Math.min(2,10-p.cards.length))))p.cards.push([v,'符号、変化量の順、傾きの分数を確かめよう。']);
@@ -1451,7 +1453,7 @@
               cards.classList.toggle("numeric", numeric);
               cards.style.setProperty(
                 "--columns",
-                Math.ceil(p.numericCards.length / 2),
+                cards.children.length <= 5 ? cards.children.length : Math.ceil(cards.children.length / 2),
               );
             }
             decorate(root);

@@ -32,6 +32,7 @@
    行に sk: 1 をつけると、その行の空欄に次の行の答えを入れても正解にする（とばした行は自動でうめる）。
    p.eqs = { 空欄番号: { 値: つながる空欄番号 } } … 約分した値を先に入れてもよい空欄（次の行の同じ項も一緒にうまる）。
    p.big に式を入れると、問題の箱に大きく出す（p.q はその下の小さい文）。review:true で最後に「間違えた問題」の一覧を出す。
+   行に pb: [[ダミー…], …]（空欄ごと）をつけると、スマホはその空欄の答え＋ダミーだけ（3〜4枚）を出す。rowCards:true は PC も行ごとのカードにする。
    06 の opt-in: roleCards:true は役割色・数カード固定/式3枚・復習を有効にする。
    roles は «x1|内容» の形（x1/y1/x2/y2/m）。指定のない教材には影響しない。
    expressionSlots は式を入れる空欄番号、expressionCards はその3択。
@@ -100,8 +101,10 @@
     out.push(s.slice(last));
     return out;
   }
-  function bigParens(s) { return s.replace(/\(([^()]*[{\/][^()]*)\)/g, '⦅$1⦆'); }
+  // 分数の入ったかっこは大きくする（空欄の答えそのものの (−{1|3}) は変えない）
+  function bigParens(s) { return s.replace(/\(([^()]*[{\/][^()]*)\)/g, function (m, g, at) { return s[at - 1] === '[' && s[at + m.length] === ']' ? m : '⦅' + g + '⦆'; }); }
 
+  var INT_SVG = '<svg class="fs-igs" viewBox="0 0 14 40" aria-hidden="true"><path d="M12.8 4.4c-.9-2.3-3.4-2.7-4.4-.6-.8 1.6-.9 4-1.1 7l-1.3 18.4c-.2 3-.5 5.6-1.3 7-1.1 1.9-3.4 1.6-4.1-.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
   function parse(s, ctx) {
     var out = '', buf = '', i = 0;
     function flush() { if (buf) { out += runHTML(buf); buf = ''; } }
@@ -117,9 +120,9 @@
         if (s[i + 1] === '{') {
           j = closing(s, i + 1, '{', '}');
           var lim = splitTop(s.slice(i + 2, j), '|');
-          out += '<span class="fs-int"><span class="fs-ig">∫</span><span class="fs-lim"><span>' + parse(lim[0], ctx) + '</span><span>' + parse(lim[1] || '', ctx) + '</span></span></span>';
+          out += '<span class="fs-int">' + INT_SVG + '<span class="fs-lim"><span>' + parse(lim[0], ctx) + '</span><span>' + parse(lim[1] || '', ctx) + '</span></span></span>';
           i = j + 1;
-        } else { out += '<span class="fs-int"><span class="fs-ig">∫</span></span>'; i++; }
+        } else { out += '<span class="fs-int">' + INT_SVG + '</span>'; i++; }
       } else if (ch === '⟦') {
         flush(); j = closing(s, i, '⟦', '⟧');
         var ev = parse(s.slice(i + 1, j), ctx), evl = '';
@@ -265,31 +268,33 @@
       return out;
     }
     function fewCards(p, st, i) {
-      var ri = p.blanks[i].row, key = p.rows[ri].cg || 'r' + ri;
+      var ri = p.blanks[i].row, row = p.rows[ri], per = !!row.pb && !wide.matches;
+      var key = (wide.matches ? 'w' : '') + (per ? 'b' + i : row.cg || 'r' + ri);
       p.fewSets = p.fewSets || {};
       if (p.fewSets[key] !== undefined) return p.fewSets[key];
-      var seed = (P.indexOf(p) + 1) * 7919 + (fewRows(p, ri)[0] + 1) * 104729 + 17;
+      var seed = (P.indexOf(p) + 1) * 7919 + (fewRows(p, ri)[0] + 1) * 104729 + (per ? i * 31 : 0) + 17;
       var rnd = function () { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
-      var vals = [], miss = false, first = {}, others = [];
+      var vals = [], miss = false, first = {}, pref = [];
       p.cards.forEach(function (c, ci) { if (!c.sep && first[c.v] === undefined) first[c.v] = ci; });
       function add(v, must) { if (first[v] === undefined) { if (must) miss = true; return; } if (vals.indexOf(v) < 0) vals.push(v); }
-      fewRows(p, ri).forEach(function (r) {
-        p.rows[r].blanks.forEach(function (bi) {
-          var b = p.blanks[bi];
-          add(b.a, true);
-          (b.soft || []).forEach(function (v) { add(v); });
-          if (b.jump) add(p.blanks[b.jump[b.jump.length - 1]].a);
-          if (p.eqs && p.eqs[bi]) Object.keys(p.eqs[bi]).forEach(function (v) { add(v); });
-        });
+      (per ? [i] : [].concat.apply([], fewRows(p, ri).map(function (r) { return p.rows[r].blanks; }))).forEach(function (bi) {
+        var b = p.blanks[bi];
+        add(b.a, true);
+        (b.soft || []).forEach(function (v) { add(v); });
+        if (b.jump) add(p.blanks[b.jump[b.jump.length - 1]].a);
+        if (p.eqs && p.eqs[bi]) Object.keys(p.eqs[bi]).forEach(function (v) { add(v); });
+        if (o.roleCards) (p.alts || []).forEach(function (set) { add(set[bi]); });
       });
       if (miss) return (p.fewSets[key] = null);
-      Object.keys(first).forEach(function (v) { if (vals.indexOf(v) < 0) others.push(first[v]); });
-      var k = kind(vals[0]), letters = vals.every(function (v) { return /^[A-Za-zθ]$/.test(v); });
-      var want = letters && vals.length >= 3 ? 0 : Math.max(1, 3 - vals.length);
-      others = others.map(function (ci) { return { ci: ci, w: (kind(p.cards[ci].v) === k ? 0 : 1) + rnd() }; })
+      if (row.pb) pref = per ? row.pb[row.blanks.indexOf(i)] || [] : [].concat.apply([], row.pb);
+      var pool = Object.keys(first).filter(function (v) { return vals.indexOf(v) < 0 && (!o.roleCards || p.numericCards.indexOf(first[v]) >= 0); });
+      var k = kind(vals[0]), letters = vals.every(function (v) { return /^[A-Za-zθ]$/.test(v); }), n = vals.length;
+      var want = letters && n >= 3 ? 0 : n >= 4 ? 0 : n === 3 ? 1 : 3 - n;
+      if (wide.matches) want += 3;
+      var others = pool.map(function (v) { return { ci: first[v], w: (pref.indexOf(v) >= 0 ? -2 : 0) + (kind(v) === k ? 0 : 1) + rnd() }; })
         .sort(function (a, b) { return a.w - b.w; }).slice(0, want).map(function (x) { return x.ci; });
       var set = vals.map(function (v) { return first[v]; }).concat(others);
-      for (var n = set.length - 1; n > 0; n--) { var j = Math.floor(rnd() * (n + 1)), t = set[n]; set[n] = set[j]; set[j] = t; }
+      for (var m = set.length - 1; m > 0; m--) { var j = Math.floor(rnd() * (m + 1)), t = set[m]; set[m] = set[j]; set[j] = t; }
       return (p.fewSets[key] = set);
     }
     // スマホのカード：その行で使い切ったカードだけうすくする（場所はそのまま）
@@ -348,19 +353,15 @@
         return '<button type="button" class="fs-tab' + groupClass + (i === cur ? ' cur' : '') + (s.done ? ' done' : s.shown ? ' shown' : '') + '"' + groupTitle + ' data-go="' + i + '" aria-label="問' + (i + 1) + '">' + (o.tabLabel ? o.tabLabel(P[i], i) : (i + 1)) + '</button>';
       }).join('');
 
-      var few = o.fewCards !== false && !wide.matches && !all && st.active !== null ? fewCards(p, st, st.active) : null;
+      var few = o.fewCards !== false && (!wide.matches || o.rowCards) && !all && st.active !== null ? fewCards(p, st, st.active) : null;
       if (o.roleCards) {
-        few = p.expressionSlots.includes(st.active) ? p.expressionCards[st.active] : p.numericCards;
+        few = p.expressionSlots.includes(st.active) ? p.expressionCards[st.active] : few || p.numericCards;
       }
       var cards = (few || p.cards.map(function (_, ci) { return ci; })).map(function (ci) {
         var c = p.cards[ci];
         if (c.sep) return '<span class="fs-sep"></span>';
         var off = all || (few ? fewOff(p, st, c.v) : isOff(p, st, c.v));
-        if (o.roleCards && p.numericCards.includes(ci)) {
-          var occurrence = p.numericCards.filter(function(k){return k < ci && p.cards[k].v === c.v;}).length;
-          var used = Object.keys(st.fill).filter(function(k){return !p.expressionSlots.includes(+k) && st.fill[k] === c.v;}).length;
-          off = all || occurrence < used;
-        } else if (o.roleCards) off = all;
+        if (o.roleCards) off = all;   // 同じ数はカード1枚で、何回でも使える
         return '<button type="button" class="fs-card' + (off ? ' used' : '') + '" data-c="' + ci + '"' + (off ? ' disabled' : '') + '>' + valHTML(c.v) + '</button>';
       }).join('');
 
@@ -378,7 +379,7 @@
         ((all || Object.keys(st.fill).length) ? '<button type="button" class="fs-btn" data-act="reset">やり直す</button>' : '') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-act="prev"' + (cur ? '' : ' disabled') + '>前の問題</button>' +
         '<button type="button" class="fs-btn' + (all ? ' primary' : '') + '" data-act="next">' + (cur === P.length - 1 ? '結果を見る' : '次の問題') + '</button></div>' +
-        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards' + (few ? ' few' + (few.length > 4 ? ' many' : '') : '') + '">' + cards + '</div></aside></div>';
+        '</section><aside class="fs-bank"' + (all ? ' hidden' : '') + '><p class="fs-msg" role="status"' + (msg ? '' : ' hidden') + '>' + msg + '</p><div class="fs-cards' + (few && (!wide.matches || o.roleCards) ? ' few' + (few.length > 4 ? ' many' : '') : '') + '">' + cards + '</div></aside></div>';
 
       bind(p, st);
       layout();
@@ -512,6 +513,11 @@
 
     // 式が横に入りきらないとき：まず少し小さくする → それでも入らなければ「＝」の前で改行 → さらに小さく
     function layout() {
+      root.querySelectorAll('.fs-card').forEach(function (c) {
+        c.style.fontSize = '';
+        var size = parseFloat(getComputedStyle(c).fontSize);
+        while (c.scrollWidth > c.clientWidth + 1 && size > 11) { size -= 1; c.style.fontSize = size + 'px'; }
+      });
       root.querySelectorAll('.fs-eq').forEach(function (e) {
         e.classList.remove('fs-wrapeq'); e.style.fontSize = '';
         var base = parseFloat(getComputedStyle(e).fontSize), size = base;

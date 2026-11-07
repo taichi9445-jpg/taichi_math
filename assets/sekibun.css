@@ -72,3 +72,9 @@
 .sk-item{margin:14px 0;padding:10px 12px;border:1px solid #d0d7de;border-radius:8px;text-align:left;overflow-x:auto}
 .sk-item h3{margin:0 0 6px;font-size:15px;color:#1f4e8c}
 a.port-back{display:block;text-decoration:none}
+.sk-mback{margin-bottom:6px}
+.sk-wait .fs-rows,.sk-wait .fs-bank,.sk-wait .fs-ctrl,.sk-wait .fs-nav{display:none}
+.sk-figask{margin:6px 0;font-size:15px;color:#1f4e8c}
+.sk-opts.figs .sk-opt{padding:4px;min-height:0}
+.sk-opts.figs .sk-opt>span{display:block;width:100%;white-space:normal}
+.sk-opts.figs .sk-fig{margin:0}

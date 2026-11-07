@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>面積を求めよう</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261106">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261107">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261107">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,169 +11,190 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>面積を求めよう</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261106"></script>
-<script src="../../assets/sekibun.js?v=20261106"></script>
+<script src="../../assets/fill-steps.js?v=20261107"></script>
+<script src="../../assets/sekibun.js?v=20261107"></script>
 <script>
-const md = s => FillSteps.md(s), { num, parse, polyS, minus, add, neg, R, lim, paren, val, evalRows, cleanCards, nearValues, fig, mono, join } = Sek;
-const M = '−', GROUP = ['x 軸より上', 'x 軸より下', 'x 軸をまたぐ', '2つのグラフ'];
+const md = s => FillSteps.md(s), { num, parse, polyS, minus, plus, add, sub, neg, mul, lim, paren, val, evalRows, cleanCards, nearValues, fig, mono, join, times, shuffle, uniq } = Sek;
+const M = '−';
 const flip = ts => ts.map(t => ({ r: neg(t.r), p: t.p }));
 const yname = ts => 'y = ' + polyS(ts);
-const ints = (a, b) => [num([b, 1]), num([a, 1])];
 const LIMB = (a, b) => '{[' + num([b, 1]) + ']|[' + num([a, 1]) + ']}';
-// (x − p)(x − q) の形
-const fac = v => v === 0 ? 'x' : '(x ' + (v > 0 ? M + ' ' + v : '+ ' + -v) + ')';
+const fac = v => (v === 0 ? 'x' : '(x ' + (v > 0 ? M + ' ' + v : '+ ' + -v) + ')');
 const facts = (p, q) => (p === 0 ? 'x' + fac(q) : q === 0 ? 'x' + fac(p) : fac(p) + fac(q));
-// 2次式の整数の解（x² の係数 ±1 など）
-function roots(ts) {
-  const out = [];
-  for (let x = -12; x <= 12; x++) if (Math.abs(val(ts, x)) < 1e-9) out.push(x);
-  return out;
+function roots(ts) { const out = []; for (let x = -12; x <= 12; x++) if (Math.abs(val(ts, x)) < 1e-9) out.push(x); return out; }
+// 式の空欄（単項式のカード）。ts が 2 項以上なら ( ) をつける
+function grp(ts) {
+  const ds = ts.map(t => [[mono(mul(t.r, [2, 1]), t.p), '係数を確かめよう。'], [mono(t.r, t.p ? t.p + 1 : 1), '指数を確かめよう。']]);
+  const s = join(ts.map(t => ({ s: '[' + mono(t.r, t.p) + ']', neg: t.r[0] < 0 })));
+  return { s: ts.length > 1 ? '(' + s + ')' : s, pb: ds.map(d => d.map(x => x[0])), cards: [...ts.map(t => mono(t.r, t.p)), ...ds.flat()] };
 }
-// 図の範囲
-function range(curves, marks, regions) {
-  const mn = Math.min(0, ...marks), mx = Math.max(0, ...marks), span = mx - mn, m = Math.max(.45, span * .28);
-  const lo = mn - m, hi = mx + m;
-  const ys = [0];
-  curves.forEach(c => { for (let i = 0; i <= 40; i++) { const x = Math.min(...marks) - span * .12 + (Math.max(...marks) - Math.min(...marks) + span * .24) * i / 40; ys.push(val(c, x)); } });
-  const top = Math.max(...ys), bot = Math.min(...ys), pad = Math.max(.6, (top - bot) * .14);
-  return { xr: [lo, hi], yr: [bot - pad, top + pad] };
-}
-const wrapB = ts => (ts.length > 1 ? '([' + polyS(ts) + '])' : '[' + polyS(ts) + ']');
-const exprCards = (ts, extra) => [polyS(ts), [polyS(flip(ts)), '符号を確かめよう。'], ...(extra || [])];
-const limCards = (a, b) => [num([a, 1]), num([b, 1]), [num([a - 1, 1]), 'グラフの図で、斜線の左右の端を見よう。'], [num([b + 1, 1]), 'グラフの図で、斜線の左右の端を見よう。']];
+const limPB = (a, b) => [[num([b + 1, 1]), num([b - 1, 1])], [num([a - 1, 1]), num([a + 1, 1])]];
+const limCards = (a, b) => [num([a, 1]), num([b, 1]), ...[a - 1, a + 1, b - 1, b + 1].map(v => [num([v, 1]), '図で、斜線の左右の端を見よう。'])];
 
-// 面積の問題を作る
+// ---- 図 ----
+// s: { ts, a, b }（x 軸との間）または { U, L, a, b }（2 つのグラフの間）
+function range(curves, marks) {
+  const mn = Math.min(0, ...marks), mx = Math.max(0, ...marks), span = mx - mn, m = Math.max(.45, span * .28), ys = [0];
+  const l = Math.min(...marks) - span * .12, h = Math.max(...marks) + span * .12;
+  curves.forEach(c => { for (let i = 0; i <= 40; i++) ys.push(val(c, l + (h - l) * i / 40)); });
+  const top = Math.max(...ys), bot = Math.min(...ys), pad = Math.max(.6, (top - bot) * .14);
+  return { xr: [mn - m, mx + m], yr: [bot - pad, top + pad] };
+}
+function figOf(s, o = {}) {
+  const { a, b } = s, lab = (x, i) => (o.hide ? (i ? 'β' : 'α') : x);
+  if (s.ts) {
+    const ts = s.ts, cuts = [];
+    for (let x = a + 1; x < b; x++) if (Math.abs(val(ts, x)) < 1e-9) cuts.push(x);
+    const pts = [a, ...cuts, b], regions = [];
+    for (let i = 0; i + 1 < pts.length; i++) { const up = val(ts, (pts[i] + pts[i + 1]) / 2) > 0; regions.push({ a: pts[i], b: pts[i + 1], up: up ? ts : [], low: up ? [] : ts }); }
+    const first = regions[0].up.length > 0, last = regions[regions.length - 1].up.length > 0;
+    const xs = [{ x: a, label: lab(a, 0), y: val(ts, a), below: first, dx: a === 0 ? 9 : 0 }, { x: b, label: lab(b, 1), y: val(ts, b), below: last, dx: b === 0 ? -9 : 0 },
+      ...cuts.map(c => ({ x: c, label: o.cut ? 'c' : c, below: !first, dx: 0 }))].filter(m => o.hide || m.x !== 0);
+    return fig({ ...(o.range || range([ts], [a, b])), curves: [{ ts, label: yname(ts) }], regions, xs, noLabel: o.noLabel });
+  }
+  const { U, L } = s;
+  return fig({ ...(o.range || range([U, L], [a, b])), curves: [{ ts: U, label: yname(U) }, { ts: L, label: yname(L) }], regions: [{ a, b, up: U, low: L }],
+    xs: [a, b].map((x, i) => ({ x, label: lab(x, i), y: val(U, x), below: Math.min(val(L, a), val(L, b)) >= -0.01, dx: x === 0 ? 9 : 0 })).filter(m => o.hide || m.x !== 0), noLabel: o.noLabel });
+}
+const shiftX = (ts, h) => { let o = []; ts.forEach(t => { let term = [{ r: t.r, p: 0 }]; for (let i = 0; i < t.p; i++) term = times(term, [{ r: [1, 1], p: 1 }, { r: [-h, 1], p: 0 }]); o = plus(o, term); }); return o; };
+const mirror = ts => ts.map(t => ({ r: t.p % 2 ? neg(t.r) : t.r, p: t.p }));
+const up1 = (ts, k) => plus(ts, [{ r: [k, 1], p: 0 }]);
+// 問題文に合う図と、まちがいの図
+function figChoices(s) {
+  const list = s.ts
+    ? [{ ts: flip(s.ts), a: s.a, b: s.b }, { ts: mirror(s.ts), a: -s.b, b: -s.a }, { ts: shiftX(s.ts, 1), a: s.a + 1, b: s.b + 1 }, { ts: s.ts, a: s.a, b: s.b + 1 }, { ts: up1(s.ts, 2), a: s.a, b: s.b }]
+    : [{ U: mirror(s.U), L: mirror(s.L), a: -s.b, b: -s.a }, { U: shiftX(s.U, 1), L: shiftX(s.L, 1), a: s.a + 1, b: s.b + 1 }, { U: flip(s.L), L: flip(s.U), a: s.a, b: s.b }, { U: up1(s.U, 1), L: s.L, a: s.a, b: s.b }];
+  const key = x => JSON.stringify([x.ts || [x.U, x.L], x.a, x.b]), seen = new Set([key(s)]);
+  const wrong = list.filter(x => { const k = key(x); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 3);
+  const all = [s, ...wrong], cs = all.flatMap(x => (x.ts ? [x.ts] : [x.U, x.L])), g = range(cs, all.flatMap(x => [x.a, x.b]));
+  return all.map((x, i) => ({ svg: figOf(x, { noLabel: true, range: g }), ok: i === 0 }));
+}
+
+// ---- 面積の問題 ----
 function area(q) {
   const rows = [], cards = [], hide = q.type === 'axis' || q.type === 'meet';
-  let a = q.a, b = q.b, ask, Fig, expr, exprWrong, value, wrongVals = [];
-  const lab = (x, i) => hide ? (i ? 'β' : 'α') : x;
+  let a = q.a, b = q.b, ask, spec, expr, exprWrong, value, wrongVals = [];
+  const limRow = (pre, g, post, h) => ({ t: pre + '∫' + LIMB(a, b) + ' ' + g.s + post, pb: [...limPB(a, b), ...g.pb], h });
   if (q.type === 'axis' || q.type === 'above' || q.type === 'below') {
     const ts = parse(q.f);
     if (q.type === 'axis') { [a, b] = roots(ts); if (b === undefined) throw Error('解がない'); }
+    spec = { ts, a, b };
     const up = val(ts, (a + b) / 2) > 0;
     ask = q.type === 'axis' ? `放物線 ${yname(ts)} と x 軸で囲まれた部分の面積 S を求めよ。` : `${yname(ts)}、x 軸、x = ${num([a, 1])}、x = ${num([b, 1])} で囲まれた部分の面積 S を求めよ。`;
     if (q.type === 'axis') {
       const lead = ts[0].r[0] < 0;
-      rows.push('#x 軸との交点の x 座標を求める',
-        polyS(ts) + ' = 0', ...(lead ? [polyS(flip(ts)) + ' = 0'] : []),
-        facts(a, b) + ' = 0', { t: 'x = [' + num([a, 1]) + '], [' + num([b, 1]) + ']', h: 'かけて 0 になるのは、どちらかが 0 のときです。' });
-      cards.push(...limCards(a, b));
+      rows.push('#x 軸との交点の x 座標を求める', polyS(ts) + ' = 0', ...(lead ? [polyS(flip(ts)) + ' = 0'] : []), facts(a, b) + ' = 0',
+        { t: 'x = [' + num([a, 1]) + '], [' + num([b, 1]) + ']', h: 'かけて 0 になるのは、どちらかが 0 のときです。' });
     }
-    const main = up ? ts : flip(ts);
-    if (up) {
-      rows.push('#x 軸より上にあるので、そのまま積分する', { t: 'S = ∫' + LIMB(a, b) + ' ' + wrapB(ts) + ' dx', h: '斜線の左の端が下端、右の端が上端です。' });
-    } else {
-      rows.push('#x 軸より下にあるので、− をつけて積分する', { t: 'S = −∫' + LIMB(a, b) + ' ' + wrapB(ts) + ' dx', h: 'x 軸より下の部分の定積分は負になるので、− をつけて正の値にします。' },
-        { t: '= ∫' + lim(b, a) + ' ' + wrapB(main) + ' dx', h: '− をかっこの中に入れます。すべての項の符号が変わります。' });
-      cards.push(polyS(main));
+    const main = up ? ts : flip(ts), g = grp(ts);
+    if (up) rows.push('#x 軸より上にあるので、そのまま積分する', limRow('S = ', g, ' dx', '斜線の左の端が下端、右の端が上端です。'));
+    else {
+      const m = grp(main);
+      rows.push('#x 軸より下にあるので、− をつけて積分する', limRow('S = −', g, ' dx', 'x 軸より下の部分の定積分は負になるので、− をつけて正の値にします。'),
+        { t: '= ∫' + lim(b, a) + ' ' + m.s + ' dx', pb: m.pb, h: '− をかっこの中に入れます。すべての項の符号が変わります。' });
+      cards.push(...m.cards);
     }
-    cards.push(...limCards(a, b), ...exprCards(ts));
+    cards.push(...limCards(a, b), ...g.cards);
     const e = evalRows(main, a, b, '= ');
     rows.push(...e.rows); cards.push(...e.cards); value = e.ans;
     wrongVals = [neg(e.ans), e.Fb, add(e.ans, [1, 1])];
-    Fig = () => {
-      const g = range([ts], [a, b]);
-      return fig({ ...g, curves: [{ ts, label: yname(ts) }], regions: [up ? { a, b, up: ts, low: [] } : { a, b, up: [], low: ts }],
-        xs: [a, b].map((x, i) => ({ x, label: lab(x, i), y: val(ts, x), below: up, dx: x === 0 ? 9 : 0 })).filter(m => hide || m.x !== 0) });
-    };
     const I = '∫' + lim(b, a) + ' ' + paren(ts) + ' dx';
     expr = up ? 'S = ' + I : 'S = −' + I;
-    exprWrong = [up ? 'S = −' + I : 'S = ' + I, 'S = ∫' + lim(a, b) + ' ' + paren(ts) + ' dx', 'S = ∫' + lim(b + 1, a) + ' ' + paren(ts) + ' dx', 'S = ∫' + lim(b, a) + ' ' + paren(Sek.plus(ts, [{ r: [1, 1], p: 0 }])) + ' dx'];
+    exprWrong = [up ? 'S = −' + I : 'S = ' + I, 'S = ∫' + lim(a, b) + ' ' + paren(ts) + ' dx', 'S = ∫' + lim(b + 1, a) + ' ' + paren(ts) + ' dx', 'S = ∫' + lim(b, a) + ' ' + paren(up1(ts, 1)) + ' dx'];
   } else if (q.type === 'cross') {
     const ts = parse(q.f), c = q.c;
-    a = q.a; b = q.b;
+    a = q.a; b = q.b; spec = { ts, a, b };
     ask = `${yname(ts)}、x 軸、x = ${num([a, 1])}、x = ${num([b, 1])} で囲まれた部分の面積 S を求めよ。`;
-    const leftUp = val(ts, (a + c) / 2) > 0, L = leftUp ? ts : flip(ts), Rt = leftUp ? flip(ts) : ts;
-    rows.push('#x 軸と交わる点で、2 つに分ける', { t: 'x 軸との交点は x = [' + num([c, 1]) + ']', h: polyS(ts) + ' = 0 を解こう。' });
+    const leftUp = val(ts, (a + c) / 2) > 0, Lf = leftUp ? ts : flip(ts), Rt = leftUp ? flip(ts) : ts;
+    rows.push('#x 軸と交わる点で、2 つに分ける', { t: 'x 軸との交点は x = [' + num([c, 1]) + ']', h: polyS(ts) + ' = 0 を解こう。', pb: [[num([c + 1, 1]), num([c - 1, 1])]] });
     rows.push('#左の部分の面積 S₁');
-    const e1 = evalRows(L, a, c, 'S₁ = ∫' + lim(c, a) + ' ' + paren(L) + ' dx = ');
-    const e2 = evalRows(Rt, c, b, 'S₂ = ∫' + lim(b, c) + ' ' + paren(Rt) + ' dx = ');
+    const e1 = evalRows(Lf, a, c, 'S₁ = ∫' + lim(c, a) + ' ' + paren(Lf) + ' dx = '), e2 = evalRows(Rt, c, b, 'S₂ = ∫' + lim(b, c) + ' ' + paren(Rt) + ' dx = ');
     rows.push(...e1.rows, '#右の部分の面積 S₂', ...e2.rows);
     value = add(e1.ans, e2.ans);
     rows.push('#2 つをたす', { t: 'S = S₁ + S₂ = [' + num(e1.ans) + '] + [' + num(e2.ans) + ']', h: 'どちらも正の値です。たし算をします。', sk: 1 }, { t: '= [' + num(value) + ']', h: 'たし算をしよう。約分できるときは約分します。' });
-    cards.push(num([c, 1]), [num([c + 1, 1]), polyS(ts) + ' = 0 を解こう。'], ...e1.cards, ...e2.cards, num(value), [num(Sek.sub(e1.ans, e2.ans)), '面積はどちらも正の値でたします。']);
-    wrongVals = [Sek.sub(e1.ans, e2.ans), Sek.sub(e2.ans, e1.ans), e1.ans, e2.ans];
-    Fig = () => {
-      const g = range([ts], [a, b, c]);
-      return fig({ ...g, curves: [{ ts, label: yname(ts) }], regions: [leftUp ? { a, b: c, up: ts, low: [] } : { a, b: c, up: [], low: ts }, leftUp ? { a: c, b, up: [], low: ts } : { a: c, b, up: ts, low: [] }],
-        xs: [{ x: a, label: a, y: val(ts, a), below: !leftUp ? false : true }, { x: b, label: b, y: val(ts, b), below: leftUp }, { x: c, label: 'c', below: !leftUp }].filter(m => m.x !== 0) });
-    };
+    cards.push(num([c, 1]), [num([c + 1, 1]), polyS(ts) + ' = 0 を解こう。'], [num([c - 1, 1]), polyS(ts) + ' = 0 を解こう。'], ...e1.cards, ...e2.cards, num(value), [num(sub(e1.ans, e2.ans)), '面積はどちらも正の値でたします。']);
+    wrongVals = [sub(e1.ans, e2.ans), sub(e2.ans, e1.ans), e1.ans, e2.ans];
     const Ia = '∫' + lim(c, a) + ' ' + paren(ts) + ' dx', Ib = '∫' + lim(b, c) + ' ' + paren(ts) + ' dx';
     expr = leftUp ? 'S = ' + Ia + ' − ' + Ib : 'S = −' + Ia + ' + ' + Ib;
-    exprWrong = [leftUp ? 'S = ' + Ia + ' + ' + Ib : 'S = ' + Ia + ' + ' + Ib, leftUp ? 'S = −' + Ia + ' + ' + Ib : 'S = ' + Ia + ' − ' + Ib, 'S = ∫' + lim(b, a) + ' ' + paren(ts) + ' dx'];
+    exprWrong = ['S = ' + Ia + ' + ' + Ib, leftUp ? 'S = −' + Ia + ' + ' + Ib : 'S = ' + Ia + ' − ' + Ib, 'S = ∫' + lim(b, a) + ' ' + paren(ts) + ' dx'];
   } else {
     const U = parse(q.up), Lw = parse(q.low), d = minus(U, Lw);
     if (q.type === 'meet') {
       [a, b] = roots(d); if (b === undefined) throw Error('解がない');
       ask = `${yname(U)} と ${yname(Lw)} で囲まれた部分の面積 S を求めよ。`;
-      const lead = d[0].r[0] < 0, eq = lead ? flip(d) : d, k = eq[0].r[0];
+      const eq = d[0].r[0] < 0 ? flip(d) : d, k = eq[0].r[0];
       rows.push('#交点の x 座標を求める', polyS(U) + ' = ' + polyS(Lw), polyS(eq) + ' = 0', (k > 1 ? k : '') + facts(a, b) + ' = 0',
         { t: 'x = [' + num([a, 1]) + '], [' + num([b, 1]) + ']', h: 'かけて 0 になるのは、どちらかが 0 のときです。' });
       cards.push(...limCards(a, b));
     } else { a = q.a; b = q.b; ask = `${yname(U)}、${yname(Lw)}、x = ${num([a, 1])}、x = ${num([b, 1])} で囲まれた部分の面積 S を求めよ。`; }
+    spec = { U, L: Lw, a, b };
+    const gu = grp(U), gl = grp(Lw), gd = grp(d);
     rows.push('#（上のグラフの式）−（下のグラフの式）を積分する',
-      { t: 'S = ∫' + LIMB(a, b) + ' (' + wrapB(U) + ' − ' + wrapB(Lw) + ') dx', h: '図で、斜線の部分の上にあるグラフの式から、下にあるグラフの式をひきます。' },
-      { t: '= ∫' + lim(b, a) + ' ' + wrapB(d) + ' dx', h: 'かっこをはずして、まとめよう。' });
-    cards.push(...limCards(a, b), polyS(U), polyS(Lw), polyS(d), [polyS(flip(d)), '上のグラフ − 下のグラフ の順にひきます。'], [polyS(Sek.plus(U, Lw)), 'ひき算です。']);
+      { t: 'S = ∫' + LIMB(a, b) + ' (' + gu.s + ' − ' + gl.s + ') dx', pb: [...limPB(a, b), ...gu.pb, ...gl.pb], h: '図で、斜線の部分の上にあるグラフの式から、下にあるグラフの式をひきます。' },
+      { t: '= ∫' + lim(b, a) + ' ' + gd.s + ' dx', pb: gd.pb, h: 'かっこをはずして、まとめよう。' });
+    cards.push(...limCards(a, b), ...gu.cards, ...gl.cards, ...gd.cards);
     const e = evalRows(d, a, b, '= ');
     rows.push(...e.rows); cards.push(...e.cards); value = e.ans;
     wrongVals = [neg(e.ans), e.Fb, add(e.ans, [1, 2])];
-    Fig = () => {
-      const g = range([U, Lw], [a, b]);
-      return fig({ ...g, curves: [{ ts: U, label: yname(U) }, { ts: Lw, label: yname(Lw) }], regions: [{ a, b, up: U, low: Lw }],
-        xs: [a, b].map((x, i) => ({ x, label: lab(x, i), y: val(U, x), below: Math.min(val(Lw, a), val(Lw, b)) >= -0.01, dx: x === 0 ? 9 : 0 })).filter(m => hide || m.x !== 0) });
-    };
     const dd = (A, B) => 'S = ∫' + lim(b, a) + ' (' + paren(A) + ' − ' + paren(B) + ') dx';
     expr = dd(U, Lw);
-    exprWrong = [dd(Lw, U), 'S = ∫' + lim(b, a) + ' (' + polyS(Sek.plus(U, Lw)) + ') dx', 'S = ∫' + lim(a, b) + ' (' + paren(U) + ' − ' + paren(Lw) + ') dx'];
+    exprWrong = [dd(Lw, U), 'S = ∫' + lim(b, a) + ' (' + paren(U) + ' + ' + paren(Lw) + ') dx', 'S = ∫' + lim(a, b) + ' (' + paren(U) + ' − ' + paren(Lw) + ') dx'];
   }
-  const p = { big: '', q: ask, rows, cards: cleanCards(cards), ans: 'S = ' + num(value), value, group: q.group, fig: Fig(), wrong: nearValues(value, wrongVals).map(v => 'S = ' + v), expr, exprWrong: Sek.uniq(exprWrong).filter(v => v !== expr).slice(0, 3) };
-  return p;
+  return { big: '', q: ask, rows, cards: cleanCards(cards), ans: 'S = ' + num(value), value, spec, fig: figOf(spec, { hide, cut: q.type === 'cross' }), wrong: nearValues(value, wrongVals).map(v => 'S = ' + v), expr, exprWrong: uniq(exprWrong).filter(v => v !== expr).slice(0, 3) };
 }
-const LIST = [
-  { type: 'above', f: 'x', a: 0, b: 2, group: 0 }, { type: 'above', f: 'x²', a: 0, b: 2, group: 0 }, { type: 'above', f: 'x+1', a: 0, b: 2, group: 0 }, { type: 'above', f: 'x²+1', a: 1, b: 2, group: 0 }, { type: 'axis', f: '-x²+4x', group: 0 }, { type: 'axis', f: '-x²+2x+3', group: 0 },
-  { type: 'below', f: 'x-3', a: 0, b: 2, group: 1 }, { type: 'below', f: 'x²-4', a: -1, b: 1, group: 1 }, { type: 'axis', f: 'x²-2x', group: 1 }, { type: 'axis', f: 'x²-3x', group: 1 }, { type: 'axis', f: 'x²-1', group: 1 },
-  { type: 'cross', f: 'x-1', a: 0, c: 1, b: 3, group: 2 }, { type: 'cross', f: 'x²-1', a: 0, c: 1, b: 2, group: 2 }, { type: 'cross', f: 'x-2', a: 0, c: 2, b: 4, group: 2 },
-  { type: 'between', up: 'x+2', low: 'x²', a: 0, b: 1, group: 3 }, { type: 'meet', up: 'x', low: 'x²', group: 3 }, { type: 'meet', up: 'x+2', low: 'x²', group: 3 }, { type: 'meet', up: '4', low: 'x²', group: 3 }, { type: 'meet', up: '8-x²', low: 'x²', group: 3 }
+const LEVELS = [
+  { name: 'x 軸より上', sub: '1次関数から放物線へ', list: [{ type: 'above', f: 'x', a: 0, b: 2 }, { type: 'above', f: 'x+1', a: 0, b: 2 }, { type: 'above', f: 'x²', a: 0, b: 2 }, { type: 'above', f: 'x²+1', a: 1, b: 2 }, { type: 'axis', f: '-x²+4x' }, { type: 'axis', f: '-x²+2x+3' }, { type: 'above', f: 'x³', a: 0, b: 2 }] },
+  { name: 'x 軸より下', sub: '− をつけて積分する', list: [{ type: 'below', f: 'x-3', a: 0, b: 2 }, { type: 'below', f: '-x-1', a: 0, b: 2 }, { type: 'below', f: 'x²-4', a: -1, b: 1 }, { type: 'axis', f: 'x²-2x' }, { type: 'axis', f: 'x²-3x' }, { type: 'axis', f: 'x²-1' }, { type: 'below', f: 'x³-1', a: -1, b: 1 }] },
+  { name: 'x 軸をまたぐ', sub: '2 つに分けて積分する', list: [{ type: 'cross', f: 'x-1', a: 0, c: 1, b: 3 }, { type: 'cross', f: 'x-2', a: 0, c: 2, b: 4 }, { type: 'cross', f: 'x²-1', a: 0, c: 1, b: 2 }, { type: 'cross', f: 'x²-4', a: 0, c: 2, b: 3 }, { type: 'cross', f: 'x³-x', a: 0, c: 1, b: 2 }] },
+  { name: '2 つのグラフ', sub: '上の式 − 下の式', list: [{ type: 'between', up: 'x+2', low: 'x²', a: 0, b: 1 }, { type: 'meet', up: 'x', low: 'x²' }, { type: 'meet', up: 'x+2', low: 'x²' }, { type: 'meet', up: '4', low: 'x²' }, { type: 'meet', up: '8-x²', low: 'x²' }, { type: 'between', up: 'x', low: 'x³', a: 0, b: 1 }] }
 ];
+const ALL = LEVELS.flatMap(l => l.list);
+const degree = q => Math.max(...[q.f, q.up, q.low].filter(Boolean).map(s => parse(s)[0].p));
+// 1次 → 2次 → 3次の順。3次は最後の数問だけ
+const byDegree = (n1, n2, n3) => [[1, n1], [2, n2], [3, n3]].flatMap(([d, n]) => shuffle(ALL.filter(q => degree(q) === d)).slice(0, n));
 function randomQ() {
-  const r = Sek.rint, p = r(-2, 1), q = p + r(2, 4), s = p + q, m = p * q, tx = (k) => (k === 0 ? '' : (k > 0 ? '+' : '-') + Math.abs(k));
-  return Sek.pick([
-    () => ({ type: 'axis', f: `x²${s ? tx(-s) + 'x' : ''}${tx(m)}` }),
-    () => ({ type: 'axis', f: `-x²${s ? tx(s) + 'x' : ''}${tx(-m)}` }),
-    () => ({ type: 'meet', up: (s ? s + 'x' : '') + (s ? tx(-m) : String(-m)), low: 'x²' }),
-    () => ({ type: 'above', f: `x²${tx(r(1, 3))}`, a: 0, b: r(1, 3) }),
-    () => ({ type: 'cross', f: `x${tx(-2)}`, a: 0, c: 2, b: r(3, 5) })
-  ])();
+  const r = Sek.rint, p = r(-2, 1), q = p + r(2, 4), s = p + q, m = p * q, tx = k => (k === 0 ? '' : (k > 0 ? '+' : '-') + Math.abs(k));
+  return Sek.pick([() => ({ type: 'axis', f: `x²${s ? tx(-s) + 'x' : ''}${tx(m)}` }), () => ({ type: 'axis', f: `-x²${s ? tx(s) + 'x' : ''}${tx(-m)}` }),
+    () => ({ type: 'meet', up: (s ? s + 'x' : '') + (s ? tx(-m) : String(-m)), low: 'x²' }), () => ({ type: 'above', f: `x²${tx(r(1, 3))}`, a: 0, b: r(1, 3) }), () => ({ type: 'cross', f: `x${tx(-2)}`, a: 0, c: 2, b: r(3, 5) })])();
 }
-const safeRandom = () => { for (;;) { const q = randomQ(); try { const p = area(q); if (p.value[0] > 0 && p.value[1] < 40) return p; } catch (e) {} } };
-const home = () => { document.getElementById('app').innerHTML = ''; showMenu(); };
+const safeRandom = () => { for (let i = 0; i < 50; i++) { try { const p = area(randomQ()); if (p.value[0] > 0 && p.value[1] < 40) return p; } catch (e) {} } return area(ALL[0]); };
+
+const app = () => document.getElementById('app'), menuEl = () => document.getElementById('menu');
 const FORMULA = () => '<div class="sk-formula">' + md('S = ∫{b|a} (上の式 − 下の式) dx') + '<small>' + md('上の式・下の式はグラフの上下。x 軸は y = 0') + '</small></div>';
-function fillMode(P, tab) {
-  document.getElementById('menu').innerHTML = '';
-  Sek.fill('#app', P, { top: FORMULA, home, tabGroup: tab ? p => ({ id: p.group, label: GROUP[p.group] }) : null });
-}
-function quizMode(make, o) {
-  document.getElementById('menu').innerHTML = '';
-  const go = () => Sek.quiz(document.getElementById('app'), make(), Object.assign({ home, again: go }, o));
-  go();
-}
-const noteQ = p => ({ big: p.big, q: p.q, ans: p.ans, wrong: p.wrong, p, fig: p.fig });
-const exprQ = p => ({ big: '', q: '斜線の部分の面積 S を表す式はどれか。', ans: p.expr, wrong: p.exprWrong, p, fig: p.fig });
+function fillMode(P, home) { menuEl().innerHTML = ''; Sek.fill(app(), P, { top: FORMULA, home }); }
+function quizMode(make, o) { menuEl().innerHTML = ''; const go = () => Sek.quiz(app(), make(), Object.assign({ home: showMenu, again: go }, o)); go(); }
+const exprQ = q => { const p = area(q); return { big: '', q: '斜線の部分の面積 S を表す式はどれか。', ans: p.expr, wrong: p.exprWrong, p, fig: figOf(p.spec) }; };
+const pickFigQ = q => { const p = area(q), c = figChoices(p.spec); return { big: '', q: p.q.replace('の面積 S を求めよ。', 'を表す図はどれか。'), ans: c[0].svg, wrong: c.slice(1).map(x => x.svg), figOpts: true }; };
+const noteQ = q => { const p = area(q); return { big: '', q: p.q, ans: p.ans, wrong: p.wrong, p, fig: p.fig, figHide: true }; };
 const icon = d => `<svg viewBox="0 0 70 50" width="66" height="47" aria-hidden="true">${d}</svg>`;
+const AX = '<path d="M8 44H64M14 48V4" stroke="#5b6470" fill="none"/>';
 const ICON = {
-  a: icon('<path d="M8 44H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M14 44Q34 44 52 8V44Z" fill="#c7daf0"/><path d="M12 44Q34 44 54 4" fill="none" stroke="#1f4e8c" stroke-width="2.4"/>'),
-  b: icon('<path d="M8 44H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M20 44Q38 -6 56 44Z" fill="#ffe0c2"/><path d="M16 50Q38 -24 60 50" fill="none" stroke="#b4540a" stroke-width="2.4"/><text x="33" y="34" font-family="STIX Two Text,serif" font-style="italic" font-size="15" fill="#b4540a">∫</text>'),
-  c: icon('<path d="M8 44H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M18 40Q38 6 58 12" fill="none" stroke="#207345" stroke-width="2.4"/><path d="M50 26l6 6 10-14" fill="none" stroke="#207345" stroke-width="3"/>'),
-  d: '✎'
+  expr: icon(AX + '<path d="M14 44Q34 44 52 8V44Z" fill="#c7daf0"/><path d="M12 44Q34 44 54 4" fill="none" stroke="#1f4e8c" stroke-width="2.4"/>'),
+  fig: icon('<rect x="4" y="6" width="28" height="18" rx="3" fill="#fff" stroke="#b4540a"/><rect x="38" y="6" width="28" height="18" rx="3" fill="#ffe0c2" stroke="#b4540a" stroke-width="2"/><rect x="4" y="28" width="28" height="18" rx="3" fill="#fff" stroke="#b4540a"/><rect x="38" y="28" width="28" height="18" rx="3" fill="#fff" stroke="#b4540a"/>'),
+  up: icon(AX + '<path d="M20 44Q38 -6 56 44Z" fill="#c7daf0"/><path d="M16 50Q38 -24 60 50" fill="none" stroke="#1f4e8c" stroke-width="2.4"/>'),
+  down: icon('<path d="M8 12H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M20 12Q38 62 56 12Z" fill="#ffe0c2"/><path d="M16 6Q38 74 60 6" fill="none" stroke="#b4540a" stroke-width="2.4"/>'),
+  cross: icon('<path d="M8 26H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M14 26V44L34 26Z" fill="#ffe0c2"/><path d="M34 26L58 26V6Z" fill="#c7daf0"/><path d="M14 44L60 4" fill="none" stroke="#207345" stroke-width="2.4"/>'),
+  two: icon(AX + '<path d="M18 40Q38 -2 56 12Q40 40 18 40Z" fill="#e3dcf5"/><path d="M12 44Q36 -8 60 8" fill="none" stroke="#6741a8" stroke-width="2.2"/><path d="M12 42Q40 44 60 6" fill="none" stroke="#c2410c" stroke-width="2.2"/>')
 };
+function stepsMenu() {
+  const home = () => { app().innerHTML = ''; stepsMenu(); };
+  const c = LEVELS.map((l, i) => ({ name: l.name, sub: l.sub + '（' + l.list.length + '問）', icon: ICON[['up', 'down', 'cross', 'two'][i]], go: () => {
+    const P = l.list.map(area), half = Math.ceil(P.length / 2);
+    P.forEach((p, k) => { if (k >= half) { p.figHide = true; p.figOpts = shuffle(figChoices(p.spec)); } });
+    fillMode(P, home);
+  } }));
+  c.push({ name: 'ランダム練習', sub: '数値が毎回かわる5問', icon: '?', go: () => fillMode(Array.from({ length: 5 }, safeRandom), home) });
+  app().innerHTML = '';
+  Sek.menu(menuEl(), c, '途中式で解く：後半の問題は図がかくれるので、図を選んでから式を作ろう。', showMenu);
+}
 function showMenu() {
-  Sek.menu(document.getElementById('menu'), [
-    { name: '途中式で解く', sub: 'カードで式を作る（' + LIST.length + '問）', icon: ICON.a, go: () => fillMode(LIST.map(area), true) },
-    { name: '面積を表す式', sub: '図を見て式を選ぶ（10問）', icon: ICON.b, go: () => quizMode(() => Sek.shuffle(LIST).slice(0, 10).sort((x, y) => x.group - y.group).map(area).map(exprQ), { name: '面積を表す式' }) },
-    { name: 'ランダム練習', sub: '数値が毎回かわる5問', icon: ICON.c, go: () => fillMode(Array.from({ length: 5 }, safeRandom), false) },
-    { name: 'ノートで解く', sub: '自分で計算して4択（8問）', icon: ICON.d, go: () => quizMode(() => Sek.shuffle(LIST).slice(0, 8).sort((x, y) => x.group - y.group).map(area).map(noteQ), { name: 'ノートで解く' }) }
-  ], 'モードを選んで始めよう。');
+  app().innerHTML = '';
+  Sek.menu(menuEl(), [
+    { name: '面積を表す式', sub: '図を見て式を選ぶ（11問）', icon: ICON.expr, go: () => quizMode(() => byDegree(3, 6, 2).map(exprQ), { name: '面積を表す式' }) },
+    { name: '図を選ぶ', sub: '問題文に合う図はどれ？（10問）', icon: ICON.fig, go: () => quizMode(() => byDegree(3, 6, 1).map(pickFigQ), { name: '図を選ぶ' }) },
+    { name: '途中式で解く', sub: '面積を計算する', icon: '<span>' + md('S = ∫{b|a}') + '</span>', go: stepsMenu },
+    { name: 'ノートで解く', sub: '問題文だけで4択（8問）', icon: '✎', go: () => quizMode(() => byDegree(2, 5, 1).map(noteQ), { name: 'ノートで解く' }) }
+  ], '上から順に進めよう。');
 }
 showMenu();
 </script>

@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>不定積分の練習</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261106">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261106">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261107">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261107">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,58 +11,65 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>不定積分の練習</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261106"></script>
-<script src="../../assets/sekibun.js?v=20261106"></script>
+<script src="../../assets/fill-steps.js?v=20261107"></script>
+<script src="../../assets/sekibun.js?v=20261107"></script>
 <script>
-const md = s => FillSteps.md(s);
-// 途中式で解く問題（だんだんむずかしく）
-const STEPS = [
-  { f: 'x²', group: 0 }, { f: 'x³', group: 0 }, { f: '5', group: 0 }, { f: '3x²', group: 0 }, { f: '4x³', group: 0 }, { f: '6x', group: 0 },
-  { f: '2x+3', group: 1 }, { f: 'x²-x', group: 1 }, { f: '3x²+2x-1', group: 1 }, { f: '6x²-4x+3', group: 1 }, { f: '4x³-3x²+2x-1', group: 1 },
-  { show: '(x + 1)²', f: 'x²+2x+1', group: 2 }, { show: 'x(x + 2)', f: 'x²+2x', group: 2 }, { show: '(x + 1)(x − 2)', f: 'x²-x-2', group: 2 }, { show: '(2x − 1)²', f: '4x²-4x+1', group: 2 }, { show: '(x − 1)(x + 3)', f: 'x²+2x-3', group: 2 },
-  { f: '2x+3', at: 1, value: 5, group: 3 }, { f: '3x²-2', at: 2, value: 3, group: 3 }, { f: '6x²-2x+1', at: 0, value: 4, group: 3 }
-];
-const GROUP = ['基本', '多項式', '展開してから', '条件から C'];
-// タイムアタック（計算だけでできる問題。展開はここに入れない）
+const md = s => FillSteps.md(s), { parse, times, polyS } = Sek;
+// 1. 積分の計算
+const CALC = ['x²', 'x³', '5', '3x²', '4x³', '6x', '2x+3', 'x²-x', '3x²+2x-1', '6x²-4x+3', '4x³-3x²+2x-1'].map(f => ({ f }));
 const POOL = ["x","x²","1","2x","3x²","5","6x","4x³","x+1","2x+3","x²+x","3x+2","x²-x","4x-1","5x+3","x³+x","x²+2x+1","2x³+x²","x⁴+x²","3x²+2x-1","x³-2x²+x","2x⁴+3x³","x⁵-x³+x","4x³-3x²+2x-1","x²+2x","x²-2x","4x-2","x⁴","x⁵","7x²","8x³","6x-2","9x²","10x","x²-2x+1","2x²+x","3x²-x","x⁶","9x","10x²","x³-x","12x","15x²","7x+4","8x-3","x²+3x+2","x²-3x+2","3x²+2x","4x²-2x","x⁷","18x","20x²","9x+5","10x-4","x³+2x²","x³-2x²","5x²+3x","6x²-3x","x⁸","24x","25x²","11x+6","12x-5","x⁴+x³","x⁴-x³","7x²+4x","8x²-4x","x⁹","30x","36x²","13x+7","14x-6","x⁵+x²","x⁵-x²","9x²+5x","10x²-5x","x²+4x+3","x²-4x+3","2x³+3x²","3x³-2x²","42x","48x²","15x+8","16x-7","x⁶+x³","x⁶-x³","11x²+6x","12x²-6x","x²+5x+4","x²-5x+4","4x³+2x²","5x³-3x²","54x","60x²","17x+9","18x-8","x⁷+x⁴","x⁷-x⁴","13x²+7x","14x²-7x","x²+6x+5","x²-6x+5","6x³+4x²","7x³-4x²","66x","72x²","19x+10","20x-9","x⁸+x⁵","x⁸-x⁵","15x²+8x","16x²-8x","x²+7x+6","x²-7x+6"];
-const level = f => { const t = Sek.parse(f); if (t.length >= 3) return 4; if (t.length === 2) return 3; return Sek.same(t[0].r, [1, 1]) ? 1 : 2; };
-const asQ = q => { const p = Sek.indefinite(q); return { big: p.big, q: p.q + (q.at === undefined ? '（C は積分定数）' : ''), ans: p.ans, wrong: p.wrong, p, level: level(q.f) }; };
-const byLevel = (quota) => quota.flatMap((n, i) => Sek.shuffle(POOL.filter(f => level(f) === i + 1)).slice(0, n)).map(f => asQ({ f }));
-const allByLevel = () => [1, 2, 3, 4].flatMap(l => Sek.shuffle(POOL.filter(f => level(f) === l))).map(f => asQ({ f }));
-// ランダム：数値が毎回かわる
-function randomQ() {
-  const r = Sek.rint, k = () => Sek.pick([1, 2, 3, 4, 5, 6]), s = () => Sek.pick(['+', '-']);
-  const a = k(), b = r(1, 6), c = r(1, 5), d = r(1, 5), e = Sek.pick([1, 2]);
-  return Sek.pick([
-    () => ({ f: `${a}x²${s()}${b}x${s()}${c}` }), () => ({ f: `${a}x³${s()}${b}x` }), () => ({ f: `${a}x${s()}${b}` }),
-    () => ({ f: `${3 * a}x²${s()}${2 * b}x` }), () => ({ f: `${4 * a}x³${s()}${3 * b}x²${s()}${c}` }),
-    () => ({ show: `(x + ${c})(x − ${d})`, f: `x²${c - d >= 0 ? '+' : '-'}${Math.abs(c - d)}x-${c * d}` }),
-    () => ({ show: `(x + ${c})²`, f: `x²+${2 * c}x+${c * c}` }),
-    () => ({ f: `${2 * a}x+${b}`, at: e, value: r(1, 9) })
-  ])();
-}
-const home = () => { document.getElementById('app').innerHTML = ''; showMenu(); };
+const level = f => { const t = parse(f); if (t.length >= 3) return 4; if (t.length === 2) return 3; return Sek.same(t[0].r, [1, 1]) ? 1 : 2; };
+// 2. 展開してから積分：(x + a)(x + b) など
+const sgn = a => (a < 0 ? '− ' + -a : '+ ' + a);
+const lin = (k, a) => [{ r: [k, 1], p: 1 }, { r: [a, 1], p: 0 }];
+const prod = (k, a, l, b) => {
+  const one = (c, v) => '(' + (c === 1 ? '' : c) + 'x ' + sgn(v) + ')';
+  return { show: k === l && a === b ? one(k, a) + '²' : one(k, a) + one(l, b), ts: times(lin(k, a), lin(l, b)) };
+};
+const xmul = a => ({ show: 'x(x ' + sgn(a) + ')', ts: times([{ r: [1, 1], p: 1 }], lin(1, a)) });
+const EXPAND = [prod(1, 1, 1, 1), xmul(2), prod(1, 1, 1, -2), prod(2, -1, 2, -1), prod(1, -1, 1, 3)];
+const EXPOOL = [xmul(2), xmul(3), xmul(-1), xmul(-4), prod(1, 1, 1, 1), prod(1, 2, 1, 2), prod(1, -1, 1, -1), prod(1, -3, 1, -3), prod(1, 1, 1, 2), prod(1, 1, 1, -2), prod(1, 2, 1, -2), prod(1, 3, 1, -3), prod(1, -1, 1, 3), prod(1, -1, 1, -2), prod(1, 2, 1, 3), prod(1, 4, 1, -1), prod(2, 1, 1, 1), prod(2, -1, 1, 3), prod(2, 1, 2, 1), prod(2, -1, 2, -1), prod(3, 1, 1, -2), prod(2, 3, 2, -3)];
+// 3. 条件つき
+const COND = [{ f: '2x+3', at: 1, value: 5 }, { f: '3x²-2', at: 2, value: 3 }, { f: '6x²-2x+1', at: 0, value: 4 }, { f: '4x-1', at: 1, value: 0 }, { f: '3x²+4x', at: -1, value: 2 }];
+
+const r = Sek.rint, s = () => Sek.pick(['+', '-']);
+const randCalc = () => { const a = r(1, 6), b = r(1, 6), c = r(1, 5); return Sek.pick([{ f: `${a}x²${s()}${b}x${s()}${c}` }, { f: `${a}x³${s()}${b}x` }, { f: `${a}x${s()}${b}` }, { f: `${3 * a}x²${s()}${2 * b}x` }, { f: `${4 * a}x³${s()}${3 * b}x²${s()}${c}` }]); };
+const randExpand = () => Sek.pick(EXPOOL);
+const randCond = () => ({ f: Sek.pick([`${2 * r(1, 4)}x${s()}${r(1, 5)}`, `${3 * r(1, 3)}x²${s()}${r(1, 5)}`, `${3 * r(1, 3)}x²${s()}${2 * r(1, 3)}x`]), at: r(-1, 2), value: r(-3, 9) });
+const asQ = (q, note) => { const p = Sek.indefinite(q); return { big: p.big, q: p.q + (q.at === undefined ? '（C は積分定数）' : ''), ans: p.ans, wrong: p.wrong, p }; };
+const levelOrder = quota => quota.flatMap((n, i) => Sek.shuffle(POOL.filter(f => level(f) === i + 1)).slice(0, n)).map(f => asQ({ f }));
+const allCalc = () => [1, 2, 3, 4].flatMap(l => Sek.shuffle(POOL.filter(f => level(f) === l))).map(f => asQ({ f }));
+const hardness = q => (q.show.includes('2x') || q.show.includes('3x') ? 2 : q.show.startsWith('x') ? 0 : 1);
+const allExpand = () => Sek.shuffle(EXPOOL).sort((a, b) => hardness(a) - hardness(b)).map(asQ);
+
+const app = () => document.getElementById('app'), menuEl = () => document.getElementById('menu');
 const FORMULA = () => '<div class="sk-formula">' + md('∫ xⁿ dx = {1|n + 1}xⁿ⁺¹ + C') + '<small>' + md('n は 0 または正の整数、C は積分定数') + '</small></div>';
-function fillMode(list, tab) {
-  document.getElementById('menu').innerHTML = '';
-  const P = list.map(q => Sek.indefinite(q));
-  Sek.fill('#app', P, { top: FORMULA, home, tabGroup: tab ? p => ({ id: p.group, label: GROUP[p.group] }) : null });
-}
-function quizMode(make, o) {
-  document.getElementById('menu').innerHTML = '';
-  const go = () => Sek.quiz(document.getElementById('app'), make(), Object.assign({ home, again: go }, o));
-  go();
-}
+function fillMode(list, detail, home) { menuEl().innerHTML = ''; Sek.fill(app(), list.map(q => Sek.indefinite(q, detail)), { top: FORMULA, home }); }
+function quizMode(make, o, home) { menuEl().innerHTML = ''; const go = () => Sek.quiz(app(), make(), Object.assign({ home, again: go }, o)); go(); }
 const tile = t => '<span>' + md(t) + '</span>';
+function practice(name, o) {
+  const home = () => { app().innerHTML = ''; practice(name, o); };
+  const c = [
+    { name: '途中式で解く', sub: 'カードで一気に答えへ（' + o.steps.length + '問）', icon: tile(o.icon), go: () => fillMode(o.steps, false, home) }
+  ];
+  if (o.detail) c.push({ name: 'くわしく解く', sub: 'かけ算の形にしてから約分', icon: tile('2 × {1|2}x²'), go: () => fillMode(o.steps, true, home) });
+  c.push({ name: 'ランダム練習', sub: '1問ずつ答えを確かめる10問', icon: '?', go: () => fillMode(Array.from({ length: 10 }, o.rand), false, home) });
+  if (o.ta) c.push({ name: 'タイムアタック', sub: '4択で10問、最後に確認', icon: '10', go: () => quizMode(o.ta, { name: 'タイムアタック', timed: true }, home) });
+  if (o.all) {
+    c.push({ name: '全問タイムアタック', sub: '全' + o.count + '問、だんだんむずかしく', icon: String(o.count), go: () => quizMode(o.all, { name: '全問タイムアタック', timed: true }, home) });
+    c.push({ name: '超鬼連チャン', sub: '1回まちがえたら終わり', icon: '×', go: () => quizMode(o.all, { name: '超鬼連チャン', timed: true, oni: true }, home) });
+  }
+  if (o.note) c.push({ name: 'ノートで解く', sub: '自分で計算して4択（5問）', icon: '✎', go: () => quizMode(o.note, { name: 'ノートで解く' }, home) });
+  menuEl().innerHTML = '';
+  Sek.menu(menuEl(), c, name, showMenu);
+}
 function showMenu() {
-  Sek.menu(document.getElementById('menu'), [
-    { name: '途中式で解く', sub: 'カードで式を作る（' + STEPS.length + '問）', icon: tile('∫ x² dx'), go: () => fillMode(STEPS, true) },
-    { name: 'ランダム練習', sub: '数値が毎回かわる10問', icon: tile('∫ ?x dx'), go: () => fillMode(Array.from({ length: 10 }, randomQ), false) },
-    { name: 'ノートで解く', sub: '自分で計算して4択（10問）', icon: '✎', go: () => quizMode(() => Array.from({ length: 10 }, () => asQ(randomQ())), { name: 'ノートで解く' }) },
-    { name: 'タイムアタック', sub: '4択で10問', icon: '10', go: () => quizMode(() => byLevel([2, 3, 3, 2]), { name: 'タイムアタック', timed: true }) },
-    { name: '全問タイムアタック', sub: '全' + POOL.length + '問に挑戦', icon: String(POOL.length), go: () => quizMode(allByLevel, { name: '全問タイムアタック', timed: true }) },
-    { name: '超鬼連チャン', sub: '1回まちがえたら終わり', icon: '×', go: () => quizMode(allByLevel, { name: '超鬼連チャン', timed: true, oni: true }) }
-  ], 'モードを選んで始めよう。');
+  app().innerHTML = '';
+  Sek.menu(menuEl(), [
+    { name: '積分の計算', sub: '単項式・多項式を積分する', icon: tile('∫ x² dx'), go: () => practice('積分の計算', { steps: CALC, detail: true, icon: '∫ x² dx', rand: randCalc, ta: () => levelOrder([2, 3, 3, 2]), all: allCalc, count: POOL.length }) },
+    { name: '展開して積分', sub: 'かっこをはずしてから積分する', icon: tile('∫ (x + 1)² dx'), go: () => practice('展開して積分', { steps: EXPAND, detail: true, icon: '∫ (x + 1)² dx', rand: randExpand, ta: () => Sek.shuffle(EXPOOL).slice(0, 10).sort((a, b) => hardness(a) - hardness(b)).map(q => asQ(q)), all: allExpand, count: EXPOOL.length }) },
+    { name: 'レベルアップ', sub: '条件から F(x) を求める', icon: tile('F(1) = 5'), go: () => practice('レベルアップ（条件つきの問題）', { steps: COND, icon: 'F(1) = 5', rand: randCond, note: () => Array.from({ length: 5 }, () => asQ(randCond())) }) }
+  ], '練習する内容を選ぼう。');
 }
 showMenu();
 </script>
