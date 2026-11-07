@@ -35,6 +35,8 @@
   .cell.cur { border:2px solid #e8930c; background:var(--cur); }
   .cell.cur b::after { content:""; display:inline-block; width:2px; height:20px; margin-left:2px; vertical-align:-3px; background:#e8930c; animation:blink 1s steps(2) infinite; }
   @keyframes blink { 50% { opacity:0; } }
+  .cell mark { background:#f7c766; color:inherit; border-radius:4px; padding:0 2px; }
+  .cell.cur.over b::after { display:none; }
   .res { display:flex; flex-direction:column; justify-content:center; align-items:flex-end; min-width:0; padding-right:2px; }
   .res b { font-size:17px; font-variant-numeric:tabular-nums; }
   .res small { font-size:11px; color:var(--sub); }
@@ -69,13 +71,14 @@
 <main id="main"></main>
 <footer><div class="keys" id="keys"></div></footer>
 <script>
-// どの品も「量・値段」を順に入れる。数字が止まったら自動で次の欄へ（次へ を押せばすぐ進む）
-const KEY = 'otoku.v1', WAIT = 1000;
+// 入れる欄は、指で押して選ぶ（自動では動かない。次へ を押すと次の欄へ進む）
+// 欄を選んだ直後は over の状態。次に打った数字で、前の数字が置きかわる
+const KEY = 'otoku.v1';
 const blank = n => ({ title: '', unit: 'g', items: Array.from({ length: n }, () => ({ q: '', p: '' })) });
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
 if (!S || !S.lists || !S.lists.length) S = { lists: [blank(2)], cur: 0 };
-let at = { i: 0, f: 'q' }, timer = null;
+let at = { i: 0, f: 'q' }, over = true;
 const L = () => S.lists[S.cur];
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 const $ = id => document.getElementById(id);
@@ -83,6 +86,7 @@ const names = 'ABCDEF';
 const order = () => L().items.flatMap((_, i) => [{ i, f: 'q' }, { i, f: 'p' }]);
 const idx = () => order().findIndex(c => c.i === at.i && c.f === at.f);
 const yen = v => v >= 100 ? v.toFixed(1) : v.toFixed(2);
+function go(c) { at = c; over = true; }
 function firstEmpty() { return order().find(c => L().items[c.i][c.f] === '') || null; }
 function unitPrice(it) { const q = parseFloat(it.q), p = parseFloat(it.p); return q > 0 && p >= 0 && it.p !== '' ? p / q : null; }
 function perLabel() { const u = L().unit; return u === '個' ? '1個' : '100' + u; }
@@ -96,13 +100,13 @@ function draw() {
   let h = '';
   l.items.forEach((it, i) => {
     const v = prices[i], best = min !== null && v !== null && Math.abs(v - min) < 1e-12;
-    const cell = (f, lab) => `<button class="cell${at.i === i && at.f === f ? ' cur' : ''}" data-c="${i}${f}"><small>${lab}</small><b>${it[f]}</b></button>`;
+    const cell = (f, lab) => { const cur = at.i === i && at.f === f, sel = cur && over && it[f] !== ''; return `<button class="cell${cur ? ' cur' : ''}${sel ? ' over' : ''}" data-c="${i}${f}"><small>${lab}</small><b>${sel ? `<mark>${it[f]}</mark>` : it[f]}</b></button>`; };
     const diff = v !== null && min !== null && !best ? `<small>+${Math.round((v / min - 1) * 100)}%</small>` : `<small>${perLabel()}</small>`;
     h += `<div class="row${best ? ' best' : ''}"><span class="name">${names[i]}</span>${cell('q', l.unit)}${cell('p', '円')}
       <div class="res">${best ? '<span class="crown">お得</span>' : ''}${v === null ? '<small>—</small>' : `<b>${yen(per(v))}円</b>${diff}`}</div></div>`;
   });
   // 結果のひとこと
-  let msg = `<div class="answer wait">${l.unit === '個' ? '個数' : '量'}と値段を、順に入れてください</div>`;
+  let msg = `<div class="answer wait">${l.unit === '個' ? '個数' : '量'}と値段を入れてください（欄を押すと選べます）</div>`;
   if (min !== null) {
     const bestI = prices.findIndex(v => v !== null && Math.abs(v - min) < 1e-12), tie = ok.filter(v => Math.abs(v - min) < 1e-12).length > 1;
     const others = ok.filter(v => Math.abs(v - min) > 1e-12), next = others.length ? Math.min(...others) : null;
@@ -114,60 +118,54 @@ function draw() {
   h += `<div class="count">比べる数${[2, 3, 4].map(n => `<button data-n="${n}" class="${l.items.length === n ? 'on' : ''}">${n}</button>`).join('')}
     <span class="count unit">単位${['g', 'ml', '個'].map(u => `<button data-u="${u}" class="${l.unit === u ? 'on' : ''}">${u}</button>`).join('')}</span></div>`;
   $('main').innerHTML = h;
-  document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const s = b.dataset.c; stopTimer(); at = { i: +s[0], f: s[1] }; draw(); });
-  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { stopTimer(); S.cur = +b.dataset.t; at = firstEmpty() || { i: 0, f: 'q' }; save(); draw(); });
+  document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const s = b.dataset.c; go({ i: +s[0], f: s[1] }); draw(); });
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { S.cur = +b.dataset.t; go(firstEmpty() || { i: 0, f: 'q' }); save(); draw(); });
   document.querySelectorAll('[data-n]').forEach(b => b.onclick = () => setCount(+b.dataset.n));
   document.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { L().unit = b.dataset.u; save(); draw(); });
   save();
 }
 // 数をかえても、入れた品はそのまま残す（へらすときは後ろから）
 function setCount(n) {
-  stopTimer();
   const it = L().items;
   while (it.length < n) it.push({ q: '', p: '' });
   while (it.length > n) it.pop();
-  at = firstEmpty() || { i: Math.min(at.i, n - 1), f: at.f };
+  go(firstEmpty() || { i: Math.min(at.i, n - 1), f: at.f });
   draw();
 }
-function stopTimer() { clearTimeout(timer); timer = null; }
 function advance() {
-  stopTimer();
   const o = order(), k = idx();
-  at = k < o.length - 1 ? o[k + 1] : { i: -1, f: '' };
+  go(k < o.length - 1 ? o[k + 1] : { i: -1, f: '' });
   draw();
 }
+// もどっても数字は消さない（打てば置きかわる）
 function back() {
-  stopTimer();
   const o = order();
   let k = at.i < 0 ? o.length : idx();
-  at = o[Math.max(0, k - 1)];
-  L().items[at.i][at.f] = '';   // 1つもどった欄は、すぐ打ち直せるように空にする
+  go(o[Math.max(0, k - 1)]);
   draw();
 }
 function press(d) {
-  if (at.i < 0) { at = firstEmpty() || { i: 0, f: 'q' }; if (!firstEmpty()) return; }
-  const it = L().items[at.i];
-  if (d === '.' && (it[at.f].includes('.') || it[at.f] === '')) return;
-  if (it[at.f].replace('.', '').length >= 6) return;
-  it[at.f] += d;
+  if (at.i < 0) { const c = firstEmpty(); if (!c) return; go(c); }
+  const it = L().items[at.i], now = over ? '' : it[at.f];
+  if (d === '.' && (now.includes('.') || now === '')) return;
+  if (now.replace('.', '').length >= 6) return;
+  it[at.f] = now + d;
+  over = false;
   draw();
-  stopTimer();
-  timer = setTimeout(advance, WAIT);
 }
 function del() {
-  stopTimer();
   if (at.i < 0) return back();
   const it = L().items[at.i];
   if (it[at.f] === '') return back();
   it[at.f] = it[at.f].slice(0, -1);
+  over = false;
   draw();
 }
 function clearAll() {
-  stopTimer();
   const n = L().items.length, u = L().unit;
-  S.lists[S.cur] = blank(n); L().unit = u; at = { i: 0, f: 'q' }; draw();
+  S.lists[S.cur] = blank(n); L().unit = u; go({ i: 0, f: 'q' }); draw();
 }
-$('new').onclick = () => { stopTimer(); S.lists.push(blank(2)); if (S.lists.length > 8) S.lists.shift(); S.cur = S.lists.length - 1; at = { i: 0, f: 'q' }; draw(); setTimeout(() => { const t = $('tabs'); t.scrollLeft = t.scrollWidth; }, 0); };
+$('new').onclick = () => { S.lists.push(blank(2)); if (S.lists.length > 8) S.lists.shift(); S.cur = S.lists.length - 1; go({ i: 0, f: 'q' }); draw(); setTimeout(() => { const t = $('tabs'); t.scrollLeft = t.scrollWidth; }, 0); };
 // テンキー（スマホのキーボードを使わないので、画面の下にずっと出ている）
 const KEYS = [['1', '2', '3', 'back'], ['4', '5', '6', 'del'], ['7', '8', '9', 'clr'], ['.', '0', '00', 'next']];
 const LABEL = { back: '↩ 1つ<br>もどる', del: '⌫', clr: 'ぜんぶ<br>消す', next: '次へ →' };
@@ -184,7 +182,7 @@ addEventListener('keydown', e => {
   else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); advance(); }
   else if (e.key === 'Backspace') del();
 });
-at = firstEmpty() || { i: -1, f: '' };
+go(firstEmpty() || { i: -1, f: '' });
 draw();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
