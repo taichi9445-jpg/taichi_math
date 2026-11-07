@@ -29,6 +29,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; padding: 0 16px 16px; }
   .item { display: flex; flex-direction: column; gap: 4px; padding: 14px; min-height: 96px; border: 1px solid #d0d7de; border-left: 3px solid #1f4e8c; border-radius: 6px; background: #fff; color: #1f2328; text-decoration: none; }
   .item:hover { background: #f1f6fc; }
+  .item.last { box-shadow: 0 0 0 3px #f2b54b; }
   .no { font-size: 12px; color: #5b6470; }
   .name { font-weight: 700; font-size: 17px; line-height: 1.6; }
   .desc { font-size: 14px; color: #5b6470; line-height: 1.7; }
@@ -135,6 +136,18 @@
     units.forEach(item => { state[item.dataset.unit] = item.open; });
     try { localStorage.setItem(key, JSON.stringify(state)); } catch (_) { /* 開閉は継続 */ }
   }));
+})();
+// 教材から一覧にもどったとき、さっきまでやっていた教材が画面のまん中に出るようにする
+(function () {
+  const key = 'taichi-math.last.math1';
+  document.querySelectorAll('a.item').forEach(a => a.addEventListener('click', () => { try { sessionStorage.setItem(key, a.getAttribute('href')); } catch (_) {} }));
+  let last = null;
+  try { last = sessionStorage.getItem(key); } catch (_) {}
+  const item = last && Array.from(document.querySelectorAll('a.item')).find(a => a.getAttribute('href') === last);
+  if (!item) return;
+  const unit = item.closest('details'); if (unit) unit.open = true;
+  item.classList.add('last');
+  requestAnimationFrame(() => item.scrollIntoView({ block: 'center' }));
 })();
 </script>
 </body>

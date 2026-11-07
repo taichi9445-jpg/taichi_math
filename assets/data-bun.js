@@ -20,10 +20,37 @@
   function f(v, d) { var r = Math.round(v * 1000) / 1000, s = d === undefined ? String(Math.abs(r)) : Math.abs(r).toFixed(d); return (r < 0 ? M : '') + s; }
   var list = function (a) { return a.map(function (v) { return f(v); }).join('　'); };
   // まちがいの数（本物とちがう、なるべく近い数）
+  var decs = function (v) { var s = f(v), i = s.indexOf('.'); return i < 0 ? 0 : s.length - i - 1; };
   function near(ans, cands, n) {
-    var o = [], seen = {}; seen[f(ans)] = 1;
-    cands.concat([ans + 1, ans - 1, ans + 2, ans - 2, ans + 0.5, ans + 3]).forEach(function (v) { var k = f(v); if (!seen[k] && o.length < (n || 3)) { seen[k] = 1; o.push(k); } });
+    var o = [], seen = {}, dmax = Math.max(1, decs(ans)); seen[f(ans)] = 1;
+    cands.concat([ans + 1, ans - 1, ans + 2, ans - 2, ans + 3, ans - 3, ans + 0.5]).forEach(function (v) { var k = f(v); if (!seen[k] && decs(v) <= dmax && o.length < (n || 3)) { seen[k] = 1; o.push(k); } });
     return o;
+  }
+  // データを横1列で（入らないときは小さくする）。多いときは per 個ずつの表
+  function line(a) { return '<div class="db-line fit1">' + a.map(function (v) { return '<span>' + f(v) + '</span>'; }).join('') + '</div>'; }
+  function grid(a, per) { return '<div class="db-grid" style="--c:' + per + '">' + a.map(function (v) { return '<span>' + f(v) + '</span>'; }).join('') + '</div>'; }
+  // 横に入らない式や行を、入る大きさまで小さくする
+  function fitAll(el) {
+    el.querySelectorAll('.fit1').forEach(function (e) {
+      e.style.fontSize = '';
+      var size = parseFloat(getComputedStyle(e).fontSize);
+      while (e.scrollWidth > e.clientWidth + 1 && size > 11) { size -= 1; e.style.fontSize = size + 'px'; }
+    });
+  }
+  // √n を簡単にした形（12 → 2√3）
+  function rootS(n) { for (var k = Math.floor(Math.sqrt(n)); k >= 1; k--) if (n % (k * k) === 0) { var r = n / (k * k); return r === 1 ? String(k) : (k > 1 ? k : '') + '√' + r; } return '√' + n; }
+  var gcd = function (a, b) { while (b) { var t = a % b; a = b; b = t; } return Math.abs(a); };
+  // 平方の和 ss を個数 n でわった分散と、その標準偏差。小数のときは分数の形も
+  function sdForms(ss, n) {
+    var v = ss / n;
+    if (ss % n === 0) return { v: f(v), s: rootS(v), vf: '', sf: '' };
+    var g = gcd(ss, n), a = ss / g, b = n / g, ra = rootS(a), rb = rootS(b), rr = rootS(a * b), m = rr.match(/^(\d*)√(\d+)$/);
+    var k = m ? (+m[1] || 1) : +rr, rad = m ? '√' + m[2] : '', g2 = gcd(k, b), k2 = k / g2, b2 = b / g2;
+    var rat = (k2 === 1 && rad ? '' : k2) + rad, last = b2 === 1 ? rat : '{' + rat + '|' + b2 + '}';
+    var steps = ['{√' + a + '|√' + b + '}'];
+    if (ra !== '√' + a || rb !== '√' + b) steps.push('{' + ra + '|' + rb + '}');
+    if (last !== steps[steps.length - 1]) steps.push(last);
+    return { v: f(v), s: '√' + f(v), vf: '{' + a + '|' + b + '}', sf: steps.join(' = ') };
   }
 
   // ---- 図 ----
@@ -41,13 +68,13 @@
   }
   // edges: 階級の境目、freq: 度数
   function histogram(edges, freq, unit) {
-    var W = 340, H = 220, L = 34, B = 40, T = 12, top = Math.max.apply(null, freq) + 1, n = edges.length - 1;
+    var W = 340, H = 236, L = 34, B = 40, T = 30, top = Math.max.apply(null, freq) + 1, n = edges.length - 1;
     var X = function (i) { return L + i / n * (W - L - 14); }, Y = function (v) { return H - B - v / top * (H - B - T); }, s = '';
     for (var v = 0; v <= top; v++) s += '<path d="M' + L + ' ' + Y(v) + 'H' + (W - 14) + '" stroke="#dbe2ea"/>' + txt(L - 6, Y(v) + 5, v, 'end', 13);
     freq.forEach(function (c, i) { s += '<rect x="' + X(i) + '" y="' + Y(c) + '" width="' + (X(1) - X(0)) + '" height="' + (Y(0) - Y(c)) + '" fill="' + BLUE + '" stroke="' + NAVY + '" stroke-width="1.5"/>'; });
     s += '<path d="M' + L + ' ' + Y(0) + 'H' + (W - 14) + 'M' + L + ' ' + Y(0) + 'V' + T + '" stroke="' + INK + '" stroke-width="1.3" fill="none"/>';
     edges.forEach(function (e, i) { s += txt(X(i), Y(0) + 17, e, 'middle', 13); });
-    s += txt(W - 14, H - 6, unit || '', 'end', 12) + txt(L - 6, T + 3, '(人)', 'end', 11);
+    s += txt(W - 14, H - 6, unit || '', 'end', 12) + txt(L, 14, '（人）', 'middle', 12);
     return '<svg class="sk-fig" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="ヒストグラム">' + s + '</svg>';
   }
   // five: [最小, Q1, Q2, Q3, 最大]
@@ -95,12 +122,13 @@
       var t = tasks[i], st = S[i], allDone = S.every(function (s) { return s.done; });
       el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + tasks.length + '</span></div>' +
         '<nav class="sk-tabs">' + tasks.map(function (_, k) { return '<button type="button" class="sk-tab' + (k === i ? ' cur' : '') + (S[k].done ? (S[k].miss ? ' ng' : ' ok') : '') + '" data-go="' + k + '">' + (k + 1) + '</button>'; }).join('') + '</nav>' +
-        '<div class="sk-q"><span class="ask">' + md(t.q) + '</span></div><div id="dbBody"></div><div class="db-say" id="dbSay"></div>' +
+        '<div class="sk-q"><span class="ask">' + [].concat(t.q).map(md).join('<br>') + '</span></div><div id="dbBody"></div><div class="db-say" id="dbSay"></div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-prev' + (i ? '' : ' disabled') + '>前の問題</button><button type="button" class="fs-btn' + (st.done ? ' primary' : '') + '" data-next>' + (allDone ? '結果を見る' : '次の問題') + '</button></div>';
       el.querySelector('[data-home]').onclick = o.home;
       el.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { i = +b.dataset.go; draw(); }; });
       el.querySelector('[data-prev]').onclick = function () { i--; draw(); window.scrollTo(0, 0); };
       el.querySelector('[data-next]').onclick = function () { if (allDone) finish(); else { i = (i + 1) % tasks.length; draw(); window.scrollTo(0, 0); } };
+      el.querySelector('.sk-q').insertAdjacentHTML('beforeend', t.sub || '');
       t.mount(el.querySelector('#dbBody'), {
         solved: st.done,
         miss: function () { st.miss++; },
@@ -109,6 +137,7 @@
           if (say) el.querySelector('#dbSay').innerHTML = '<div class="sk-ans"><b>正解</b>' + say + '</div>';
         }
       });
+      fitAll(el);
     }
     function finish() {
       var clean = S.filter(function (s) { return s.done && !s.miss; }).length, bad = [];
@@ -193,8 +222,8 @@
           return '<div class="db-hcol">' + cells + '</div>';
         }).join('');
         var y = ''; for (var h = top; h >= 1; h--) y += '<span>' + h + '</span>';
-        body.innerHTML = '<div class="db-hwrap"><div class="db-hy">' + y + '</div><div class="db-hist" style="--n:' + n + '">' + cols + '</div></div>' +
-          '<div class="db-hx" style="--n:' + n + '">' + edges.map(function (e) { return '<span>' + e + '</span>'; }).join('') + '</div><p class="db-note">' + (i < n ? '色のついた列の、度数の高さを押そう。' : '') + (unit ? '（横：' + unit + '、縦：人）' : '') + '</p>';
+        body.innerHTML = '<div class="db-hwrap"><div class="db-hy">' + y + '<span class="z">0</span></div><div class="db-hmain"><div class="db-hist" style="--n:' + n + '">' + cols + '</div>' +
+          '<div class="db-hx" style="--n:' + n + '">' + edges.map(function (e) { return '<span>' + e + '</span>'; }).join('') + '</div></div></div><p class="db-note">' + (i < n ? '色のついた列の、度数の高さを押そう。' : '') + (unit ? '（横：' + unit + '、縦：人）' : '') + '</p>';
         body.querySelectorAll('[data-c]').forEach(function (b) {
           b.onclick = function () { var h = +b.dataset.h, k = +b.dataset.c; if (h === freq[k]) { i++; while (i < n && freq[i] === 0) i++; draw(); if (i >= n) ctx.ok(); } else { ctx.miss(); draw([k, h]); } };
         });
@@ -223,8 +252,10 @@
             return '<' + (hd.h ? 'th' : 'td') + (hd.hl ? ' class="hl"' : '') + '>' + md(String(hd.t)) + '</' + (hd.h ? 'th' : 'td') + '>';
           }).join('') + '</tr>';
         }).join('') + '</table></div>';
+        var box = function (c) { return '<span class="fill db-box' + (c === cur ? ' now' : '') + (c.v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(c) + '">' + (c.v !== null ? md(c.v) : '') + '</span>'; };
         if (o.below) html += '<table class="db-t db-b">' + o.below.map(function (r) { return '<tr><th>' + md(r[0]) + '</th><td class="fill' + (r[1] === cur ? ' now' : '') + (r[1].v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(r[1]) + '">' + (r[1].v !== null ? md(r[1].v) : '') + '</td></tr>'; }).join('') + '</table>';
-        if (o.grids.length > 1) html += '<div class="sk-ctrl"><button type="button" class="fs-btn" data-flip>表の向きを変える</button></div>';
+        if (o.formula) html += '<div class="db-fx">' + (o.formulaHead ? '<p class="db-fh">公式　' + o.formulaHead + '</p>' : '') + '<p class="db-fl fit1">' + o.formula(box) + '</p></div>';
+        if (o.grids.length > 1) html = '<div class="sk-ctrl db-flip"><button type="button" class="fs-btn" data-flip>表の向きを変える</button></div>' + html;
         html += '<div class="db-cards">' + (cur ? cur.cards.map(function (v, k) { return '<button type="button" class="fs-card' + (bad === v ? ' db-bad' : '') + '" data-k="' + k + '">' + md(v) + '</button>'; }).join('') : '') + '</div>';
         if (cur && cur.hint) html = '<p class="db-note">' + md(cur.hint) + '</p>' + html;
         if (o.pre) html = o.pre + html;
@@ -233,14 +264,46 @@
         body.querySelectorAll('[data-k]').forEach(function (b) {
           b.onclick = function () {
             var v = cur.cards[+b.dataset.k];
-            if (v === cur.a) { cur.v = v; cur = firstOpen(); draw(); if (!cur) ctx.ok(o.say ? '<p>' + md(o.say) + '</p>' : ''); }
+            if (v === cur.a) { cur.v = v; cur = firstOpen(); draw(); if (!cur) ctx.ok(paras(o.say)); }
             else { ctx.miss(); draw(v); }
           };
         });
         var fl = body.querySelector('[data-flip]'); if (fl) fl.onclick = function () { g = (g + 1) % o.grids.length; draw(); };
       }
       draw();
-      if (ctx.solved) ctx.ok(o.say ? '<p>' + md(o.say) + '</p>' : '');
+      if (ctx.solved) ctx.ok(paras(o.say));
+    };
+  }
+  var paras = function (say) { return say ? [].concat(say).map(function (t) { return '<p>' + md(t) + '</p>'; }).join('') : ''; };
+
+  // ---- 順に選んで進む（値を1つずつ求めてから図を選ぶ、など） ----
+  // steps: [{ q, ans, wrong, memo?（できたら上に残す文）, hint? }]。o: { pre, say }
+  function chain(steps, o) {
+    return function (body, ctx) {
+      var k = ctx.solved ? steps.length : 0, tried = [], LBL = ['ア', 'イ', 'ウ', 'エ'];
+      steps.forEach(function (s) { s.ch = s.ch || shuffle([s.ans].concat(s.wrong.slice(0, 3))); });
+      function draw() {
+        var memo = steps.slice(0, k).filter(function (s) { return s.memo; }).map(function (s) { return '<li' + (s.memoHTML ? ' class="fig"' : '') + '>' + (s.memoHTML || md(s.memo)) + '</li>'; }).join('');
+        var h = (o.pre || '') + (memo ? '<ol class="db-memo">' + memo + '</ol>' : '');
+        if (k < steps.length) {
+          var s = steps[k], fig = /^<svg/.test(s.ans), long = !fig && s.ch.some(function (v) { return /[぀-ヿ一-鿿]/.test(v) && v.length > 9; });
+          h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(s.q) + '</p><div class="sk-opts' + (fig ? ' figs stack' : long ? ' stack wrap' : '') + '">' + s.ch.map(function (v, j) {
+            var bad = tried.indexOf(v) >= 0;
+            return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + '" data-k="' + j + '"' + (bad ? ' disabled' : '') + '><small>' + LBL[j] + '</small><span>' + (fig ? v : md(v)) + '</span></button>';
+          }).join('') + '</div>' + (tried.length && s.hint ? '<p class="db-note">' + md(s.hint) + '</p>' : '');
+        }
+        body.innerHTML = h;
+        body.querySelectorAll('[data-k]').forEach(function (b) {
+          b.onclick = function () {
+            var s = steps[k], v = s.ch[+b.dataset.k];
+            if (v === s.ans) { k++; tried = []; draw(); if (k === steps.length) ctx.ok(paras(o.say)); }
+            else { tried.push(v); ctx.miss(); draw(); }
+          };
+        });
+        fitAll(body);
+      }
+      draw();
+      if (ctx.solved) ctx.ok(paras(o.say));
     };
   }
   var hd = function (t, hl) { return { t: t, h: true, hl: hl }; };
@@ -259,5 +322,6 @@
 
   global.DB = { md: md, sum: sum, mean: mean, sorted: sorted, median: median, halves: halves, quartiles: quartiles, modes: modes, f: f, list: list, near: near,
     dotPlot: dotPlot, histogram: histogram, boxPlot: boxPlot, scatter: scatter, cloudNear: cloudNear, corr: corr,
+    line: line, grid: grid, fitAll: fitAll, rootS: rootS, sdForms: sdForms, chain: chain, paras: paras,
     run: run, sortTask: sortTask, thenPick: thenPick, dotTask: dotTask, histTask: histTask, cell: cell, tableTask: tableTask, hd: hd, termQuiz: termQuiz };
 })(window);

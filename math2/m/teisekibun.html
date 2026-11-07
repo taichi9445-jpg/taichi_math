@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>定積分の練習</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261109">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261109">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261110">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261110">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,13 +11,13 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>定積分の練習</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261109"></script>
-<script src="../../assets/sekibun.js?v=20261109"></script>
+<script src="../../assets/fill-steps.js?v=20261110"></script>
+<script src="../../assets/sekibun.js?v=20261110"></script>
 <script>
 const md = s => FillSteps.md(s), { num, parse, polyS, sub, add, neg, R, lim, evalRows, cleanCards, nearValues, times } = Sek;
 // 1. 定積分の計算
 const CALC = [{ f: '2x', a: 0, b: 1 }, { f: 'x²', a: 0, b: 3 }, { f: '3', a: 1, b: 4 }, { f: 'x+1', a: 0, b: 2 }, { f: '2x+3', a: 1, b: 2 }, { f: 'x²+1', a: 1, b: 2 }, { f: '3x²+2x', a: 0, b: 2 }, { f: 'x-2', a: 0, b: 1 }, { f: 'x²', a: -1, b: 1 }, { f: '2x²+1', a: -1, b: 1 }];
-const POOL = ["x;0;1","2x;0;1","1;0;2","x;0;2","3x²;0;1","4x³;0;1","x+1;0;1","2;0;2","x²;0;1","2x+1;0;1","x;1;2","1;1;3","2x;1;2","3;1;2","x;1;3","x+1;1;2","x²;1;2","2x+3;1;2","x²+1;1;2","x+2;1;3","x²;-1;1","1;-1;1","x;-1;1","x³;-1;1","x²;-2;2","x²+1;-1;1","2x²;-1;1","x²+2;-1;1","3x²;-1;1","x⁴;-1;1","4;-1;2","x²;-1;2","x²+3;-1;1","2x²+1;-1;1","5x⁴;-1;1","x³+x²;0;1","x²+2x+1;0;2","2x³+3x²;0;1","x²+1;1;3","3x²+2x;0;2","x⁴+x²;0;1","x²+x+1;1;2","x³+2x;0;2","x²+4;0;2","x³+x;-1;1","x⁴+1;-1;1","3x²+4x+1;0;1","x³+3x²+2x;0;1","2x-3;0;1","x-2;0;1","x²-4x+3;1;3","x-1;0;1","x²-2x;0;2","2x;1;3"]
+const POOL = ["x;0;1","2x;0;1","1;0;2","x;0;2","3x²;0;1","4x³;0;1","x+1;0;1","2;0;2","x²;0;1","2x+1;0;1","x;1;2","1;1;3","2x;1;2","3;1;2","x;1;3","x+1;1;2","x²;1;2","2x+3;1;2","x²+1;1;2","x+2;1;3","x²;-1;1","1;-1;1","x;-1;1","x³;-1;1","x²;-2;2","x²+1;-1;1","2x²;-1;1","x²+2;-1;1","3x²;-1;1","x⁴;-1;1","4;-1;2","x²;-1;2","x²+3;-1;1","2x²+1;-1;1","5x⁴;-1;1","x³+x²;0;1","x²+2x+1;0;2","2x³+3x²;0;1","x²+1;1;3","3x²+2x;0;2","x⁴+x²;0;1","x²+2x+1;1;2","x³+2x;0;2","x²+4;0;2","x³+x;-1;1","x⁴+1;-1;1","3x²+4x+1;0;1","x³+3x²+2x;0;1","2x-3;0;1","x-2;0;1","x²-4x+3;1;3","x-1;0;1","x²-2x;0;2","2x;1;3"]
   .map(s => { const [f, a, b] = s.split(';'); return { f, a: +a, b: +b }; });
 const level = q => { const n = parse(q.f).length; return q.a < 0 || n >= 3 ? 4 : n === 2 ? 3 : q.a === 0 ? 1 : 2; };
 // 2. 展開して定積分
@@ -38,7 +38,7 @@ function sameEnds() {
 }
 function joinRange(f, a, c, b) {
   const ts = parse(f), e = evalRows(ts, a, b, '= '), I = (x, y) => '∫' + lim(y, x) + ' ' + Sek.paren(ts) + ' dx';
-  return { big: I(a, c) + ' + ' + I(c, b), q: '定積分を求めよ。', ans: num(e.ans), value: e.ans,
+  return { big: I(a, c) + ' + ' + I(c, b), q: '定積分を求めよ。', ans: num(e.ans), value: e.ans, bad3: e.bad3,
     rows: ['#積分する区間をつなぐ', { t: '= ∫{[' + num([b, 1]) + ']|[' + num([a, 1]) + ']} ' + Sek.paren(ts) + ' dx', h: num([a, 1]) + ' から ' + num([c, 1]) + ' と ' + num([c, 1]) + ' から ' + num([b, 1]) + ' をつなごう。' }, ...e.rows],
     cards: cleanCards([num([b, 1]), num([a, 1]), [num([c, 1]), '区間をつなぐと、はしの2つが残ります。'], ...e.cards]), wrong: nearValues(e.ans, [add(e.ans, [1, 1]), e.Fb, sub(e.ans, [2, 1])]) };
 }
@@ -46,7 +46,7 @@ function sumSame(op, f, g, a, b) {
   const F = parse(f), G = parse(g), ts = op === '+' ? Sek.plus(F, G) : Sek.minus(F, G), e = evalRows(ts, a, b, '= ');
   const A = '∫' + lim(b, a) + ' ' + Sek.paren(F) + ' dx', B = '∫' + lim(b, a) + ' ' + Sek.paren(G) + ' dx', w = ts.length > 1 ? '(' + Sek.join(ts.map(t => ({ s: '[' + Sek.mono(t.r, t.p) + ']', neg: t.r[0] < 0 }))) + ')' : (ts[0].r[0] < 0 ? '−' : '') + '[' + Sek.mono(ts[0].r, ts[0].p) + ']';
   const dm = ts.map(t => [[Sek.mono(Sek.mul(t.r, [2, 1]), t.p), '同類項をもう一度まとめよう。'], [Sek.mono(t.r, t.p ? t.p + 1 : 1), '指数は変わりません。']]);
-  return { big: A + ' ' + (op === '+' ? '+' : '−') + ' ' + B, q: '定積分を求めよ。', ans: num(e.ans), value: e.ans,
+  return { big: A + ' ' + (op === '+' ? '+' : '−') + ' ' + B, q: '定積分を求めよ。', ans: num(e.ans), value: e.ans, bad3: e.bad3,
     rows: ['#区間が同じなので、1 つの定積分にまとめる', { t: '= ∫' + lim(b, a) + ' ' + w + ' dx', h: 'かっこをはずして、同類項をまとめよう。', pb: dm.map(d => d.map(x => x[0])) }, ...e.rows],
     cards: cleanCards([...ts.map(t => Sek.mono(t.r, t.p)), ...dm.flat(), ...e.cards]), wrong: nearValues(e.ans, [add(e.ans, [1, 1]), neg(e.ans)]) };
 }
@@ -68,7 +68,9 @@ function randUp() {
   return Sek.pick([() => sixth(facs(al, be), al, be), () => sixth(facs(al, be), al, be), () => joinRange(`${2 * k}x`, a, c, b), () => joinRange(`${3 * k}x²`, a, c, b), () => reversed(`${2 * k}x`, b, a), () => sumSame('+', `x²+${k}x`, `x²-${k}x`, a, b)])();
 }
 const r = Sek.rint, s = () => Sek.pick(['+', '-']);
-const randCalc = () => { const a = r(-2, 1), b = a + r(1, 3), k = r(1, 4), m = r(1, 5); return Sek.pick([{ f: `${3 * k}x²${s()}${2 * m}x`, a, b }, { f: `${2 * k}x${s()}${m}`, a, b }, { f: `${3 * k}x²${s()}${m}`, a, b }, { f: `${4 * k}x³${s()}${2 * m}x`, a, b }, { f: `x²${s()}${r(1, 4)}x`, a, b }]); };
+// 分母が 3 種類（{1|3}・{1|2}・整数）になる問題は出さない
+const randCalc = () => { for (let i = 0; i < 60; i++) { const q = randCalc0(); if (!Sek.definite(q).bad3) return q; } return CALC[5]; };
+const randCalc0 = () => { const a = r(-2, 1), b = a + r(1, 3), k = r(1, 4), m = r(1, 5); return Sek.pick([{ f: `${3 * k}x²${s()}${2 * m}x`, a, b }, { f: `${2 * k}x${s()}${m}`, a, b }, { f: `${3 * k}x²${s()}${m}`, a, b }, { f: `${4 * k}x³${s()}${2 * m}x`, a, b }, { f: `x²${s()}${r(1, 4)}x`, a, b }]); };
 const randExpand = () => Sek.pick(EXPOOL);
 const asQ = q => { const p = q.rows ? q : Sek.definite(q); return { big: p.big, q: p.q, ans: p.ans, wrong: p.wrong, p }; };
 const levelOrder = quota => quota.flatMap((n, i) => Sek.shuffle(POOL.filter(q => level(q) === i + 1)).slice(0, n)).map(asQ);

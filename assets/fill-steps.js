@@ -29,6 +29,8 @@
    行に note: '式', noteAfter: 行番号 をつけると、その行が出たときに、この行の横に（式）を出す。
    行に cg: '名前' をつけると、同じ名前の行はスマホのカードの並びを同じにする（行の中でもカードの場所は変わらない）。
    ⏎ は、式が横に入らないときだけ改行してよい場所。∫{上端|下端} 定積分の記号、⟦式⟧{上端|下端} 定積分の [ ]。² のほか ³⁴… や ′ も書ける。カードの値に {分子|分母} を使ってよい。
+   ⦃…⦄ は中かっこ { }（かっこの外側のかっこ）。
+   行に alt: [[空欄の答え…], …] をつけると、その行の空欄はその組でも正解（分数どうしでまとめる計算など）。
    行に sk: 1 をつけると、その行の空欄に次の行の答えを入れても正解にする（とばした行は自動でうめる）。
    p.eqs = { 空欄番号: { 値: つながる空欄番号 } } … 約分した値を先に入れてもよい空欄（次の行の同じ項も一緒にうまる）。
    p.big に式を入れると、問題の箱に大きく出す（p.q はその下の小さい文）。review:true で最後に「間違えた問題」の一覧を出す。
@@ -47,7 +49,7 @@
 
   // √ は小さな SVG で描く（記号の右上から横線が切れ目なく中の数字にかぶさる）。中の数字は係数と同じ STIX。
   function radicalSVG(d) {
-    var w = 16 + String(d).length * 11;
+    var w = 16 + String(d).replace('.', '').length * 11 + (String(d).indexOf('.') >= 0 ? 5 : 0);
     return '<svg class="fs-root" width="' + (w / 20) + 'em" height="1.3em" viewBox="0 0 ' + w + ' 26" aria-label="√' + d + '">' +
       '<path d="M1 15 L4 13 L7.5 22.5 L13 3 H' + (w - 0.5) + '" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>' +
       '<text x="14.5" y="21" font-size="20" font-family="STIX Two Text, serif" fill="currentColor">' + d + '</text></svg>';
@@ -56,7 +58,7 @@
   // 数式の部分：sin・cos・tan は立体、A や x などの文字は斜体、² は右上の小さい 2
   function mathRun(s) {
     var h = '';
-    s.replace(/(\d*)√(\d+)|(sin|cos|tan)|([²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻]+)|([A-Za-zθαβ])|(√)|(′)|([^A-Za-zθαβ²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻√′]+?(?=\d*√|√|′|sin|cos|tan|[²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻]|[A-Za-zθαβ]|$))/g,
+    s.replace(/(\d*)√(\d+(?:\.\d+)?)|(sin|cos|tan)|([²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻]+)|([A-Za-zθαβ])|(√)|(′)|([^A-Za-zθαβ²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻√′]+?(?=\d*√|√|′|sin|cos|tan|[²³⁴⁵⁶⁷⁸⁹⁰¹ⁿ⁺⁻]|[A-Za-zθαβ]|$))/g,
       function (m, c, d, fn, sq, letter, root, prime) {
         if (d !== undefined) h += '<span class="fs-rt">' + (c || '') + radicalSVG(d) + '</span>';
         else if (fn) h += '<span class="fs-fn">' + fn + '</span>';
@@ -94,8 +96,8 @@
     var out = [], depth = 0, last = 0;
     for (var i = 0; i < s.length; i++) {
       var ch = s[i];
-      if (ch === '{' || ch === '[' || ch === '⦅' || ch === '«' || ch === '⟦') depth++;
-      else if (ch === '}' || ch === ']' || ch === '⦆' || ch === '»' || ch === '⟧') depth--;
+      if (ch === '{' || ch === '[' || ch === '⦅' || ch === '«' || ch === '⟦' || ch === '⦃') depth++;
+      else if (ch === '}' || ch === ']' || ch === '⦆' || ch === '»' || ch === '⟧' || ch === '⦄') depth--;
       else if (depth === 0 && s.substr(i, sep.length) === sep) { out.push(s.slice(last, i)); last = i + sep.length; i += sep.length - 1; }
     }
     out.push(s.slice(last));
@@ -149,6 +151,12 @@
         i = j + 1;
         if (s[i] === '²') { sup = '<sup>2</sup>'; i++; }
         out += '<span class="fs-pg"><span class="fs-bp">(</span>' + inner + '<span class="fs-bp">)</span>' + sup + '</span>';
+      } else if (ch === '⦃') {
+        // 中かっこ（かっこの外側のかっこ）。中に分数があれば大きく
+        flush(); j = closing(s, i, '⦃', '⦄');
+        var cin = parse(s.slice(i + 1, j), ctx), tall = /fs-fr|fs-pg|frac/.test(cin);
+        i = j + 1;
+        out += '<span class="fs-pg"><span class="fs-cb' + (tall ? ' tall' : '') + '">{</span>' + cin + '<span class="fs-cb' + (tall ? ' tall' : '') + '">}</span></span>';
       } else { buf += ch; i++; }
     }
     flush();
@@ -233,8 +241,17 @@
     function rowDone(p, st, ri) { return p.rows[ri].blanks.every(function (b) { return st.fill[b] !== undefined; }); }
 
     // その空欄に、そのカードを入れてよいか（@ のついた空欄は、同じ組の中で入れかえてよい）
+    // その行の答えの組（alt のある行は、入れたカードに合う組）
+    function rowSets(p, ri) { var row = p.rows[ri], base = row.blanks.map(function (k) { return p.blanks[k].a; }); return [base].concat(row.alt || []); }
+    function rowSet(p, st, ri) {
+      var row = p.rows[ri];
+      return rowSets(p, ri).filter(function (set) { return row.blanks.every(function (k, n) { return st.fill[k] === undefined || st.fill[k] === set[n]; }); })[0] || rowSets(p, ri)[0];
+    }
     function accepts(p, st, i, v) {
-      var b = p.blanks[i];
+      var b = p.blanks[i], arow = p.rows[b.row];
+      if (arow.alt && !b.g) return rowSets(p, b.row).some(function (set) {
+        return arow.blanks.every(function (k, n) { return k === i ? set[n] === v : st.fill[k] === undefined || st.fill[k] === set[n]; });
+      });
       if (!b.g && p.alts) {
         return [p.blanks.map(function (x) { return x.a; })].concat(p.alts).some(function (set) {
           if (set[i] !== v) return false;
@@ -284,6 +301,8 @@
         if (b.jump) add(p.blanks[b.jump[b.jump.length - 1]].a);
         if (p.eqs && p.eqs[bi]) Object.keys(p.eqs[bi]).forEach(function (v) { add(v); });
         if (o.roleCards) (p.alts || []).forEach(function (set) { add(set[bi]); });
+        var brow = p.rows[b.row];
+        (brow.alt || []).forEach(function (set) { add(set[brow.blanks.indexOf(bi)]); });
       });
       if (miss) return (p.fewSets[key] = null);
       if (row.pb) pref = per ? row.pb[row.blanks.indexOf(i)] || [] : [].concat.apply([], row.pb);
@@ -430,7 +449,8 @@
         st.says[p.blanks[i].row] = '（' + v + ' でも正解。ここは公式どおり ' + soft.a + ' と書いて、値はあとの行で入れよう）';
         render(); follow();
       } else if (jump !== null) {
-        p.blanks.forEach(function (x) { if (x.i <= jump && st.fill[x.i] === undefined) st.fill[x.i] = x.a; });
+        var jsets = {};
+        p.blanks.forEach(function (x) { if (x.i <= jump && st.fill[x.i] === undefined) { var rs = jsets[x.row] || (jsets[x.row] = rowSet(p, st, x.row)); st.fill[x.i] = rs[p.rows[x.row].blanks.indexOf(x.i)]; } });
         msg = ''; st.active = null;
         st.says[p.blanks[jump].row] = '（途中をとばしても正解。とばした行も見ておこう）';
         if (firstEmpty(p, st) === null) st.done = true;
@@ -466,7 +486,7 @@
         b.onclick = function () {
           var a = b.dataset.act;
           if (a === 'hint') { hintOpen = !hintOpen; hintRow = st.active === null ? -1 : p.blanks[st.active].row; render(); if (hintOpen) follow('.fs-hint'); }
-          else if (a === 'show') { p.blanks.forEach(function (x) { st.fill[x.i] = x.a; }); st.shown = true; msg = ''; render(); }
+          else if (a === 'show') { var sets = {}; p.blanks.forEach(function (x) { if (st.fill[x.i] === undefined) { var rs = sets[x.row] || (sets[x.row] = rowSet(p, st, x.row)); st.fill[x.i] = rs[p.rows[x.row].blanks.indexOf(x.i)]; } }); st.shown = true; msg = ''; render(); }
           else if (a === 'reset') { S[cur] = fresh(); msg = ''; hintOpen = false; render(); window.scrollTo(0, 0); }
           else if (a === 'prev') go(cur - 1);
           else if (a === 'next') { if (cur === P.length - 1) { finalView = true; render(); window.scrollTo(0, 0); } else go(cur + 1); }

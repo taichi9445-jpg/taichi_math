@@ -80,3 +80,8 @@ a.port-back{display:block;text-decoration:none}
 .sk-opts.figs .sk-opt{padding:4px;min-height:0}
 .sk-opts.figs .sk-opt>span{display:block;width:100%;white-space:normal}
 .sk-opts.figs .sk-fig{margin:0}
+.sk-opts.wrap .sk-opt{justify-content:flex-start;min-height:58px;padding:20px 12px 8px}
+.sk-opts.wrap .sk-opt>span{white-space:normal;text-align:left;font-size:17px;line-height:1.5}
+.sk-opts.figs .sk-opt{padding-top:20px}
+.sk-menu.plain .sk-card{min-height:76px;padding:12px 8px}
+.sk-menu.plain .sk-card b{font-size:17px}

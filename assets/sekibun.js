@@ -214,7 +214,7 @@
     var cards = F.map(function (t) { return mono(t.r, t.p); });
     dums.forEach(function (d) { cards = cards.concat(d); });
     var br = ' ⏎ ', zero = termVals(F, a).every(function (v) { return v[0] === 0; });
-    var P = function (s, big) { return (big ? '⦅' : '(') + s + (big ? '⦆' : ')'); };
+    var P = function (s, big) { return /\(/.test(s) ? '⦃' + s + '⦄' : (big ? '⦅' : '(') + s + (big ? '⦆' : ')'); };
     if (detail) {
       var coef = F.some(function (t) { return t.r[1] !== 1; });
       rows.push({ t: '= ' + P(subst(F, b), coef) + br + '− ' + P(subst(F, a), coef), h: '[ ] の式の x に、上端を代入した式から、下端を代入した式をひきます。' });
@@ -229,12 +229,34 @@
       cards = cards.concat(abs);
       all.forEach(function (v) { var w = [Math.abs(v[0]), v[1]]; [add(w, [1, 1]), add(w, [2, 1])].forEach(function (d) { cards.push([num(d), 'もう一度計算しよう。']); }); });
     }
-    rows.push({ t: '= [' + num(Fb) + '] − ' + (zero ? '0' : '[' + num(Fa, true) + ']'), h: 'かっこの中を計算します。', sk: 1 });
+    var g = zero ? null : groups(termVals(F, b), termVals(F, a));
+    if (!g || !g.alt) rows.push({ t: '= [' + num(Fb) + '] − ' + (zero ? '0' : '[' + num(Fa, true) + ']'), h: 'かっこの中を計算します。', sk: 1 });
+    else {
+      var X = num(g.A), Y = num([Math.abs(g.B[0]), g.B[1]]), plusB = g.B[0] > 0;
+      var why = g.ints ? '分数どうし、整数どうしをまとめて計算してもかまいません（分数を先に書きます）。' : '分母が同じ数どうしをまとめて計算してもかまいません。';
+      if (plusB) {
+        rows.push({ t: '= [' + num(Fb) + '] [−] [' + num(Fa, true) + ']', h: 'かっこの中を計算します。' + why + 'そのときは、真ん中の符号に気をつけよう。', sk: 1, alt: [[X, '+', Y]] });
+        cards.push('+', '−');
+      } else rows.push({ t: '= [' + num(Fb) + '] − [' + num(Fa, true) + ']', h: 'かっこの中を計算します。' + why, sk: 1, alt: [[X, Y]] });
+      cards.push(X, Y, [num(neg(g.A)), '符号を確かめよう。']);
+    }
     rows.push({ t: '= [' + num(ans) + ']', h: 'ひき算をします。負の数をひくときは、たし算になります。' });
     cards.push(num(Fb), num(Fa, true), num(ans));
     cards.push([num(add(Fb, [1, 1])), 'もう一度計算しよう。'], [num(neg(Fa), true), '符号を確かめよう。'],
       [num(add(Fb, Fa)), '上端の値から、下端の値をひきます。'], [num(sub(Fa, Fb)), '上端の値 − 下端の値 の順です。']);
-    return { rows: rows, cards: cards, ans: ans, Fa: Fa, Fb: Fb };
+    return { rows: rows, cards: cards, ans: ans, Fa: Fa, Fb: Fb, bad3: !!(g && g.bad) };
+  }
+  // 代入した項の値を、分母ごとにまとめる。分母が 3 種類（例：{1|3}・{1|2}・整数）になる問題は出さない（bad）
+  //   2 種類なら、A（分数／先に出てくる分母）と B（もう一方）の「上端 − 下端」を別解にする
+  function groups(vb, va) {
+    if (vb.every(function (v) { return v[0] === 0; })) return null;
+    var ds = [];
+    vb.concat(va).forEach(function (v) { if (ds.indexOf(v[1]) < 0) ds.push(v[1]); });
+    if (ds.length >= 3) return { bad: true };
+    if (ds.length < 2) return null;
+    var d1 = ds[0] === 1 ? ds[1] : ds[0];
+    var part = function (d, list) { return list.filter(function (v) { return (v[1] === d1) === d; }).reduce(add, [0, 1]); };
+    return { alt: true, ints: ds.indexOf(1) >= 0, A: sub(part(true, vb), part(true, va)), B: sub(part(false, vb), part(false, va)) };
   }
   function nearValues(ans, list) {
     var o = list.slice(), k = 1;
@@ -252,7 +274,7 @@
     }
     var e = evalRows(ts, q.a, q.b, '= ', detail);
     rows = rows.concat(e.rows); cards = cards.concat(e.cards);
-    return { big: head, q: '定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: num(e.ans), group: q.group, value: e.ans,
+    return { big: head, q: '定積分を求めよ。', rows: rows, cards: cleanCards(cards), ans: num(e.ans), group: q.group, value: e.ans, bad3: e.bad3,
       wrong: nearValues(e.ans, [add(e.Fb, e.Fa), sub(e.Fa, e.Fb), e.Fb, at(ts, [q.b, 1]), sub(at(ts, [q.b, 1]), at(ts, [q.a, 1]))]) };
   }
 
@@ -348,8 +370,9 @@
 
   // ---- メニュー ----
   function menu(el, cards, lead, back) {
-    el.innerHTML = (back ? '<button type="button" class="fs-btn zm-back sk-mback" data-back>← もどる</button>' : '') + (lead ? '<p class="sk-lead">' + lead + '</p>' : '') + '<div class="sk-menu n' + cards.length + '">' + cards.map(function (c, i) {
-      return '<button type="button" class="sk-card c' + ((c.c === undefined ? i : c.c) % 6) + '" data-i="' + i + '"><span class="ic">' + c.icon + '</span><b>' + c.name + '</b><small>' + c.sub + '</small></button>';
+    var plain = cards.every(function (c) { return !c.icon; });
+    el.innerHTML = (back ? '<button type="button" class="fs-btn zm-back sk-mback" data-back>← もどる</button>' : '') + (lead ? '<p class="sk-lead">' + lead + '</p>' : '') + '<div class="sk-menu n' + cards.length + (plain ? ' plain' : '') + '">' + cards.map(function (c, i) {
+      return '<button type="button" class="sk-card c' + ((c.c === undefined ? i : c.c) % 6) + '" data-i="' + i + '">' + (c.icon ? '<span class="ic">' + c.icon + '</span>' : '') + '<b>' + c.name + '</b>' + (c.sub ? '<small>' + c.sub + '</small>' : '') + '</button>';
     }).join('') + '</div>';
     el.querySelectorAll('.sk-card').forEach(function (b) { b.onclick = function () { cards[+b.dataset.i].go(); }; });
     var bk = el.querySelector('[data-back]'); if (bk) bk.onclick = back;
@@ -422,7 +445,7 @@
     function tick() { var e = el.querySelector('#skTime'); if (e) e.textContent = fmt(performance.now() - t0); }
     function nextOpen() { for (var k = 1; k <= list.length; k++) { var c = (i + k) % list.length; if (!S[c].done) return c; } return -1; }
     function fit() {
-      el.querySelectorAll('.big-formula,.sk-opt>span').forEach(function (e) {
+      el.querySelectorAll('.big-formula,.sk-opts:not(.wrap) .sk-opt>span,.fit1').forEach(function (e) {
         if (e.querySelector('svg.sk-fig')) return;
         e.style.fontSize = '';
         var size = parseFloat(getComputedStyle(e).fontSize);
@@ -441,13 +464,14 @@
         hints = '<div class="sk-hints">' + rows.slice(0, st.hint).map(function (r, k) { return '<div class="sk-hint"><b>考え方' + (k + 1) + '</b>' + (r.h ? '<div class="say">' + md(r.h) + '</div>' : '') + '<p>' + md((r.t || r).replace(/^!/, '')) + '</p></div>'; }).join('') + '</div>' +
           (st.done ? '' : '<div class="sk-ctrl"><button type="button" class="fs-btn" data-hint' + (st.hint >= rows.length ? ' disabled' : '') + '>' + (st.hint ? '次のヒント' : 'ヒント') + '</button></div>');
       }
-      var stack = q.stack || st.ch.some(function (v) { return !/^<svg/.test(v) && v.length > 24; });
-      var ans = q.say ? '<p>' + md(q.say) + '</p>' + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : q.p ? workOf(q.p) : '<p>' + show(q.ans) + '</p>';
+      var jpLong = st.ch.some(function (v) { return !/^<svg/.test(v) && /[぀-ヿ一-鿿]/.test(v) && v.replace(/[{}|]/g, '').length > 9; });
+      var stack = q.stack || jpLong || st.ch.some(function (v) { return !/^<svg/.test(v) && v.length > 24; });
+      var ans = q.say ? [].concat(q.say).map(function (t) { return '<p>' + md(t) + '</p>'; }).join('') + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : q.p ? workOf(q.p) : '<p>' + show(q.ans) + '</p>';
       var allDone = doneN() >= list.length;
       el.innerHTML = '<div class="sk-top"><button type="button" class="fs-btn zm-back" data-home>メニューへ</button><span class="sk-count">' + o.name + '　' + (i + 1) + ' / ' + list.length + '</span>' + (o.timed ? '<span class="sk-time" id="skTime">' + fmt(performance.now() - t0) + '</span>' : '') + '</div>' +
         '<div class="sk-bar"><span style="width:' + (doneN() / list.length * 100) + '%"></span></div>' + tabs +
-        '<div class="sk-body' + (q.fig && !hideNow ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? (hideNow ? '<div class="sk-ctrl"><button type="button" class="fs-btn" data-see>図を見る</button></div>' : '<div class="sk-figbox">' + q.fig + '</div>') : '') + '</div>' +
-        '<div class="sk-right"><div class="sk-opts' + (q.figOpts ? ' figs' : '') + (stack ? ' stack' : '') + '">' + st.ch.map(function (v, k) {
+        '<div class="sk-body' + (q.fig && !hideNow ? ' has-fig' : '') + '"><div class="sk-left"><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + [].concat(q.q).map(md).join('<br>') + '</span>' + (q.sub || '') + '</div>' + (q.fig ? (hideNow ? '<div class="sk-ctrl"><button type="button" class="fs-btn" data-see>図を見る</button></div>' : '<div class="sk-figbox">' + q.fig + '</div>') : '') + '</div>' +
+        '<div class="sk-right"><div class="sk-opts' + (q.figOpts ? ' figs' : '') + (stack ? ' stack' : '') + (jpLong ? ' wrap' : '') + '">' + st.ch.map(function (v, k) {
           var bad = st.tried.indexOf(v) >= 0, good = st.done && v === q.ans;
           return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + '" data-k="' + k + '"' + (bad || st.done ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + show(v) + '</span></button>';
         }).join('') + '</div>' + hints +
@@ -486,8 +510,8 @@
         (bad.length ? '<p><button type="button" class="fs-btn primary" data-rev>間違えた問題を確認する（' + bad.length + '問）</button></p>' : '<p>間違えた問題はありません</p>') +
         '<div id="skRev" hidden>' + bad.map(function (k) {
           var q = list[k];
-          return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + md(q.q) + '</span></div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
-            (q.figOpts ? '' : '<p>選んだ答え：' + S[k].tried.map(show).join('、') + '</p><p>正しい答え：' + show(q.ans) + '</p>') + (q.say ? '<p>' + md(q.say) + '</p>' + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : '') + (q.p ? workOf(q.p) : '') + '</div>';
+          return '<div class="sk-item"><h3>問題 ' + (k + 1) + '</h3><div class="sk-q">' + (q.big ? '<span class="big-formula">' + md(q.big) + '</span>' : '') + '<span class="ask">' + [].concat(q.q).map(md).join('<br>') + '</span>' + (q.sub || '') + '</div>' + (q.fig ? '<div class="sk-figbox">' + q.fig + '</div>' : '') +
+            (q.figOpts ? '' : '<p>選んだ答え：' + S[k].tried.map(show).join('、') + '</p><p>正しい答え：' + show(q.ans) + '</p>') + (q.say ? [].concat(q.say).map(function (t) { return '<p>' + md(t) + '</p>'; }).join('') + (q.ansFig ? '<div class="sk-figbox">' + q.ansFig + '</div>' : '') : '') + (q.p ? workOf(q.p) : '') + '</div>';
         }).join('') + '</div>' +
         '<div class="fs-nav"><button type="button" class="fs-btn" data-home>メニューへ</button><button type="button" class="fs-btn" data-again>もう一度</button></div></section>';
       el.querySelector('[data-home]').onclick = o.home;

@@ -168,3 +168,5 @@ body{margin:0;padding:8px 10px 0;background:#f5f7fa;color:#1f2328;font:17px/1.7 
 .fs-lim .fs-blank{min-width:1.9em;min-height:1.5em;font-size:1.2em;margin:1px 0}
 .fs-ev{display:inline-flex;align-items:center;vertical-align:middle}
 .fs-evb{font-family:'STIX Two Text',serif;font-size:1.7em;line-height:1;font-weight:300}
+.fs-cb{font-family:'STIX Two Text',serif;font-size:1.25em;line-height:1;font-weight:300;padding:0 .04em}
+.fs-cb.tall{font-size:2.1em;transform:scaleX(.8)}

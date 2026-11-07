@@ -24,18 +24,19 @@
 .db-col:active .st{background:#eef4fb}
 .db-col.ng .st{background:#fdeaea}
 /* ヒストグラム */
-.db-hwrap{display:flex;gap:4px;max-width:420px;margin:8px auto 0}
+.db-hwrap{display:flex;gap:4px;max-width:420px;margin:8px auto 0;padding:12px 20px 0 0}
+.db-hmain{flex:1;min-width:0}
 .db-hy{display:flex;flex-direction:column;font-size:13px;color:#5b6470;text-align:right}
 .db-hy span{height:30px;line-height:30px;transform:translateY(-15px)}
+.db-hy span.z{height:0}
 .db-hist{flex:1;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));border-left:2px solid #1f2328;border-bottom:2px solid #1f2328}
 .db-hcol{display:flex;flex-direction:column}
 .db-hc{height:30px;padding:0;border:0;border-top:1px solid #dbe2ea;border-right:1px solid #eef1f4;background:#fff}
 .db-hc.now{background:#fff6e6}
-.db-hc.on{background:#c7daf0;border-color:#1f4e8c}
+.db-hc.on{position:relative;z-index:1;background:#c7daf0;outline:1.5px solid #1f4e8c;outline-offset:-1px}
 .db-hc.ng{background:#fdeaea}
-.db-hx{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr)) 0;max-width:420px;margin:2px auto 0;padding-left:24px;font-size:13px}
-.db-hx span{transform:translateX(-50%);text-align:center;white-space:nowrap}
-.db-hx span:first-child{justify-self:start}
+.db-hx{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr)) 0;margin:3px 0 0;font-size:13px}
+.db-hx span{justify-self:start;transform:translateX(-50%);white-space:nowrap}
 /* 表 */
 .db-tw{overflow-x:auto;margin:8px 0}
 .db-t{border-collapse:collapse;margin:0 auto;font-size:16px;font-family:'STIX Two Text','BIZ UDPGothic',serif}
@@ -55,3 +56,30 @@
 .db-cards:empty{display:none}
 @media (max-width:480px){.db-t th,.db-t td{min-width:30px;height:36px;padding:1px 3px;font-size:14px}.db-t th{font-size:12px}}
 .sk-figbox .db-t{margin:0 auto}
+/* 問題文：ことばの途中では改行しない（読点・句点・空白で改行） */
+.sk-q .ask{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+/* データの行（横1列）とデータの表 */
+.db-line{display:block;margin:10px 0 2px;padding:6px 8px;border-radius:6px;background:#fff;border:1px solid #d6dee8;font-family:'STIX Two Text',serif;font-size:20px;white-space:nowrap;overflow:hidden;text-align:center}
+.db-line span{margin:0 .32em}
+.db-grid{display:grid;grid-template-columns:repeat(var(--c),minmax(0,1fr));max-width:460px;margin:10px auto 2px;border-top:1px solid #d6dee8;border-left:1px solid #d6dee8;background:#fff;font-family:'STIX Two Text',serif;font-size:17px}
+.db-grid span{padding:4px 0;border-right:1px solid #d6dee8;border-bottom:1px solid #d6dee8;text-align:center}
+/* 付箋でかくした見出し */
+.db-t th.db-tag{background:#fff3b0;box-shadow:inset 0 0 0 2px #e9c84a;transform:rotate(-2deg);font-size:18px;font-weight:700;color:#8a6d00}
+.db-five th{font-size:12px;white-space:normal;min-width:52px}
+/* 順に求める問題：求めた値のメモ */
+.db-memo{max-width:520px;margin:10px auto;padding:8px 10px 8px 34px;border-radius:6px;background:#f6f3fd;font-size:17px;line-height:1.8}
+.db-memo li.fig{list-style:none;margin-left:-24px}
+.db-q2 b{display:inline-block;min-width:1.6em;margin-right:4px;border-radius:50%;background:#e7edf5;color:#1f4e8c;font-size:14px;text-align:center}
+/* 公式に入れる（相関係数） */
+.db-fx{margin:12px auto 4px;padding:8px 10px;border:1px solid #d9cbef;border-radius:8px;background:#fbf9fe;text-align:center}
+.db-fh{margin:0 0 6px;font-size:15px;color:#6741a8;white-space:nowrap;overflow-x:auto}
+.db-fl{margin:0;font-size:20px;white-space:nowrap;overflow:hidden}
+.db-fl .fs-fr>span{padding:3px 4px}
+.db-box{display:inline-flex;align-items:center;justify-content:center;min-width:46px;min-height:36px;margin:2px;padding:0 6px;border:1.5px dashed #9db6d6;border-radius:6px;background:#fff;cursor:pointer;vertical-align:middle}
+.db-box.now{border:2px solid #e8930c;background:#fff6e6}
+.db-box.ok{border:1px solid #8fcda3;background:#e8f6ec}
+.db-flip{margin:4px 0 0}
+.fs-qt{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+.db-t th{word-break:keep-all}
+.sk-menu.plain .sk-card b{word-break:keep-all;overflow-wrap:anywhere}
+.sk-ans p,.db-memo{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
