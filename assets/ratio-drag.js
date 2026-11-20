@@ -5,6 +5,7 @@
  *       辺が 1 つだけわかっている（9 問）：のこり 2 辺と左下の角を、1・√2・√3・2・30°・45°・60° から入れる
  *   ・基本：6 問。はじめの 3 問は 30° → 45° → 60° の順（角がわかっている問題）、のこり 3 問は辺が 1 つの問題（30°・45°・60° を 1 問ずつ、順番はまぜる）
  *   ・ランダム：12 パターンをすべてまぜて出す
+ *   ・向きを変えて（2026-11-21）：12 パターンを左右反転・上下反転・両方・斜辺が下にして、ランダムに 10 問（#30・#31 は斜辺が下なしの 48 通り）
  *   ・カードはドラッグでも、「カードを押す → □ を押す」でも入る。同じカードを何回でも使える（45° の 1 と 1）
  *   RatioDrag.mount(要素, { next: 次のレベルへ進む関数, nextLabel: 'ボタンの文字', home: '../index.html' })
  */
@@ -77,9 +78,18 @@
     [30, 45, 60].forEach(deg => SIDES.forEach(given => B.push({ type: 'B', deg, given })));
     return { A, B };
   }
+  // 向き：n そのまま（印の角が左下・直角が右下）、x 左右反転、y 上下反転、xy 両方、h 斜辺が下（hx はその左右反転）
+  const TURN4 = ['n', 'x', 'y', 'xy'], TURN5 = ['n', 'x', 'y', 'xy', 'h'];
+  const MODE_NAME = { basic: '基本（6問）', all: 'ランダム（全12問）', turn: '向きを変えて（10問）', turn48: '向きを変えて（10問）' };
   function makeList(mode) {
     const { A, B } = allPatterns();
     if (mode === 'all') return shuffle(A.concat(B));
+    if (mode === 'turn' || mode === 'turn48') {
+      // 12 パターン × 向き（turn：5 通り＝60、turn48：4 通り＝48）から 10 問
+      const turns = mode === 'turn' ? TURN5 : TURN4, all = [];
+      A.concat(B).forEach(q => turns.forEach(t => all.push(Object.assign({}, q, { or: t === 'h' && Math.random() < .5 ? 'hx' : t }))));
+      return shuffle(all).slice(0, 10);
+    }
     // 基本：角がわかっている 3 問（30° → 45° → 60°）＋ 辺が 1 つの問題を 30°・45°・60° から 1 問ずつ（順番はまぜる）
     const pick = shuffle([30, 45, 60]).map(deg => shuffle(B.filter(b => b.deg === deg))[0]);
     return A.concat(pick);
@@ -89,33 +99,35 @@
     if (q.type === 'B') { delete a[q.given]; a.ang = q.deg + '°'; }
     return a;
   }
+  // 解説・ヒントは、図の向きによらない言い方にする（「印の角」＝オレンジの印の角）
   const EXP_A = {
     30: '30° の角と向かい合う辺が、いちばん短い 1。<br>斜辺（直角と向かい合う、いちばん長い辺）は 2。<br>のこりの辺が √3。<br>辺の比は ' + R3 + '。',
     45: '45° の直角三角形は直角二等辺三角形。<br>直角をはさむ2辺が、どちらも 1。<br>斜辺は √2。<br>辺の比は ' + R2 + '。',
     60: '60° の角と向かい合う辺が √3。<br>斜辺（いちばん長い辺）は 2。<br>60° のとなりの辺が、いちばん短い 1。<br>辺の比は ' + R3 + '。'
   };
   const EXP_B = {
-    30: '横の辺のほうが、たての辺より長い直角三角形。<br>辺の比は ' + R3 + ' で、いちばん短いたての辺が 1、横の辺が √3、斜辺が 2。<br>左下の角は、いちばん短い辺（1）と向かい合うので 30°。',
-    45: '直角をはさむ2辺が同じ長さ → 直角二等辺三角形。<br>辺の比は ' + R2 + ' で、直角をはさむ2辺が 1、斜辺が √2。<br>左下の角は 45°。',
-    60: 'たての辺のほうが、横の辺より長い直角三角形。<br>辺の比は ' + R3 + ' で、いちばん短い横の辺が 1、たての辺が √3、斜辺が 2。<br>左下の角は、√3 の辺と向かい合うので 60°。'
+    30: '直角をはさむ2辺の長さがちがうので、辺の比は ' + R3 + '。<br>印の角と向かい合う辺が、いちばん短い 1。<br>斜辺は 2、のこりの辺が √3。<br>いちばん短い辺と向かい合う角なので、印の角は 30°。',
+    45: '直角をはさむ2辺が同じ長さ → 直角二等辺三角形。<br>辺の比は ' + R2 + ' で、直角をはさむ2辺が 1、斜辺が √2。<br>印の角は 45°。',
+    60: '直角をはさむ2辺の長さがちがうので、辺の比は ' + R3 + '。<br>印の角と向かい合う辺が √3、印の角のとなりの辺が、いちばん短い 1。<br>斜辺は 2。<br>√3 の辺と向かい合う角なので、印の角は 60°。'
   };
   const HINT_A = {
     30: '30°・60°・90° の直角三角形の辺の比は ' + R3 + '。<br>いちばん短い 1 は、30° の角と向かい合う辺。<br>いちばん長い 2 は、斜辺（直角と向かい合う辺）。',
     45: '45°・45°・90° の直角三角形（直角二等辺三角形）の辺の比は ' + R2 + '。<br>いちばん長い √2 は、斜辺（直角と向かい合う辺）。',
     60: '30°・60°・90° の直角三角形の辺の比は ' + R3 + '。<br>いちばん短い 1 は、30° の角と向かい合う辺（60° のとなりの辺）。<br>いちばん長い 2 は、斜辺（直角と向かい合う辺）。'
   };
-  const HINT_B = 'まず、直角をはさむ2辺（横の辺とたての辺）の長さをくらべよう。<br>' +
+  const HINT_B = 'まず、直角をはさむ2辺の長さをくらべよう。<br>' +
     '・同じ長さ → 直角二等辺三角形。辺の比は ' + R2 + '、角は 45°。<br>' +
     '・ちがう長さ → 辺の比は ' + R3 + '。いちばん短い辺（1）と向かい合う角が 30°、√3 の辺と向かい合う角が 60°。';
+  const TURN_NOTE = { x: '（左右反転）', y: '（上下反転）', xy: '（左右・上下とも反転）', h: '（斜辺が下）', hx: '（斜辺が下）' };
   function question(q) {
     if (q.type === 'A') return '<span class="rd-ang">' + q.deg + '°</span> の角をもつ直角三角形です。<br>3つの辺の □ に、辺の比をあてはめよう。';
-    return '辺の長さが 1 つだけわかっている直角三角形です。<br>のこりの辺の □ に辺の比を、<span class="rd-ang">左下の角</span>の □ に角の大きさをあてはめよう。';
+    return '辺の長さが 1 つだけわかっている直角三角形です。<br>のこりの辺の □ に辺の比を、<span class="rd-ang">印の角</span>の □ に角の大きさをあてはめよう。';
   }
   // まちがえたとき：どこがおかしいかを一言で（g：□ に入れたもの）
   function reason(q, g) {
     const s = Object.assign({}, RATIO[q.deg]);
     SIDES.forEach(k => { if (k in g) s[k] = g[k]; });
-    if (q.type === 'B' && !/°$/.test(g.ang)) return '左下の角の □ には、角の大きさ（30°・45°・60°）を入れよう。';
+    if (q.type === 'B' && !/°$/.test(g.ang)) return '印の角の □ には、角の大きさ（30°・45°・60°）を入れよう。';
     if (SIDES.some(k => /°$/.test(s[k]))) return '辺の □ には、辺の長さ（1・√2・√3・2）を入れよう。';
     const vals = SIDES.map(k => s[k]);
     if (q.deg === 45) {
@@ -128,34 +140,44 @@
       if (s.VR === s.RT) return '30°・60° の直角三角形は、3つの辺の長さがすべてちがうよ。辺の比は ' + R3 + '。';
       if (s.VR !== RATIO[q.deg].VR) {
         if (q.type === 'A') return q.deg === 30 ? 'いちばん短い辺（1）は、30° の角と向かい合う辺だよ。' : '60° の角と向かい合う辺は √3。いちばん短い辺（1）は、60° のとなりの辺だよ。';
-        return q.deg === 30 ? '図をよく見ると、横の辺のほうがたての辺より長いよ。短いほうが 1、長いほうが √3。' : '図をよく見ると、たての辺のほうが横の辺より長いよ。短いほうが 1、長いほうが √3。';
+        return '直角をはさむ2辺のうち、図で短く見えるほうが 1、長く見えるほうが √3 だよ。';
       }
     }
     if (q.type === 'B' && g.ang !== q.deg + '°') {
       if (q.deg === 45) return '直角二等辺三角形なので、直角でない2つの角はどちらも 45°。';
-      if (q.deg === 30) return '左下の角は、いちばん短い辺（1）と向かい合っているよ。いちばん短い辺と向かい合う角は 30°。';
-      return '左下の角は、√3 の辺と向かい合っているよ。√3 の辺と向かい合う角は 60°（1 の辺と向かい合う上の角が 30°）。';
+      if (q.deg === 30) return '印の角は、いちばん短い辺（1）と向かい合っているよ。いちばん短い辺と向かい合う角は 30°。';
+      return '印の角は、√3 の辺と向かい合っているよ。√3 の辺と向かい合う角は 60°（1 の辺と向かい合う角が 30°）。';
     }
     return '赤い枠の □ を見直そう。';
   }
 
   // ---------- 図 ----------
+  // 数学の座標で V=(0,0)・R=(p,0)・T=(p,h) をつくり、向きに合わせて反転・回転してから画面に入れる
   function figure(q) {
-    const W = 360, H = 290, pad = 46;
+    const W = 360, H = 330, pad = 50, or = q.or || 'n';
     const [p, h] = SHAPE[q.deg];
-    const s = Math.min((W - 2 * pad) / p, (H - 2 * pad) / h);
-    const x0 = (W - p * s) / 2, y0 = (H + h * s) / 2;
-    const P = { V: [x0, y0], R: [x0 + p * s, y0], T: [x0 + p * s, y0 - h * s] };
-    const f = v => v.toFixed(1);
+    let M = { V: [0, 0], R: [p, 0], T: [p, h] };
+    if (or === 'h' || or === 'hx') {   // 斜辺 VT を横に（直角 R が上）
+      const th = Math.atan2(h, p), c = Math.cos(-th), sn = Math.sin(-th);
+      Object.keys(M).forEach(k => { const [x, y] = M[k]; M[k] = [x * c - y * sn, -(x * sn + y * c)]; });
+    }
+    const fx = or === 'x' || or === 'xy' || or === 'hx', fy = or === 'y' || or === 'xy';
+    Object.keys(M).forEach(k => { M[k] = [fx ? -M[k][0] : M[k][0], fy ? -M[k][1] : M[k][1]]; });
+    const xs = Object.values(M).map(v => v[0]), ys = Object.values(M).map(v => v[1]);
+    const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+    const s = Math.min((W - 2 * pad) / (maxx - minx), (H - 2 * pad) / (maxy - miny));
+    const ox = (W - (maxx - minx) * s) / 2, oy = (H - (maxy - miny) * s) / 2;
+    const P = {}; Object.keys(M).forEach(k => { P[k] = [ox + (M[k][0] - minx) * s, oy + (maxy - M[k][1]) * s]; });
+    const f = v => v.toFixed(1), unit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
     let o = '<svg class="rd-tri" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="直角三角形">';
     o += '<polygon points="' + ['V', 'R', 'T'].map(k => f(P[k][0]) + ',' + f(P[k][1])).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" stroke-linejoin="round"/>';
-    const m = 13;   // 直角の印
-    o += '<path d="M' + f(P.R[0] - m) + ' ' + f(P.R[1]) + ' V' + f(P.R[1] - m) + ' H' + f(P.R[0]) + '" fill="none" stroke="#1f2328" stroke-width="1.5"/>';
-    const t = q.deg * Math.PI / 180, r = 26;   // 左下の角の印
-    o += '<path d="M' + f(x0 + r) + ' ' + f(y0) + ' A' + r + ' ' + r + ' 0 0 0 ' + f(x0 + r * Math.cos(t)) + ' ' + f(y0 - r * Math.sin(t)) + '" fill="none" stroke="#d9480f" stroke-width="2.5"/>';
+    const u1 = unit(P.R, P.V), u2 = unit(P.R, P.T), m = 13;   // 直角の印
+    o += '<path d="M' + f(P.R[0] + u1[0] * m) + ' ' + f(P.R[1] + u1[1] * m) + ' L' + f(P.R[0] + (u1[0] + u2[0]) * m) + ' ' + f(P.R[1] + (u1[1] + u2[1]) * m) + ' L' + f(P.R[0] + u2[0] * m) + ' ' + f(P.R[1] + u2[1] * m) + '" fill="none" stroke="#1f2328" stroke-width="1.5"/>';
+    const a1 = unit(P.V, P.R), a2 = unit(P.V, P.T), r = 26, cross = a1[0] * a2[1] - a1[1] * a2[0];   // 印の角
+    o += '<path d="M' + f(P.V[0] + a1[0] * r) + ' ' + f(P.V[1] + a1[1] * r) + ' A' + r + ' ' + r + ' 0 0 ' + (cross > 0 ? 1 : 0) + ' ' + f(P.V[0] + a2[0] * r) + ' ' + f(P.V[1] + a2[1] * r) + '" fill="none" stroke="#d9480f" stroke-width="2.5"/>';
     if (q.type === 'A') {
-      const half = t / 2, d = Math.max(58, Math.min(100, 21 / Math.tan(half)));
-      o += '<text x="' + f(x0 + d * Math.cos(half)) + '" y="' + f(y0 - d * Math.sin(half)) + '" font-size="20" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + q.deg + '°</text>';
+      const bis = unit([0, 0], [a1[0] + a2[0], a1[1] + a2[1]]), half = q.deg * Math.PI / 360, d = Math.max(58, Math.min(100, 21 / Math.tan(half)));
+      o += '<text x="' + f(P.V[0] + bis[0] * d) + '" y="' + f(P.V[1] + bis[1] * d) + '" font-size="20" font-weight="700" font-family="BIZ UDPGothic, sans-serif" fill="#d9480f" text-anchor="middle" dominant-baseline="central">' + q.deg + '°</text>';
     } else {
       // わかっている辺の長さ：辺のまん中から外側へ
       const k = q.given, a = P[k[0]], b = P[k[1]], c = P['VRT'.replace(k[0], '').replace(k[1], '')];
@@ -174,11 +196,11 @@
       }
     }
     // 上下のよけいな余白を切る（□ が入るすきまは残す）
-    const top = Math.max(0, P.T[1] - 58), bottom = Math.min(H, y0 + 66);
+    const Ys = Object.values(P).map(v => v[1]), top = Math.max(0, Math.min(...Ys) - 62), bottom = Math.min(H, Math.max(...Ys) + 66);
     o = o.replace('viewBox="0 0 ' + W + ' ' + H + '"', 'viewBox="0 ' + f(top) + ' ' + W + ' ' + f(bottom - top) + '"');
     return o + '</svg>';
   }
-  // □ の位置：辺の □ は辺のまん中から外側へ、角の □ は左下の頂点のすぐ左
+  // □ の位置：辺の □ は辺のまん中から外側へ、角の □ は印の角の頂点から、三角形の外側へ
   function placeSlots(fig) {
     const svg = fig.querySelector('svg.rd-tri'), poly = svg && svg.querySelector('polygon');
     if (!poly || !fig.offsetWidth) return;
@@ -189,9 +211,12 @@
     fig.querySelectorAll('.rd-slot').forEach(el => {
       const w = el.offsetWidth, h = el.offsetHeight;
       if (el.dataset.key === 'ang') {
-        const V = px(P.V);
-        el.style.left = Math.max(-28, V[0] - 8 - w) + 'px';
-        el.style.top = (V[1] - h / 2 - 12) + 'px';
+        const V = px(P.V), R = px(P.R), T = px(P.T);
+        const u = (a) => { const dx = a[0] - V[0], dy = a[1] - V[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
+        const b1 = u(R), b2 = u(T); let d = [-(b1[0] + b2[0]), -(b1[1] + b2[1])]; const L = Math.hypot(d[0], d[1]) || 1; d = [d[0] / L, d[1] / L];
+        const dist = Math.abs(d[0]) * w / 2 + Math.abs(d[1]) * h / 2 + 8;
+        el.style.left = Math.max(-30, Math.min(fig.clientWidth - w + 30, V[0] + d[0] * dist - w / 2)) + 'px';
+        el.style.top = (V[1] + d[1] * dist - h / 2) + 'px';
         return;
       }
       const [a, b] = el.dataset.key.split(''), c = 'VRT'.replace(a, '').replace(b, '');
@@ -211,11 +236,16 @@
   }
 
   // ---------- 画面 ----------
+  //   opt.modes：出すモード（はじめのものから始める）。既定は ['basic', 'all', 'turn']（#30・#31 は ['turn48']）
+  //   opt.back：{ label, fn } … 上に「← メニューへ」などのボタンを出す
   let st = null;   // { el, opt, mode, list, i, score, missed, done, picked, ro }
   function mount(el, opt) {
-    if (!document.getElementById('rd-style')) { const s = document.createElement('style'); s.id = 'rd-style'; s.textContent = CSS; document.head.appendChild(s); }
+    if (!document.getElementById('rd-style')) { const s = document.createElement('style'); s.id = 'rd-style'; s.textContent = CSS + '.rd .rd-backbar{margin:0 0 8px}.rd .rd-modes{flex-wrap:wrap}.rd button.rd-mode{white-space:nowrap}@media (max-width:640px){.rd button.rd-mode{padding:6px 10px!important;font-size:13px!important}}.rd .rd-turn{font-size:13px;color:#5b6470;margin-left:auto}'; document.head.appendChild(s); }
     if (st && st.ro) st.ro.disconnect();
-    st = { el, opt: opt || {}, mode: (st && st.el === el && st.mode) || 'basic' };
+    opt = opt || {};
+    const modes = opt.modes || ['basic', 'all', 'turn'];
+    const keep = st && st.el === el && modes.indexOf(st.mode) >= 0 ? st.mode : modes[0];
+    st = { el, opt, modes, mode: keep };
     el.classList.add('rd');
     start();
   }
@@ -225,10 +255,13 @@
     render();
   }
   function modesHTML() {
-    return '<div class="rd-modes"><button type="button" class="rd-mode' + (st.mode === 'basic' ? ' on' : '') + '" data-mode="basic">基本（6問）</button>' +
-      '<button type="button" class="rd-mode' + (st.mode === 'all' ? ' on' : '') + '" data-mode="all">ランダム（全12問）</button></div>';
+    const back = st.opt.back ? '<div class="rd-backbar"><button type="button" class="rd-btn rd-back">' + st.opt.back.label + '</button></div>' : '';
+    return back + '<div class="rd-modes">' + st.modes.map(m => '<button type="button" class="rd-mode' + (st.mode === m ? ' on' : '') + '" data-mode="' + m + '">' + MODE_NAME[m] + '</button>').join('') + '</div>';
   }
-  function bindModes() { st.el.querySelectorAll('.rd-mode').forEach(b => b.onclick = () => { if (b.dataset.mode !== st.mode || st.i > 0) start(b.dataset.mode); }); }
+  function bindModes() {
+    st.el.querySelectorAll('.rd-mode').forEach(b => b.onclick = () => { if (b.dataset.mode !== st.mode || st.i > 0) start(b.dataset.mode); });
+    const bk = st.el.querySelector('.rd-back'); if (bk) bk.onclick = () => { if (st.ro) st.ro.disconnect(); st.opt.back.fn(); };
+  }
   function render() {
     const q = st.list[st.i], n = st.list.length, el = st.el;
     st.missed = false; st.done = false; st.picked = null;
@@ -237,7 +270,7 @@
     el.innerHTML = modesHTML() +
       '<div class="rd-top"><span class="rd-badge">問' + (st.i + 1) + '</span><span>' + (st.i + 1) + ' / ' + n + '</span><span class="rd-bar"><i style="width:' + (st.i / n * 100) + '%"></i></span></div>' +
       '<p class="rd-q">' + tx(question(q)) + '</p>' +
-      '<div class="rd-fig">' + figure(q) + keys.map(k => '<button type="button" class="rd-slot' + (k === 'ang' ? ' rd-angslot' : '') + '" data-key="' + k + '" aria-label="' + (k === 'ang' ? '左下の角の大きさを入れる場所' : '辺の長さを入れる場所') + '"></button>').join('') + '</div>' +
+      '<div class="rd-fig">' + figure(q) + keys.map(k => '<button type="button" class="rd-slot' + (k === 'ang' ? ' rd-angslot' : '') + '" data-key="' + k + '" aria-label="' + (k === 'ang' ? '印の角の大きさを入れる場所' : '辺の長さを入れる場所') + '"></button>').join('') + '</div>' +
       '<p class="rd-note">カードを □ までドラッグしよう（カードを押してから □ を押しても入るよ）</p>' +
       '<div class="rd-tray">' + chips.map(row => '<div class="rd-row">' + row.map(v => '<button type="button" class="rd-chip' + (/°$/.test(v) ? ' ang' : '') + '" data-v="' + v + '">' + val(v) + '</button>').join('') + '</div>').join('') + '</div>' +
       '<div class="rd-acts"><button type="button" class="rd-btn rd-hintbtn">ヒント</button><button type="button" class="rd-btn go rd-check" disabled>答え合わせ</button><button type="button" class="rd-btn go rd-next" style="display:none">' + (st.i + 1 < n ? '次の問題へ' : '結果を見る') + '</button></div>' +
@@ -311,21 +344,21 @@
   function results() {
     const n = st.list.length, o = st.opt;
     if (st.ro) st.ro.disconnect();
-    const other = st.mode === 'basic' ? 'all' : 'basic';
+    const others = st.modes.filter(m => m !== st.mode);
     st.el.innerHTML = modesHTML() + '<div class="rd-res"><div class="rd-score">一発正解 ' + st.score + ' / ' + n + ' 問</div>' +
       '<p>' + (st.score === n ? '全問一発正解！ 辺の比はばっちりだね。' : 'お疲れ様でした！ まちがえた三角形の辺の比を、もう一度たしかめよう。') + '</p>' +
       '<div class="rd-nav">' + (o.next ? '<button type="button" class="rd-btn go rd-gonext">' + (o.nextLabel || '次のレベルへ ▶') + '</button>' : '') +
-      '<button type="button" class="rd-btn rd-again">同じ問題の出し方でもう一度</button>' +
-      '<button type="button" class="rd-btn rd-other">' + (other === 'all' ? 'ランダム（全12問）でやってみる' : '基本（6問）でやってみる') + '</button>' +
-      '<a class="rd-home">ほかの教材をえらぶ</a></div></div>';
+      '<button type="button" class="rd-btn rd-again">' + (/turn/.test(st.mode) || st.mode === 'all' ? '新しい問題でもう一度' : '同じ問題の出し方でもう一度') + '</button>' +
+      others.map(m => '<button type="button" class="rd-btn rd-other" data-m="' + m + '">' + MODE_NAME[m] + 'でやってみる</button>').join('') +
+      (o.back ? '<button type="button" class="rd-btn rd-back2">' + o.back.label + '</button>' : '<a class="rd-home">ほかの教材をえらぶ</a>') + '</div></div>';
     // 一覧へのリンク：ページの「← 教材の一覧へ」と同じ行き先（GAS で開いたときは書きかえ済みのものを使う）
     const back = document.querySelector('a.port-back'), home = st.el.querySelector('.rd-home');
-    home.href = o.home || (back && back.href) || '../index.html';
-    if (back && back.target) home.target = back.target;
+    if (home) { home.href = o.home || (back && back.href) || '../index.html'; if (back && back.target) home.target = back.target; }
     bindModes();
     if (o.next) st.el.querySelector('.rd-gonext').onclick = () => o.next();
     st.el.querySelector('.rd-again').onclick = () => start();
-    st.el.querySelector('.rd-other').onclick = () => start(other);
+    st.el.querySelectorAll('.rd-other').forEach(b => b.onclick = () => start(b.dataset.m));
+    const b2 = st.el.querySelector('.rd-back2'); if (b2) b2.onclick = () => o.back.fn();
   }
 
   window.RatioDrag = { mount, _test: { makeList, answerOf, reason, allPatterns } };

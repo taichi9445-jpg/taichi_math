@@ -55,6 +55,7 @@
 </main>
 <script src="../assets/fill-steps.js?v=20261120"></script>
 <script src="../assets/zahyou.js?v=20261120"></script>
+<script src="../assets/ratio-drag.js?v=20261121"></script>
 <script>
 const PRACTICE = {
   basic: { name: '基本の角', sub: '30°・45°・60°・120°・135°・150°', angles: [30, 45, 60, 120, 135, 150] },
@@ -155,10 +156,19 @@ function showReview() {
 }
 
 // ---------------- メニュー ----------------
+
+// 【2026-11-21 先生の要望】有名角の直角三角形を、左右・上下に反転した向きでも：辺の比と角をカードであてはめる（assets/ratio-drag.js、48 通りから 10 問）
+function startTurn() {
+  document.getElementById('menu').innerHTML = '';
+  const app = document.getElementById('app'); app.hidden = false; app.innerHTML = '<div id="rdBox"></div>';
+  RatioDrag.mount(document.getElementById('rdBox'), { modes: ['turn48'], back: { label: '← メニューへ', fn: showMenu } });
+  window.scrollTo(0, 0);
+}
+const TURN_ITEM = '<section class="zm-sec"><h2>有名角の直角三角形<small>向きを変えても辺の比がわかるかな</small></h2><div class="zm-list"><button type="button" class="zm-item" onclick="startTurn()"><span class="ic"><svg viewBox="0 0 88 58" aria-hidden="true"><path d="M6 50H38V14Z" fill="#e3ecf7" stroke="#1f4e8c" stroke-width="2.2" stroke-linejoin="round"/><path d="M32 50V44H38" fill="none" stroke="#1f4e8c" stroke-width="1.4"/><path d="M82 8H50V44Z" fill="#fde8dc" stroke="#d9480f" stroke-width="2.2" stroke-linejoin="round"/><path d="M56 8V14H50" fill="none" stroke="#d9480f" stroke-width="1.4"/></svg></span><b>向きを変えて辺の比</b><span class="s">30°・45°・60°（ランダム10問）</span></button></div></section>';
 function showMenu() {
   clearViews();
   const item = (id, cls, m, fn, icon) => `<button type="button" class="zm-item ${cls}" onclick="${fn}('${id}')"><span class="ic">${icon}</span><b>${m.name}</b><span class="s">${m.sub}</span>${done[id] ? `<span class="ok">✓${best[id] ? ' ' + fmt(best[id]) : ''}</span>` : ''}</button>`;
-  document.getElementById('menu').innerHTML = `<div class="zm">
+  document.getElementById('menu').innerHTML = `<div class="zm">${TURN_ITEM}
   <section class="zm-sec"><h2>数学Ⅰ<small>0° ≦ θ ≦ 180°</small></h2>
     <div class="zm-list">${item('basic', '', PRACTICE.basic, 'startPractice', menuIcon('ang', 150))}${item('axis', '', PRACTICE.axis, 'startPractice', menuIcon('ang', 90))}
     ${item('ta1', 'ta', RUNS.ta1, 'startRun', menuIcon('ta', 0, ORANGE))}${item('mr1', 'mr', RUNS.mr1, 'startRun', menuIcon('mr', 0, GREEN))}</div></section>
