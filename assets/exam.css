@@ -1,0 +1,80 @@
+/* exam.css — 数学Ⅰ テスト対策（目指せ30点！・目指せ60点！）の見た目  2026-11-21 */
+:root { --ex-navy: #1f4e8c; --ex-orange: #e8590c; --ex-red: #e03131; --ex-green: #2b8a3e; --ex-ink: #1f2328; }
+
+/* ---- 表紙 ---- */
+.ex-cover { max-width: 760px; margin: 0 auto; }
+.ex-hero { position: relative; overflow: hidden; margin: 6px 0 16px; padding: 26px 22px 22px; border-radius: 18px; color: #fff;
+  background: linear-gradient(135deg, #1f4e8c 0%, #3b6fb6 55%, #e8590c 130%); box-shadow: 0 8px 22px rgba(31, 78, 140, .22); }
+.ex-hero small { display: inline-block; padding: 2px 10px; border-radius: 999px; background: rgba(255, 255, 255, .2); font-size: 13px; letter-spacing: .05em; }
+.ex-hero h1 { margin: 10px 0 6px; font-size: clamp(28px, 8vw, 40px); line-height: 1.25; letter-spacing: .02em; }
+.ex-hero p { margin: 0; font-size: 15px; line-height: 1.7; opacity: .95; }
+.ex-hero .deco { position: absolute; right: -10px; top: -18px; font: 900 96px/1 'BIZ UDPGothic', sans-serif; color: rgba(255, 255, 255, .1); pointer-events: none; }
+.ex-courses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ex-course { display: flex; flex-direction: column; gap: 8px; padding: 18px 16px 16px; border-radius: 16px; text-decoration: none; color: var(--ex-ink); background: #fff;
+  border: 2px solid #d0d7de; border-bottom-width: 6px; transition: transform .08s; }
+.ex-course:active { transform: translateY(3px); border-bottom-width: 3px; }
+.ex-course .tag { align-self: flex-start; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; }
+.ex-course .goal { font: 900 clamp(26px, 6.5vw, 34px)/1.15 'BIZ UDPGothic', sans-serif; }
+.ex-course .goal b { font-size: 1.5em; }
+.ex-course ul { margin: 2px 0 0; padding-left: 1.2em; font-size: 14px; line-height: 1.7; color: #3d4752; }
+.ex-course .go { margin-top: auto; padding: 10px; border-radius: 10px; text-align: center; font-weight: 700; color: #fff; }
+.ex-course.c30 { border-color: #f4b183; }
+.ex-course.c30 .tag, .ex-course.c30 .go { background: var(--ex-orange); }
+.ex-course.c30 .goal { color: var(--ex-orange); }
+.ex-course.c60 { border-color: #9db6d6; }
+.ex-course.c60 .tag, .ex-course.c60 .go { background: var(--ex-navy); }
+.ex-course.c60 .goal { color: var(--ex-navy); }
+.ex-tips { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: #fff8e6; border: 1px solid #f2d39b; font-size: 14px; line-height: 1.8; }
+.ex-tips b { color: #b35c00; }
+@media (max-width: 640px) { .ex-courses { grid-template-columns: 1fr; } }
+
+/* ---- コースの見出し ---- */
+.ex-head { margin: 0 0 10px; padding: 14px 16px; border-radius: 14px; color: #fff; }
+.ex-head small { font-size: 12px; opacity: .9; }
+.ex-head h1 { margin: 2px 0 2px; font-size: 26px; letter-spacing: .02em; }
+.ex-head p { margin: 0; font-size: 14px; opacity: .95; }
+.ex-head.h30 { background: linear-gradient(120deg, #e8590c, #f08c00); }
+.ex-head.h60 { background: linear-gradient(120deg, #1f4e8c, #3b6fb6); }
+
+/* ---- 問題の中 ---- */
+.ex-figbox { display: flex; justify-content: center; margin: 6px 0; }
+.ex-figbox svg.ex-tri { width: 100%; max-width: 340px; height: auto; }
+@media (max-width: 640px) { .ex-figbox svg.ex-tri { max-width: 270px; max-height: 210px; } .ex-head h1 { font-size: 22px; } .ex-head p { font-size: 13px; } }
+.sk-opts.ex-opts.stack .sk-opt span { font-size: 18px; }
+.ex-figbox .db-t { font-size: 15px; }
+.ex-count { margin: 4px 0; font-size: 13px; color: #5b6470; }
+.ex-ask { margin: 6px 0 8px; font-size: 20px; text-align: center; }
+.ex-clear { margin: 10px 0; font-size: 18px; font-weight: 700; color: var(--ex-green); text-align: center; }
+.ex-memo { margin: 8px 0; font-size: 17px; text-align: center; }
+.sk-opts.ex-opts.six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) { .sk-opts.ex-opts.six { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sk-opts.ex-opts.stack { grid-template-columns: 1fr; }
+
+/* 途中式（fill-steps）を 1 問だけ出すときは、問題番号・前後のボタンをかくす */
+.ex-fs .fs-tabs, .ex-fs .fs-nav, .ex-fs .fs-q { display: none !important; }
+.ex-fs .fs-done .fs-btn { display: none; }
+
+/* 図の □ にカードを入れる */
+.ex-slotfig { position: relative; max-width: 400px; margin: 4px auto 8px; padding: 0 34px; }
+.ex-slotfig svg { display: block; width: 100%; height: auto; }
+.ex-slot { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; width: 60px; height: 44px; padding: 0; border: 2px dashed var(--ex-navy);
+  border-radius: 6px; background: #fff; font: 400 22px/1 'STIX Two Text', serif; color: var(--ex-ink); cursor: pointer; }
+.ex-slot.filled { border-style: solid; border-width: 1px; }
+.ex-slot.over { background: #e3edf9; }
+.ex-slot.ok { border: 2px solid var(--ex-green); background: #ebfbee; }
+.ex-slot.ng { border: 2px solid #c92a2a; background: #fff5f5; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 6px 0; }
+.ex-chip { min-width: 60px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ex-chip.sel { background: var(--ex-navy) !important; color: #fff !important; }
+.ex-ghost { position: fixed; z-index: 50; pointer-events: none; margin: 0; box-shadow: 0 4px 12px rgba(31, 35, 40, .2); }
+.ex-ng { color: #a61e1e; }
+
+/* スマホ：見出しと問題番号を小さくして、問題と途中式が 1 画面に入るように */
+@media (max-width: 640px) {
+  .ex-head { padding: 8px 12px; border-radius: 10px; }
+  .ex-head small, .ex-head p { display: none; }
+  .ex-head h1 { margin: 0; font-size: 20px; }
+  .sk-tabs .sk-tab { min-width: 32px !important; min-height: 32px !important; height: 32px; padding: 0 4px !important; font-size: 14px !important; }
+  .sk-tabs { gap: 4px !important; }
+  .ex-fs .fs-rows { margin-top: 4px; }
+}

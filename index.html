@@ -38,6 +38,16 @@
   .switch { display: inline-block; margin-top: 10px; padding: 8px 14px; min-height: 40px; border: 1px solid #c5d3e4; border-bottom: 3px solid #9db6d6; border-radius: 8px; background: #fff; color: #1f4e8c; font-size: 15px; font-weight: 700; text-decoration: none; }
   .switch:active { transform: translateY(2px); border-bottom-width: 1px; }
   .item.u5 { border-left-color: #0f766e; }
+  /* 2026-11-21 テスト対策（目指せ30点！・60点！）への入口 */
+  .exam-banner { margin: 0 0 16px; padding: 16px; border-radius: 14px; color: #fff; background: linear-gradient(120deg, #1f4e8c 0%, #3b6fb6 60%, #e8590c 140%); box-shadow: 0 6px 16px rgba(31, 78, 140, .2); }
+  .exam-banner .t { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+  .exam-banner .t small { font-size: 13px; font-weight: 400; opacity: .9; }
+  .exam-banner p { margin: 0 0 10px; font-size: 14px; opacity: .95; }
+  .exam-banner .btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .exam-banner .btns a { display: block; padding: 12px 10px; border-radius: 10px; background: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 19px; border-bottom: 4px solid rgba(0, 0, 0, .18); }
+  .exam-banner .btns a small { display: block; font-size: 12px; font-weight: 400; color: #5b6470; }
+  .exam-banner .b30 { color: #e8590c; } .exam-banner .b60 { color: #1f4e8c; }
+  .exam-banner .all { display: inline-block; margin-top: 8px; color: #fff; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -48,6 +58,16 @@
     <p>単元を開いて、教材をえらぼう。</p>
     <a class="switch" href="math2/index.html">数学Ⅱの教材へ →</a>
   </div>
+
+  <section class="exam-banner">
+    <p class="t">テスト対策　くり返し練習<small>三角比・データの分析</small></p>
+    <p>やるたびに数字がかわる問題で、スラスラ解けるまで何周でも！</p>
+    <div class="btns">
+      <a class="b30" href="test/t30.html">目指せ30点！<small>まずはここから</small></a>
+      <a class="b60" href="test/t60.html">目指せ60点！<small>30点コース＋α</small></a>
+    </div>
+    <a class="all" href="test/index.html">コースの中身を見る →</a>
+  </section>
 
   <details class="unit" data-unit="math1-1">
     <summary><h2>式の計算 <span class="count">13教材</span></h2><span class="toggle-label" aria-hidden="true"><span class="when-closed">開く ▾</span><span class="when-open">閉じる ▴</span></span></summary>
