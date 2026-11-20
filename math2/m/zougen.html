@@ -8,7 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261110" />
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261120" />
     <style>
       * {
         box-sizing: border-box;
@@ -936,8 +936,13 @@
           <div id="completionNav" class="result-nav"></div>
         </section>
       </section>
+        <!-- 【2026-11-19 先生の要望】因数分解の練習（増減表で f′(x) = 0 を解く前の準備）。穴うめはカード（assets/fill-steps.js） -->
+    <section id="factorBox" style="display: none">
+      <div class="fx-modes"><button type="button" class="fx-mode" data-m="seq">順番に10問</button><button type="button" class="fx-mode" data-m="rand">ランダムに10問</button></div>
+      <div id="factorApp"></div>
+    </section>
     </main>
-    <script src="../../assets/fill-steps.js?v=20261110"></script>
+    <script src="../../assets/fill-steps.js?v=20261120"></script>
     <script>
       // 数式のHTMLは、文字だけ斜体・数字は立体。式の行と日本語の説明を分ける。
       function mathHTML(html) {
@@ -3113,6 +3118,138 @@
           "最大・最小・4問",
         ][i];
       });
+    </script>
+    <style>
+      /* メニュー：4つを 2×2 に（因数分解の練習を左上に） */
+      #modeSelection .mode-buttons{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-width:760px!important}
+      #modeSelection .mode-btn{grid-column:auto!important;width:100%!important;justify-self:stretch!important;aspect-ratio:auto!important;min-height:130px!important}
+      #modeSelection .mode-btn.fx-card{background:#f3effd!important}
+      #modeSelection .mode-btn:nth-child(2){background:#eaf2fd!important}
+      #modeSelection .mode-btn:nth-child(3){background:#eaf6ee!important}
+      #modeSelection .mode-btn:nth-child(4){background:#fff1df!important}
+      .fx-card .mode-icon{display:flex!important;flex-direction:column;align-items:center;font:17px/1.35 'STIX Two Text',serif!important;white-space:nowrap}
+      #factorApp .fs-qt .big-formula{display:block;margin:4px 0 2px;font:26px/1.4 'STIX Two Text',serif;text-align:center}
+      #factorApp .fs-qt .ask{display:block;font-size:15px;color:#5b6470;text-align:center}
+      .fx-modes{display:flex;gap:8px;justify-content:center;margin:4px 0 12px}
+      .fx-mode{min-height:40px;padding:6px 16px;border:1px solid #c5d3e4;border-radius:20px;background:#fff;color:#1f4e8c;font:15px 'BIZ UDPGothic',sans-serif;cursor:pointer}
+      .fx-mode.on{background:#1f4e8c;color:#fff;border-color:#1f4e8c;font-weight:700}
+          /* 【2026-11-19】数式の字間（先生の指摘）：斜体の x と右肩の数字がくっつかないように、f′ の ′ のあとが空きすぎないように */
+      .m i + sup, .fs-m i + sup { margin-left: .1em; }
+      .m i { margin-right: .04em; }
+      .m .pr, .fs-m .pr { margin-left: .1em !important; margin-right: -.03em !important; }
+      .m .pr + .fn-gap { width: 0; }
+      .m .fn-gap { width: .1em; }
+    </style>
+    <script>
+      // ---------- 因数分解の練習 ----------
+      //   種類（やさしい順）：A 数でくくる（1次式）→ B 文字でくくる → C たして・かけて → S 平方の差 → Q (x − a)² → D 数でくくってから公式
+      //   順番：決まった10問。ランダム：同じ種類の順で、数を毎回かえる（たすき掛け・3次式はなし）
+      (function () {
+        const M = "−";
+        const num = (n) => (n < 0 ? M + Math.abs(n) : String(n));
+        const sg = (n) => (n < 0 ? M + Math.abs(n) : "+" + n);           // 符号つき（カード・空欄の答え）
+        const fac = (n) => "(x " + (n < 0 ? M + " " + -n : "+ " + n) + ")";   // (x + n)
+        const co = (c, x, first) => {
+          if (c === 0) return "";
+          const a = Math.abs(c), body = (a === 1 && x ? "" : String(a)) + x;
+          return first ? (c < 0 ? M : "") + body : (c < 0 ? " " + M + " " : " + ") + body;
+        };
+        const poly = (a, b, c) => { let s = ""; [[a, "x²"], [b, "x"], [c, ""]].forEach(([k, x]) => { if (k) s += co(k, x, !s); }); return s; };
+        const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const nz = (a, b) => { let v; do v = ri(a, b); while (!v); return v; };
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const flip = (v) => (v[0] === M ? "+" + v.slice(1) : M + v.replace(/^\+/, ""));
+        const uniq = (a) => [...new Set(a)];
+        function pairRows(p, q) {   // たして p + q、かけて pq になる2数
+          return [
+            { t: "#たして " + num(p + q) + "、かけて " + num(p * q) + " になる 2 つの数をさがす" },
+            { t: "2 つの数：[" + sg(p) + "@s]、[" + sg(q) + "@s]", h: "かけて " + num(p * q) + " になる2数の中から、たして " + num(p + q) + " になるものをえらぼう。" }
+          ];
+        }
+        const make = {
+          A(g, k) {     // g x − g k = g(x − k)
+            const e = poly(0, g, -g * k);
+            return { e, rows: [{ t: e + " = [" + g + "](x [" + sg(-k) + "])", h: g + "x と " + g * Math.abs(k) + " は、どちらも " + g + " でわりきれるね。" + g + " でくくろう。" }],
+              dum: [String(g * Math.abs(k)), sg(-g * k), String(Math.abs(k) === g ? g + 1 : Math.abs(k))], ans: g + fac(-k) };
+          },
+          B(g, k) {     // g x² − g k x = g x (x − k)
+            const e = poly(g, -g * k, 0), gx = (g === 1 ? "" : g) + "x";
+            return { e, rows: [{ t: e + " = [" + gx + "](x [" + sg(-k) + "])", h: "どちらの項にも x があるね。" + (g > 1 ? "数の " + g + " もいっしょにくくろう。" : "x でくくろう。") }],
+              dum: uniq([g > 1 ? String(g) : "x²", g > 1 ? "x" : "2x", sg(-g * k)]), ans: gx + fac(-k) };
+          },
+          C(p, q) {     // x² + (p+q)x + pq = (x + p)(x + q)
+            const e = poly(1, p + q, p * q);
+            return { e, rows: pairRows(p, q).concat([{ t: e + " = (x [" + sg(p) + "@t])(x [" + sg(q) + "@t])", h: "見つけた2つの数を、それぞれのかっこに入れよう。" }]),
+              dum: [sg(p + q), sg(p * q)], ans: fac(p) + fac(q) };
+          },
+          S(k) {        // x² − k² = (x + k)(x − k)
+            const e = poly(1, 0, -k * k);
+            return { e, rows: [{ t: e + " = x² − [" + k + "]²", h: k * k + " は、何の2乗かな？" }, { t: e + " = (x + [" + k + "])(x − [" + k + "])", h: "a² − b² = (a + b)(a − b) を使おう。" }],
+              dum: uniq([String(k * k), String(2 * k), String(k + 1)]), ans: fac(k) + fac(-k) };
+          },
+          Q(k) {        // x² − 2kx + k² = (x − k)²
+            const e = poly(1, -2 * k, k * k);
+            return { e, rows: pairRows(-k, -k).concat([{ t: e + " = (x [" + sg(-k) + "])²", h: "同じ数が2つなので、(x + a)² の形になるね。" }]),
+              dum: [sg(-2 * k), sg(k * k)], ans: fac(-k) + "²" };
+          },
+          D(g, p, q) {  // g(x + p)(x + q)：まず g でくくる
+            const e = poly(g, g * (p + q), g * p * q);
+            const inner = "x²" + (p + q ? " [" + sg(p + q) + "x]" : "") + " [" + sg(p * q) + "]";
+            const first = { t: e + " = [" + g + "](" + inner.replace(/\[([+−])1x\]/, "[$1x]") + ")", h: "どの項も " + g + " でわりきれるね。まず " + g + " でくくろう。" };
+            const rows = p === -q
+              ? [first, { t: e + " = " + g + "(x + [" + Math.abs(p) + "])(x − [" + Math.abs(p) + "])", h: "かっこの中は a² − b² の形。(a + b)(a − b) を使おう。" }]
+              : [first].concat(pairRows(p, q), [{ t: e + " = " + g + "(x [" + sg(p) + "@t])(x [" + sg(q) + "@t])", h: "見つけた2つの数を入れよう。前の " + g + " をわすれずに。" }]);
+            return { e, rows, dum: uniq([String(g * 2), sg(g * p * q)].concat(p + q ? [sg(g * (p + q)) + "x"] : [sg(g)])), ans: g + fac(p) + fac(q) };
+          }
+        };
+        const SEQ = [["A", 2, 3], ["A", 3, -4], ["B", 1, -4], ["B", 3, 2], ["C", -2, -3], ["C", 3, -1], ["S", 3], ["Q", 2], ["D", 3, 2, -2], ["D", 3, 1, -3]];
+        function pq(lim) { let p, q; do { p = nz(-lim, lim); q = nz(-lim, lim); } while (p === q || p === -q); return [p, q]; }
+        function randomSet() {
+          return [
+            ["A", ri(2, 6), nz(-5, 5)], ["A", ri(2, 6), nz(-5, 5)],
+            ["B", 1, nz(-6, 6)], ["B", ri(2, 4), nz(-4, 4)],
+            ["C", ...pq(6)], ["C", ...pq(6)],
+            ["S", ri(1, 7)], ["Q", nz(-5, 5)],
+            (() => { const k = ri(1, 3); return ["D", ri(2, 3), k, -k]; })(),
+            ["D", pick([2, 3]), ...pq(4)]
+          ];
+        }
+        function problem([type, ...a]) {
+          const d = make[type](...a);
+          const right = d.rows.flatMap((r) => [...r.t.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1].split("@")[0]));
+          const flips = right.filter((v) => /^[+−]/.test(v)).map(flip);
+          const dummies = uniq(flips.concat(d.dum)).filter((v) => !right.includes(v)).slice(0, 5);
+          return { q: "次の式を因数分解しよう。", big: d.e, rows: d.rows, cards: uniq(right).concat(dummies), ans: d.e + " = " + d.ans };
+        }
+        let fxMode = "seq";
+        window.startFactor = function (m) {
+          if (m) fxMode = m;
+          ["modeSelection", "quizContainer", "completion"].forEach((id) => (document.getElementById(id).style.display = "none"));
+          document.getElementById("factorBox").style.display = "block";
+          document.querySelectorAll(".fx-mode").forEach((b) => b.classList.toggle("on", b.dataset.m === fxMode));
+          const list = (fxMode === "seq" ? SEQ : randomSet()).map(problem);
+          FillSteps.mount({
+            el: "#factorApp", problems: list,
+            hint: (p, row) => row.h || "",
+            tabGroup: (p, i) => ({ id: i < 4 ? 0 : i < 8 ? 1 : 2, label: i < 4 ? "くくる" : i < 8 ? "公式" : "くくってから公式" }),
+            tabsBefore: '<button type="button" class="fs-btn zm-back" onclick="backToModeSelection()">メニューへ</button>',
+            finalExtra: '<p><button type="button" class="fs-btn primary" onclick="startFactor(\'rand\')">ランダムでもう10問</button> <button type="button" class="fs-btn" onclick="backToModeSelection()">メニューにもどる</button></p>'
+          });
+          window.scrollTo(0, 0);
+        };
+        document.querySelectorAll(".fx-mode").forEach((b) => (b.onclick = () => startFactor(b.dataset.m)));
+        // メニューのいちばん左上に「因数分解の練習」
+        const btn = document.createElement("button");
+        btn.className = "mode-btn fx-card";
+        btn.onclick = () => startFactor("seq");
+        btn.innerHTML = '<div class="mode-icon"><span class="m"><i>x</i>² − 5<i>x</i> + 6</span><span class="m">= (<i>x</i> − 2)(<i>x</i> − 3)</span></div><div class="mode-title">因数分解の練習</div><div class="mode-desc">増減表の準備。くくる・公式（10問）</div>';
+        document.querySelector("#modeSelection .mode-buttons").prepend(btn);
+        const baseBack = backToModeSelection;
+        backToModeSelection = function () { document.getElementById("factorBox").style.display = "none"; baseBack(); window.scrollTo(0, 0); };
+        const baseStart = startMode;
+        startMode = function (m) { document.getElementById("factorBox").style.display = "none"; baseStart(m); };
+        window.__factorTest = { SEQ, randomSet, problem };
+      })();
     </script>
   </body>
 </html>

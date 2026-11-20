@@ -134,11 +134,11 @@
     return { big: '', q: '次の ' + d.length + ' 個のデータは、小さい順に並んでいる。最頻値を求めよ。', sub: line(d), ans: f(md0[0]), wrong: D.near(md0[0], [Math.round(D.median(d)), Math.round(D.mean(d)), Math.max.apply(null, d)]), say: md0[0] + ' が ' + cnt + ' 回出てきて、もっとも多いので最頻値です。' };
   }
   var FRS = [[2, 3, 4, 1], [1, 4, 3, 2], [1, 2, 5, 2], [3, 4, 2, 1], [2, 5, 3, 2], [1, 3, 4, 2]];
-  function freqMeanQ() {
+  function freqMeanQ(i) {   // i があれば、平均値 → 最頻値 → 平均値 … の順
     var w = pick([2, 4, 10]), k = 4, fr = pick(FRS), mids = range(k, function (i) { return i * w + w / 2; }), tot = D.sum(fr), s = D.sum(fr.map(function (v, i) { return v * mids[i]; })), m = s / tot;
     var c = { s: { unit: '点' }, edges: range(k + 1, function (i) { return i * w; }), fr: fr, mids: mids, n: tot };
     var mi = fr.indexOf(Math.max.apply(null, fr));
-    return pick([
+    return (typeof i === 'number' ? function (L) { return L[i % 2]; } : pick)([
       { big: '', q: 'この度数分布表から、階級値を使って平均値を求めよ。', fig: freqHTML(c), ans: f(m), wrong: D.near(m, [D.mean(mids), m + w, m - w / 2]), say: '（階級値 × 度数）の合計 ' + s + ' を、度数の合計 ' + tot + ' でわって ' + f(m) + ' です。',
         p: hint([[fr.map(function (v, i) { return mids[i] + ' × ' + v; }).join(' + ') + ' = ' + s, '（階級値）×（度数）を合計します。'], [s + ' ÷ ' + tot + ' = ' + f(m), '度数の合計でわります。']]) },
       { big: '', q: 'この度数分布表の最頻値を求めよ。', fig: freqHTML(c), ans: f(mids[mi]), wrong: D.near(mids[mi], [fr[mi], c.edges[mi], c.edges[mi + 1]]), say: '度数がもっとも大きい階級は ' + clsName(c, mi).replace(' 以上 ', '～').replace(' 未満', '') + '。その階級値 ' + mids[mi] + ' を最頻値とします。' }
@@ -363,64 +363,73 @@
   }
 
   var n = function (k, fn) { return function () { return range(k, fn); }; };
+  // 【2026-11-19 先生の要望】教科書に沿って、問題を少なく・広く。言葉の意味の問題はなくした。
+  //   1 つのメニューの中で「やってみる問題（点を打つ・表をつくる など）」と「選ぶ問題」を続けて出す（mix）
+  var LBL = ['ア', 'イ', 'ウ', 'エ'];
+  // 選ぶ問題（Sek.quiz の形）を、D.run で出せる形にする
+  function asTask(z) {
+    var say = z.say ? [].concat(z.say).map(function (t) { return '<p>' + md(t) + '</p>'; }).join('') + (z.ansFig ? '<div class="sk-figbox">' + z.ansFig + '</div>' : '') : '<p>' + md(z.ans) + '</p>';
+    var showV = function (v) { return /^<(svg|div|table)/.test(v) ? v : md(v); };
+    return { q: z.q, sub: (z.big ? '<span class="big-formula">' + md(z.big) + '</span>' : '') + (z.sub || ''), mount: function (body, ctx) {
+      var ch = shuffle([z.ans].concat(z.wrong.slice(0, 3))), tried = [], fin = ctx.solved;
+      function draw() {
+        body.innerHTML = (z.fig ? '<div class="sk-figbox">' + z.fig + '</div>' : '') + '<div class="sk-opts' + (z.figOpts ? ' figs' : '') + '">' + ch.map(function (v, k) {
+          var bad = tried.indexOf(v) >= 0;
+          return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (fin && v === z.ans ? ' ok' : '') + '" data-k="' + k + '"' + (fin || bad ? ' disabled' : '') + '><small>' + LBL[k] + '</small><span>' + showV(v) + '</span></button>';
+        }).join('') + '</div>';
+        body.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { var v = ch[+b.dataset.k]; if (v === z.ans) { fin = true; draw(); ctx.ok(say); } else { tried.push(v); ctx.miss(); draw(); } }; });
+      }
+      draw();
+      if (fin) ctx.ok(say);
+    } };
+  }
+  // parts：[[問題数, 問題を1つ作る関数, '選ぶ' なら選ぶ問題], …] を順につなげる
+  function mix(name, parts) {
+    taskMode(function () { return [].concat.apply([], parts.map(function (p) { return range(p[0], function (i) { var t = p[1](i); return p[2] ? asTask(t) : t; }); })); }, name);
+  }
+  var count = function (parts) { return parts.reduce(function (a, p) { return a + p[0]; }, 0) + '問'; };
+  function unit(name, parts) { return [name, count(parts), function () { mix(name, parts); }]; }
+  var CH = true;   // 選ぶ問題のしるし
+  var dotDraw = function () { var d = dotData(); return { q: '次のデータ（小さい順）を、ドットプロットに表そう。', mount: D.dotTask(d, 0, 8) }; };
+  var histDraw = function () { var c = genClass(); return { q: c.s.name + 'の度数分布表から、ヒストグラムをかこう。', mount: function (b, x) { var w = document.createElement('div'); w.innerHTML = freqHTML(c); b.appendChild(w); var d = document.createElement('div'); b.appendChild(d); D.histTask(c.edges, c.fr, c.s.unit)(d, x); } }; };
+  var sortOnly = function () { var d = nums(rint(7, 10), 1, 30); return { q: 'データを小さい順に押そう。', mount: D.sortTask(d) }; };
+  var sortMedian = function () { var d = nums(pick([7, 8, 9, 10]), 1, 20), m = D.median(d), s = sorted(d), h = Math.floor(s.length / 2); return { q: 'データを小さい順に並べて、中央値を求めよう。', mount: D.sortTask(d, D.thenPick('中央値はどれか。', f(m), D.near(m, [s[h - 1], s[h], Math.round(D.mean(d))]), medianSay(d))) }; };
   var P = {
     seiri: function () {
-      show('やりたい問題を選ぼう。', [
-        ['言葉の意味', '10問', function () { quizMode(function () { return D.termQuiz(T1, 10); }, { name: '言葉の意味' }); }],
-        ['度数分布表の見方', '7問', function () { quizMode(tableWords, { name: '度数分布表の見方' }); }],
-        ['ドットプロットに点を打つ', '3問', function () { taskMode(n(3, function () { var d = dotData(); return { q: '次のデータ（小さい順）を、ドットプロットに表そう。', mount: D.dotTask(d, 0, 8) }; }), 'ドットプロットに点を打つ'); }],
-        ['ドットプロットを選ぶ', '5問', function () { quizMode(n(5, dotChoice), { name: 'ドットプロットを選ぶ' }); }],
-        ['度数分布表をつくる', '3問', function () { taskMode(n(3, function (i) { return freqTask(i > 0); }), '度数分布表をつくる'); }],
-        ['ヒストグラムをかく', '3問', function () { taskMode(n(3, function () { var c = genClass(); return { q: c.s.name + 'の度数分布表から、ヒストグラムをかこう。', mount: function (b, x) { var w = document.createElement('div'); w.innerHTML = freqHTML(c); b.appendChild(w); var d = document.createElement('div'); b.appendChild(d); D.histTask(c.edges, c.fr, c.s.unit)(d, x); } }; }), 'ヒストグラムをかく'); }],
-        ['ヒストグラムを選ぶ', '5問', function () { quizMode(n(5, histChoice), { name: 'ヒストグラムを選ぶ' }); }],
-        ['ヒストグラムを読みとる', '6問', function () { quizMode(n(6, histRead), { name: 'ヒストグラムを読みとる' }); }],
-        ['相対度数・累積度数の表', '3問', function () { taskMode(n(3, relTask), '相対度数・累積度数の表'); }]
+      show('上から順にやってみよう。', [
+        unit('ドットプロット', [[2, dotDraw], [2, dotChoice, CH]]),
+        unit('度数分布表をつくる', [[3, function (i) { return freqTask(i > 0); }]]),
+        unit('ヒストグラム', [[2, histDraw], [2, histChoice, CH], [2, histRead, CH]]),
+        unit('相対度数・累積度数', [[3, relTask]])
       ]);
     },
     daihyou: function () {
-      show('やりたい問題を選ぼう。', [
-        ['言葉の意味', '7問', function () { quizMode(function () { return D.termQuiz(T2, 7); }, { name: '言葉の意味' }); }],
-        ['データを小さい順に並べる', '5問', function () { taskMode(n(5, function () { var d = nums(rint(7, 10), 1, 30); return { q: 'データを小さい順に押そう。', mount: D.sortTask(d) }; }), '小さい順に並べる'); }],
-        ['並べてから中央値', '5問', function () { taskMode(n(5, function () { var d = nums(pick([7, 8, 9, 10]), 1, 20), m = D.median(d), s = sorted(d), h = Math.floor(s.length / 2); return { q: 'データを小さい順に並べて、中央値を求めよう。', mount: D.sortTask(d, D.thenPick('中央値はどれか。', f(m), D.near(m, [s[h - 1], s[h], Math.round(D.mean(d))]), medianSay(d))) }; }), '並べてから中央値'); }],
-        ['中央値を求める', '8問', function () { quizMode(n(8, medianQ), { name: '中央値を求める' }); }],
-        ['平均値を求める', '8問', function () { quizMode(n(8, meanQ), { name: '平均値を求める' }); }],
-        ['最頻値を求める', '6問', function () { quizMode(n(6, modeQ), { name: '最頻値を求める' }); }],
-        ['度数分布表から平均値・最頻値', '6問', function () { quizMode(n(6, freqMeanQ), { name: '度数分布表から' }); }],
-        ['外れ値と平均値・中央値', '4問', function () { quizMode(n(4, outlierQ), { name: '外れ値と平均値・中央値' }); }]
+      show('上から順にやってみよう。', [
+        unit('小さい順・中央値・平均値・最頻値', [[2, sortOnly], [1, sortMedian], [2, medianQ, CH], [2, meanQ, CH], [2, modeQ, CH]]),
+        unit('度数分布表から平均値・最頻値', [[3, freqMeanQ, CH]])
       ]);
     },
     hako: function () {
-      show('やりたい問題を選ぼう。', [
-        ['言葉の意味', '8問', function () { quizMode(function () { return D.termQuiz(T3, 8); }, { name: '言葉の意味' }); }],
-        ['四分位数を求める', '8問', function () { quizMode(n(8, quartQ), { name: '四分位数を求める' }); }],
-        ['範囲・四分位範囲を求める', '6問', function () { quizMode(n(6, rangeQ), { name: '範囲・四分位範囲' }); }],
-        ['5 つの値から箱ひげ図を選ぶ', '6問', function () { quizMode(n(6, boxPick), { name: '箱ひげ図を選ぶ' }); }],
-        ['データから箱ひげ図をつくる', '4問', function () { taskMode(n(4, boxFromData), 'データから箱ひげ図'); }],
-        ['箱ひげ図を読みとる', '8問', function () { quizMode(n(8, boxRead), { name: '箱ひげ図を読みとる' }); }],
-        ['外れ値を見つける', '4問', function () { taskMode(n(4, outlierFind), '外れ値を見つける'); }]
+      show('上から順にやってみよう。', [
+        unit('四分位数と四分位範囲', [[3, quartQ, CH], [2, rangeQ, CH]]),
+        unit('箱ひげ図', [[2, boxFromData], [2, boxPick, CH], [2, boxRead, CH]]),
+        unit('外れ値を見つける', [[2, outlierFind]])
       ]);
     },
     bunsan: function () {
-      show('やりたい問題を選ぼう。', [
-        ['言葉の意味', '6問', function () { quizMode(function () { return D.termQuiz(T4, 3, T4X).concat(D.termQuiz(T4, 3, T4X)); }, { name: '言葉の意味' }); }],
-        ['表をうめて分散・標準偏差', '3問', function () { taskMode(n(3, varTask), '表をうめる'); }],
-        ['偏差・分散・標準偏差の計算', '8問', function () { quizMode(n(8, varQ), { name: '計算' }); }],
-        ['散らばりを比べる', '4問', function () { quizMode(n(4, varCompare), { name: '散らばりを比べる' }); }]
+      show('上から順にやってみよう。', [
+        unit('表をうめて分散・標準偏差', [[2, varTask]]),
+        unit('分散・標準偏差の計算と比較', [[3, varQ, CH], [2, varCompare, CH]])
       ]);
     },
     soukan: function () {
-      show('やりたい問題を選ぼう。', [
-        ['言葉の意味', '5問', function () { quizMode(function () { return D.termQuiz(T5, 5); }, { name: '言葉の意味' }); }],
-        ['散布図から相関を読む', '6問', function () { quizMode(n(6, scatterJudge), { name: '散布図から相関を読む' }); }],
-        ['散布図から相関係数を選ぶ', '6問', function () { quizMode(n(6, rPick), { name: '相関係数を選ぶ' }); }],
-        ['相関係数の性質', '4問', function () { quizMode(n(4, rRangeQ), { name: '相関係数の性質' }); }],
-        ['公式で相関係数を計算する', '6問', function () { fillMode(function () { return shuffle(RC).slice(0, 6).map(rCalcP); }); }],
-        ['表をうめて相関係数', '2問', function () { taskMode(n(2, corrTask), '表をうめる'); }]
+      show('上から順にやってみよう。', [
+        unit('散布図と相関', [[2, scatterJudge, CH], [2, rPick, CH], [1, rRangeQ, CH]]),
+        unit('相関係数を計算する', [[2, rCalcQ, CH], [1, corrTask]])
       ]);
     },
     matome: function () {
       show('やりたい問題を選ぼう。', [
-        ['言葉の穴うめ', '9問', function () { quizMode(fillQ, { name: '言葉の穴うめ' }); }],
         ['総合問題', '10問', function () { quizMode(allQ, { name: '総合問題' }); }],
         ['データの活用（手順と判断）', '4問', function () { quizMode(judgeQ, { name: 'データの活用' }); }],
         ['タイムアタック', '10問', function () { quizMode(allQ, { name: 'タイムアタック', timed: true }); }]

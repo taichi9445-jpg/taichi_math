@@ -19,14 +19,19 @@ function doGet(e) {
   var page = cleanPath(prm.p || START);
   if (!page) return message('ページの名前が正しくありません。');
   var fresh = prm.fresh === '1';
-  var text = getText(page, fresh);
-  if (text === null) return message('ページが見つかりませんでした：' + page);
-  var html = buildPage(page, text, fresh);
-  var m = html.match(/<title>([^<]*)<\/title>/i);
-  return HtmlService.createHtmlOutput(html)
-    .setTitle(m ? m[1] : '数学デジタル教材')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // 2026-11-19：うまく作れなかったときは、白い画面ではなく理由を出す
+  try {
+    var text = getText(page, fresh);
+    if (text === null) return message('ページが見つかりませんでした：' + page);
+    var html = buildPage(page, text, fresh);
+    var m = html.match(/<title>([^<]*)<\/title>/i);
+    return HtmlService.createHtmlOutput(html)
+      .setTitle(m ? m[1] : '数学デジタル教材')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (err) {
+    return message('ページを開けませんでした（' + page + '）。<br>理由：' + String((err && err.message) || err).replace(/</g, '&lt;'));
+  }
 }
 
 // 「m/abc.html」「math2/m/abc.html」のような、教材の中の .html だけを通す
@@ -73,7 +78,11 @@ function buildPage(page, html, fresh) {
   html = html.replace(/<script\b([^>]*)\bsrc\s*=\s*"([^"]+)"([^>]*)>\s*<\/script>/gi, function (tag, a, src, b) {
     if (!isRel(src)) return tag;
     var js = getText(resolvePath(dir, noQuery(src)), fresh);
-    return js === null ? tag : '<script>\n' + js.replace(/<\/script/gi, '<\\/script') + '\n</script>';
+    return js === null ? tag : '<script>\n' + safeJs(js) + '\n</script>';
+  });
+  // ページの中に直接書いてある script も同じようにする
+  html = html.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, function (all, open, body, close) {
+    return /\bsrc\s*=/i.test(open) ? all : open + safeJs(body) + close;
   });
   // 教材どうしのリンク（JS の中の文字も）を、このウェブアプリの ?p= にする。画面全体で開くように target="_top"
   html = html.replace(/href="([^"#?]+\.html)(#[^"]*)?"/g, function (all, href, hash) {
@@ -83,6 +92,10 @@ function buildPage(page, html, fresh) {
   });
   return html;
 }
+
+// JS の文字の中の「</text>」などは「<\/text>」と書いても同じ意味。GAS が HTML の閉じタグとまちがえて止まらないようにする（2026-11-19）
+//   閉じタグの形（</ ＋ 名前 ＋ >）だけを書きかえる。/</g のような正規表現はそのまま
+function safeJs(js) { return js.replace(/<\/([A-Za-z][\w-]*\s*>)/g, '<\\/$1'); }
 
 function message(t) {
   return HtmlService.createHtmlOutput('<p style="font:16px sans-serif;padding:20px">' + t + '</p><p style="font:16px sans-serif;padding:0 20px"><a href="' + ScriptApp.getService().getUrl() + '" target="_top">数学Ⅱの一覧へ</a></p>')

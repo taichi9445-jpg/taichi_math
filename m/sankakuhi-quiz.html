@@ -9,6 +9,7 @@
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
+  <script src="../assets/ratio-drag.js?v=20261119"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>三角比クイズ</title>
@@ -134,8 +135,9 @@
             <button class="level-btn active" onclick="selectLevel(1)"><span class="lv-l">レベル1: 三角形の回転</span><span class="lv-s"><span class="lv-no">Lv1</span> 向き</span></button>
             <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 三角比の計算</span><span class="lv-s"><span class="lv-no">Lv2</span> 計算</span></button>
             <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 有名角の辺の比</span><span class="lv-s"><span class="lv-no">Lv3</span> 辺の比</span></button>
-            <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 有名角の値</span><span class="lv-s"><span class="lv-no">Lv4</span> 有名角</span></button>
-            <button class="level-btn" onclick="selectLevel(5)"><span class="lv-l">レベル5: 応用問題</span><span class="lv-s"><span class="lv-no">Lv5</span> 応用</span></button>
+            <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 辺の比と角をあてはめる</span><span class="lv-s"><span class="lv-no">Lv4</span> 比と角</span></button>
+            <button class="level-btn" onclick="selectLevel(5)"><span class="lv-l">レベル5: 有名角の値</span><span class="lv-s"><span class="lv-no">Lv5</span> 有名角</span></button>
+            <button class="level-btn" onclick="selectLevel(6)"><span class="lv-l">レベル6: 応用問題</span><span class="lv-s"><span class="lv-no">Lv6</span> 応用</span></button>
         </div>
 
         <!-- レベル1 -->
@@ -258,45 +260,8 @@
             </div>
         </div>
 
-        <!-- レベル4 -->
-        <div id="level4" class="quiz-container">
-            <div class="progress">
-                <div class="progress-bar" id="progress4" style="width: 0%"></div>
-            </div>
-
-            <div class="question-card">
-                <div class="question-number" id="questionNum4">問題 1/10</div>
-                <div class="question-text" id="questionText4"></div>
-
-                <div class="triangle-container" id="triangleContainer4"></div>
-
-                <div class="options" id="options4"></div>
-
-                <div class="buttons">
-                    <button class="btn btn-secondary" onclick="showHint(4)">ヒント</button>
-                    <button class="btn btn-secondary" id="retryBtn4" onclick="retryQuestion(4)" style="display: none;">もう一度挑戦</button>
-                    <button class="btn btn-primary" id="nextBtn4" onclick="nextQuestion(4)" style="display: none;">次の問題へ</button>
-                </div>
-
-                <div class="hint-container" id="hint4">
-                    <div class="hint-title">ヒント</div>
-                    <div id="hintText4"></div>
-                </div>
-
-                <div class="feedback" id="feedback4"></div>
-            </div>
-
-            <div class="results" id="results4">
-                <div class="score" id="score4"></div>
-                <p>お疲れ様でした！</p>
-                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
-                <div class="result-nav">
-                    <button class="next" onclick="goLevel(5); window.scrollTo(0, 0);">次のレベル（レベル5）へ ▶</button>
-                    <button class="again" onclick="restartLevel(4)">もう一度挑戦</button>
-                    <a href="../index.html">ほかの教材をえらぶ</a>
-                </div>
-            </div>
-        </div>
+        <!-- レベル4（2026-11-19 追加）：有名角の直角三角形に、辺の比と角をカードであてはめる（assets/ratio-drag.js） -->
+        <div id="level4" class="quiz-container"><div id="rdMount"></div></div>
 
         <!-- レベル5 -->
         <div id="level5" class="quiz-container">
@@ -331,8 +296,48 @@
                 <p>お疲れ様でした！</p>
                 <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
                 <div class="result-nav">
-                    
+                    <button class="next" onclick="goLevel(6); window.scrollTo(0, 0);">次のレベル（レベル6）へ ▶</button>
                     <button class="again" onclick="restartLevel(5)">もう一度挑戦</button>
+                    <a href="../index.html">ほかの教材をえらぶ</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- レベル6 -->
+        <div id="level6" class="quiz-container">
+            <div class="progress">
+                <div class="progress-bar" id="progress6" style="width: 0%"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNum6">問題 1/10</div>
+                <div class="question-text" id="questionText6"></div>
+
+                <div class="triangle-container" id="triangleContainer6"></div>
+
+                <div class="options" id="options6"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="showHint(6)">ヒント</button>
+                    <button class="btn btn-secondary" id="retryBtn6" onclick="retryQuestion(6)" style="display: none;">もう一度挑戦</button>
+                    <button class="btn btn-primary" id="nextBtn6" onclick="nextQuestion(6)" style="display: none;">次の問題へ</button>
+                </div>
+
+                <div class="hint-container" id="hint6">
+                    <div class="hint-title">ヒント</div>
+                    <div id="hintText6"></div>
+                </div>
+
+                <div class="feedback" id="feedback6"></div>
+            </div>
+
+            <div class="results" id="results6">
+                <div class="score" id="score6"></div>
+                <p>お疲れ様でした！</p>
+                <!-- 【ブラッシュアップ】次のレベル・ほかの教材も選べるようにした -->
+                <div class="result-nav">
+                    
+                    <button class="again" onclick="restartLevel(6)">もう一度挑戦</button>
                     <a href="../index.html">ほかの教材をえらぶ</a>
                 </div>
             </div>
@@ -346,8 +351,9 @@
         //   ・レベル1：選択肢は「正しい図」「辺の長さが入れかわった図」「ちがう角が左下の図」など、図形として意味のある 4 つに
         //   ・レベル2：90° − θ の問題（sin C = cos A）を追加。ヒントでは答えの数を出さない
         //   ・レベル3：有名角の辺の比（2026-10-27 追加）。前半は正しい図をえらぶ、後半はカードを辺にドラッグして入れる
-        //   ・レベル4：有名角の値（元の名前は「応用問題」だった）。出す順をまぜる
-        //   ・レベル5：元は「レベル3のシャッフル」だった。辺の長さを求める・90° − θ・三角比の表などの応用問題に
+        //   ・レベル4（2026-11-19 追加）：有名角の直角三角形に、辺の比と角をカードであてはめる（assets/ratio-drag.js。#26 と共通）
+        //   ・レベル5：有名角の値（元の名前は「応用問題」だった）。出す順をまぜる
+        //   ・レベル6：元は「レベル3のシャッフル」だった。辺の長さを求める・90° − θ・三角比の表などの応用問題に
         //   ・正解したら理由を一言、まちがえたら「えらんだものが何なのか」を一言。まちがえた選択肢は押せなくなり、そのままえらび直せる
         let currentLevel = 1;
         let currentQuestion = 0;
@@ -391,8 +397,8 @@
         // 問題データはそのままに、表示の段階で表記を整える。
         function baseIsAdjacent(level) {
             if (level === 2) return L2[currentQuestion][4] === 'A';
-            if (level === 4) return true; // 有名角の図はすべて左下の角が基準
-            if (level === 5) return !!L4[currentQuestion].fig;
+            if (level === 5) return true; // 有名角の図はすべて左下の角が基準
+            if (level === 6) return !!L4[currentQuestion].fig;
             return false;
         }
         function formatNotation(root, useBase = false) {
@@ -899,7 +905,7 @@
             if (level === 1) return L1.map(level1Question);
             if (level === 2) return L2.map(level2Question);
             if (level === 3) return L3A.map(ratioChoice).concat(L3B.map(ratioDrag));
-            if (level === 4) return shuffleArray(L3).map(level3Question);
+            if (level === 5) return shuffleArray(L3).map(level3Question);
             return L4.map(level4Question);
         }
         const HINT4 = [
@@ -919,6 +925,7 @@
             restartLevel(level);
         }
         function restartLevel(level) {
+            if (level === 4) { RatioDrag.mount(document.getElementById('rdMount'), { next: () => { goLevel(5); window.scrollTo(0, 0); }, nextLabel: '次のレベル（レベル5）へ ▶' }); return; }
             currentQuestion = 0;
             score = 0;
             levelQuestions[level] = buildLevel(level);
@@ -957,7 +964,7 @@
                 b.onclick = () => selectOption(level, index);
                 box.appendChild(b);
             });
-            const hint = question.hint || (level === 5 ? HINT4[currentQuestion] : '');
+            const hint = question.hint || (level === 6 ? HINT4[currentQuestion] : '');
             document.getElementById('hintText' + level).innerHTML = displayContent(hint, level, true);
             document.getElementById('nextBtn' + level).style.display = 'none';
             document.getElementById('retryBtn' + level).style.display = 'none';
@@ -1052,7 +1059,7 @@
                 .observe(document.body, { childList: true, subtree: true, characterData: true });
         }
 
-        // 【Claude Code 2026-10-28】レベル4のタイムアタック（先生の要望）
+        // 【Claude Code 2026-10-28】レベル5（有名角の値）のタイムアタック（先生の要望）
         //   ・「タイムアタック」で時間が 0 から進み、問題をまぜ直して 9 問。ボタンは「もう一度やり直す」に変わる
         //   ・途中は解説を出さない（正解ならすぐ次へ、まちがえたら × をつけて、のこりからえらび直す）
         //   ・9 問目が終わると時間が止まり、タイムと「間違えた問題を確認する」（図つきの解説）が出る
@@ -1062,34 +1069,34 @@
         let ta4ResultsHTML = null;
         function ta4Bar() {
             let bar = document.getElementById('ta4Bar');
-            if (!bar) { bar = document.createElement('div'); bar.id = 'ta4Bar'; bar.className = 'ta4-bar'; document.querySelector('#level4 .question-card').before(bar); document.getElementById('level4').classList.add('has-ta4'); }
+            if (!bar) { bar = document.createElement('div'); bar.id = 'ta4Bar'; bar.className = 'ta4-bar'; document.querySelector('#level5 .question-card').before(bar); document.getElementById('level5').classList.add('has-ta4'); }
             const on = ta4 && ta4.t0;
             bar.innerHTML = on
                 ? '<span class="ta4-time" id="ta4Time">' + ta4Fmt((ta4.end || performance.now()) - ta4.t0) + '</span><button type="button" class="ta4-go" onclick="ta4Start()">もう一度やり直す</button><button type="button" class="ta4-quit" onclick="ta4Quit()">やめる</button>'
                 : '<button type="button" class="ta4-go" onclick="ta4Start()">タイムアタック</button><span class="ta4-note">9問をランダムに。時間をはかろう</span>';
-            document.querySelector('#level4 .buttons').style.display = on ? 'none' : '';
+            document.querySelector('#level5 .buttons').style.display = on ? 'none' : '';
         }
         function ta4Stop() { if (ta4 && ta4.timer) clearInterval(ta4.timer); }
-        function ta4Restore() { const r = document.getElementById('results4'); if (ta4ResultsHTML !== null) r.innerHTML = ta4ResultsHTML; }
+        function ta4Restore() { const r = document.getElementById('results5'); if (ta4ResultsHTML !== null) r.innerHTML = ta4ResultsHTML; }
         function ta4Start() {
             ta4Stop(); ta4Restore();
             ta4 = { t0: performance.now(), wrong: [], miss: 0, timer: setInterval(() => { const el = document.getElementById('ta4Time'); if (el && ta4 && !ta4.end) el.textContent = ta4Fmt(performance.now() - ta4.t0); }, 100) };
-            ta4Bar(); restartLevel(4); window.scrollTo(0, 0);
+            ta4Bar(); restartLevel(5); window.scrollTo(0, 0);
         }
-        function ta4Quit() { ta4Stop(); ta4 = null; ta4Restore(); ta4Bar(); restartLevel(4); }
+        function ta4Quit() { ta4Stop(); ta4 = null; ta4Restore(); ta4Bar(); restartLevel(5); }
         const baseGoLevel = goLevel;
         goLevel = function (level) { if (ta4) { ta4Stop(); ta4 = null; ta4Restore(); } baseGoLevel(level); ta4Bar(); };
         selectLevel = function (level) { goLevel(level); };
         const baseLoadQuestion = loadQuestion;
-        loadQuestion = function (level) { baseLoadQuestion(level); if (level === 4) ta4Bar(); };
+        loadQuestion = function (level) { baseLoadQuestion(level); if (level === 5) ta4Bar(); };
         const baseSelectOption = selectOption;
         selectOption = function (level, index) {
-            if (level !== 4 || !ta4 || ta4.end) return baseSelectOption(level, index);
+            if (level !== 5 || !ta4 || ta4.end) return baseSelectOption(level, index);
             if (isAnswered) return;
-            const q = levelQuestions[4][currentQuestion], buttons = document.querySelectorAll('#options4 .option'), orig = order[index];
+            const q = levelQuestions[5][currentQuestion], buttons = document.querySelectorAll('#options5 .option'), orig = order[index];
             if (orig === q.correct) {
                 isAnswered = true; buttons[index].classList.add('correct'); if (!missedThis) score++;
-                setTimeout(() => { if (ta4 && !ta4.end) nextQuestion(4); }, 300);
+                setTimeout(() => { if (ta4 && !ta4.end) nextQuestion(5); }, 300);
             } else {
                 missedThis = true; ta4.miss++; buttons[index].classList.add('incorrect'); buttons[index].disabled = true;
                 let w = ta4.wrong.find(x => x.q === q); if (!w) ta4.wrong.push(w = { q, you: [] }); w.you.push(q.options[orig]);
@@ -1097,11 +1104,11 @@
         };
         const baseShowResults = showResults;
         showResults = function (level) {
-            if (level !== 4 || !ta4) return baseShowResults(level);
+            if (level !== 5 || !ta4) return baseShowResults(level);
             ta4.end = performance.now(); ta4Stop();
-            const ms = ta4.end - ta4.t0, best = ta4Best[4], newBest = !best || ms < best; if (newBest) ta4Best[4] = ms;
-            document.querySelector('#level4 .question-card').style.display = 'none';
-            const r = document.getElementById('results4'); if (ta4ResultsHTML === null) ta4ResultsHTML = r.innerHTML;
+            const ms = ta4.end - ta4.t0, best = ta4Best[5], newBest = !best || ms < best; if (newBest) ta4Best[5] = ms;
+            document.querySelector('#level5 .question-card').style.display = 'none';
+            const r = document.getElementById('results5'); if (ta4ResultsHTML === null) ta4ResultsHTML = r.innerHTML;
             r.style.display = 'block';
             r.innerHTML = '<div class="score">タイムアタック クリア</div><div class="ta4-big">' + ta4Fmt(ms) + '</div>' +
                 '<p>' + (ta4.miss ? 'まちがえた回数 ' + ta4.miss + ' 回' : 'ノーミス！') + (newBest && best ? '　記録更新！' : '') + '</p>' +
@@ -1111,18 +1118,18 @@
             document.getElementById('ta4Time').textContent = ta4Fmt(ms);
         };
         function ta4Review() {
-            const r = document.getElementById('results4');
+            const r = document.getElementById('results5');
             r.innerHTML = '<div class="score">間違えた問題</div>' + ta4.wrong.map(w =>
-                '<div class="ta4-item"><div class="ta4-q">' + displayContent(w.q.question, 4) + '</div>' +
+                '<div class="ta4-item"><div class="ta4-q">' + displayContent(w.q.question, 5) + '</div>' +
                 '<p class="ta4-ans">答え　' + w.q.options[w.q.correct] + '　<span class="ta4-you">（選んだ答え：' + w.you.join('、') + '）</span></p>' +
-                '<div class="ta4-exp">' + displayContent(w.q.exp, 4, true) + '</div>' +
-                (w.q.hint ? '<div class="ta4-fig">' + displayContent(w.q.hint, 4, true) + '</div>' : '') + '</div>').join('') +
+                '<div class="ta4-exp">' + displayContent(w.q.exp, 5, true) + '</div>' +
+                (w.q.hint ? '<div class="ta4-fig">' + displayContent(w.q.hint, 5, true) + '</div>' : '') + '</div>').join('') +
                 '<div class="result-nav"><button class="again" onclick="ta4Start()">もう一度挑戦する</button><button class="again" onclick="ta4Quit()">ふつうの練習にもどる</button></div>';
             r.scrollIntoView({ block: 'start' });
         }
         (function () {
             const st = document.createElement('style');
-            st.textContent = '.ta4-bar{display:flex;align-items:center;gap:8px;height:48px;margin:0 0 10px;white-space:nowrap}#level4.has-ta4 .progress{top:73px}' +
+            st.textContent = '.ta4-bar{display:flex;align-items:center;gap:8px;height:48px;margin:0 0 10px;white-space:nowrap}#level5.has-ta4 .progress{top:73px}' +
                 '.ta4-time{font:700 20px/1 "BIZ UDPGothic",sans-serif;font-variant-numeric:tabular-nums;color:#fff;background:#1f4e8c;border-radius:8px;padding:9px 10px;min-width:96px;text-align:center}' +
                 '.ta4-go{min-height:44px;padding:6px 12px;border:1px solid #e8890c;border-bottom:3px solid #b35c00;border-radius:6px;background:#e8890c;color:#fff;font:700 16px "BIZ UDPGothic",sans-serif;cursor:pointer}' +
                 '.ta4-quit{min-height:44px;padding:6px 12px;border:1px solid #c5d3e4;border-radius:6px;background:#fff;color:#1f4e8c;font:15px "BIZ UDPGothic",sans-serif;cursor:pointer}' +

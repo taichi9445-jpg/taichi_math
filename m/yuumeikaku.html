@@ -9,6 +9,7 @@
   -->
   <link rel="stylesheet" href="../assets/port.css">
   <script src="../assets/port.js"></script>
+  <script src="../assets/ratio-drag.js?v=20261119"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>有名角の三角比の値</title>
@@ -412,8 +413,9 @@
     <small>数学Ⅰ　図形と計量</small><h1>有名角の三角比の値</h1>
     <p>図で確かめながら三角比を学ぼう</p>
    </header>
-   <div class="level-selector"><button class="level-btn active" onclick="selectLevel(0)"><span class="lv-l">レベル0: 有名角の辺の比</span><span class="lv-s">Lv0<br>辺の比</span></button> <button class="level-btn" onclick="selectLevel(1)"><span class="lv-l">レベル1: 鋭角の三角比</span><span class="lv-s">Lv1<br>鋭角</span></button> <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 鈍角・0°・90°・180°</span><span class="lv-s">Lv2<br>鈍角</span></button> <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 全部まぜて</span><span class="lv-s">Lv3<br>まぜる</span></button> <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 180°−<i class="mi">θ</i>・角を求める</span><span class="lv-s">Lv4<br>角<i class="mi">θ</i></span></button>
+   <div class="level-selector"><button class="level-btn active" onclick="selectLevel(0)"><span class="lv-l">レベル0: 有名角の辺の比</span><span class="lv-s">Lv0<br>辺の比</span></button> <button class="level-btn" onclick="selectLevel(1)"><span class="lv-l">レベル1: 辺の比と角をあてはめる</span><span class="lv-s">Lv1<br>比と角</span></button> <button class="level-btn" onclick="selectLevel(2)"><span class="lv-l">レベル2: 鋭角の三角比</span><span class="lv-s">Lv2<br>鋭角</span></button> <button class="level-btn" onclick="selectLevel(3)"><span class="lv-l">レベル3: 鈍角・0°・90°・180°</span><span class="lv-s">Lv3<br>鈍角</span></button> <button class="level-btn" onclick="selectLevel(4)"><span class="lv-l">レベル4: 全部まぜて</span><span class="lv-s">Lv4<br>まぜる</span></button> <button class="level-btn" onclick="selectLevel(5)"><span class="lv-l">レベル5: 180°−<i class="mi">θ</i>・角を求める</span><span class="lv-s">Lv5<br>角<i class="mi">θ</i></span></button>
    </div>
+   <div id="rdBox" style="display:none"></div>
    <div class="mode-selector"><button class="mode-btn active" onclick="selectMode('sequential')">順番モード</button> <button class="mode-btn" onclick="selectMode('random')">ランダムモード</button>
    </div>
    <div class="progress" id="progress">
@@ -438,7 +440,8 @@
         //   ・レベル0：三角形を角度どおりにかき、角の印をつけた。1, √3, 2 そのままの問題に加えて、大きさを変えた三角形
         //              （斜辺 6 の 30° の三角形の底辺 など）を追加。元の 5 問目と 6 問目は同じ問題だったので 1 つにした
         //   ・レベル3：レベル1・2 をまぜて出す（元は順番モードだと sin → cos → tan の順が決まっていた）
-        //   ・レベル4（新しく追加）：180° − θ・90° − θ の関係と、三角比の値から角 θ を求める問題
+        //   ・レベル1（2026-11-19 追加）：有名角の直角三角形に、辺の比と角をカードであてはめる（assets/ratio-drag.js。#25 と共通）。元のレベル1〜4 は 2〜5 へ
+        //   ・レベル5（もとのレベル4）：180° − θ・90° − θ の関係と、三角比の値から角 θ を求める問題
         //   ・正解したら「なぜその値か」を一言、まちがえたら「えらんだ値が何なのか」を一言。
         //     まちがえた選択肢は押せなくなり、そのままえらび直せる（元は 1 秒後に自動でやり直しになり、同じ選択肢もまた押せた）
         let currentLevel = 0;
@@ -649,12 +652,13 @@ function svgRoot(t){return String(t)}
               why: ['', 'sin 0° = 0。0° の点 (1, 0) の y 座標は 0 だよ。', 'sin 180° = 0。180° の点 (−1, 0) の y 座標は 0 だよ。', 'sin 0° = sin 180° = 0。sin θ = 1 になるのは 90° だけだよ。'], hint: '半径 1 の半円の上で、y 座標が 1 の点はどこかな？' }
         ];
 
-        const LEVEL_SIZE = [L0.length, L1.length, L2.length, L1.length + L2.length, L4.length];
+        const LEVEL_SIZE = [L0.length, 0, L1.length, L2.length, L1.length + L2.length, L4.length];   // レベル1 は assets/ratio-drag.js
         function levelList(level) {
             if (level === 0) return L0.map((d, i) => ({ kind: 0, i }));
-            if (level === 1) return L1.map((d, i) => ({ kind: 1, i }));
-            if (level === 2) return L2.map((d, i) => ({ kind: 2, i }));
-            if (level === 3) return shuffleArray(L1.map((d, i) => ({ kind: 1, i })).concat(L2.map((d, i) => ({ kind: 2, i }))));   // いつもまぜる
+            if (level === 1) return [];   // レベル1（辺の比と角をあてはめる）は assets/ratio-drag.js で出す
+            if (level === 2) return L1.map((d, i) => ({ kind: 1, i }));
+            if (level === 3) return L2.map((d, i) => ({ kind: 2, i }));
+            if (level === 4) return shuffleArray(L1.map((d, i) => ({ kind: 1, i })).concat(L2.map((d, i) => ({ kind: 2, i }))));   // いつもまぜる
             return L4.map((d, i) => ({ kind: 4, i }));
         }
 
@@ -841,7 +845,7 @@ function svgRoot(t){return String(t)}
         function showResult() {
             const n = playList.length;
             const perfect = correctAnswers === n;
-            const names = ['有名角の直角三角形の辺の比', '鋭角の三角比', '鈍角・0°・90°・180° の三角比', '0°〜180° の三角比', '180° − θ・90° − θ と、値から角を求める問題'];
+            const names = ['有名角の直角三角形の辺の比', '辺の比と角', '鋭角の三角比', '鈍角・0°・90°・180° の三角比', '0°〜180° の三角比', '180° − θ・90° − θ と、値から角を求める問題'];
             const other = currentMode === 'random' ? 'sequential' : 'random';
             const modal = document.createElement('div');
             modal.className = 'result-modal';
@@ -853,7 +857,7 @@ function svgRoot(t){return String(t)}
                     <div class="result-score">一発正解 ${correctAnswers} / ${n} 問</div>
                     <p>${names[currentLevel]}を${perfect ? '完全にマスターしました！' : '練習しました。まちがえた問題をもう一度たしかめよう！'}</p>
                     <div class="result-nav">
-                        ${currentLevel < 4 ? `<button class="next" onclick="closeResult(); selectLevel(${currentLevel + 1});">次のレベル（レベル${currentLevel + 1}）へ ▶</button>` : ''}
+                        ${currentLevel < 5 ? `<button class="next" onclick="closeResult(); selectLevel(${currentLevel + 1});">次のレベル（レベル${currentLevel + 1}）へ ▶</button>` : ''}
                         <button class="again" onclick="closeResult(); selectLevel(currentLevel);">同じレベルでもう一度</button>
                         <button class="mode" onclick="closeResult(); selectMode('${other}');">${other === 'random' ? 'ランダムモード' : '順番モード'}でもう一度</button>
                         <a href="../index.html">ほかの教材をえらぶ</a>
@@ -961,7 +965,7 @@ function acuteFigure(deg,fn,trace=false){const r=RATIO[deg],p=SHAPE[deg][0],q=SH
 function complementFigure(deg){const p=Math.cos(deg*Math.PI/180),q=Math.sin(deg*Math.PI/180),scale=Math.min(264/p,184/q),x=(360-p*scale)/2,y=(280-q*scale)/2,T=[x+p*scale,y],angle=deg*Math.PI/180;const arc=`<path d="M${T[0]} ${T[1]+22} A22 22 0 0 1 ${T[0]-22*Math.cos(angle)} ${T[1]+22*Math.sin(angle)}" fill="none" stroke="#d9480f" stroke-width="2"/>${svgLabel(T[0]-30,T[1]+48,(90-deg)+'°','#d9480f',60)}`;return triSVG({p,q,deg,sides:{VR:'底辺',RT:'対辺',VT:'斜辺'},colors:{VR:'#2b8a3e',RT:'#c92a2a',VT:'#1f4e8c'}}).replace(/<\/svg>$/,arc+'</svg>')+'<p>上の角から見ると、下の横の辺が対辺、右の縦の辺が隣辺になります。</p>'+triSVG({p,q,deg,sides:{VR:'対辺',RT:'隣辺',VT:'斜辺'},colors:{VR:'#c92a2a',RT:'#2b8a3e',VT:'#1f4e8c'}}).replace(/<\/svg>$/,arc+'</svg>')}
 const originalMakeProblem=makeProblem;
 makeProblem=function(item){const p=originalMakeProblem(item);if(item.kind===0){p.hint='';p.why=p.why.map(w=>w?'求める辺の位置と、'+L0[item.i].deg+'° の直角三角形の辺の比を確かめよう。':'');p.exp=notation(p.exp);return p}
- if(item.kind===1||item.kind===2){const [fn,deg]= (item.kind===1?L1:L2)[item.i], [x,y,r]=POINT[deg],acute=currentLevel===1;
+ if(item.kind===1||item.kind===2){const [fn,deg]= (item.kind===1?L1:L2)[item.i], [x,y,r]=POINT[deg],acute=currentLevel===2;
  p.question=fn+' '+deg+'° の値を求めなさい。';const role={sin:['対辺','斜辺'],cos:['底辺','斜辺'],tan:['対辺','底辺']}[fn],coord={sin:['y','r'],cos:['x','r'],tan:['y','x']}[fn];
  const fig=acute?acuteFigure(deg,fn):hintSemicircle(deg,POINT[deg]);p.hint=acute?acuteFigure(deg,fn,true)+'<p>①の辺が分母、②の辺が分子。</p>':definitionFigure()+fig+'<p>'+([0,90,180].includes(deg)?(deg===90&&fn==='tan'?'x = 0 で割ることになるね。':'軸の上の点Pの座標を確かめよう。'):'直角三角形の角は '+Math.min(deg,180-deg)+'°。辺の比からPの座標を考えよう。')+'</p>';
  p.exp=fig+(acute?'<p>'+deg+'° の直角三角形の辺の比を使います。</p>':'<p>'+(![0,90,180].includes(deg)?'直角三角形の角は '+Math.min(deg,180-deg)+'°。OH = '+rtHTML(x.replace('−',''))+'、PH = '+rtHTML(y)+'。<br>':'')+'P('+rtHTML(x)+', '+rtHTML(y)+')、r = '+rtHTML(r)+'</p>')+'<p class="eq">'+fn+' '+deg+'° = '+fraction(...(acute?role:coord))+'</p><p class="eq">= '+mathHTML(VALUES[fn][deg])+'</p>'+(deg>90?'<p>xが負なのでcosとtanは負、yが正なのでsinは正です。</p>':'');p.why=p.why.map(w=>notation(w)+'<p>'+(acute?'①の辺が分母、②の辺が分子になっているか確かめよう。':'Pはy軸の左か右か、xとyの符号を確かめよう。')+'</p>');return p;}
@@ -1012,7 +1016,7 @@ function hintSemicircle(deg,pts,extra={}){
  return s+'</svg>'}
 
 acuteFigure=function(deg,fn,trace=false){return trace?textbookTrace(deg,fn):numericAcuteFigure(deg,fn,false)};
-const reviewedMakeProblem=makeProblem;makeProblem=function(item){const p=reviewedMakeProblem(item);if(currentLevel===1){const [fn,deg,choices]=L1[item.i];p.hint=textbookTrace(deg,fn);p.why=choices.map(c=>{if(c===VALUES[fn][deg])return '';const other=['sin','cos','tan'].filter(f=>f!==fn&&Math.abs(valueOf(VALUES[f][deg])-valueOf(c))<1e-9);return notation(c)+' は'+(other.length?other.join('・')+' '+deg+'° の値です。':'この三角比の値とは違います。')+'<p>'+fn+'の筆記体をなぞり、分母と分子に使う辺を確かめよう。</p>'})}return p};
+const reviewedMakeProblem=makeProblem;makeProblem=function(item){const p=reviewedMakeProblem(item);if(currentLevel===2){const [fn,deg,choices]=L1[item.i];p.hint=textbookTrace(deg,fn);p.why=choices.map(c=>{if(c===VALUES[fn][deg])return '';const other=['sin','cos','tan'].filter(f=>f!==fn&&Math.abs(valueOf(VALUES[f][deg])-valueOf(c))<1e-9);return notation(c)+' は'+(other.length?other.join('・')+' '+deg+'° の値です。':'この三角比の値とは違います。')+'<p>'+fn+'の筆記体をなぞり、分母と分子に使う辺を確かめよう。</p>'})}return p};
 // 【Claude Code 2026-10-28】タイムアタックモード（先生の要望）
 //   ・「スタート」で時間が 0 から進み、問題はランダム。スタートのボタンは「もう一度やり直す」に変わる
 //   ・途中は解説を出さない（正解ならすぐ次へ、まちがえたら × をつけて、のこりからえらび直す）
@@ -1115,5 +1119,26 @@ function taReview() {
     '.ta-fig{margin-top:6px;padding:8px;background:#f1f6fc;border-radius:6px}.ta-fig svg{max-width:100%;height:auto}';
   document.head.appendChild(st);
 })();
+// 【2026-11-19】レベル1（辺の比と角をあてはめる）：カードの問題は assets/ratio-drag.js。ほかのレベルの部分（モード・問題・ボタン）はかくす
+const rdNormal = ['.mode-selector', '#progress', '#score', '.problem-area', '.controls', '#taBar'];
+const rdBaseSelectLevel = selectLevel;
+selectLevel = function (level) {
+  const box = document.getElementById('rdBox');
+  if (level === 1) {
+    taStop(); ta = null; closeResult();
+    currentLevel = 1;
+    document.querySelectorAll('.level-btn').forEach((b, i) => b.classList.toggle('active', i === 1));
+    rdNormal.forEach(q => { const e = document.querySelector(q); if (e) e.style.display = 'none'; });
+    box.style.display = '';
+    RatioDrag.mount(box, { next: () => { selectLevel(2); window.scrollTo(0, 0); }, nextLabel: '次のレベル（レベル2）へ ▶' });
+    return;
+  }
+  box.style.display = 'none';
+  rdNormal.forEach(q => { const e = document.querySelector(q); if (e) e.style.display = ''; });
+  rdBaseSelectLevel(level);
+  if (currentMode !== 'ta') { const bar = document.getElementById('taBar'); if (bar) bar.style.display = 'none'; }
+};
+const rdBaseNextProblem = nextProblem;
+nextProblem = function () { if (currentLevel !== 1) rdBaseNextProblem(); };
 restart();
 </script></body></html>

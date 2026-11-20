@@ -646,6 +646,15 @@
           height: 54px;
         }
       }
+    #questionTabs.tabs-folded,#questionTabs.tabs-open{display:flex;flex-wrap:wrap;gap:6px}
+      #questionTabs .tabs-toggle{width:auto!important;min-width:0!important;padding:6px 14px!important;font-size:15px!important;flex:0 0 100%;max-width:none;text-align:left}
+      #questionTabs.tabs-open{max-height:260px;overflow:auto;padding:4px;border:1px solid #d0d7de;border-radius:8px}
+          /* 【2026-11-19】数式の字間（先生の指摘）：斜体の x と右肩の数字がくっつかないように、f′ の ′ のあとが空きすぎないように */
+      .m i + sup, .fs-m i + sup { margin-left: .1em; }
+      .m i { margin-right: .04em; }
+      .m .pr, .fs-m .pr { margin-left: .1em !important; margin-right: -.03em !important; }
+      .m .pr + .fn-gap { width: 0; }
+      .m .fn-gap { width: .1em; }
     </style>
   </head>
   <body>
@@ -663,7 +672,7 @@
         <div class="toolbar">
           <span class="question-no" id="status"></span
           ><span id="timer" class="time-value" aria-label="経過時間"></span
-          ><button onclick="menu()">選び直す</button
+          ><button onclick="menu()">← メニューへ戻る</button
           ><button onclick="start(ADVANCED ? mode : lev)">
             もう一度やり直す
           </button>
@@ -1566,8 +1575,8 @@
       let answerDelay = null;
       const modeNames = {
         normal: "通常モード",
-        input: "入力モード",
-        hundred: "全問連続モード",
+        input: "組み立てモード",
+        hundred: "全問タイムアタック",
         hell: "超鬼連チャンモード",
       };
       function shuffled(a) {
@@ -1650,6 +1659,7 @@
           nextHidden: $("next").hidden,
         });
       }
+      let tabsOpen = false;
       function renderTabs() {
         let tabs = $("questionTabs");
         if (!tabs) {
@@ -1658,7 +1668,15 @@
           tabs.setAttribute("aria-label", "問題番号");
           $("question").before(tabs);
         }
-        tabs.innerHTML = questions
+        // 【2026-11-19】問題が多いとき（タイムアタック・超鬼連チャン）は番号をならべず、ボタンを押したときだけ一覧を出す
+        const many = questions.length > 12;
+        if (many && !tabsOpen) {
+          tabs.className = "tabs-folded";
+          tabs.innerHTML = '<button type="button" class="tabs-toggle" onclick="tabsOpen=true;renderTabs()">問題を選ぶ　▼</button>';
+          return;
+        }
+        tabs.className = many ? "tabs-open" : "";
+        tabs.innerHTML = (many ? '<button type="button" class="tabs-toggle" onclick="tabsOpen=false;renderTabs()">問題の一覧をとじる　▲</button>' : "") + questions
           .map(
             (q, i) =>
               "<button " +
@@ -1710,6 +1728,7 @@
         if (ADVANCED && done && index === frontier) return; // 160 ms feedback before advancing
         saveQuestion();
         index = n;
+        tabsOpen = false;
         load();
       }
       function reviewHTML() {
@@ -1903,7 +1922,7 @@
         if (done || composing) return;
         const v = $("answerInput").value.trim();
         if (!v) {
-          $("inputFeedback").textContent = "答えを入力してください。";
+          $("inputFeedback").textContent = "カードを押して答えの式を作ってください。";
           return;
         }
         if (!parsePoly(v)) {
@@ -2093,7 +2112,7 @@
       const menuTitles = ADVANCED
         ? [
             "4択で10問",
-            "式を入力して10問",
+            "式を組み立てて10問",
             "全" + problemPool.length + "問タイムアタック",
             "超鬼連チャン",
           ]
@@ -2133,7 +2152,7 @@
             (ADVANCED
               ? [
                   "選んで解く・時間を計測",
-                  "キーボードで答える",
+                  "カードで式を組み立てる",
                   "全部の問題に挑戦",
                   "1回まちがえたら終わり",
                 ][i]
@@ -2141,6 +2160,80 @@
             "</small></button>",
         )
         .join("");
+
+      // 【2026-11-19 先生の要望】「式を組み立てて10問」：キーボードを使わず、カードを押して答えの式を組み立てる
+      //   ・カードは「＋」「−」と、項のまとまり（6x² など）。符号のカードはいつも両方出す（符号だけで答えがわからないように）
+      //   ・項のカードは、正しい項と、この問題の4択のまちがいの選択肢に出てくる項（係数・次数をまちがえたもの）
+      //   ・押した順に式ができる。「1つ消す」「全部消す」。答え合わせは今までと同じ samePoly
+      const TILE_SUP = (n) => (n > 1 ? String(n).split("").map((d) => SUPS[d]).join("") : "");
+      const tileTerm = (c, n) => (n === 0 ? String(c) : (c === 1 ? "" : String(c)) + "x" + TILE_SUP(n));
+      let built = [];
+      function tileTerms(q) {
+        const ans = parsePoly(q.options[q.correct]) || {};
+        const key = (c, n) => n + ":" + c;
+        const must = Object.entries(ans).filter(([, c]) => c !== 0).map(([n, c]) => [Math.abs(c), +n]);
+        if (!must.length) must.push([0, 0]);   // 答えが 0
+        const extra = [];
+        q.options.forEach((o, i) => {
+          if (i === q.correct) return;
+          const p = parsePoly(o);
+          if (p) Object.entries(p).forEach(([n, c]) => { if (c !== 0 || Object.keys(p).length === 1) extra.push([Math.abs(c), +n]); });
+        });
+        const seen = new Set(must.map(([c, n]) => key(c, n)));
+        const dummies = shuffled(extra).filter(([c, n]) => { const k = key(c, n); if (seen.has(k)) return false; seen.add(k); return true; });
+        // まちがいの項が少ないときは、次数を1つ上げた項を足す（指数を下げ忘れたまちがい）
+        if (dummies.length < 2) must.forEach(([c, n]) => { const k = key(c, n + 1); if (c && !seen.has(k)) { seen.add(k); dummies.push([c, n + 1]); } });
+        const all = must.concat(dummies.slice(0, Math.max(2, 9 - must.length)));
+        return all.map(([c, n]) => tileTerm(c, n)).sort((a, b) => {
+          const da = (parsePoly(a) && Math.max(...Object.keys(parsePoly(a)).map(Number))) || 0, db = (parsePoly(b) && Math.max(...Object.keys(parsePoly(b)).map(Number))) || 0;
+          return db - da || parseInt(a) - parseInt(b);
+        });
+      }
+      function builtText() { return built.map((t, i) => (t === "+" || t === "−") ? (i ? " " + t + " " : t) : t).join(""); }
+      function showBuilt() {
+        $("answerInput").value = builtText().replace(/−/g, "-");
+        $("inputPreview").innerHTML = built.length ? mathHTML(builtText()) : '<span class="tile-ph">下のカードを押して、答えの式を作ろう</span>';
+        $("inputFeedback").textContent = "";
+      }
+      function tilePress(t) {
+        if (done) return;
+        const last = built[built.length - 1], isSign = t === "+" || t === "−";
+        if (isSign) { if (last === "+" || last === "−") built[built.length - 1] = t; else built.push(t); }
+        else {
+          if (last !== undefined && last !== "+" && last !== "−") { $("inputFeedback").textContent = "項と項のあいだには、＋か−のカードを入れよう。"; return; }
+          built.push(t);
+        }
+        showBuilt();
+      }
+      function tileBack() { if (!done) { built.pop(); showBuilt(); } }
+      function tileClear() { if (!done) { built = []; showBuilt(); } }
+      function buildTiles() {
+        built = [];
+        let box = $("tileBox");
+        if (!box) {
+          box = document.createElement("div"); box.id = "tileBox"; box.className = "tile-box";
+          $("inputPreview").after(box);
+          const st = document.createElement("style");
+          st.textContent = "#inputSection>label,#answerInput,#inputSection .input-tools,#inputSection .input-help{display:none!important}" +
+            "#inputPreview{min-height:56px;display:flex;align-items:center;justify-content:center;padding:6px 10px;border:2px solid #9db6d6;border-radius:8px;background:#f5f9ff;font:26px 'STIX Two Text',serif;margin:6px 0 10px}" +
+            ".tile-ph{font:15px 'BIZ UDPGothic',sans-serif;color:#5b6470}" +
+            ".tile-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px}" +
+            ".tile-box button.tile{min-width:58px;min-height:50px;padding:4px 10px;font:24px 'STIX Two Text',serif;border:1px solid #9db6d6;border-bottom:3px solid #7f9cc4;border-radius:6px;background:#fff;color:#1f2328}" +
+            ".tile-box button.tile.sign{min-width:64px;background:#edf3fa;font-weight:700}" +
+            ".tile-box .tile-edit{display:flex;gap:8px;justify-content:center;margin:2px 0 4px}.tile-box .tile-edit button{font-size:15px;padding:6px 14px}";
+          document.head.appendChild(st);
+        }
+        const q = questions[index], terms = tileTerms(q);
+        box.innerHTML = '<div class="tile-row">' + ["+", "−"].map((t) => '<button type="button" class="tile sign" data-t="' + t + '">' + t + "</button>").join("") + "</div>" +
+          '<div class="tile-row">' + terms.map((t) => '<button type="button" class="tile" data-t="' + t + '">' + mathHTML(t) + "</button>").join("") + "</div>" +
+          '<div class="tile-edit"><button type="button" onclick="tileBack()">1つ消す</button><button type="button" onclick="tileClear()">全部消す</button></div>';
+        box.querySelectorAll(".tile").forEach((b) => (b.onclick = () => tilePress(b.dataset.t)));
+        showBuilt();
+      }
+      const baseLoadFresh = loadFresh;
+      loadFresh = function () { baseLoadFresh(); if (ADVANCED && mode === "input") buildTiles(); };
+      const baseLoad = load;
+      load = function () { baseLoad(); if (ADVANCED && mode === "input" && $("answerInput").value) $("inputPreview").innerHTML = mathHTML($("answerInput").value); };
       menu();
     </script>
   </body>

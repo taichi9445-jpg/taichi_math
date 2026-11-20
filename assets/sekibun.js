@@ -395,7 +395,10 @@
       finalExtra: '<p><button type="button" class="fs-btn" id="skHome">メニューにもどる</button></p>'
     });
     // 最後の画面のボタン
-    new MutationObserver(function () { var b = el.querySelector('#skHome'); if (b) b.onclick = o.home; var h = el.querySelector('[data-home]'); if (h) h.onclick = o.home; }).observe(el, { childList: true, subtree: true });
+    // 2026-11-19：前の画面の見張りを止めてから付ける（残っていると、ほかの画面の「メニューへ」まで、この画面のメニューに書きかえていた）
+    if (el._skObs) el._skObs.disconnect();
+    el._skObs = new MutationObserver(function () { var b = el.querySelector('#skHome'); if (b) b.onclick = o.home; var h = el.querySelector('[data-home]'); if (h) h.onclick = o.home; });
+    el._skObs.observe(el, { childList: true, subtree: true });
     return api;
   }
   // 後半の問題：図をかくす。図を選ぶ（または 図を見る を押す）と、途中式に進める
@@ -436,6 +439,7 @@
   var liveTimer = null;
   function quiz(el, list, o) {
     clearInterval(liveTimer);
+    if (el._skObs) { el._skObs.disconnect(); el._skObs = null; }   // 途中式の画面の見張りを止める
     var S = list.map(function (q) { return { ch: shuffle([q.ans].concat(q.wrong.slice(0, 3))), tried: [], done: false, hint: 0 }; });
     var i = 0, t0 = performance.now(), lock = false, ended = false;
     var md = FillSteps.md, LBL = ['ア', 'イ', 'ウ', 'エ'];

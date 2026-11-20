@@ -2,8 +2,8 @@
 <html lang="ja"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>面積を求めよう</title>
-<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261110">
-<link rel="stylesheet" href="../../assets/sekibun.css?v=20261110">
+<link rel="stylesheet" href="../../assets/fill-steps.css?v=20261120">
+<link rel="stylesheet" href="../../assets/sekibun.css?v=20261120">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
 </head><body>
 <a class="port-back" href="../index.html">← 教材の一覧へ</a>
@@ -11,8 +11,8 @@
   <header class="fs-head"><small>数学Ⅱ　微分・積分</small><h1>面積を求めよう</h1></header>
   <div id="menu"></div><div id="app"></div>
 </main>
-<script src="../../assets/fill-steps.js?v=20261110"></script>
-<script src="../../assets/sekibun.js?v=20261110"></script>
+<script src="../../assets/fill-steps.js?v=20261120"></script>
+<script src="../../assets/sekibun.js?v=20261120"></script>
 <script>
 const md = s => FillSteps.md(s), { num, parse, polyS, minus, plus, add, sub, neg, mul, lim, paren, val, evalRows, cleanCards, nearValues, fig, mono, join, times, shuffle, uniq } = Sek;
 const M = '−';
@@ -152,14 +152,42 @@ const LEVELS = [
 ];
 const ALL = LEVELS.flatMap(l => l.list);
 const degree = q => Math.max(...[q.f, q.up, q.low].filter(Boolean).map(s => parse(s)[0].p));
-// 1次 → 2次 → 3次の順。3次は最後の数問だけ
-const byDegree = (n1, n2, n3) => [[1, n1], [2, n2], [3, n3]].flatMap(([d, n]) => shuffle(ALL.filter(q => degree(q) === d)).slice(0, n));
-function randomQ() {
-  const r = Sek.rint, p = r(-2, 1), q = p + r(2, 4), s = p + q, m = p * q, tx = k => (k === 0 ? '' : (k > 0 ? '+' : '-') + Math.abs(k));
-  return Sek.pick([() => ({ type: 'axis', f: `x²${s ? tx(-s) + 'x' : ''}${tx(m)}` }), () => ({ type: 'axis', f: `-x²${s ? tx(s) + 'x' : ''}${tx(-m)}` }),
-    () => ({ type: 'meet', up: (s ? s + 'x' : '') + (s ? tx(-m) : String(-m)), low: 'x²' }), () => ({ type: 'above', f: `x²${tx(r(1, 3))}`, a: 0, b: r(1, 3) }), () => ({ type: 'cross', f: `x${tx(-2)}`, a: 0, c: 2, b: r(3, 5) })])();
+// 【2026-11-19 先生の要望】出す順：x 軸より上 → x 軸より下（− をつける）→ x 軸をまたぐ（分けて積分）→ 2 つのグラフ。
+//   それぞれの中は 1次 → 2次 → 3次 の順。どの問題を出すかはランダム
+const KIND = ['up', 'down', 'cross', 'two'];
+function kindOf(q) {
+  if (q.type === 'cross') return 'cross';
+  if (q.type === 'between' || q.type === 'meet') return 'two';
+  const ts = parse(q.f); let a = q.a, b = q.b;
+  if (q.type === 'axis') [a, b] = roots(ts);
+  return val(ts, (a + b) / 2) > 0 ? 'up' : 'down';
 }
-const safeRandom = () => { for (let i = 0; i < 50; i++) { try { const p = area(randomQ()); if (p.value[0] > 0 && p.value[1] < 40 && !p.bad3) return p; } catch (e) {} } return area(ALL[0]); };
+const POOL = Object.fromEntries(KIND.map(k => [k, ALL.filter(q => kindOf(q) === k)]));
+// n 問：1次を半分くらい、4問以上なら 3次を1問（あれば）、のこりは2次。足りない次数はほかの次数でうめ、次数の小さい順にならべる
+function pickKind(k, n) {
+  const by = d => shuffle(POOL[k].filter(q => degree(q) === d));
+  const d1 = by(1), d2 = by(2), d3 = by(3);
+  const want = [Math.floor(n / 2), 0, n >= 4 ? 1 : 0]; want[1] = n - want[0] - want[2];
+  const out = [...d1.splice(0, want[0]), ...d2.splice(0, want[1]), ...d3.splice(0, want[2])];
+  const rest = [...d1, ...d2, ...d3];
+  while (out.length < n && rest.length) out.push(rest.shift());
+  return out.sort((x, y) => degree(x) - degree(y));
+}
+const ordered = counts => KIND.flatMap((k, i) => pickKind(k, counts[i]));   // counts：[上, 下, またぐ, 2つのグラフ] の問題数
+function randomQ(kind) {
+  const r = Sek.rint, tx = k => (k === 0 ? '' : (k > 0 ? '+' : '-') + Math.abs(k));
+  const p = r(-2, 1), q = p + r(2, 4), s = p + q, m = p * q;   // 2 つの解 p < q
+  const make = {
+    up: () => Sek.pick([() => ({ type: 'axis', f: `-x²${s ? tx(s) + 'x' : ''}${tx(-m)}` }), () => ({ type: 'above', f: `x²${tx(r(1, 3))}`, a: 0, b: r(1, 3) }), () => ({ type: 'above', f: `x${tx(r(1, 3))}`, a: 0, b: r(2, 4) })])(),
+    down: () => Sek.pick([() => ({ type: 'axis', f: `x²${s ? tx(-s) + 'x' : ''}${tx(m)}` }), () => ({ type: 'below', f: `x${tx(-r(3, 5))}`, a: 0, b: r(1, 2) })])(),
+    cross: () => { const c = r(1, 2); return Sek.pick([() => ({ type: 'cross', f: `x${tx(-c)}`, a: 0, c, b: c + r(1, 3) }), () => ({ type: 'cross', f: `x²${tx(-c * c)}`, a: 0, c, b: c + 1 })])(); },
+    two: () => ({ type: 'meet', up: (s ? s + 'x' : '') + (s ? tx(-m) : String(-m)), low: 'x²' })
+  };
+  return make[kind]();
+}
+const safeRandom = (kind) => { for (let i = 0; i < 50; i++) { try { const p = area(randomQ(kind)); if (p.value[0] > 0 && p.value[1] < 40 && !p.bad3) { p.kind = kind; return p; } } catch (e) {} } const p = area(pickKind(kind, 1)[0]); p.kind = kind; return p; };
+// ランダム練習 5 問：4 種類から 1 問ずつ＋どれか 1 問。やさしい種類の順にならべる
+const randomFive = () => { const ks = [...KIND, Sek.pick(KIND)].sort((a, b) => KIND.indexOf(a) - KIND.indexOf(b)); return ks.map(safeRandom); };
 
 const app = () => document.getElementById('app'), menuEl = () => document.getElementById('menu');
 const FORMULA = () => '<div class="sk-formula">' + md('S = ∫{b|a} (上の式 − 下の式) dx') + '<small>' + md('上の式・下の式はグラフの上下。x 軸は y = 0') + '</small></div>';
@@ -190,24 +218,30 @@ const ICON = {
   cross: icon('<path d="M8 26H64M14 48V4" stroke="#5b6470" fill="none"/><path d="M14 26V44L34 26Z" fill="#ffe0c2"/><path d="M34 26L58 26V6Z" fill="#c7daf0"/><path d="M14 44L60 4" fill="none" stroke="#207345" stroke-width="2.4"/>'),
   two: icon(AX + '<path d="M18 40Q38 -2 56 12Q40 40 18 40Z" fill="#e3dcf5"/><path d="M12 44Q36 -8 60 8" fill="none" stroke="#6741a8" stroke-width="2.2"/><path d="M12 42Q40 44 60 6" fill="none" stroke="#c2410c" stroke-width="2.2"/>')
 };
+// 途中式：種類ごとに 3〜4 問（上 4・下 4・またぐ 3・2つのグラフ 4 ＝ 15 問）。種類ごとの後半は図がかくれる（図を選んでから式を作る）
+const KIND_NAME = { up: 'x 軸より上', down: 'x 軸より下', cross: 'x 軸をまたぐ', two: '2 つのグラフ' };
+function stepsSet(list) {
+  const P = list.map(q => { const p = area(q); p.kind = kindOf(q); return p; });
+  KIND.forEach(k => { const g = P.filter(p => p.kind === k); g.forEach((p, i) => { if (i >= Math.ceil(g.length / 2)) { p.figHide = true; p.figOpts = shuffle(figChoices(p.spec)); } }); });
+  return P;
+}
+const kindTabs = (p) => { const i = KIND.indexOf(p.kind); return i < 0 ? null : { id: i, label: KIND_NAME[p.kind] }; };
 function stepsMenu() {
   const home = () => { app().innerHTML = ''; stepsMenu(); };
-  const c = LEVELS.map((l, i) => ({ name: l.name, sub: l.sub + '（' + l.list.length + '問）', icon: ICON[['up', 'down', 'cross', 'two'][i]], go: () => {
-    const P = l.list.map(area), half = Math.ceil(P.length / 2);
-    P.forEach((p, k) => { if (k >= half) { p.figHide = true; p.figOpts = shuffle(figChoices(p.spec)); } });
-    fillMode(P, home);
-  } }));
-  c.push({ name: 'ランダム練習', sub: '数値が毎回かわる5問', icon: '?', go: () => fillMode(Array.from({ length: 5 }, safeRandom), home) });
+  const c = [
+    { name: '順番に解く', sub: '上 → 下 → またぐ → 2つのグラフ（15問）', icon: ICON.cross, go: () => { menuEl().innerHTML = ''; Sek.fill(app(), stepsSet(ordered([4, 4, 3, 4])), { top: FORMULA, home, tabGroup: kindTabs }); } },
+    { name: 'ランダム練習', sub: '数値が毎回かわる5問', icon: '?', go: () => { menuEl().innerHTML = ''; Sek.fill(app(), randomFive(), { top: FORMULA, home, tabGroup: kindTabs }); } }
+  ];
   app().innerHTML = '';
-  Sek.menu(menuEl(), c, '途中式で解く：後半の問題は図がかくれるので、図を選んでから式を作ろう。', showMenu);
+  Sek.menu(menuEl(), c, '途中式で解く：x 軸より上 → 下 → またぐ → 2 つのグラフ の順に難しくなるよ。後半の問題は図がかくれるので、図を選んでから式を作ろう。', showMenu);
 }
 function showMenu() {
   app().innerHTML = '';
   Sek.menu(menuEl(), [
-    { name: '面積を表す式', sub: '図を見て式を選ぶ（11問）', icon: ICON.expr, go: () => quizMode(() => byDegree(3, 6, 2).map(exprQ), { name: '面積を表す式' }) },
-    { name: '図を選ぶ', sub: '問題文に合う図はどれ？（10問）', icon: ICON.fig, go: () => quizMode(() => byDegree(3, 6, 1).map(pickFigQ), { name: '図を選ぶ' }) },
+    { name: '面積を表す式', sub: '図を見て式を選ぶ（11問）', icon: ICON.expr, go: () => quizMode(() => ordered([4, 3, 2, 2]).map(exprQ), { name: '面積を表す式' }) },
+    { name: '図を選ぶ', sub: '問題文に合う図はどれ？（10問）', icon: ICON.fig, go: () => quizMode(() => ordered([3, 3, 2, 2]).map(pickFigQ), { name: '図を選ぶ' }) },
     { name: '途中式で解く', sub: '面積を計算する', icon: '<span>' + md('S = ∫{b|a}') + '</span>', go: stepsMenu },
-    { name: 'ノートで解く', sub: '問題文だけで4択（8問）', icon: '✎', go: () => quizMode(() => byDegree(2, 5, 1).map(noteQ), { name: 'ノートで解く' }) }
+    { name: 'ノートで解く', sub: '問題文だけで4択（8問）', icon: '✎', go: () => quizMode(() => ordered([2, 2, 2, 2]).map(noteQ), { name: 'ノートで解く' }) }
   ], '上から順に進めよう。');
 }
 showMenu();

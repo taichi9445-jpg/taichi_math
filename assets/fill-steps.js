@@ -300,7 +300,7 @@
         (b.soft || []).forEach(function (v) { add(v); });
         if (b.jump) add(p.blanks[b.jump[b.jump.length - 1]].a);
         if (p.eqs && p.eqs[bi]) Object.keys(p.eqs[bi]).forEach(function (v) { add(v); });
-        if (o.roleCards) (p.alts || []).forEach(function (set) { add(set[bi]); });
+        if (o.roleCards || o.altCards) (p.alts || []).forEach(function (set) { add(set[bi]); });   // altCards：別の答え（単位円の座標など）もスマホのカードに出す
         var brow = p.rows[b.row];
         (brow.alt || []).forEach(function (set) { add(set[brow.blanks.indexOf(bi)]); });
       });
@@ -346,7 +346,9 @@
         }
         var ctx = { k: 0, blank: function () {
           var i = row.blanks[ctx.k++], b = p.blanks[i], v = st.fill[i];
-          var isFrac = (/\//.test(b.a) && !/\s/.test(b.a)) || /\{/.test(b.a);
+          // 答えが分数のとき、または入れたカードが分数のとき（単位円で考えた P(√3/2, 1/2) など）は、枠を縦に広げる
+          var isFracV = function (s) { return s !== undefined && ((/\//.test(s) && !/\s/.test(s)) || /\{/.test(s)); };
+          var isFrac = isFracV(b.a) || isFracV(v);
           var cls = 'fs-blank' + (isFrac ? ' frac' : '') + (v !== undefined ? ' ok' : '') + (i === st.active && !all ? ' active' : '') + ((o.roleCards || o.review) && st.wrongBlanks[i] ? ' reviewed-wrong' : '');
           return '<button type="button" class="' + cls + '" data-b="' + i + '" aria-label="空欄">' + (v !== undefined ? valHTML(v) : '') + '</button>';
         } };

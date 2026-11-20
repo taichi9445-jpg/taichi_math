@@ -88,14 +88,18 @@ function zahyouFig(deg, t, info) {
   s += `<path d="M${ox} ${oy}L${px} ${py}" stroke="${RED}" stroke-width="3" stroke-linecap="round"/><circle cx="${px}" cy="${py}" r="4.5" fill="${RED}"/>`;
   if (fin) {
     // P の名前（座標がうまったら P(x, y)）。点から外向きに
-    const ux = Math.cos(a), uy = -Math.sin(a), w = info.xy ? 30 + (info.xy.join('').length) * 9 : 14;
+    const xyFrac = info.xy && info.xy.some(v => /\//.test(v));
+    const ux = Math.cos(a), uy = -Math.sin(a), w = info.xy ? (xyFrac ? 70 : 30) + (info.xy.map(v => v.split('/').sort((p, q) => q.length - p.length)[0]).join('').length) * (xyFrac ? 14 : 9) : 14;
     let lx = px + ux * 18 + (Math.abs(ux) > .25 ? Math.sign(ux) * w / 2 : 0), ly = py + uy * 20 + (Math.abs(uy) < .3 ? -14 : 0);
     lx = Math.min(W - w / 2 - 2, Math.max(w / 2 + 2, lx));
-    labels += zl(lx, Math.max(12, Math.min(H - 12, ly)), W, H, info.xy ? md(`P(${info.xy[0]}, ${info.xy[1]})`) : md('P'), RED);
+    // 分数の座標（単位円で考えた P(√3/2, 1/2) など）は、スラッシュではなく縦の分数で書く（2026-11-19 先生の要望）
+    if (xyFrac) ly += uy < 0 ? -14 : 14;
+    labels += zl(lx, Math.max(xyFrac ? 26 : 12, Math.min(H - (xyFrac ? 26 : 12), ly)), W, H, info.xy ? md(`P(${tex(info.xy[0])}, ${tex(info.xy[1])})`) : md('P'), RED);
     if (info.r) { // 半径がうまったら OP の長さ
       const mx = (ox + px) / 2, my = (oy + py) / 2; let nx = -(py - oy), ny = px - ox; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
       if (!onAxis(deg) && nx * (px - mx) + ny * (oy - my) > 0) { nx = -nx; ny = -ny; }
       if (onAxis(deg)) { nx = deg % 180 === 0 ? 0 : -1; ny = deg % 180 === 0 ? -1 : 0; }
+      if (deg % 360 === 0) ny = 1.25;   // 0°・360°：角度の文字（線の上）と重ならないよう、線の下に書く
       s += svgNum(mx + nx * 16, my + ny * 16 + 6, info.r, NAVY, 16);
     }
   }
@@ -178,9 +182,24 @@ function hint(p, row) {
 }
 function hintFig(p, row) { const i = p.rows.indexOf(row); return (i <= 1 && !onAxis(p.deg)) ? refTriFig(p.deg) : ''; }
 
+// 半径 r = 1（単位円）で考えたとき：公式の行 sin θ = y/r・cos θ = x/r がうまったら、横に「= y」「= x」を自動で出す（2026-11-19 先生の要望）
+function unitNote(root, p, st) {
+  const val = i => st.fill[i] !== undefined ? st.fill[i] : (st.shown ? p.blanks[i].a : undefined);
+  if (val(2) !== '1') return;   // r の空欄（P の座標の次）
+  const lis = [...root.querySelectorAll('.fs-row.formula')];
+  [['sin', 'y'], ['cos', 'x']].forEach(([fn, v]) => {
+    const ri = p.rows.findIndex(r => r.formula && r.src && r.src.indexOf(fn) >= 0);
+    const li = lis[p.rows.slice(0, ri).filter(r => r.formula).length];
+    if (!li || ri < 0 || !p.rows[ri].blanks.every(b => val(b) !== undefined)) return;
+    const eq = li.querySelector('.fs-eq');
+    if (eq && !eq.querySelector('.zu-note')) eq.insertAdjacentHTML('beforeend', '<span class="fs-g zu-note"><span class="fs-m fs-eqs">=</span><span class="fs-m"><i>' + v + '</i></span></span>');
+  });
+}
+
 // 図：問題がかわったときだけ OP を回す。うめた座標・r は図にもかきこむ
 let animKey = null, animTok = 0;
 function afterRender(root, p, st) {
+  unitNote(root, p, st);
   const box = root.querySelector('.fs-fig'); if (!box) return;
   const filled = i => st.fill[i] !== undefined || st.shown;
   const info = { xy: filled(0) && filled(1) ? [st.fill[0] || p.blanks[0].a, st.fill[1] || p.blanks[1].a] : null, r: filled(2) ? (st.fill[2] || p.blanks[2].a) : null };
@@ -224,7 +243,7 @@ function mountZahyou(app, angles, key, o = {}) {
   const problems = angles.map(d => problemFor(d, key));
   let api = null;
   api = FillSteps.mount({
-    el: app, problems, hint, hintFig,
+    el: app, problems, hint, hintFig, altCards: true,
     tabGroup: p => ({id:key === 'basic' && p.deg > 90 ? 1 : 0,label:key === 'basic' ? (p.deg < 90 ? '鋭角' : '鈍角') : '同じ種類の角'}),
     after: (root, p, st) => { afterRender(root, p, st); if (api && o.onDone && api.state().every(s => s.done || s.shown)) o.onDone(); },
     tabLabel: p => p.deg + '°', tabPrefix: '', badge: p => p.deg + '°',

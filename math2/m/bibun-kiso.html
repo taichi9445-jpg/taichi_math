@@ -8,7 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261110">
+    <link rel="stylesheet" href="../../assets/fill-steps.css?v=20261120">
     <style>
       * {
         box-sizing: border-box;
@@ -656,6 +656,15 @@
       .reviewed-wrong{outline:2px solid #e4a09a;outline-offset:2px}
       #levelFiveSteps .pr{margin-left:.12em;margin-right:.07em}
       @media(min-width:900px) and (orientation:landscape){body.level-five #quiz .quiz-grid{display:block}#levelFiveSteps .fs-grid{grid-template-columns:minmax(0,1fr) 280px}#levelFiveSteps .fs-bank{position:sticky;top:10px;bottom:auto}}
+    #questionTabs.tabs-folded,#questionTabs.tabs-open{display:flex;flex-wrap:wrap;gap:6px}
+      #questionTabs .tabs-toggle{width:auto!important;min-width:0!important;padding:6px 14px!important;font-size:15px!important;flex:0 0 100%;max-width:none;text-align:left}
+      #questionTabs.tabs-open{max-height:260px;overflow:auto;padding:4px;border:1px solid #d0d7de;border-radius:8px}
+          /* 【2026-11-19】数式の字間（先生の指摘）：斜体の x と右肩の数字がくっつかないように、f′ の ′ のあとが空きすぎないように */
+      .m i + sup, .fs-m i + sup { margin-left: .1em; }
+      .m i { margin-right: .04em; }
+      .m .pr, .fs-m .pr { margin-left: .1em !important; margin-right: -.03em !important; }
+      .m .pr + .fn-gap { width: 0; }
+      .m .fn-gap { width: .1em; }
     </style>
   </head>
   <body>
@@ -672,7 +681,7 @@
       <section id="quiz" hidden>
         <div class="toolbar">
           <span class="question-no" id="status"></span><span id="timer"></span
-          ><button onclick="menu()">選び直す</button
+          ><button onclick="menu()">← メニューへ戻る</button
           ><button onclick="start(ADVANCED ? mode : lev)">
             もう一度やり直す
           </button>
@@ -727,7 +736,7 @@
       </section>
       <section id="result" hidden></section>
     </main>
-    <script src="../../assets/fill-steps.js?v=20261110"></script>
+    <script src="../../assets/fill-steps.js?v=20261120"></script>
     <script>
       const ADVANCED = false;
       const LEVELS = [
@@ -1408,7 +1417,7 @@
       const modeNames = {
         normal: "通常モード",
         input: "入力モード",
-        hundred: "全問連続モード",
+        hundred: "全問タイムアタック",
         hell: "超鬼連チャンモード",
       };
       function shuffled(a) {
@@ -1485,6 +1494,7 @@
           nextHidden: $("next").hidden,
         });
       }
+      let tabsOpen = false;
       function renderTabs() {
         let tabs = $("questionTabs");
         if (!tabs) {
@@ -1493,7 +1503,15 @@
           tabs.setAttribute("aria-label", "問題番号");
           $("question").before(tabs);
         }
-        tabs.innerHTML = questions
+        // 【2026-11-19】問題が多いとき（タイムアタック・超鬼連チャン）は番号をならべず、ボタンを押したときだけ一覧を出す
+        const many = questions.length > 12;
+        if (many && !tabsOpen) {
+          tabs.className = "tabs-folded";
+          tabs.innerHTML = '<button type="button" class="tabs-toggle" onclick="tabsOpen=true;renderTabs()">問題を選ぶ　▼</button>';
+          return;
+        }
+        tabs.className = many ? "tabs-open" : "";
+        tabs.innerHTML = (many ? '<button type="button" class="tabs-toggle" onclick="tabsOpen=false;renderTabs()">問題の一覧をとじる　▲</button>' : "") + questions
           .map(
             (q, i) =>
               "<button " +
@@ -1546,6 +1564,7 @@
         if (ADVANCED && done && index === frontier) return; // 160 ms feedback before advancing
         saveQuestion();
         index = n;
+        tabsOpen = false;
         load();
       }
       function toggleReview(){const open=$('reviewList').hidden;$('reviewList').hidden=!open;$('reviewToggle').setAttribute('aria-expanded',String(open));fitMath();}
