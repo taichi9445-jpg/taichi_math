@@ -90,6 +90,26 @@ function buildPage(page, html, fresh) {
     var to = resolvePath(dir, href);
     return 'href="' + self + '?p=' + to + (hash || '') + '" target="_top"';
   });
+  // 2026-11-20：script の中身は base64 の文字（英数字だけ）にして送り、画面の側でもとにもどして動かす。
+  //   GAS が途中で JS の文字を変えてしまっても動くように（#27 相互関係が GAS だけで白くなった件）
+  var k = 0;
+  html = html.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, function (all, open, body, close) {
+    if (/\bsrc\s*=/i.test(open) || /\btype\s*=\s*"(?!text\/javascript)[^"]*"/i.test(open) || !body.trim()) return all;
+    k++;
+    return '<script>__gasRun("' + Utilities.base64Encode(body, Utilities.Charset.UTF_8) + '","script' + k + '")</script>';
+  });
+  // いちばん最初に：もとにもどして動かす仕組みと、エラーを画面に出す仕組み
+  var boot = '<script>(function(){' +
+    'function show(t){var b=document.getElementById("gas-err");if(!b){b=document.createElement("div");b.id="gas-err";' +
+    'b.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#fff5f5;color:#a61e1e;border:2px solid #c92a2a;border-radius:8px;padding:10px;font:14px/1.5 sans-serif;white-space:pre-wrap;max-height:40vh;overflow:auto";' +
+    'b.textContent="うまく動きませんでした。この画面を先生に見せてください。\\n";(document.body||document.documentElement).appendChild(b);}b.textContent+=t+"\\n";}' +
+    'window.addEventListener("error",function(e){show((e.message||"error")+" ["+(e.filename||"").split("/").pop()+" "+(e.lineno||"")+":"+(e.colno||"")+"]");});' +
+    'window.addEventListener("unhandledrejection",function(e){show("Promise: "+(e.reason&&e.reason.message||e.reason));});' +
+    'window.__gasRun=function(b,name){try{var s=atob(b),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);' +
+    'var src=new TextDecoder("utf-8").decode(u),el=document.createElement("script");el.text=src+"\\n//# sourceURL="+name+".js";' +
+    'var c=document.currentScript;c.parentNode.insertBefore(el,c.nextSibling);}catch(err){show(name+": "+err.message);}};' +
+    '})();</script>';
+  html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (h) { return h + boot; }) : boot + html;
   return html;
 }
 
