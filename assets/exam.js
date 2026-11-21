@@ -71,14 +71,15 @@
     var s = '<polygon points="' + ['V', 'R', 'T'].map(function (k) { return f1(P[k][0]) + ',' + f1(P[k][1]); }).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" stroke-linejoin="round"/>';
     var u1 = unit(P.R, P.V), u2 = unit(P.R, P.T), m = 13;
     s += '<path d="M' + f1(P.R[0] + u1[0] * m) + ' ' + f1(P.R[1] + u1[1] * m) + 'L' + f1(P.R[0] + (u1[0] + u2[0]) * m) + ' ' + f1(P.R[1] + (u1[1] + u2[1]) * m) + 'L' + f1(P.R[0] + u2[0] * m) + ' ' + f1(P.R[1] + u2[1] * m) + '" fill="none" stroke="#1f2328" stroke-width="1.5"/>';
-    if (o.mark) {
-      var a1 = unit(P.V, P.R), a2 = unit(P.V, P.T), r = 24, cr = a1[0] * a2[1] - a1[1] * a2[0];
-      s += '<path d="M' + f1(P.V[0] + a1[0] * r) + ' ' + f1(P.V[1] + a1[1] * r) + 'A' + r + ' ' + r + ' 0 0 ' + (cr > 0 ? 1 : 0) + ' ' + f1(P.V[0] + a2[0] * r) + ' ' + f1(P.V[1] + a2[1] * r) + '" fill="none" stroke="#d9480f" stroke-width="2.4"/>';
+    var mk = o.mark === true ? 'V' : o.mark;   // 角の印をつける頂点（V か T）
+    if (mk) {
+      var oth = 'VRT'.replace(mk, '').split(''), a1 = unit(P[mk], P[oth[0]]), a2 = unit(P[mk], P[oth[1]]), r = 24, cr = a1[0] * a2[1] - a1[1] * a2[0];
+      s += '<path d="M' + f1(P[mk][0] + a1[0] * r) + ' ' + f1(P[mk][1] + a1[1] * r) + 'A' + r + ' ' + r + ' 0 0 ' + (cr > 0 ? 1 : 0) + ' ' + f1(P[mk][0] + a2[0] * r) + ' ' + f1(P[mk][1] + a2[1] * r) + '" fill="none" stroke="#d9480f" stroke-width="2.4"/>';
     }
     if (o.names) ['V', 'R', 'T'].forEach(function (k) {
       if (!o.names[k]) return;
       var d = unit(G, P[k]);
-      s += '<text x="' + f1(P[k][0] + d[0] * 19) + '" y="' + f1(P[k][1] + d[1] * 19) + '" text-anchor="middle" dominant-baseline="central" font-family="STIX Two Text, serif" font-style="italic" font-size="21" fill="' + (o.mark && k === 'V' ? '#d9480f' : '#1f2328') + '">' + o.names[k] + '</text>';
+      s += '<text x="' + f1(P[k][0] + d[0] * 19) + '" y="' + f1(P[k][1] + d[1] * 19) + '" text-anchor="middle" dominant-baseline="central" font-family="STIX Two Text, serif" font-style="italic" font-size="21" fill="' + (mk === k ? '#d9480f' : '#1f2328') + '">' + o.names[k] + '</text>';
     });
     if (o.sides) [['VR', 'V', 'R', 'T'], ['RT', 'R', 'T', 'V'], ['VT', 'V', 'T', 'R']].forEach(function (e) {
       var t = o.sides[e[0]]; if (t === undefined || t === null || t === '') return;
@@ -91,22 +92,155 @@
     return '<svg class="ex-tri" viewBox="0 ' + f1(top) + ' ' + W + ' ' + f1(bot - top) + '" role="img" aria-label="直角三角形">' + s + '</svg>';
   }
 
+  // ---------- ヒントの図（ボタンを押すと開く） ----------
+  function hintBox(html, open, label) {
+    return '<details class="ex-hint"' + (open ? ' open' : '') + '><summary>' + (label || 'ヒント') + '</summary><div class="ex-hintbody">' + html + '</div></details>';
+  }
+  // 図の中の式（「(−1, √3)」のように √ がまじる文字）。x はまん中、anchor：'start'・'middle'・'end'
+  function mtext(x, y, str, color, fs, anchor) {
+    fs = fs || 19; color = color || '#1f2328';
+    var parts = String(str).split(/(\d*√\d+)/).filter(function (p) { return p !== ''; });
+    var cw = function (ch) { return /[0-9]/.test(ch) ? .5 : /[A-Z]/.test(ch) ? .66 : /[(),]/.test(ch) ? .33 : ch === ' ' ? .25 : ch === '−' ? .72 : ch === '=' ? .62 : .55; };
+    var wOf = function (p) { var m = p.match(/^(\d*)√(\d+)$/); if (m) return (m[1].length * .5 + .75 + m[2].length * .5) * fs + 3; return p.split('').reduce(function (s, ch) { return s + cw(ch) * fs; }, 0); };
+    var W = parts.reduce(function (s, p) { return s + wOf(p); }, 0), cx = anchor === 'start' ? x : anchor === 'end' ? x - W : x - W / 2, out = '', b = y + fs * .35;
+    parts.forEach(function (p) {
+      var m = p.match(/^(\d*)√(\d+)$/), w = wOf(p);
+      if (m) {
+        var x0 = cx; if (m[1]) { out += '<text x="' + x0.toFixed(1) + '" y="' + b.toFixed(1) + '" font-family="STIX Two Text, serif" font-size="' + fs + '" fill="' + color + '">' + m[1] + '</text>'; x0 += m[1].length * .5 * fs; }
+        var x1 = x0 + 1, k = fs / 22;
+        out += '<path d="M' + x1.toFixed(1) + ' ' + (b - 7 * k).toFixed(1) + 'L' + (x1 + 4 * k).toFixed(1) + ' ' + (b - 9 * k).toFixed(1) + 'L' + (x1 + 9 * k).toFixed(1) + ' ' + (b + 1 * k).toFixed(1) + 'L' + (x1 + 15 * k).toFixed(1) + ' ' + (b - 19 * k).toFixed(1) + 'H' + (x1 + fs * .75 + m[2].length * .5 * fs + 2).toFixed(1) + '" fill="none" stroke="' + color + '" stroke-width="1.3" stroke-linejoin="round"/>';
+        out += '<text x="' + (x1 + fs * .75).toFixed(1) + '" y="' + b.toFixed(1) + '" font-family="STIX Two Text, serif" font-size="' + fs + '" fill="' + color + '">' + m[2] + '</text>';
+      } else out += '<text x="' + cx.toFixed(1) + '" y="' + b.toFixed(1) + '" font-family="STIX Two Text, serif" font-size="' + fs + '" fill="' + color + '"' + (/^[A-Za-z]+$/.test(p.trim()) ? ' font-style="italic"' : '') + ' xml:space="preserve">' + p + '</text>';
+      cx += w;
+    });
+    return out;
+  }
+  var arcPath = function (P, u, v, r, color, wdt) {   // 頂点 P で、向き u から向き v までの角の印
+    var cr = u[0] * v[1] - u[1] * v[0];
+    return '<path d="M' + (P[0] + u[0] * r).toFixed(1) + ' ' + (P[1] + u[1] * r).toFixed(1) + 'A' + r + ' ' + r + ' 0 0 ' + (cr > 0 ? 1 : 0) + ' ' + (P[0] + v[0] * r).toFixed(1) + ' ' + (P[1] + v[1] * r).toFixed(1) + '" fill="none" stroke="' + (color || '#d9480f') + '" stroke-width="' + (wdt || 2.2) + '"/>';
+  };
+  var unitV = function (a, b) { var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
+  var degText = function (x, y, d, color) { return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-family="BIZ UDPGothic, sans-serif" font-weight="700" font-size="16" fill="' + (color || '#d9480f') + '">' + d + '°</text>'; };
+
+  // 有名角のヒント：角が左下・直角が右下の直角三角形に、s・c・t の筆記体（書き順の矢印つき）
+  var SP_SIDE = { 30: ['√3', '1', '2', [Math.sqrt(3), 1]], 45: ['1', '1', '√2', [1, 1]], 60: ['1', '√3', '2', [1, Math.sqrt(3)]] };   // 底辺・高さ・斜辺
+  // 教科書の図にならう：sin は斜辺にそって上へ → B の右上でくるっと → 対辺の外を下へ。cos は B から A をまわって底辺の下へ（大きな c）。tan は底辺の下から、対辺の外を上へ（t）
+  function spFig(fn, deg) {
+    var t = SP_SIDE[deg], hyp = Math.hypot(t[3][0], t[3][1]), s = 200 / hyp, bw = t[3][0] * s, hh = t[3][1] * s;
+    var W = 340, x0 = (W - bw) / 2 - 14, y0 = 70 + hh, V = [x0, y0], R = [x0 + bw, y0], T = [x0 + bw, y0 - hh], f1 = function (v) { return v.toFixed(1); };
+    var RED = '#d6336c', hv = unitV(V, T), nh = [hv[1], -hv[0]], mid = [(V[0] + T[0]) / 2, (V[1] + T[1]) / 2];
+    var at = function (p, a, b) { return [p[0] + hv[0] * a + nh[0] * b, p[1] + hv[1] * a + nh[1] * b]; };   // p から斜辺の向きに a、外へ b
+    var P = function (p) { return f1(p[0]) + ' ' + f1(p[1]); };
+    var smooth = function (pts) {   // 点を通るなめらかな線
+      var d = 'M' + P(pts[0]);
+      for (var i = 0; i < pts.length - 1; i++) {
+        var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+        d += 'C' + P([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + ' ' + P([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + ' ' + P(p2);
+      }
+      return d;
+    };
+    var head = function (p, u) { var n = [-u[1], u[0]]; return '<path d="M' + P([p[0] + u[0] * 8, p[1] + u[1] * 8]) + 'L' + P([p[0] - u[0] * 5 + n[0] * 5.5, p[1] - u[1] * 5 + n[1] * 5.5]) + 'L' + P([p[0] - u[0] * 5 - n[0] * 5.5, p[1] - u[1] * 5 - n[1] * 5.5]) + 'z" fill="' + RED + '"/>'; };
+    var out = '<defs><marker id="exArw' + fn + deg + '" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0 0L10 5L0 10z" fill="' + RED + '"/></marker></defs>';
+    out += '<polygon points="' + [V, R, T].map(function (p) { return f1(p[0]) + ',' + f1(p[1]); }).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" stroke-linejoin="round"/>';
+    out += '<path d="M' + f1(R[0] - 13) + ' ' + f1(R[1]) + 'V' + f1(R[1] - 13) + 'H' + f1(R[0]) + '" fill="none" stroke="#1f2328" stroke-width="1.5"/>';
+    out += arcPath(V, [1, 0], hv, 28) + degText(V[0] + 48 * Math.cos(deg * Math.PI / 360), V[1] - 48 * Math.sin(deg * Math.PI / 360), deg);
+    var d, extra = '';
+    if (fn === 'sin') {
+      var S1 = at(T, 34, 12), L = function (a, b) { return at(S1, a, b); };
+      d = smooth([at(V, -30, 12), at(mid, 0, 12), S1, L(20, 10), L(12, 30), L(-8, 24), L(-10, -8), [R[0] + 30, T[1] + 26], [R[0] + 36, (T[1] + R[1]) / 2 + 8], [R[0] + 24, R[1] + 14], [R[0] - 16, R[1] + 22]]);
+      extra = head(at(V, 4, 12), hv);
+    } else if (fn === 'cos') {
+      d = smooth([[T[0] + 14, T[1] - 4], [T[0] - 2, T[1] - 24], at(T, -24, 30), at(mid, 0, 34), at(V, 8, 30), [V[0] - 20, V[1] + 8], [V[0] + 24, V[1] + 22], [R[0] - 10, R[1] + 20], [R[0] + 18, R[1] + 2]]);
+    } else {
+      d = 'M' + P([V[0] - 14, V[1] + 15]) + 'L' + P([R[0] + 34, R[1] + 15]);
+      extra = head([V[0] + 6, V[1] + 15], [1, 0]) +
+        '<path d="' + smooth([[R[0] - 40, R[1] + 15], [R[0] + 6, R[1] + 2], [R[0] + 18, R[1] - 24], [R[0] + 20, (T[1] + R[1]) / 2], [R[0] + 20, T[1] - 26]]) + '" fill="none" stroke="' + RED + '" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M' + P([R[0] + 2, T[1] + 4]) + 'H' + f1(R[0] + 38) + '" stroke="' + RED + '" stroke-width="3" stroke-linecap="round"/>';
+    }
+    out += '<path d="' + d + '" fill="none" stroke="' + RED + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#exArw' + fn + deg + ')"/>' + extra;
+    // 辺の長さ（赤い線より外がわ）
+    var hd = fn === 'cos' ? 56 : 34;
+    out += lab(f1(V[0] + bw / 2), f1(y0 + 44), t[0], '#1f4e8c') + lab(f1(R[0] + (fn === 'sin' ? 62 : 52)), f1(y0 - hh / 2), t[1], '#1f4e8c') + lab(f1(mid[0] + nh[0] * hd), f1(mid[1] + nh[1] * hd), t[2], '#1f4e8c');
+    return '<svg class="ex-tri ex-sp" viewBox="0 ' + f1(T[1] - 64) + ' ' + W + ' ' + f1(hh + 64 + 66) + '" role="img" aria-label="' + deg + '° の直角三角形">' + out + '</svg>' +
+      '<p class="ex-hcap">' + md(fn + ' ' + deg + '° = ' + (fn === 'sin' ? '{対辺|斜辺}' : fn === 'cos' ? '{底辺|斜辺}' : '{対辺|底辺}')) + '</p>';
+  }
+
+  // 鈍角・0°・90°・180° のヒント：角度に合わせた半径の円（30°・60° の仲間は 2、45° の仲間は √2、0°・90°・180° は 1）
+  var OBP = { 120: ['2', [-1, Math.sqrt(3)], '−1, √3'], 135: ['√2', [-1, 1], '−1, 1'], 150: ['2', [-Math.sqrt(3), 1], '−√3, 1'], 0: ['1', [1, 0], '1, 0'], 90: ['1', [0, 1], '0, 1'], 180: ['1', [-1, 0], '−1, 0'] };
+  function obFig(deg) {
+    var e = OBP[deg], r = Math.hypot(e[1][0], e[1][1]), Rp = 92, k = Rp / r, W = 340, O = [W / 2, 128], f1 = function (v) { return v.toFixed(1); };
+    var P = [O[0] + e[1][0] * k, O[1] - e[1][1] * k], H = [P[0], O[1]], out = '';
+    out += '<defs><marker id="exAx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5b6470"/></marker></defs>';
+    out += '<circle cx="' + O[0] + '" cy="' + O[1] + '" r="' + Rp + '" fill="none" stroke="#9db6d6" stroke-width="1.6"/>';
+    out += '<path d="M' + (O[0] - Rp - 26) + ' ' + O[1] + 'H' + (O[0] + Rp + 30) + '" stroke="#5b6470" stroke-width="1.4" marker-end="url(#exAx)"/><path d="M' + O[0] + ' ' + (O[1] + Rp + 14) + 'V' + (O[1] - Rp - 22) + '" stroke="#5b6470" stroke-width="1.4" marker-end="url(#exAx)"/>';
+    out += '<text x="' + (O[0] + Rp + 32) + '" y="' + (O[1] + 16) + '" font-family="STIX Two Text, serif" font-style="italic" font-size="18" fill="#5b6470">x</text><text x="' + (deg === 90 ? O[0] - 20 : O[0] + 8) + '" y="' + (O[1] - Rp - 12) + '" font-family="STIX Two Text, serif" font-style="italic" font-size="18" fill="#5b6470">y</text>';
+    out += '<text x="' + (O[0] - 6) + '" y="' + (O[1] + 18) + '" text-anchor="end" font-family="STIX Two Text, serif" font-style="italic" font-size="18" fill="#1f2328">O</text>';
+    // 直角三角形（P から x 軸へ下ろす）
+    if (Math.abs(e[1][0]) > 1e-9 && Math.abs(e[1][1]) > 1e-9) {
+      out += '<polygon points="' + [O, H, P].map(function (p) { return f1(p[0]) + ',' + f1(p[1]); }).join(' ') + '" fill="#f1f6fc" stroke="none"/>';
+      out += '<path d="M' + f1(P[0]) + ' ' + f1(P[1]) + 'V' + f1(O[1]) + '" stroke="#1f2328" stroke-width="1.8" stroke-dasharray="5 4"/>';
+      var sx = P[0] < O[0] ? 1 : -1;
+      out += '<path d="M' + f1(H[0] + sx * 11) + ' ' + f1(H[1]) + 'V' + f1(H[1] - 11) + 'H' + f1(H[0]) + '" fill="none" stroke="#1f2328" stroke-width="1.3"/>';
+    }
+    out += '<path d="M' + O[0] + ' ' + O[1] + 'L' + f1(P[0]) + ' ' + f1(P[1]) + '" stroke="#1f2328" stroke-width="2.4"/>';
+    // 角の印
+    var ra = 22;
+    if (deg > 0) out += '<path d="M' + (O[0] + ra) + ' ' + O[1] + 'A' + ra + ' ' + ra + ' 0 0 0 ' + f1(O[0] + ra * Math.cos(deg * Math.PI / 180)) + ' ' + f1(O[1] - ra * Math.sin(deg * Math.PI / 180)) + '" fill="none" stroke="#d9480f" stroke-width="2.2"/>' +
+      degText(O[0] + (ra + 18) * Math.cos(deg * Math.PI / 360) + (deg === 180 ? 0 : 6), O[1] - (ra + 18) * Math.sin(deg * Math.PI / 360) - (deg === 180 ? 4 : 0), deg);
+    // 半径（斜辺）の長さ
+    var u = unitV(O, P), n = [u[1], -u[0]];
+    if (n[1] > 0 || (Math.abs(n[1]) < 1e-9 && deg === 0)) n = [-n[0], -n[1]];   // x 軸と反対がわ（上）に書く
+    if (deg === 90) n = [-1, 0];
+    out += lab(f1((O[0] + P[0]) / 2 + n[0] * 18), f1((O[1] + P[1]) / 2 + n[1] * 18), e[0], '#1f4e8c');
+    // 点 P と座標
+    out += '<circle cx="' + f1(P[0]) + '" cy="' + f1(P[1]) + '" r="4.5" fill="#d9480f"/>';
+    var lx = P[0] + u[0] * 14, ly = P[1] + u[1] * 14 - (deg === 0 || deg === 180 ? 16 : 6), anc = u[0] < -.3 ? 'end' : u[0] > .3 ? 'start' : 'middle';
+    if (deg === 90) { lx = P[0] + 10; anc = 'start'; ly = P[1] - 14; }
+    if (deg === 180) { lx = P[0] - 12; anc = 'start'; ly = P[1] + 26; }
+    if (deg > 90 && deg < 180) { lx = P[0] + (deg === 120 ? 28 : 40); anc = 'end'; ly = P[1] - 22; }
+    out += mtext(lx, ly, 'P(' + e[2] + ')', '#d9480f', 19, anc);
+    return '<svg class="ex-tri ex-ob" viewBox="0 0 ' + W + ' 246" role="img" aria-label="' + deg + '° の点 P">' + out + '</svg>' +
+      '<p class="ex-hcap">' + md('sin = {y|r}、cos = {x|r}、tan = {y|x}') + '</p>';
+  }
+
+  // 一般の三角形（A を左下、B を右下に置く）。angA・angB：角、side：{ a, b } に書く文字、col：{ a, b } の色
+  function sTri(angA, angB, side, col) {
+    var A0 = angA * Math.PI / 180, B0 = angB * Math.PI / 180, C0 = Math.PI - A0 - B0, c = Math.sin(C0), b = Math.sin(B0);
+    var raw = [[0, 0], [c, 0], [b * Math.cos(A0), b * Math.sin(A0)]], W = 340, pad = 44;
+    var xs = raw.map(function (p) { return p[0]; }), ys = raw.map(function (p) { return p[1]; });
+    var mnx = Math.min.apply(null, xs), mxx = Math.max.apply(null, xs), mxy = Math.max.apply(null, ys);
+    var s = Math.min((W - 2 * pad) / (mxx - mnx), 170 / mxy), Hh = mxy * s + 2 * pad;
+    var P = raw.map(function (p) { return [pad + (p[0] - mnx) * s, pad + (mxy - p[1]) * s]; }), A = P[0], B = P[1], C = P[2], f1 = function (v) { return v.toFixed(1); };
+    var G = [(A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3];
+    var out = '<polygon points="' + P.map(function (p) { return f1(p[0]) + ',' + f1(p[1]); }).join(' ') + '" fill="#f1f6fc" stroke="#1f2328" stroke-width="2" stroke-linejoin="round"/>';
+    [[A, B, C, angA], [B, A, C, angB]].forEach(function (e) {
+      var u = unitV(e[0], e[1]), v = unitV(e[0], e[2]), m = unitV([0, 0], [u[0] + v[0], u[1] + v[1]]);
+      out += arcPath(e[0], u, v, 22) + degText(e[0][0] + m[0] * 44, e[0][1] + m[1] * 44, e[3]);
+    });
+    [[A, 'A'], [B, 'B'], [C, 'C']].forEach(function (e) { var d = unitV(G, e[0]); out += '<text x="' + f1(e[0][0] + d[0] * 18) + '" y="' + f1(e[0][1] + d[1] * 18) + '" text-anchor="middle" dominant-baseline="central" font-family="STIX Two Text, serif" font-style="italic" font-size="21">' + e[1] + '</text>'; });
+    var sideLab = function (U, V, O, txt, color) { if (!txt) return ''; var mx = (U[0] + V[0]) / 2, my = (U[1] + V[1]) / 2, L = Math.hypot(V[0] - U[0], V[1] - U[1]), n = [-(V[1] - U[1]) / L, (V[0] - U[0]) / L]; if ((O[0] - mx) * n[0] + (O[1] - my) * n[1] > 0) n = [-n[0], -n[1]]; var tw = String(txt).length * 12 + (/√/.test(txt) ? 8 : 0), dist = 14 + Math.abs(n[0]) * tw / 2 + Math.abs(n[1]) * 11; return lab(f1(mx + n[0] * dist), f1(my + n[1] * dist), txt, color); };
+    out += sideLab(B, C, A, side.a, col.a) + sideLab(C, A, B, side.b, col.b);
+    return '<svg class="ex-tri" viewBox="0 0 ' + W + ' ' + f1(Hh) + '" role="img" aria-label="三角形">' + out + '</svg>';
+  }
+
   // ---------- 部品：選ぶ（1問〜何問か続けて） ----------
   // items：[{ q, fig?, ans, wrong:[…], say? }]。正解したら少し待って次へ。最後まで行ったら ctx.ok
   function chooseTask(items, o) {
     o = o || {};
     return function (body, ctx) {
-      var k = ctx.solved ? items.length : 0, tried = [], LBL = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'], lock = false;
-      items.forEach(function (it) { it.ch = it.ch || shuffle([it.ans].concat(it.wrong.slice(0, (o.n || 6) - 1))); });
+      var k = ctx.solved ? items.length : 0, tried = [], LBL = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'], lock = false, hintOpen = false;
+      items.forEach(function (it) { it.ch = it.ch || shuffle([it.ans].concat(it.wrong.slice(0, (it.n || o.n || 6) - 1))); });
       function draw(okNow) {
         if (k >= items.length) { body.innerHTML = (o.pre || '') + (o.done ? '<p class="ex-done">' + md(o.done) + '</p>' : '<p class="ex-clear">ぜんぶ正解！</p>'); return; }
         var it = items[k];
         body.innerHTML = (o.pre || '') + (items.length > 1 && !o.noCount ? '<p class="ex-count">' + (k + 1) + ' / ' + items.length + '</p>' : '') +
-          (it.q ? '<p class="ex-ask">' + md(it.q) + '</p>' : '') + (it.fig ? '<div class="ex-figbox">' + it.fig + '</div>' : '') +
+          (it.pre || '') + (it.q ? '<p class="ex-ask">' + md(it.q) + '</p>' : '') + (it.fig ? '<div class="ex-figbox">' + it.fig + '</div>' : '') +
+          (it.hintFig ? hintBox(it.hintFig, hintOpen) : '') +
           '<div class="sk-opts ex-opts' + (it.ch.length > 4 ? ' six' : '') + (it.ch.some(function (v) { return String(v).length > 14; }) ? ' stack' : '') + '">' + it.ch.map(function (v, j) {
             var bad = tried.indexOf(v) >= 0, good = okNow && v === it.ans;
             return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + '" data-k="' + j + '"' + (bad || okNow ? ' disabled' : '') + '><small>' + LBL[j] + '</small><span>' + choiceMd(v) + '</span></button>';
           }).join('') + '</div>' + (tried.length && it.hint ? '<p class="db-note">' + md(it.hint) + '</p>' : '');
+        var hb = body.querySelector('details.ex-hint'); if (hb) hb.addEventListener('toggle', function () { hintOpen = hb.open; });
         body.querySelectorAll('[data-k]').forEach(function (b) {
           b.onclick = function () {
             if (lock) return;
@@ -198,12 +332,17 @@
         var pts = poly.getAttribute('points').trim().split(/\s+/).map(function (p) { return p.split(',').map(Number); }), P = { V: pts[0], R: pts[1], T: pts[2] };
         var vb = svg.viewBox.baseVal, rc = svg.getBoundingClientRect(), fr = fig.getBoundingClientRect(), k = rc.width / vb.width;
         var px = function (p) { return [rc.left - fr.left + (p[0] - vb.x) * k, rc.top - fr.top + (p[1] - vb.y) * k]; };
+        // 頂点の文字（A・B・C）と □ が重ならないように、重なるときは辺から少しずつ遠ざける
+        var busy = [].slice.call(svg.querySelectorAll('text')).map(function (t) { var r = t.getBoundingClientRect(); return [r.left - fr.left - 3, r.top - fr.top - 3, r.right - fr.left + 3, r.bottom - fr.top + 3]; });
+        var hit = function (a) { return busy.some(function (b) { return a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]; }); };
         slots.forEach(function (el) {
           var a = el.dataset.key[0], b = el.dataset.key[1], c = 'VRT'.replace(a, '').replace(b, ''), A = px(P[a]), B = px(P[b]), C = px(P[c]);
           var mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1, n = [-(B[1] - A[1]) / L, (B[0] - A[0]) / L];
           if ((C[0] - mx) * n[0] + (C[1] - my) * n[1] > 0) n = [-n[0], -n[1]];
-          var w = el.offsetWidth, h = el.offsetHeight, dist = Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * h / 2 + 7;
-          el.style.left = (mx + n[0] * dist - w / 2) + 'px'; el.style.top = (my + n[1] * dist - h / 2) + 'px';
+          var w = el.offsetWidth, h = el.offsetHeight, dist = Math.abs(n[0]) * w / 2 + Math.abs(n[1]) * h / 2 + 7, x, y;
+          for (var g = 0; g < 30; g++) { x = mx + n[0] * dist - w / 2; y = my + n[1] * dist - h / 2; if (!hit([x, y, x + w, y + h])) break; dist += 4; }
+          el.style.left = x + 'px'; el.style.top = y + 'px';
+          busy.push([x, y, x + w, y + h]);
         });
         var tb = slots.map(function (e) { return [parseFloat(e.style.top), parseFloat(e.style.top) + e.offsetHeight]; });
         fig.style.marginTop = Math.max(4, -Math.min.apply(null, tb.map(function (t) { return t[0]; })) + 6) + 'px';
@@ -297,7 +436,7 @@
   }
 
   // ---- 2 三平方の定理で x を求める ----
-  function pythSolve() {
+  function pythSolve(level) {
     var c, rt = Math.random() < .35, unk = Math.random() < .55 ? 'leg' : 'hyp';
     if (!rt) { c = pick([[3, 4, 5], [6, 8, 10], [5, 12, 13]]); c = Math.random() < .5 ? [c[1], c[0], c[2]] : c; }
     else if (unk === 'hyp') { var l = pick([[1, 2], [2, 3], [1, 3], [2, 5], [3, 5], [1, 4]]); c = shuffle(l).concat([null]); }
@@ -329,8 +468,12 @@
       var sx = Math.sqrt(d2), sw = Math.random() < .5;
       var fig = sw ? { p: q, q: sx, sides: { VR: q, RT: 'x', VT: r } } : { p: sx, q: q, sides: { VR: 'x', RT: q, VT: r } };
     }
-    fig.or = pick(ORS); fig.colors = {}; fig.colors[Object.keys(fig.sides).filter(function (k) { return fig.sides[k] === 'x'; })[0]] = '#d9480f';
-    return { q: '【三平方の定理】<br>図の x の値を求めなさい。', sub: '<div class="ex-figbox">' + rtFig(fig) + '</div>', mount: fillTask(rows, ans) };
+    fig.or = level < 60 ? 'n' : pick(ORS);   // 30 点：直角はいつも右下
+    fig.colors = {}; fig.colors[Object.keys(fig.sides).filter(function (k) { return fig.sides[k] === 'x'; })[0]] = '#d9480f';
+    // ヒント：同じ形・同じ向きの三角形に、頂点 A・B・C と a・b・c、三平方の定理の式
+    var hint = '<div class="ex-figbox">' + rtFig({ p: fig.p, q: fig.q, or: fig.or, names: { V: 'B', R: 'C', T: 'A' }, sides: { VR: 'a', RT: 'b', VT: 'c' }, colors: { VT: '#d9480f' } }) + '</div>' +
+      '<p class="ex-hcap">' + md('a² + b² = c²') + '<br><small>斜辺 c は、直角と向かい合う辺</small></p>';
+    return { q: '【三平方の定理】<br>図の x の値を求めなさい。', sub: '<div class="ex-figbox">' + rtFig(fig) + '</div>' + hintBox(hint, false, 'ヒント（公式の図）'), mount: fillTask(rows, ans) };
   }
 
   // ---- 3 sin A・cos A・tan A ----
@@ -374,7 +517,7 @@
     var fill = fillTask(rows, 'sin B = ' + mdFrac(s) + '、cos B = ' + mdFrac(c) + '、tan B = ' + mdFrac(t));
     return {
       q: '【三角比】<br>直角三角形 ABC を、角 B が左下、直角 C が右下になるように動かした。',
-      sub: '<div class="ex-figbox">' + rtFig(Object.assign({}, orig, { mark: false })) + '</div>',
+      sub: '<div class="ex-figbox">' + rtFig(Object.assign({}, orig, { mark: orig.names.V === 'B' ? 'V' : 'T' })) + '</div>',
       mount: seqTask([
         { head: '(1) 辺の長さを □ に入れなさい。', mount: slot },
         { head: '(2) sin B、cos B、tan B の値を求めなさい。', mount: fill }
@@ -387,7 +530,7 @@
   var SPECIAL_HINT = { 30: '30° の直角三角形の辺の比は 1 : √3 : 2（30° と向かい合う辺が 1）。', 45: '45° の直角三角形の辺の比は 1 : 1 : √2。', 60: '60° の直角三角形の辺の比は 1 : √3 : 2（60° と向かい合う辺が √3）。' };
   function special9() {
     var six = ['1/2', '√3/2', '1/√2', '1/√3', '√3', '1'], items = [];
-    ['sin', 'cos', 'tan'].forEach(function (fn) { [30, 45, 60].forEach(function (d) { items.push({ q: fn + ' ' + d + '°', ans: VAL[fn][d], wrong: six.filter(function (v) { return v !== VAL[fn][d]; }), hint: SPECIAL_HINT[d] }); }); });
+    ['sin', 'cos', 'tan'].forEach(function (fn) { [30, 45, 60].forEach(function (d) { items.push({ q: fn + ' ' + d + '°', ans: VAL[fn][d], wrong: six.filter(function (v) { return v !== VAL[fn][d]; }), hint: SPECIAL_HINT[d], hintFig: spFig(fn, d) }); }); });
     return { q: '【有名角の三角比】<br>次の三角比の値を選びなさい。', mount: chooseTask(shuffle(items), { say: 'sin・cos・tan と 30°・45°・60° の 9 つ、全部答えられたね！' }) };
   }
 
@@ -404,11 +547,12 @@
     g = g || dataSet();
     var u = ' 点', d = g.data, so = D.sorted(d), sum = D.sum(d), mean = sum / 6, med = D.median(d), mn = so[0], mx = so[5];
     var dis = uniq(d).map(Number), plus = function (a) { return '(' + a.join('+') + ')'; };
-    var j = rint(0, 5), alt = d.slice(); alt[j] = d[j] + (d[j] >= 10 ? -1 : 1);   // 1 つだけちがう数（よく見ないと気づかない）
-    var meanF = uniq([plus(d) + '÷5', plus(dis) + '÷6', plus(dis) + '÷' + dis.length, plus(alt) + '÷6', '(' + so[2] + '+' + so[3] + ')÷2', '(' + mn + '+' + mx + ')÷2']).filter(function (v) { return v !== plus(d) + '÷6'; });
+    // 式は 4 択。数 1 つだけのちがいのような細かいまちがい探しはしない（考え方のちがいだけ）
+    //   中央値の式（まん中 2 つの平均）、最小値と最大値のまん中、2 でわる
+    var meanF = uniq(['(' + so[2] + '+' + so[3] + ')÷2', '(' + mn + '+' + mx + ')÷2', plus(d) + '÷2']).filter(function (v) { return v !== plus(d) + '÷6'; });
     var mean1 = chooseTask([
-      { q: '平均値を求める式を選びなさい。', ans: plus(d) + '÷6', wrong: shuffle(meanF), hint: '平均値 = (データの合計) ÷ (データの個数)' },
-      { q: '平均値を選びなさい。', ans: f(mean) + u, wrong: D.near(mean, [sum / 5, (mn + mx) / 2, med, mean + 0.5], 5).map(function (v) { return v + u; }), hint: '合計を 6 でわろう。' }
+      { q: '平均値を求める式を選びなさい。', ans: plus(d) + '÷6', wrong: meanF, n: 4, hint: '平均値 = (データの合計) ÷ (データの個数)' },
+      { pre: '<p class="ex-memo">' + md('平均値 = (' + d.join(' + ') + ') ÷ 6') + '</p>', q: '平均値を選びなさい。', ans: f(mean) + u, wrong: D.near(mean, [sum / 5, (mn + mx) / 2, med, mean + 0.5], 5).map(function (v) { return v + u; }), hint: '合計を 6 でわろう。' }
     ], { n: 6, noCount: true, done: '平均値 = (' + d.join(' + ') + ') ÷ 6 = ' + f(mean) + '（点）' });
     var med1 = D.sortTask(d, D.thenPick('中央値を選びなさい。', f(med) + u, D.near(med, [so[2], so[3], mean, (mn + mx) / 2], 5).map(function (v) { return v + u; }),
       'データは 6 個（偶数）なので、中央値は 3 番目と 4 番目の平均。(' + so[2] + ' + ' + so[3] + ') ÷ 2 = ' + f(med) + '（点）'));
@@ -506,7 +650,7 @@
       { t: ofn + '²A = [' + k + '/' + d2 + ']', h: '1 = {' + d2 + '|' + d2 + '} として、ひき算をします。', cards: deck([k + '/' + d2], [(d2 + n * n) + '/' + d2, (d - n) + '/' + d2, k + '/' + d, n * n + '/' + d2]) },
       { t: '#' + rng + ' より [' + sign + '] なので', h: obtuse ? '90° < A < 180° では、sin A は正、cos A は負。' : '0° < A < 90° では、sin A も cos A も正。', cards: deck([sign], [badSign, ofn + ' A = 0', gfn + ' A ' + (negOf(ofn) ? '<' : '>') + ' 0']) },
       { t: ofn + ' A = ' + (negOf(ofn) ? M : '') + '{√' + k + '|√' + d2 + '} = [' + ov + ']', h: '分子と分母、それぞれの √ をとります。√' + d2 + ' = ' + d + '。', cards: deck([ov], [(negOf(ofn) ? '' : M) + om + '/' + d, om + '/' + d2, k + '/' + d, '√' + k + '/' + d2]) },
-      { t: '!tan A = {sin A|cos A}' },
+      { t: '!tan A = {[sin A]|[cos A]}', h: '三角比の相互関係の、tan A の式です。', cards: deck(['sin A', 'cos A'], ['tan A', '1', 'sin²A', 'cos²A']) },
       { t: 'tan A = ' + paren(sv) + ' ÷ ' + paren(cvv), h: 'sin A と cos A の値を、それぞれ代入します。', cards: deck([sv, cvv], [d + '/' + n, (negOf('cos') ? '' : M) + cn + '/' + d, sn + '/' + cn]) },
       { t: 'tan A = ' + mdFrac(sv) + ' × ' + paren(rec) + ' = [' + tv + ']', h: '分数でわるときは、わる数の逆数をかけます。', cards: deck([rec, tv], [(negOf('cos') ? M : '') + cn + '/' + d, (tneg ? '' : M) + tv.replace(/^−/, ''), cn + '/' + sn.replace('√', '√'), sn + '/' + d]) }
     ];
@@ -520,11 +664,11 @@
   // ---- 三角形の面積 S = ½ bc sin A ----
   var SINV = { 30: '1/2', 150: '1/2', 60: '√3/2', 120: '√3/2', 45: '1/√2', 135: '1/√2' };
   function area() {
-    var deg = pick([30, 150, 60, 120, 45, 135]), b, c;
+    var deg = pick([30, 45, 60]), b, c;   // 鋭角だけ
     do { b = rint(2, 10); c = rint(2, 10); } while ((b * c) % 4 !== 0 || b === c);
     var P = b * c / 2, sv = SINV[deg], ans, rows;
     rows = [
-      { t: 'S = {1|2} × [' + c + '@s] × [' + b + '@s] × sin [' + deg + ']°', h: '2 つの辺 AB・AC と、その間の角 A を使います。', cards: deck([c, b, deg], [b + c, b * c, 180 - deg]) },
+      { t: 'S = {1|2} × [' + c + '@s] × [' + b + '@s] × sin [' + deg + ']°', h: '2 つの辺 AB・AC と、その間の角 A を使います。', cards: deck([c, b, deg], [b + c, b * c, 90 - deg, 90]) },
       { t: 'S = [' + P + '] × sin ' + deg + '°', h: '{1|2} × ' + c + ' × ' + b + ' を計算します。', cards: deck([P], [b * c, P / 2, b + c, 2 * P]) },
       { t: '#sin ' + deg + '° = [' + sv + '] より', h: deg > 90 ? 'sin(180° − θ) = sin θ。sin ' + deg + '° = sin ' + (180 - deg) + '°。' : deg + '° の直角三角形の辺の比を思い出そう。', cards: deck([sv], ['1/2', '√3/2', '1/√2', M + sv, '1']) }
     ];
@@ -568,25 +712,34 @@
       { t: Y + ' = ' + s1 + ' × [' + SREC[P] + '] × ' + mdFrac(SV[Q]), h: '分数でわるときは、わる数の逆数をかけます。', cards: deck([SREC[P]], [SV[P], '2', '√2', '2/√3', '√3/2', '1/2']) },
       { t: Y + ' = [' + s2 + ']', h: '√ どうしをかけたり、約分したりして計算します。', cards: deck([s2], other(s2).concat([s1, k + '√6'])) }
     ];
+    var side = {}, col = {}; side[X] = s1; side[Y] = Y; col[X] = '#1f4e8c'; col[Y] = '#d9480f';
+    var angA = PX === 'A' ? P : Q, angB = PX === 'B' ? P : Q;
     return {
       q: '【正弦定理】<br>△ABC で、' + X + ' = ' + s1 + '、' + PX + ' = ' + P + '°、' + QY + ' = ' + Q + '° のとき、' + Y + ' を求めなさい。',
+      sub: '<div class="ex-figbox">' + sTri(angA, angB, side, col) + '</div>',
       mount: fillTask(rows, Y + ' = ' + s2), _chk: { s1: s1, s2: s2, P: P, Q: Q, k: k }
     };
   }
 
   // ---- 鈍角と 0°・90°・180° の三角比（18 問、順番はまぜる） ----
   var OB = { 120: ['√3/2', '−1/2', '−√3'], 135: ['1/√2', '−1/√2', '−1'], 150: ['1/2', '−√3/2', '−1/√3'], 0: ['0', '1', '0'], 90: ['1', '0', 'なし'], 180: ['0', '−1', '0'] };
-  var OB_HINT = { 120: '120° は 180° − 60°。半径 2 の半円で P(−1, √3)。', 135: '135° は 180° − 45°。半径 √2 の半円で P(−1, 1)。', 150: '150° は 180° − 30°。半径 2 の半円で P(−√3, 1)。', 0: '0° のとき、半径 1 の円で P(1, 0)。', 90: '90° のとき、P(0, 1)。tan は x = 0 でわることになるので…？', 180: '180° のとき、P(−1, 0)。' };
+  var OB_HINT = { 120: '120° は 180° − 60°。半径 2 の円で P(−1, √3)。', 135: '135° は 180° − 45°。半径 √2 の円で P(−1, 1)。', 150: '150° は 180° − 30°。半径 2 の円で P(−√3, 1)。', 0: '0° のとき、半径 1 の円で P(1, 0)。', 90: '90° のとき、P(0, 1)。tan は x = 0 でわることになるので…？', 180: '180° のとき、P(−1, 0)。' };
+  var OBFIG = {};
   function obtuse18() {
-    var pool = ['1/2', '√3/2', '1/√2', '−1/2', '−√3/2', '−1/√2', '√3', '−√3', '1/√3', '−1/√3', '1', '−1', '0', 'なし'], items = [];
-    ['sin', 'cos', 'tan'].forEach(function (fn, j) {
-      [120, 135, 150, 0, 90, 180].forEach(function (d) {
-        var a = OB[d][j], flip = a === '0' || a === 'なし' ? null : a[0] === '−' ? a.slice(1) : M + a;
-        var w = shuffle(pool.filter(function (v) { return v !== a && v !== flip; })).slice(0, flip ? 4 : 5);
-        items.push({ q: fn + ' ' + d + '°', ans: a, wrong: (flip ? [flip] : []).concat(w), hint: OB_HINT[d] });
+    var pool = ['1/2', '√3/2', '1/√2', '−1/2', '−√3/2', '−1/√2', '√3', '−√3', '1/√3', '−1/√3', '1', '−1', '0', 'なし'];
+    var make = function (degs) {
+      var items = [];
+      ['sin', 'cos', 'tan'].forEach(function (fn, j) {
+        degs.forEach(function (d) {
+          var a = OB[d][j], flip = a === '0' || a === 'なし' ? null : a[0] === '−' ? a.slice(1) : M + a;
+          var w = shuffle(pool.filter(function (v) { return v !== a && v !== flip; })).slice(0, flip ? 4 : 5);
+          items.push({ q: fn + ' ' + d + '°', ans: a, wrong: (flip ? [flip] : []).concat(w), hint: OB_HINT[d], hintFig: OBFIG[d] || (OBFIG[d] = obFig(d)) });
+        });
       });
-    });
-    return { q: '【鈍角と 0°・90°・180° の三角比】<br>次の三角比の値を選びなさい。', mount: chooseTask(shuffle(items), { say: '鈍角では cos と tan が負になるね。0°・90°・180° は点 P の座標で考えよう。' }) };
+      return shuffle(items);
+    };
+    // 前半 9 問は 120°・135°・150°、後半 9 問は 0°・90°・180°（それぞれの中で順番はまぜる）
+    return { q: '【鈍角と 0°・90°・180° の三角比】<br>次の三角比の値を選びなさい。', mount: chooseTask(make([120, 135, 150]).concat(make([0, 90, 180])), { say: '鈍角では cos と tan が負になるね。0°・90°・180° は点 P の座標で考えよう。' }) };
   }
 
   // ---- 分散と標準偏差（8 個のデータ） ----
@@ -628,7 +781,7 @@
   // =====================================================================
   function course(level) {
     // 続きの問題（動かした図 → 三角比、平均値 → 中央値 → 最頻値、表 → ヒストグラム、表 → 分散）は、1 つの大問の中で下へ続ける
-    var t = [pythFormula(level), pythSolve(), trigA(), trigBPair(), special9()];
+    var t = [pythFormula(level), pythSolve(level), trigA(), trigBPair(), special9()];
     if (level >= 60) t = t.concat([soukan(false), soukan(true), area(), sineRule(), obtuse18()]);
     t = t.concat([dataTask(level), freqTask()]);
     if (level >= 60) t.push(varTask());
@@ -641,5 +794,5 @@
     var go = function () { D.run(app, course(level), { name: '目指せ' + level + '点', home: home, again: go }); };
     go();
   }
-  global.EXAM = { start: start, _t: { pythFormula: pythFormula, pythSolve: pythSolve, trigA: trigA, trigBPair: trigBPair, special9: special9, dataSet: dataSet, dataTask: dataTask, freqTask: freqTask, soukan: soukan, area: area, sineRule: sineRule, obtuse18: obtuse18, varTask: varTask, course: course, frac: frac, rootOf: rootOf } };
+  global.EXAM = { start: start, _t: { pythFormula: pythFormula, pythSolve: pythSolve, trigA: trigA, trigBPair: trigBPair, special9: special9, dataSet: dataSet, dataTask: dataTask, freqTask: freqTask, soukan: soukan, area: area, sineRule: sineRule, obtuse18: obtuse18, varTask: varTask, course: course, frac: frac, rootOf: rootOf, spFig: spFig, obFig: obFig, sTri: sTri, rtFig: rtFig } };
 })(window);

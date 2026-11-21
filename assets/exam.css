@@ -108,5 +108,21 @@
 /* 箱ひげ図の 4 択と、できたあとに残す正しい図 */
 #app .db-memo { padding-left: 10px; list-style: none; }
 #app .db-memo li.fig { margin-left: 0; }
-#app .db-memo svg, #app .sk-opts.figs svg { width: 100%; max-width: 360px; height: auto; display: block; margin: 0 auto; }
+#app .db-memo li.fig svg, #app .sk-opts.figs svg { width: 100%; max-width: 360px; height: auto; display: block; margin: 0 auto; }
 .ex-sdone > .db-note, .ex-sdone > .ex-chips, .ex-sdone .sk-ctrl { display: none; }
+/* ---- 2026-11-23 先生の要望で追加 ---- */
+/* ヒントの図（ボタンを押すと開く） */
+.ex-hint { margin: 8px 0; }
+.ex-hint > summary { display: inline-block; list-style: none; cursor: pointer; padding: 7px 16px; border: 2px solid #c9d4e2; border-bottom-width: 4px; border-radius: 10px;
+  background: #fff; color: var(--ex-navy); font-weight: 700; font-size: 16px; user-select: none; -webkit-user-select: none; }
+.ex-hint > summary::-webkit-details-marker { display: none; }
+.ex-hint[open] > summary { background: #fff8e6; border-color: #f2d39b; color: #b35c00; }
+.ex-hintbody { margin-top: 8px; padding: 8px 6px 4px; border-radius: 12px; background: #fffdf5; border: 1px dashed #f2d39b; }
+.ex-hcap { margin: 2px 0 6px; text-align: center; font-size: 18px; line-height: 1.6; }
+.ex-hcap small { font-size: 14px; color: #5b6470; }
+.ex-hintbody svg.ex-ob { max-width: 340px; }
+/* 平均値の式を、値を選ぶときも残す */
+.ex-memo { padding: 6px 10px; border-radius: 8px; background: #eef4fb; }
+/* 表：埋める欄の線は実線に（iPhone で点線の罫線が消えることがあるため） */
+.ex-part .db-t td.fill { border-style: solid; border-color: #aeb8c5; }
+.ex-hintbody > svg { display: block; width: 100%; max-width: 340px; height: auto; margin: 0 auto; }
