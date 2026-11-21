@@ -19,6 +19,8 @@
   // 分数 n/d（約分して、分母 1 なら整数）。neg で −
   function frac(n, d, neg) { var g = gcd(n, d); n /= g; d /= g; return (neg ? M : '') + (d === 1 ? n : n + '/' + d); }
   var mdFrac = function (v) { var m = String(v).match(/^(−?)([^/]+)\/(.+)$/); return m ? m[1] + '{' + m[2] + '|' + m[3] + '}' : String(v); };
+  // 選択肢の「1/2」「−√3/2」は、上下の分数で出す（式や単位つきの文字はそのまま）
+  var choiceMd = function (v) { v = String(v); return md(/^−?[^\s/()÷+]+\/[^\s/()÷+]+$/.test(v) ? mdFrac(v) : v); };
   // 答えのカード＋ダミーで、全部で n 枚（答えはそのまま、ダミーは答えと重ならないもの）
   // 足りないときは、答えに近いまちがい（±1、2倍、分母と分子の入れかえ、√ の中を ±1）でうめる
   function nearMiss(v) {
@@ -97,13 +99,13 @@
       var k = ctx.solved ? items.length : 0, tried = [], LBL = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'], lock = false;
       items.forEach(function (it) { it.ch = it.ch || shuffle([it.ans].concat(it.wrong.slice(0, (o.n || 6) - 1))); });
       function draw(okNow) {
-        if (k >= items.length) { body.innerHTML = (o.pre || '') + '<p class="ex-clear">ぜんぶ正解！</p>'; return; }
+        if (k >= items.length) { body.innerHTML = (o.pre || '') + (o.done ? '<p class="ex-done">' + md(o.done) + '</p>' : '<p class="ex-clear">ぜんぶ正解！</p>'); return; }
         var it = items[k];
-        body.innerHTML = (o.pre || '') + (items.length > 1 ? '<p class="ex-count">' + (k + 1) + ' / ' + items.length + '</p>' : '') +
-          '<p class="ex-ask">' + md(it.q) + '</p>' + (it.fig ? '<div class="ex-figbox">' + it.fig + '</div>' : '') +
+        body.innerHTML = (o.pre || '') + (items.length > 1 && !o.noCount ? '<p class="ex-count">' + (k + 1) + ' / ' + items.length + '</p>' : '') +
+          (it.q ? '<p class="ex-ask">' + md(it.q) + '</p>' : '') + (it.fig ? '<div class="ex-figbox">' + it.fig + '</div>' : '') +
           '<div class="sk-opts ex-opts' + (it.ch.length > 4 ? ' six' : '') + (it.ch.some(function (v) { return String(v).length > 14; }) ? ' stack' : '') + '">' + it.ch.map(function (v, j) {
             var bad = tried.indexOf(v) >= 0, good = okNow && v === it.ans;
-            return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + '" data-k="' + j + '"' + (bad || okNow ? ' disabled' : '') + '><small>' + LBL[j] + '</small><span>' + md(v) + '</span></button>';
+            return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + (good ? ' ok' : '') + '" data-k="' + j + '"' + (bad || okNow ? ' disabled' : '') + '><small>' + LBL[j] + '</small><span>' + choiceMd(v) + '</span></button>';
           }).join('') + '</div>' + (tried.length && it.hint ? '<p class="db-note">' + md(it.hint) + '</p>' : '');
         body.querySelectorAll('[data-k]').forEach(function (b) {
           b.onclick = function () {
@@ -153,7 +155,7 @@
       var keys = Object.keys(answer), got = {}, picked = null, done = !!ctx.solved;
       if (done) keys.forEach(function (k) { got[k] = answer[k]; });
       body.innerHTML = '<div class="ex-slotfig">' + rtFig(figOpt) + keys.map(function (k) { return '<button type="button" class="ex-slot" data-key="' + k + '"></button>'; }).join('') + '</div>' +
-        '<p class="db-note">カードを □ までドラッグしよう（カードを押してから □ を押しても入るよ）</p>' +
+        '<p class="db-note">カードを □ にドラッグ（カードを押してから □ を押しても入る）</p>' +
         '<div class="ex-chips">' + chips.map(function (v) { return '<button type="button" class="fs-card ex-chip" data-v="' + v + '">' + md(v) + '</button>'; }).join('') + '</div>' +
         '<div class="sk-ctrl"><button type="button" class="fs-btn primary ex-check" disabled>答え合わせ</button></div><div class="ex-msg"></div>';
       body.__ans = answer;   // 確かめ用
@@ -188,8 +190,8 @@
       chk.onclick = function () {
         var all = true;
         slots.forEach(function (s) { var ok = got[s.dataset.key] === answer[s.dataset.key]; s.classList.add(ok ? 'ok' : 'ng'); if (!ok) all = false; });
-        if (all) { done = true; paint(); slots.forEach(function (s) { s.classList.add('ok'); }); ctx.ok(D.paras(say)); }
-        else { ctx.miss(); body.querySelector('.ex-msg').innerHTML = '<p class="db-note ex-ng">赤い枠の □ を直そう。同じ辺は、動かしても長さは変わらないよ。</p>'; }
+        if (all) { done = true; paint(); slots.forEach(function (s) { s.classList.add('ok'); }); body.querySelector('.ex-msg').innerHTML = ''; chk.hidden = true; body.classList.add('ex-sdone'); ctx.ok(say ? D.paras(say) : ''); }
+        else { ctx.miss(); body.querySelector('.ex-msg').innerHTML = '<p class="db-note ex-ng">赤い枠の □ を直そう。動かしても、辺の長さは変わらない。</p>'; }
       };
       function place() {
         var svg = fig.querySelector('svg'), poly = svg && svg.querySelector('polygon'); if (!poly || !fig.offsetWidth) return;
@@ -209,7 +211,65 @@
       }
       paint(); place();
       if (global.ResizeObserver) new ResizeObserver(place).observe(fig);
-      if (done) ctx.ok(D.paras(say));
+      if (done) { chk.hidden = true; body.classList.add('ex-sdone'); ctx.ok(say ? D.paras(say) : ''); }
+    };
+  }
+
+  // ---------- 部品：続きの問題を、同じ大問の下へ順に出していく ----------
+  // parts：[{ head?, mount, note? }]。1 つできたら、その下に次の問題を出す（そこまでスクロール）
+  //   note：その問題の解説を、その場に小さく残す。最後の問題の解説が「正解」の欄に出る
+  function seqTask(parts) {
+    var fn = function (body, ctx) {
+      body.innerHTML = '';
+      function open(i) {
+        var p = parts[i], box = document.createElement('section'), inner = document.createElement('div'), fired = false;
+        box.className = 'ex-part' + (i ? ' next' : '');
+        if (p.head) box.innerHTML = '<p class="ex-ph">' + md(p.head) + '</p>';
+        box.appendChild(inner); body.appendChild(box);
+        p.mount(inner, {
+          solved: ctx.solved, miss: ctx.miss,
+          ok: function (say) {
+            if (fired) return; fired = true;
+            if (i === parts.length - 1) { ctx.ok(say || '<p>よくできました！</p>'); return; }
+            if (say && p.note) box.insertAdjacentHTML('beforeend', '<div class="ex-psay">' + say + '</div>');
+            var nx = open(i + 1);
+            if (!ctx.solved) setTimeout(function () { try { nx.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { nx.scrollIntoView(); } }, 380);
+          }
+        });
+        return box;
+      }
+      open(0);
+    };
+    fn.parts = parts;   // 確かめ用
+    return fn;
+  }
+
+  // ---------- 部品：ヒストグラムをかく（1 本の柱を、右上から左下への斜線でぬる） ----------
+  function histTask(edges, freq, unit) {
+    return function (body, ctx) {
+      var n = freq.length, i = ctx.solved ? n : 0, top = Math.max.apply(null, freq) + 1;
+      var W = 340, H = 250, L = 36, R = 14, B = 34, T = 14;
+      var X = function (k) { return L + k / n * (W - L - R); }, Y = function (v) { return H - B - v / top * (H - B - T); }, f1 = function (v) { return v.toFixed(1); };
+      function draw(bad) {
+        var s = '<defs><pattern id="exHatch" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-2 2L2 -2M0 8L8 0M6 10L10 6" stroke="#1f4e8c" stroke-width="1.3"/></pattern></defs>';
+        if (i < n) s += '<rect x="' + f1(X(i)) + '" y="' + f1(Y(top)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(top)) + '" fill="#fff1db"/>';
+        for (var v = 0; v <= top; v++) s += '<path d="M' + L + ' ' + f1(Y(v)) + 'H' + (W - R) + '" stroke="#dbe2ea"/><text x="' + (L - 7) + '" y="' + f1(Y(v) + 5) + '" text-anchor="end" font-family="STIX Two Text, serif" font-size="14" fill="#1f2328">' + v + '</text>';
+        freq.forEach(function (c, k) { if (k < i) s += '<rect x="' + f1(X(k)) + '" y="' + f1(Y(c)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(c)) + '" fill="url(#exHatch)" stroke="#1f4e8c" stroke-width="2"/>'; });
+        if (bad) s += '<rect x="' + f1(X(bad[0])) + '" y="' + f1(Y(bad[1])) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(bad[1])) + '" fill="#ffc9c9" fill-opacity=".7" stroke="#c92a2a" stroke-width="1.5"/>';
+        s += '<path d="M' + L + ' ' + f1(Y(0)) + 'H' + (W - R) + 'M' + L + ' ' + f1(Y(0)) + 'V' + T + '" stroke="#1f2328" stroke-width="1.4" fill="none"/>';
+        edges.forEach(function (e, k) { s += '<text x="' + f1(X(k)) + '" y="' + f1(Y(0) + 19) + '" text-anchor="middle" font-family="STIX Two Text, serif" font-size="14" fill="#1f2328">' + f(e) + '</text>'; });
+        if (i < n) for (var h = 1; h <= top; h++) s += '<rect class="ex-hc" data-h="' + h + '" x="' + f1(X(i)) + '" y="' + f1(Y(h)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(h - 1) - Y(h)) + '" fill="#1f4e8c" fill-opacity="0"/>';
+        body.innerHTML = '<div class="ex-hist"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="ヒストグラム">' + s + '</svg></div>' +
+          '<p class="db-note">' + (i < n ? 'オレンジの列で、度数の高さを押そう。' : '') + '（横：' + unit + '、縦：人）</p>';
+        body.querySelectorAll('.ex-hc').forEach(function (r) {
+          r.addEventListener('click', function () {
+            var h = +r.getAttribute('data-h');
+            if (h === freq[i]) { i++; draw(); if (i >= n) ctx.ok(''); } else { ctx.miss(); draw([i, h]); }
+          });
+        });
+      }
+      draw();
+      if (ctx.solved) ctx.ok('');
     };
   }
 
@@ -219,16 +279,19 @@
   var ORS = ['n', 'x', 'y', 'xy'];
 
   // ---- 1 三平方の定理の式を選ぶ ----
-  function pythFormula() {
-    var L = shuffle(['A', 'B', 'C']), names = { V: L[0], R: L[1], T: L[2] }, lo = function (c) { return c.toLowerCase(); };
+  //   30 点：直角はいつも右下（C）で、斜辺は c。60 点：直角の位置（右下・左下・右上・左上）も文字もランダム
+  function pythFormula(level) {
+    var easy = level < 60, AB = shuffle(['A', 'B']);
+    var L = easy ? [AB[0], 'C', AB[1]] : shuffle(['A', 'B', 'C']), names = { V: L[0], R: L[1], T: L[2] }, lo = function (c) { return c.toLowerCase(); };
     var h = lo(names.R), l1 = lo(names.V), l2 = lo(names.T);   // RT は V の向かい、VR は T の向かい、VT は R の向かい（斜辺）
     var sides = { RT: l1, VR: l2, VT: h };
     var t = pick([[3, 4], [4, 3], [5, 12], [8, 6]]), legs = shuffle([l1, l2]);
+    if (easy) legs = [l1, l2].sort();   // a² + b² = c² の形
     var ans = legs[0] + '² + ' + legs[1] + '² = ' + h + '²';
     return {
-      q: '【三平方の定理】<br>直角三角形 ABC で成り立つ式はどれか。',
-      sub: '<div class="ex-figbox">' + rtFig({ p: t[0], q: t[1], names: names, sides: sides, or: pick(ORS) }) + '</div>',
-      mount: chooseTask([{ q: '正しい式をえらぼう。', ans: ans, wrong: [l1 + '² + ' + h + '² = ' + l2 + '²', l2 + '² + ' + h + '² = ' + l1 + '²', legs[0] + ' + ' + legs[1] + ' = ' + h], hint: '直角と向かい合う辺（斜辺）はどれかな？ 斜辺の2乗が、ほかの2辺の2乗の和になるよ。' }],
+      q: '【三平方の定理】<br>直角三角形 ABC で成り立つ式を選びなさい。',
+      sub: '<div class="ex-figbox">' + rtFig({ p: t[0], q: t[1], names: names, sides: sides, or: easy ? 'n' : pick(ORS) }) + '</div>',
+      mount: chooseTask([{ q: '', ans: ans, wrong: [l1 + '² + ' + h + '² = ' + l2 + '²', l2 + '² + ' + h + '² = ' + l1 + '²', legs[0] + ' + ' + legs[1] + ' = ' + h], hint: '直角と向かい合う辺（斜辺）はどれかな？ 斜辺の2乗が、ほかの2辺の2乗の和になるよ。' }],
         { n: 4, say: '直角は ' + names.R + '。直角と向かい合う辺 ' + h + ' が斜辺なので、' + ans + '。' })
     };
   }
@@ -236,7 +299,7 @@
   // ---- 2 三平方の定理で x を求める ----
   function pythSolve() {
     var c, rt = Math.random() < .35, unk = Math.random() < .55 ? 'leg' : 'hyp';
-    if (!rt) { c = pick([[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17]]); c = Math.random() < .5 ? [c[1], c[0], c[2]] : c; }
+    if (!rt) { c = pick([[3, 4, 5], [6, 8, 10], [5, 12, 13]]); c = Math.random() < .5 ? [c[1], c[0], c[2]] : c; }
     else if (unk === 'hyp') { var l = pick([[1, 2], [2, 3], [1, 3], [2, 5], [3, 5], [1, 4]]); c = shuffle(l).concat([null]); }
     else { var g = pick([[3, 2], [4, 3], [4, 1], [5, 2], [6, 5], [3, 1.5]].filter(function (x) { return x[1] % 1 === 0 && sqfree(x[0] * x[0] - x[1] * x[1]); })); c = [null, g[1], g[0]]; }
     var p, q, r, rows, ans, xKey;
@@ -267,7 +330,7 @@
       var fig = sw ? { p: q, q: sx, sides: { VR: q, RT: 'x', VT: r } } : { p: sx, q: q, sides: { VR: 'x', RT: q, VT: r } };
     }
     fig.or = pick(ORS); fig.colors = {}; fig.colors[Object.keys(fig.sides).filter(function (k) { return fig.sides[k] === 'x'; })[0]] = '#d9480f';
-    return { q: '【三平方の定理】<br>x の値を求めよう。', sub: '<div class="ex-figbox">' + rtFig(fig) + '</div>', mount: fillTask(rows, ans) };
+    return { q: '【三平方の定理】<br>図の x の値を求めなさい。', sub: '<div class="ex-figbox">' + rtFig(fig) + '</div>', mount: fillTask(rows, ans) };
   }
 
   // ---- 3 sin A・cos A・tan A ----
@@ -281,7 +344,7 @@
       { t: 'tan A = {[' + a + ']|[' + b + ']}', h: 'tan A = {対辺|底辺}。', cards: deck([a, b], dm(a).concat([c])) }
     ];
     return {
-      q: '【三角比】<br>直角三角形 ABC で、sin A、cos A、tan A を求めよう。',
+      q: '【三角比】<br>直角三角形 ABC で、sin A、cos A、tan A の値を求めなさい。',
       sub: '<div class="ex-figbox">' + rtFig({ p: b, q: a, names: { V: 'A', R: 'C', T: 'B' }, sides: { VR: b, RT: a, VT: c }, mark: true }) + '</div>',
       mount: fillTask(rows, 'sin A = {' + a + '|' + c + '}、cos A = {' + b + '|' + c + '}、tan A = {' + a + '|' + b + '}')
     };
@@ -302,23 +365,21 @@
     if (chips.length < 6) chips = shuffle(uniq(chips.concat([AB + k, BC + CA])).slice(0, 6));
     var mv = Object.assign({}, moved, { sides: { VR: BC, RT: CA, VT: AB } });
     var s = frac(CA, AB), c = frac(BC, AB), t = frac(CA, BC);
-    var task1 = {
-      q: '【三角比】<br>上の直角三角形を、角 B が左下、直角 C が右下になるように動かしたよ。<br>辺の長さを □ に入れよう。',
-      sub: '<div class="ex-figbox">' + rtFig(Object.assign({ mark: false }, orig, { mark: false })) + '</div>',
-      mount: slotTask(moved, { VR: String(BC), RT: String(CA), VT: String(AB) }, chips.map(String), ['BC = ' + BC + '、CA = ' + CA + '、AB = ' + AB + '。三角形を動かしても、辺の長さは変わらないよ。'])
-    };
-    var dm = function (n, d) { return [frac(d, n), n + '/' + d, frac(n, d === AB ? BC : AB)]; };
+    var slot = slotTask(moved, { VR: String(BC), RT: String(CA), VT: String(AB) }, chips.map(String), '');
     var rows = [
       { t: 'sin B = {[' + CA + ']|[' + AB + ']} = [' + s + ']', h: 'sin B = {対辺|斜辺}。分数は約分して答えよう。', cards: deck([CA, AB, s], [BC, frac(AB, CA), frac(BC, AB)]) },
       { t: 'cos B = {[' + BC + ']|[' + AB + ']} = [' + c + ']', h: 'cos B = {底辺|斜辺}。約分しよう。', cards: deck([BC, AB, c], [CA, frac(AB, BC), frac(CA, AB)]) },
       { t: 'tan B = {[' + CA + ']|[' + BC + ']} = [' + t + ']', h: 'tan B = {対辺|底辺}。約分しよう。', cards: deck([CA, BC, t], [AB, frac(BC, CA), frac(CA, AB)]) }
     ];
-    var task2 = {
-      q: '【三角比】<br>動かした図で、sin B、cos B、tan B を求めよう（約分を忘れずに）。',
-      sub: '<div class="ex-figbox">' + rtFig(mv) + '</div>',
-      mount: fillTask(rows, 'sin B = ' + mdFrac(s) + '、cos B = ' + mdFrac(c) + '、tan B = ' + mdFrac(t))
+    var fill = fillTask(rows, 'sin B = ' + mdFrac(s) + '、cos B = ' + mdFrac(c) + '、tan B = ' + mdFrac(t));
+    return {
+      q: '【三角比】<br>直角三角形 ABC を、角 B が左下、直角 C が右下になるように動かした。',
+      sub: '<div class="ex-figbox">' + rtFig(Object.assign({}, orig, { mark: false })) + '</div>',
+      mount: seqTask([
+        { head: '(1) 辺の長さを □ に入れなさい。', mount: slot },
+        { head: '(2) sin B、cos B、tan B の値を求めなさい。', mount: fill }
+      ])
     };
-    return [task1, task2];
   }
 
   // ---- 5 30°・45°・60° の三角比（9 問、順番はまぜる） ----
@@ -326,63 +387,94 @@
   var SPECIAL_HINT = { 30: '30° の直角三角形の辺の比は 1 : √3 : 2（30° と向かい合う辺が 1）。', 45: '45° の直角三角形の辺の比は 1 : 1 : √2。', 60: '60° の直角三角形の辺の比は 1 : √3 : 2（60° と向かい合う辺が √3）。' };
   function special9() {
     var six = ['1/2', '√3/2', '1/√2', '1/√3', '√3', '1'], items = [];
-    ['sin', 'cos', 'tan'].forEach(function (fn) { [30, 45, 60].forEach(function (d) { items.push({ q: fn + ' ' + d + '° の値は？', ans: VAL[fn][d], wrong: six.filter(function (v) { return v !== VAL[fn][d]; }), hint: SPECIAL_HINT[d] }); }); });
-    return { q: '【有名角の三角比】<br>30°・45°・60° の三角比の値をえらぼう（9問）。', mount: chooseTask(shuffle(items), { say: 'sin・cos・tan と 30°・45°・60° の 9 つ、全部答えられたね！' }) };
+    ['sin', 'cos', 'tan'].forEach(function (fn) { [30, 45, 60].forEach(function (d) { items.push({ q: fn + ' ' + d + '°', ans: VAL[fn][d], wrong: six.filter(function (v) { return v !== VAL[fn][d]; }), hint: SPECIAL_HINT[d] }); }); });
+    return { q: '【有名角の三角比】<br>次の三角比の値を選びなさい。', mount: chooseTask(shuffle(items), { say: 'sin・cos・tan と 30°・45°・60° の 9 つ、全部答えられたね！' }) };
   }
 
-  // ---- 6 データ（10 個）：平均値・中央値・最頻値 ----
-  var SCENE = [{ name: '10点満点の小テストの得点', unit: '点', lo: 2, hi: 10 }, { name: '1か月に読んだ本の冊数', unit: '冊', lo: 0, hi: 8 }, { name: '1週間に運動した日数', unit: '日', lo: 0, hi: 7 }, { name: 'シュートが入った回数（10回中）', unit: '回', lo: 1, hi: 9 }];
+  // ---- 6 データ（6 個の小テストの得点）：平均値 → 中央値 → 最頻値 を 1 つの大問で ----
   function dataSet() {
-    var s = pick(SCENE);
     for (;;) {
-      var mode = rint(s.lo + 1, s.hi - 1), data = [mode, mode, mode], cnt = {};
-      while (data.length < 10) { var v = rint(s.lo, s.hi); if (v === mode || (cnt[v] || 0) >= 2) continue; cnt[v] = (cnt[v] || 0) + 1; data.push(v); }
-      data = shuffle(data);
-      var med = D.median(data);
-      if (med !== mode && D.mean(data) !== mode) return { s: s, data: data, mode: mode };
+      var mode = rint(3, 8), data = [mode, mode], used = {}; used[mode] = 1;
+      while (data.length < 6) { var v = rint(2, 10); if (used[v]) continue; used[v] = 1; data.push(v); }
+      var sum = D.sum(data), med = D.median(data), mean = sum / 6;
+      if (sum % 3 === 0 && med !== mode && mean !== mode && mean !== med) return { data: shuffle(data), mode: mode };
     }
   }
-  function dataTasks(g) {
-    var s = g.s, u = ' ' + s.unit, d = g.data, so = D.sorted(d), sum = D.sum(d), mean = sum / 10, med = D.median(d);
-    var plus = d.join(' + '), mn = so[0], mx = so[9], dis = uniq(so).map(Number);
-    var meanT = {
-      q: '【平均値】<br>' + s.name + '（単位：' + s.unit + '）の 10 個のデータです。平均値を求めよう。', sub: D.line(d),
-      mount: chooseTask([
-        { q: '平均値を求める式はどれか。', ans: '(' + d.join('+') + ')÷10', wrong: ['(' + d.join('+') + ')÷9', '(' + mn + '+' + mx + ')÷2', '(' + dis.join('+') + ')÷' + dis.length], hint: '平均値 = (データの合計) ÷ (データの個数)。データは 10 個。' },
-        { q: '合計は ' + sum + '。平均値はいくつか。', ans: f(mean) + u, wrong: D.near(mean, [sum / 9, (mn + mx) / 2, med], 5).map(function (v) { return v + u; }), hint: '合計 ' + sum + ' を 10 でわろう。' }
-      ], { n: 4, say: '合計 ' + sum + ' ÷ 10 = ' + f(mean) + '（' + s.unit + '）' })
+  function dataTask(level, g) {
+    g = g || dataSet();
+    var u = ' 点', d = g.data, so = D.sorted(d), sum = D.sum(d), mean = sum / 6, med = D.median(d), mn = so[0], mx = so[5];
+    var dis = uniq(d).map(Number), plus = function (a) { return '(' + a.join('+') + ')'; };
+    var j = rint(0, 5), alt = d.slice(); alt[j] = d[j] + (d[j] >= 10 ? -1 : 1);   // 1 つだけちがう数（よく見ないと気づかない）
+    var meanF = uniq([plus(d) + '÷5', plus(dis) + '÷6', plus(dis) + '÷' + dis.length, plus(alt) + '÷6', '(' + so[2] + '+' + so[3] + ')÷2', '(' + mn + '+' + mx + ')÷2']).filter(function (v) { return v !== plus(d) + '÷6'; });
+    var mean1 = chooseTask([
+      { q: '平均値を求める式を選びなさい。', ans: plus(d) + '÷6', wrong: shuffle(meanF), hint: '平均値 = (データの合計) ÷ (データの個数)' },
+      { q: '平均値を選びなさい。', ans: f(mean) + u, wrong: D.near(mean, [sum / 5, (mn + mx) / 2, med, mean + 0.5], 5).map(function (v) { return v + u; }), hint: '合計を 6 でわろう。' }
+    ], { n: 6, noCount: true, done: '平均値 = (' + d.join(' + ') + ') ÷ 6 = ' + f(mean) + '（点）' });
+    var med1 = D.sortTask(d, D.thenPick('中央値を選びなさい。', f(med) + u, D.near(med, [so[2], so[3], mean, (mn + mx) / 2], 5).map(function (v) { return v + u; }),
+      'データは 6 個（偶数）なので、中央値は 3 番目と 4 番目の平均。(' + so[2] + ' + ' + so[3] + ') ÷ 2 = ' + f(med) + '（点）'));
+    var modeW = uniq([f(med), f(mean), mx, mn, g.mode + 1, g.mode - 1, 2].map(function (v) { return v + u; })).filter(function (v) { return v !== g.mode + u; });
+    var mode1 = chooseTask([{ q: '最頻値を選びなさい。', ans: g.mode + u, wrong: shuffle(modeW), hint: 'いちばん多く出てくる値をさがそう。' }],
+      { n: 6, done: '最頻値 = ' + g.mode + '（点）', say: g.mode + ' が 2 回でいちばん多いので、最頻値は ' + g.mode + '（点）' });
+    var parts = [
+      { head: '(1) 平均値', mount: mean1 },
+      { head: '(2) 中央値　データを小さい順に並べなさい。', mount: med1, note: true }
+    ];
+    if (level >= 60) parts = parts.concat(boxParts(so, med, mean));   // 60 点：中央値のあとに四分位数と箱ひげ図
+    parts.push({ head: '(' + (parts.length + 1) + ') 最頻値', mount: mode1 });
+    return {
+      q: '【データの代表値' + (level >= 60 ? 'と箱ひげ図' : '') + '】<br>以下のデータは、6 人の小テスト（10 点満点）の得点である。<br>' +
+        (level >= 60 ? '代表値と四分位数を求め、箱ひげ図を選びなさい。' : '平均値・中央値・最頻値を求めなさい。'), sub: D.line(d),
+      mount: seqTask(parts)
     };
-    var medT = {
-      q: '【中央値】<br>同じデータを小さい順に並べて、中央値を求めよう。', sub: D.line(d),
-      mount: D.sortTask(d, D.thenPick('中央値はいくつか。', f(med) + u, D.near(med, [so[4], so[5], mean]).map(function (v) { return v + u; }),
-        'データは 10 個（偶数）なので、5 番目の ' + so[4] + ' と 6 番目の ' + so[5] + ' の平均。(' + so[4] + ' + ' + so[5] + ') ÷ 2 = ' + f(med) + '（' + s.unit + '）'))
-    };
-    var modeT = {
-      q: '【最頻値】<br>小さい順に並べたデータを見て、最頻値を求めよう。', sub: D.line(so),
-      mount: D.chain([{ q: '最頻値はいくつか。', ans: g.mode + u, wrong: uniq([3 + u, f(med) + u, mx + u, f(mean) + u, mn + u, (g.mode + 1) + u, (g.mode - 1) + u]).filter(function (v) { return v !== g.mode + u; }), hint: 'いちばん多く出てくる値をさがそう。' }],
-        { say: g.mode + ' が 3 回でいちばん多いので、最頻値は ' + g.mode + '（' + s.unit + '）' })
-    };
-    return [meanT, medT, modeT];
   }
 
-  // ---- 7 度数分布表 → ヒストグラム ----
-  var SCENE2 = [{ name: '通学時間', unit: '分', w: 5, k: 4, lo: 0 }, { name: 'ハンドボール投げの記録', unit: 'm', w: 5, k: 4, lo: 10 }, { name: '1日のスマホの使用時間', unit: '時間', w: 1, k: 4, lo: 0 }, { name: '小テストの得点', unit: '点', w: 10, k: 4, lo: 60 }];
-  function freqTasks() {
+  // ---- 60 点：最小値・第1四分位数・第3四分位数・最大値 → 正しい箱ひげ図を 4 択 ----
+  //   6 個のデータ（小さい順に so[0]〜so[5]）。下半分 so[0..2] の中央値が第1四分位数 so[1]、上半分 so[3..5] の中央値が第3四分位数 so[4]
+  function boxParts(so, med, mean) {
+    var u = ' 点', q1 = so[1], q3 = so[4], mn = so[0], mx = so[5];
+    var pool = uniq(so.concat([med, so[2], so[3], (so[0] + so[1]) / 2, (so[4] + so[5]) / 2]).map(function (v) { return f(v); }));
+    var opts = function (ans, extra) { return shuffle(uniq(extra.map(function (v) { return f(v); }).concat(shuffle(pool))).filter(function (v) { return v !== f(ans); })).slice(0, 5).map(function (v) { return v + u; }); };
+    var quart = chooseTask([
+      { q: '最小値を選びなさい。', ans: f(mn) + u, wrong: opts(mn, [mx, q1]), hint: 'いちばん小さい値。' },
+      { q: '第1四分位数を選びなさい。', ans: f(q1) + u, wrong: opts(q1, [(so[0] + so[1]) / 2, so[2], mn]), hint: 'データを中央値で前半 3 個（' + so.slice(0, 3).join('、') + '）と後半 3 個に分ける。前半の中央値が第1四分位数。' },
+      { q: '第3四分位数を選びなさい。', ans: f(q3) + u, wrong: opts(q3, [(so[4] + so[5]) / 2, so[3], mx]), hint: '後半 3 個（' + so.slice(3).join('、') + '）の中央値が第3四分位数。' },
+      { q: '最大値を選びなさい。', ans: f(mx) + u, wrong: opts(mx, [mn, q3]), hint: 'いちばん大きい値。' }
+    ], { n: 6, noCount: true, done: '最小値 ' + mn + '、第1四分位数 ' + q1 + '、中央値 ' + f(med) + '、第3四分位数 ' + q3 + '、最大値 ' + mx + '（点）' });
+    // 箱ひげ図：正しい 1 つ ＋ よくあるまちがい 3 つ
+    var five = [mn, q1, med, q3, mx], key = function (a) { return a.map(function (v) { return f(v); }).join(','); };
+    var okFive = function (a) { for (var i = 0; i < 4; i++) if (a[i] > a[i + 1]) return false; return a[0] >= 0 && a[4] <= 10; };
+    var cands = [[mn, so[2], med, so[3], mx], [mn, q1, mean, q3, mx], [mn, (so[0] + so[1]) / 2, med, (so[4] + so[5]) / 2, mx], [mn, q1, so[2], q3, mx],
+      [mn, q1, med + 1, q3, mx], [mn, q1 - 1, med, q3 + 1, mx], [mn + 1, q1, med, q3, mx - 1], [mn, q1 + 1, med, q3 - 1, mx]];
+    var seen = {}, wrongs = []; seen[key(five)] = 1;
+    cands.forEach(function (c) { if (wrongs.length < 3 && okFive(c) && !seen[key(c)]) { seen[key(c)] = 1; wrongs.push(c); } });
+    var fig = function (a) { return D.boxPlot(a, 0, 10, 1); };
+    var box = D.chain([{ q: '正しい箱ひげ図を選びなさい。', ans: fig(five), wrong: wrongs.map(fig), memo: '箱ひげ図', memoHTML: fig(five), hint: '左から 最小値・第1四分位数・中央値・第3四分位数・最大値 の順。箱の中の線が中央値。' }],
+      { say: '' });
+    return [
+      { head: '(3) 最小値・第1四分位数・第3四分位数・最大値', mount: quart },
+      { head: '(4) 箱ひげ図', mount: box }
+    ];
+  }
+
+  // ---- 7 度数分布表 → ヒストグラム（1 つの大問で） ----
+  var SCENE2 = [{ name: '10 人の通学時間', unit: '分', w: 5, k: 4, lo: 0 }, { name: '10 人のハンドボール投げの記録', unit: 'm', w: 5, k: 4, lo: 10 }, { name: '10 人の 1 日のスマホの使用時間', unit: '時間', w: 1, k: 4, lo: 0 }, { name: '10 人のテストの得点', unit: '点', w: 10, k: 4, lo: 60 }];
+  function freqTask() {
     var s = pick(SCENE2), fr;
-    do { fr = range(s.k, function () { return rint(0, 5); }); } while (D.sum(fr) !== 10 || fr.filter(function (v) { return v === 0; }).length > 1 || Math.max.apply(null, fr) > 5);
+    do { fr = range(s.k, function () { return rint(1, 5); }); } while (D.sum(fr) !== 10);   // 度数 0 の階級は作らない
     var edges = range(s.k + 1, function (i) { return s.lo + i * s.w; }), data = [];
     fr.forEach(function (c, i) { for (var j = 0; j < c; j++) data.push(s.w === 1 ? +(edges[i] + rint(0, 9) / 10).toFixed(1) : rint(edges[i], edges[i + 1] - 1)); });
     data = D.sorted(data);
-    var un = s.unit === 'm' ? 'ｍ' : s.unit, cls = function (i) { return edges[i] + ' 以上 ' + edges[i + 1] + ' 未満'; }, mid = function (i) { return f((edges[i] + edges[i + 1]) / 2); };
+    var un = s.unit, cls = function (i) { return edges[i] + ' 以上 ' + edges[i + 1] + ' 未満'; }, mid = function (i) { return f((edges[i] + edges[i + 1]) / 2); };
     var cells = fr.map(function (v) { return D.cell(v, ['0', '1', '2', '3', '4', '5']); }), tot = D.cell(10, ['8', '9', '10', '11', '12', '20']);
     tot.hint = '度数の合計は、データの個数と同じ';
     var grid = [[D.hd('階級（' + un + '）'), D.hd('階級値（' + un + '）'), D.hd('度数（人）')]].concat(fr.map(function (_, i) { return [cls(i), mid(i), cells[i]]; }), [['計', null, tot]]);
-    var tableHTML = '<table class="db-t"><tr><th>階級（' + un + '）</th><th>階級値（' + un + '）</th><th>度数（人）</th></tr>' + fr.map(function (v, i) { return '<tr><td>' + cls(i) + '</td><td>' + mid(i) + '</td><td>' + v + '</td></tr>'; }).join('') + '<tr><td>計</td><td></td><td>10</td></tr></table>';
-    return [
-      { q: '【度数分布表】<br>' + s.name + '（単位：' + un + '、小さい順）の 10 個のデータです。度数と度数の合計をうめよう。', sub: D.line(data),
-        mount: D.tableTask({ grids: [grid], order: cells.concat([tot]), say: '各階級に入るデータの個数を数えたよ。合計はデータの個数 10。' }) },
-      { q: '【ヒストグラム】<br>できた度数分布表から、ヒストグラムをかこう。', sub: '<div class="ex-figbox">' + tableHTML + '</div>', mount: D.histTask(edges, fr, un) }
-    ];
+    return {
+      q: '【度数分布表とヒストグラム】<br>以下のデータは、' + s.name + '（' + un + '）である。<br>度数分布表を完成させ、ヒストグラムをかきなさい。', sub: D.line(data),
+      mount: seqTask([
+        { head: '(1) 度数分布表', mount: D.tableTask({ grids: [grid], order: cells.concat([tot]), say: '' }) },
+        { head: '(2) ヒストグラム', mount: histTask(edges, fr, un) }
+      ])
+    };
   }
 
   // =====================================================================
@@ -390,8 +482,9 @@
   // =====================================================================
   // ---- 相互関係（acute：0°〜90°、obtuse：90°〜180°） ----
   function soukan(obtuse) {
-    var ints = [[3, 5], [4, 5], [5, 13], [12, 13], [8, 17], [15, 17]], roots = [[2, 3], [1, 4], [3, 4], [2, 5]];
-    var gfn, n, d, useRoot = Math.random() < .3;
+    // 2 乗する数は小さく（分母は 5 まで。15/17 のような 2 けたは使わない）
+    var ints = [[3, 5], [4, 5]], roots = [[2, 3], [1, 4], [3, 4]];
+    var gfn, n, d, useRoot = Math.random() < .5;
     if (useRoot) { var r = pick(roots); gfn = 'cos'; n = r[0]; d = r[1]; }
     else { var r2 = pick(ints); gfn = obtuse && Math.random() < .5 ? 'cos' : pick(['sin', 'cos']); n = r2[0]; d = r2[1]; }
     var ofn = gfn === 'sin' ? 'cos' : 'sin', k = d * d - n * n, om = rootOf(k), d2 = d * d;
@@ -406,7 +499,7 @@
     var sv = gfn === 'sin' ? gv : ov, cvv = gfn === 'cos' ? gv : ov, rec = (negOf('cos') ? M : '') + d + (cn === 1 ? '' : '/' + cn);
     if (cn === 1) rec = (negOf('cos') ? M : '') + d;
     var rows = [
-      { t: '!' + (gfn === 'cos' ? 'sin²A + [cos²A] = [1]' : '[sin²A] + cos²A = [1]'), h: '三角比の相互関係 sin²A + cos²A = 1 から始めます。', cards: deck([gfn + '²A', '1'], ['tan²A', ofn + '²A', '2', '0']) },
+      { t: '![sin²A@s] + [cos²A@s] = [1]', h: '三角比の相互関係の式から始めます。', cards: deck(['sin²A', 'cos²A', '1'], ['tan²A', '2', '0']) },
       { t: put, h: gfn + ' A = ' + mdFrac(gv) + ' を代入します。', cards: deck([gv], [(negOf(gfn) ? '' : M) + n + '/' + d, d + '/' + n, n + '/' + d2, n * n + '/' + d]) },
       { t: sq, h: '( )² を計算します。分子と分母を、それぞれ2乗します。', cards: deck([n * n + '/' + d2], [n * n + '/' + d, 2 * n + '/' + 2 * d, M + n * n + '/' + d2, n + '/' + d2]) },
       { t: ofn + '²A = [1] − [' + n * n + '/' + d2 + ']', h: '左の分数を右へ移項します。移項すると符号が変わります。', cards: deck(['1', n * n + '/' + d2], ['0', n * n + '/' + d, k + '/' + d2, '2']) },
@@ -419,7 +512,7 @@
     ];
     var ans = ofn + ' A = ' + mdFrac(ov) + '、tan A = ' + mdFrac(tv);
     return {
-      q: '【三角比の相互関係】<br>' + rng + ' で、' + gfn + ' A = ' + mdFrac(gv) + ' のとき、' + ofn + ' A と tan A の値を求めよう。',
+      q: '【三角比の相互関係】<br>' + rng + ' で、' + gfn + ' A = ' + mdFrac(gv) + ' のとき、' + ofn + ' A と tan A の値を求めなさい。',
       mount: fillTask(rows, ans)
     };
   }
@@ -431,8 +524,7 @@
     do { b = rint(2, 10); c = rint(2, 10); } while ((b * c) % 4 !== 0 || b === c);
     var P = b * c / 2, sv = SINV[deg], ans, rows;
     rows = [
-      { t: '!S = {1|2} × AB × AC × sin A' },
-      { t: 'S = {1|2} × [' + c + '@s] × [' + b + '@s] × sin ' + deg + '°', h: 'AB = ' + c + '、AC = ' + b + ' を代入します。', cards: deck([c, b], [b + c, b * c, deg, 2]) },
+      { t: 'S = {1|2} × [' + c + '@s] × [' + b + '@s] × sin [' + deg + ']°', h: '2 つの辺 AB・AC と、その間の角 A を使います。', cards: deck([c, b, deg], [b + c, b * c, 180 - deg]) },
       { t: 'S = [' + P + '] × sin ' + deg + '°', h: '{1|2} × ' + c + ' × ' + b + ' を計算します。', cards: deck([P], [b * c, P / 2, b + c, 2 * P]) },
       { t: '#sin ' + deg + '° = [' + sv + '] より', h: deg > 90 ? 'sin(180° − θ) = sin θ。sin ' + deg + '° = sin ' + (180 - deg) + '°。' : deg + '° の直角三角形の辺の比を思い出そう。', cards: deck([sv], ['1/2', '√3/2', '1/√2', M + sv, '1']) }
     ];
@@ -441,7 +533,7 @@
     else { ans = (P / 2 === 1 ? '' : P / 2) + '√2'; rows.push({ t: 'S = ' + P + ' × {1|√2} = [' + P + '/√2]', h: P + ' を √2 でわります。', cards: deck([P + '/√2'], [P + '√2', P / 2, (P / 2) + '/√2', P + '/2']) },
       { t: '#分母を有理化して' }, { t: 'S = {' + P + ' × √2|√2 × √2} = [' + ans + ']', h: '{' + P + '√2|2} を約分します。', cards: deck([ans], [P + '√2', P / 2, (P / 2) + '√3', P * 2 + '√2']) }); }
     var fig = '<div class="ex-figbox">' + gTri(deg, c, b) + '</div>';
-    return { q: '【三角形の面積】<br>△ABC で、AB = ' + c + '、AC = ' + b + '、A = ' + deg + '° のとき、面積 S を求めよう。', sub: fig, mount: fillTask(rows, 'S = ' + ans) };
+    return { q: '【三角形の面積】<br>△ABC で、AB = ' + c + '、AC = ' + b + '、A = ' + deg + '° のとき、面積 S を求めなさい。', sub: fig, mount: fillTask(rows, 'S = ' + ans) };
   }
   // 一般の三角形（A の角と、AB・AC の長さ）
   function gTri(deg, ab, ac) {
@@ -460,21 +552,26 @@
     return '<svg class="ex-tri" viewBox="0 0 ' + W + ' ' + f1(H) + '" role="img" aria-label="三角形">' + out + '</svg>';
   }
 
-  // ---- 正弦定理（外接円の半径） ----
+  // ---- 正弦定理（辺の長さを求める。使う角は 30°・45°・60° の鋭角だけ） ----
+  //   sin30° : sin45° : sin60° = 1 : √2 : √3 なので、辺は k、k√2、k√3 の形になる（k は 2〜5）
+  var SV = { 30: '1/2', 45: '1/√2', 60: '√3/2' }, SREC = { 30: '2', 45: '√2', 60: '2/√3' }, SR = { 30: 1, 45: 2, 60: 3 };
   function sineRule() {
-    var deg = pick([30, 150, 45, 135, 60, 120]), kk = rint(2, 7), sv = SINV[deg], a, rows;
-    if (deg === 30 || deg === 150) { a = String(kk); rows = [{ t: '2R = ' + a + ' ÷ {1|2}' }, { t: '2R = ' + a + ' × [2]', h: '分数でわるときは、逆数をかけます。', cards: deck(['2'], ['1/2', '√2', '√3', '4', a]) }]; }
-    else if (deg === 45 || deg === 135) { a = kk + '√2'; rows = [{ t: '2R = ' + a + ' ÷ {1|√2}' }, { t: '2R = ' + a + ' × [√2]', h: '{1|√2} でわる ＝ √2 をかける。', cards: deck(['√2'], ['1/√2', '2', '√3', '2/√2', kk]) }]; }
-    else { a = kk + '√3'; rows = [{ t: '2R = ' + a + ' ÷ {√3|2}' }, { t: '2R = ' + a + ' × [2/√3]', h: '{√3|2} でわる ＝ {2|√3} をかける。', cards: deck(['2/√3'], ['√3/2', '2', '√3', '2√3', kk]) }]; }
-    rows = [
-      { t: '!{a|sin A} = 2R' },
-      { t: '{[' + a + ']|sin ' + deg + '°} = 2R', h: 'a = ' + a + ' を代入します。', cards: deck([a], [kk, 2 * kk, kk + (/√2/.test(a) ? '√3' : '√2'), deg]) },
-      { t: '#sin ' + deg + '° = [' + sv + '] より', h: deg > 90 ? 'sin(180° − θ) = sin θ。' : deg + '° の直角三角形の辺の比を思い出そう。', cards: deck([sv], ['1/2', '√3/2', '1/√2', M + sv, '1']) }
-    ].concat(rows, [
-      { t: '2R = [' + 2 * kk + ']', h: 'かけ算をします。√ どうしをかけると √ がはずれます。', cards: deck([2 * kk], [kk, 4 * kk, 2 * kk + '√2', 2 * kk + '√3']) },
-      { t: 'R = [' + kk + ']', h: '両辺を 2 でわります。', cards: deck([kk], [2 * kk, kk / 2, kk + '√2', kk + 1]) }
-    ]);
-    return { q: '【正弦定理】<br>△ABC で、a = ' + a + '、A = ' + deg + '° のとき、外接円の半径 R を求めよう。', mount: fillTask(rows, 'R = ' + kk) };
+    var ang = shuffle([30, 45, 60]).slice(0, 2), P = ang[0], Q = ang[1], k = rint(2, 5);
+    var kr = function (r) { return r === 1 ? String(k) : k + '√' + r; };
+    var s1 = kr(SR[P]), s2 = kr(SR[Q]), findB = Math.random() < .6;
+    var X = findB ? 'a' : 'b', Y = findB ? 'b' : 'a', PX = X.toUpperCase(), QY = Y.toUpperCase();
+    var other = function (v) { return [k, k + '√2', k + '√3', 2 * k].map(String).filter(function (x) { return x !== v; }); };
+    var rows = [
+      { t: '{[' + s1 + ']|sin [' + P + ']°} = {' + Y + '|sin [' + Q + ']°}', h: '正弦定理 {a|sin A} = {b|sin B} に、わかっている辺と角を入れます。', cards: deck([s1, P, Q], [180 - P - Q, 90, other(s1)[0]]) },
+      { t: '#sin ' + P + '° = [' + SV[P] + ']、sin ' + Q + '° = [' + SV[Q] + '] より', h: '30°・45°・60° の直角三角形の辺の比を思い出そう。', cards: deck([SV[P], SV[Q]], ['1/2', '√3/2', '1/√2', '√3', '2/√3', '1/√3']) },
+      { t: Y + ' = ' + s1 + ' ÷ [' + SV[P] + '] × [' + SV[Q] + ']', h: '両辺に sin ' + Q + '° をかけると、' + Y + ' = ' + s1 + ' ÷ sin ' + P + '° × sin ' + Q + '°。', cards: deck([SV[P], SV[Q]], ['1/2', '√3/2', '1/√2', '2', '√2', '2/√3']) },
+      { t: Y + ' = ' + s1 + ' × [' + SREC[P] + '] × ' + mdFrac(SV[Q]), h: '分数でわるときは、わる数の逆数をかけます。', cards: deck([SREC[P]], [SV[P], '2', '√2', '2/√3', '√3/2', '1/2']) },
+      { t: Y + ' = [' + s2 + ']', h: '√ どうしをかけたり、約分したりして計算します。', cards: deck([s2], other(s2).concat([s1, k + '√6'])) }
+    ];
+    return {
+      q: '【正弦定理】<br>△ABC で、' + X + ' = ' + s1 + '、' + PX + ' = ' + P + '°、' + QY + ' = ' + Q + '° のとき、' + Y + ' を求めなさい。',
+      mount: fillTask(rows, Y + ' = ' + s2), _chk: { s1: s1, s2: s2, P: P, Q: Q, k: k }
+    };
   }
 
   // ---- 鈍角と 0°・90°・180° の三角比（18 問、順番はまぜる） ----
@@ -486,58 +583,55 @@
       [120, 135, 150, 0, 90, 180].forEach(function (d) {
         var a = OB[d][j], flip = a === '0' || a === 'なし' ? null : a[0] === '−' ? a.slice(1) : M + a;
         var w = shuffle(pool.filter(function (v) { return v !== a && v !== flip; })).slice(0, flip ? 4 : 5);
-        items.push({ q: fn + ' ' + d + '° の値は？', ans: a, wrong: (flip ? [flip] : []).concat(w), hint: OB_HINT[d] });
+        items.push({ q: fn + ' ' + d + '°', ans: a, wrong: (flip ? [flip] : []).concat(w), hint: OB_HINT[d] });
       });
     });
-    return { q: '【鈍角と 0°・90°・180° の三角比】<br>値をえらぼう（18問）。「なし」は値が定義されないこと。', mount: chooseTask(shuffle(items), { say: '鈍角では cos と tan が負になるね。0°・90°・180° は点 P の座標で考えよう。' }) };
+    return { q: '【鈍角と 0°・90°・180° の三角比】<br>次の三角比の値を選びなさい。', mount: chooseTask(shuffle(items), { say: '鈍角では cos と tan が負になるね。0°・90°・180° は点 P の座標で考えよう。' }) };
   }
 
   // ---- 分散と標準偏差（8 個のデータ） ----
-  function varTasks() {
-    var dev, V, ss;
+  function varTask() {
+    var dev, V, ss, N = 6;
     for (;;) {
-      dev = range(7, function () { return rint(-3, 3); }); var last = -D.sum(dev);
-      if (Math.abs(last) > 4) continue;
+      dev = range(N - 1, function () { return rint(-3, 3); }); var last = -D.sum(dev);
+      if (Math.abs(last) > 3) continue;
       dev.push(last); ss = D.sum(dev.map(function (x) { return x * x; }));
-      if (ss % 8 !== 0) continue; V = ss / 8;
-      if ([1, 2, 3, 4, 5, 6].indexOf(V) >= 0 && dev.filter(function (x) { return x === 0; }).length <= 2) break;
+      if (ss % N !== 0) continue; V = ss / N;
+      if ([1, 2, 3, 4, 5, 6].indexOf(V) >= 0 && dev.filter(function (x) { return x === 0; }).length <= 1) break;
     }
-    var m = rint(4, 6), x = dev.map(function (d) { return m + d; }), S = D.sum(x), unit = '点';
-    var wide = global.matchMedia && matchMedia('(min-width: 760px)').matches;
-    var sumC = D.cell(S, uniq([S, S + 1, S - 1, S + 10, S - 8, m]).slice(0, 6)), meanC = D.cell(m, uniq([m, m + 1, m - 1, S / 10, 8, S]).slice(0, 6));
-    sumC.hint = 'データの合計を計算しよう。'; meanC.hint = '平均値 = 合計 ÷ 8';
+    var m = rint(4, 7), x = dev.map(function (d) { return m + d; }), S = D.sum(x), unit = '点';
+    var sumC = D.cell(S, uniq([S, S + 1, S - 1, S + 2, S - 10, m]).slice(0, 6)), meanC = D.cell(m, uniq([m, m + 1, m - 1, m + 2, Math.round(S / 5), S]).slice(0, 6));
+    sumC.hint = 'データの合計を計算しよう。'; meanC.hint = '平均値 = 合計 ÷ 6';
     var dC = dev.map(function (d, i) { var c = D.cell(sgn(d), uniq([d, -d, d + 1, d - 1, x[i], 0]).map(Number).sort(function (a, b) { return a - b; }).map(sgn).slice(0, 6)); c.hint = '偏差 = データの値 − 平均値（' + x[i] + ' − ' + m + '）'; return c; });
     var sC = dev.map(function (d) { var c = D.cell(d * d, uniq([d * d, Math.abs(2 * d), Math.abs(d), d * d + 1, 0, 9, 4, 1]).map(Number).filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; }).slice(0, 6)); if (c.cards.indexOf(String(d * d)) < 0) c.cards[0] = String(d * d); c.hint = '偏差を 2 乗しよう（負の数の 2 乗は正）'; return c; });
-    var ssC = D.cell(ss, uniq([ss, ss + 2, ss - 2, ss + 8, D.sum(dev.map(Math.abs)), 0]).slice(0, 6)), vC = D.cell(V, uniq([V, ss, V + 1, V * 2, ss / 7, Math.sqrt(V)].map(function (v) { return f(v); })).slice(0, 6));
-    ssC.hint = '偏差の 2 乗の合計'; vC.hint = '偏差の 2 乗の平均値 = 合計 ÷ 8（これが分散）';
-    var H = D.hd, horiz = [[H(''), H('1'), H('2'), H('3'), H('4'), H('5'), H('6'), H('7'), H('8'), H('合計'), H('平均')],
-      [H('データ x')].concat(x, [sumC, meanC]), [H('偏差')].concat(dC, [null, null]), [H('偏差²')].concat(sC, [ssC, vC])];
-    var vert = [[H(''), H('データ x'), H('偏差'), H('偏差²')]].concat(x.map(function (v, i) { return [String(i + 1), v, dC[i], sC[i]]; }), [['合計', sumC, null, ssC], ['平均', meanC, null, vC]]);
+    var ssC = D.cell(ss, uniq([ss, ss + 2, ss - 2, ss + 6, D.sum(dev.map(Math.abs)), 0]).slice(0, 6)), vC = D.cell(V, uniq([V, ss, V + 1, V * 2, f(ss / 5), f(Math.sqrt(V))].map(function (v) { return f(v); })).slice(0, 6));
+    ssC.hint = '偏差の 2 乗の合計'; vC.hint = '偏差の 2 乗の平均値 = 合計 ÷ 6';
+    var H = D.hd, horiz = [[H('')].concat(range(N, function (i) { return H(String(i + 1)); }), [H('合計'), H('平均')]),
+      [H('データ')].concat(x, [sumC, meanC]), [H('偏差')].concat(dC, [null, null]), [H('偏差²')].concat(sC, [ssC, vC])];
     var sd = rootOf(V), sdU = sd + ' ' + unit;
-    var table = {
-      q: '【分散と標準偏差】<br>小テストの得点（8 人）です。表をうめよう（合計 → 平均 → 偏差 → 偏差²）。', sub: D.line(x),
-      mount: D.tableTask({ grids: wide ? [horiz, vert] : [vert, horiz], order: [sumC, meanC].concat(dC, sC, [ssC, vC]), say: '偏差の 2 乗の平均値が分散。分散は ' + V + ' です。' })
-    };
-    var vWrong = uniq([ss, V + 1, V * 2, f(ss / 7)]).filter(function (v) { return v !== String(V); });
+    var vWrong = uniq([ss, V + 1, V * 2, f(ss / 5)]).filter(function (v) { return v !== String(V); });
     var sdWrong = uniq([V + ' ' + unit, (V * V) + ' ' + unit, rootOf(ss) + ' ' + unit, '√' + (V + 1) + ' ' + unit, (V * 2) + ' ' + unit]).filter(function (v) { return v !== sdU; });
-    var res = {
-      q: '【分散と標準偏差】<br>表の結果から、分散と標準偏差を求めよう。', sub: '<p class="ex-memo">偏差の 2 乗の合計 = ' + ss + '、データの個数 = 8</p>',
-      mount: D.chain([
-        { q: '分散はいくつか。', ans: String(V), wrong: vWrong, memo: '分散 = ' + ss + ' ÷ 8 = ' + V, hint: '分散 = (偏差の 2 乗の合計) ÷ (データの個数)' },
-        { q: '標準偏差はいくつか。', ans: sdU, wrong: sdWrong, hint: '標準偏差 = √分散。単位はデータと同じ「点」。' }
-      ], { say: '分散 ' + V + '、標準偏差 √' + V + (sd !== '√' + V ? ' = ' + sd : '') + '（' + unit + '）' })
+    return {
+      q: '以下は、6 人の小テストの得点（点）である。<br>このデータの分散と標準偏差を求めなさい。',
+      mount: seqTask([
+        { head: '(1) 表を埋めなさい。', mount: D.tableTask({ grids: [horiz], order: [sumC, meanC].concat(dC, sC, [ssC, vC]), say: '' }) },
+        { head: '(2) 分散と標準偏差', mount: D.chain([
+          { q: '分散を選びなさい。', ans: String(V), wrong: vWrong, memo: '分散 = ' + V, hint: '分散 = (偏差の 2 乗の合計) ÷ (データの個数)' },
+          { q: '標準偏差を選びなさい。', ans: sdU, wrong: sdWrong, memo: '標準偏差 = ' + sdU, hint: '標準偏差 = √分散。単位はデータと同じ「点」。' }
+        ], { say: '分散は偏差の 2 乗の平均値で ' + ss + ' ÷ 6 = ' + V + '。標準偏差は √' + V + (sd !== '√' + V ? ' = ' + sd : '') + '（' + unit + '）' }) }
+      ])
     };
-    return [table, res];
   }
 
   // =====================================================================
   // コース
   // =====================================================================
   function course(level) {
-    var t = [pythFormula(), pythSolve(), trigA()].concat(trigBPair(), [special9()]);
+    // 続きの問題（動かした図 → 三角比、平均値 → 中央値 → 最頻値、表 → ヒストグラム、表 → 分散）は、1 つの大問の中で下へ続ける
+    var t = [pythFormula(level), pythSolve(), trigA(), trigBPair(), special9()];
     if (level >= 60) t = t.concat([soukan(false), soukan(true), area(), sineRule(), obtuse18()]);
-    t = t.concat(dataTasks(dataSet()), freqTasks());
-    if (level >= 60) t = t.concat(varTasks());
+    t = t.concat([dataTask(level), freqTask()]);
+    if (level >= 60) t.push(varTask());
     t.forEach(function (x) { if (typeof x.q === 'string') x.q = x.q.split('<br>'); });   // 問題文は行ごとに（DB.run が文字をそのまま出すため）
     return t;
   }
@@ -547,5 +641,5 @@
     var go = function () { D.run(app, course(level), { name: '目指せ' + level + '点', home: home, again: go }); };
     go();
   }
-  global.EXAM = { start: start, _t: { pythFormula: pythFormula, pythSolve: pythSolve, trigA: trigA, trigBPair: trigBPair, special9: special9, dataSet: dataSet, dataTasks: dataTasks, freqTasks: freqTasks, soukan: soukan, area: area, sineRule: sineRule, obtuse18: obtuse18, varTasks: varTasks, course: course, frac: frac, rootOf: rootOf } };
+  global.EXAM = { start: start, _t: { pythFormula: pythFormula, pythSolve: pythSolve, trigA: trigA, trigBPair: trigBPair, special9: special9, dataSet: dataSet, dataTask: dataTask, freqTask: freqTask, soukan: soukan, area: area, sineRule: sineRule, obtuse18: obtuse18, varTask: varTask, course: course, frac: frac, rootOf: rootOf } };
 })(window);

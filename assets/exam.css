@@ -78,3 +78,35 @@
   .sk-tabs { gap: 4px !important; }
   .ex-fs .fs-rows { margin-top: 4px; }
 }
+
+/* ---- 2026-11-22 先生の要望で追加 ---- */
+/* 途中式：「答え」の欄は出さず、下の「正解」だけ。できたあとの「やり直す」もかくす */
+.ex-fs .fs-done, .ex-fs .fs-done + .fs-ctrl { display: none !important; }
+/* 続きの問題（同じ大問の中で下へ続ける） */
+.ex-part.next { margin-top: 18px; padding-top: 12px; border-top: 2px dashed #c9d4e2; }
+.ex-ph { margin: 4px 0 6px; font-size: 17px; font-weight: 700; color: var(--ex-navy); }
+.ex-psay, .ex-done { margin: 8px 0; padding: 8px 12px; border-radius: 8px; background: #ebfbee; font-size: 16px; line-height: 1.7; }
+.ex-done { text-align: center; font-size: 18px; }
+/* 小さい順に並べる：かならず 1 行 */
+.ex-part .db-slots, .ex-part .db-pool { flex-wrap: nowrap; gap: 5px; }
+.ex-part .db-slot { min-width: 0; flex: 0 1 46px; }
+.ex-part .db-num { min-width: 0; flex: 0 1 50px; padding: 0; }
+/* 表をうめるカード：横 1 列にそろえる */
+#app .db-cards { flex-wrap: nowrap; }
+#app .db-cards .fs-card { flex: 1 1 0; min-width: 0; max-width: 96px; padding-left: 0; padding-right: 0; }
+/* ヒストグラム（斜線の柱） */
+.ex-hist { display: flex; justify-content: center; }
+.ex-hist svg { width: 100%; max-width: 420px; height: auto; touch-action: manipulation; }
+.ex-hc { cursor: pointer; }
+.ex-hc:hover { fill-opacity: .14; }
+@media (max-width: 480px) { .ex-part .db-t th, .ex-part .db-t td { min-width: 26px; padding: 1px 2px; } }
+/* 問題文：日本語はふつうに折り返す（keep-all だと「。」だけが次の行に行く） */
+#app .sk-q .ask, #app .ex-ask, #app .ex-ph, #app .db-q2, #app .ex-done, #app .ex-psay, #app .sk-ans p { word-break: normal; overflow-wrap: anywhere; line-break: strict; text-wrap: pretty; }
+/* 図の □ に入れるカードも横 1 列 */
+.ex-chips { flex-wrap: nowrap; gap: 6px; }
+.ex-chips .ex-chip { flex: 1 1 0; min-width: 0; max-width: 90px; padding-left: 0; padding-right: 0; }
+/* 箱ひげ図の 4 択と、できたあとに残す正しい図 */
+#app .db-memo { padding-left: 10px; list-style: none; }
+#app .db-memo li.fig { margin-left: 0; }
+#app .db-memo svg, #app .sk-opts.figs svg { width: 100%; max-width: 360px; height: auto; display: block; margin: 0 auto; }
+.ex-sdone > .db-note, .ex-sdone > .ex-chips, .ex-sdone .sk-ctrl { display: none; }
