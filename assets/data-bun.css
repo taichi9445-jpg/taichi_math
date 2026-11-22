@@ -83,3 +83,55 @@
 .db-t th{word-break:keep-all}
 .sk-menu.plain .sk-card b{word-break:keep-all;overflow-wrap:anywhere}
 .sk-ans p,.db-memo{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+/* ---- 2026-11-23 先生の要望で追加 ---- */
+/* 小さい順に並べた行：スマホでも PC でもかならず横 1 列（数が多いときは字を小さく） */
+.db-rowbox{container-type:inline-size}
+.db-row{--g:5px;display:flex;flex-wrap:nowrap;justify-content:center;gap:var(--g);margin:6px 0 4px}
+.db-row.many{--g:3px}
+.db-row.mk{padding:17px 0 17px}
+.db-row .db-slot{position:relative;flex:0 1 46px;min-width:0;height:40px;padding:0;font-size:19px;font-size:clamp(12px,calc(100cqw / var(--n) * .52),19px)}
+.db-row .db-slot.ring{border:2.5px solid #e03131;border-radius:15px}
+.db-row .db-slot.hl{background:#fff3bf;border-color:#f2c94c}
+.db-row .db-slot.tint{background:#d9e8fa;border-color:#7ea6d8}
+.db-row .db-slot i{position:absolute;font-style:normal;line-height:1;pointer-events:none}
+.db-row .vm{top:-17px;left:calc(var(--g) / -2);transform:translateX(-50%);color:#e03131;font-weight:700;font-size:17px;font-family:'BIZ UDPGothic',sans-serif}
+.db-row .lb{top:100%;margin-top:3px;left:50%;transform:translateX(-50%);color:#c92a2a;font-size:11px;white-space:nowrap;font-family:'BIZ UDPGothic',sans-serif}
+.db-row .lb.lv{left:calc(var(--g) / -2)}
+/* 並べるカード（多いときは 2 行の表に） */
+.db-pool2{display:grid;grid-template-columns:repeat(var(--c),minmax(0,1fr));gap:6px;max-width:560px;margin:4px auto 6px}
+.db-pool2 .db-num{min-width:0;min-height:46px;padding:0;font-size:19px}
+/* 答えたことのメモ（小さく横に） */
+.db-memo2{display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;margin:2px 0 0;font-size:15px}
+.db-memo2 span{padding:2px 9px;border-radius:12px;background:#f1edfb;white-space:nowrap}
+.db-mfig svg{display:block;width:100%;max-width:360px;height:auto;margin:4px auto 0}
+/* 選択肢：短い答えは横 4 つ、長い答えは横 2 つ（高さも低めにして、1 画面に入るように） */
+#app .sk-opts.db-o4{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:6px}
+#app .sk-opts.db-o2{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
+#app .sk-opts.db-o4 .sk-opt,#app .sk-opts.db-o2 .sk-opt{min-height:50px;padding:14px 2px 4px;font-size:17px}
+#app .sk-opts.db-o4 .sk-opt small,#app .sk-opts.db-o2 .sk-opt small{font-size:10px}
+#app .sk-opts.figs svg{width:100%;max-width:360px;height:auto;display:block;margin:0 auto}
+#app .db-q2{margin:8px 0 0}
+/* 続きの問題（同じ問題の中で下へ続ける） */
+.db-part.next{margin-top:16px;padding-top:10px;border-top:2px dashed #c9d4e2}
+.db-ph{margin:2px 0 4px;font-size:17px;font-weight:700;color:#1f4e8c}
+.db-psay{margin:8px 0;padding:8px 12px;border-radius:8px;background:#ebfbee;font-size:16px;line-height:1.7}
+/* ヒストグラム（斜線の柱） */
+.db-hist2{display:flex;justify-content:center}
+.db-hist2 svg{width:100%;max-width:420px;height:auto;touch-action:manipulation}
+.db-hc2{cursor:pointer}
+.db-hc2:hover{fill-opacity:.14}
+/* 20 個のデータ：10 個ずつ 2 行 */
+.db-grid.d20{max-width:520px;font-size:18px}
+.db-grid.d20 span{padding:5px 0}
+.db-cap{margin:6px 0 0;font-size:13px;color:#5b6470;text-align:center}
+/* 箱ひげ図をかく */
+.db-bd{display:flex;justify-content:center;margin:4px 0}
+.db-bd svg{width:100%;max-width:520px;height:auto;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none;border:1px solid #e3e8ee;border-radius:8px;background:#fff}
+.db-bdt .db-t{margin:4px auto}
+.db-bdn b{color:#c2410c}
+/* 表：埋める欄の線は実線に（iPhone で点線が消えることがあるため） */
+.db-part .db-t td.fill{border-style:solid;border-color:#aeb8c5}
+#app .db-cards{flex-wrap:nowrap}
+#app .db-cards .fs-card{flex:1 1 0;min-width:0;max-width:96px;padding-left:0;padding-right:0}
+#app .sk-q .ask,#app .db-q2,#app .db-ph,#app .sk-ans p{word-break:normal;overflow-wrap:anywhere;line-break:strict;text-wrap:pretty}
+@media (max-width:480px){.db-part .db-t th,.db-part .db-t td{min-width:26px;padding:1px 2px}}

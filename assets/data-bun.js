@@ -211,26 +211,187 @@
     };
   }
 
-  // ---- ヒストグラムをかく（柱の高さを押す） ----
+  // ---- ヒストグラムをかく（1 本ずつ、オレンジの列で度数の高さを押す。柱は斜線でぬる）2026-11-23 テスト対策と同じかき方に ----
+  var hatchId = 0;
   function histTask(edges, freq, unit) {
     return function (body, ctx) {
-      var n = freq.length, i = ctx.solved ? n : 0, top = Math.max.apply(null, freq) + 1;
+      var n = freq.length, i = ctx.solved ? n : 0, top = Math.max.apply(null, freq) + 1, pid = 'dbHatch' + (++hatchId);
+      var W = 340, H = 250, L = 36, R = 14, B = 34, T = 14;
+      var X = function (k) { return L + k / n * (W - L - R); }, Y = function (v) { return H - B - v / top * (H - B - T); }, f1 = function (v) { return v.toFixed(1); };
       function draw(bad) {
-        var cols = freq.map(function (c, k) {
-          var cells = '';
-          for (var h = top; h >= 1; h--) cells += '<button type="button" class="db-hc' + (k < i && h <= c ? ' on' : '') + (bad && bad[0] === k && bad[1] === h ? ' ng' : '') + (k === i ? ' now' : '') + '" data-c="' + k + '" data-h="' + h + '"' + (k === i ? '' : ' disabled') + '></button>';
-          return '<div class="db-hcol">' + cells + '</div>';
-        }).join('');
-        var y = ''; for (var h = top; h >= 1; h--) y += '<span>' + h + '</span>';
-        body.innerHTML = '<div class="db-hwrap"><div class="db-hy">' + y + '<span class="z">0</span></div><div class="db-hmain"><div class="db-hist" style="--n:' + n + '">' + cols + '</div>' +
-          '<div class="db-hx" style="--n:' + n + '">' + edges.map(function (e) { return '<span>' + e + '</span>'; }).join('') + '</div></div></div><p class="db-note">' + (i < n ? '色のついた列の、度数の高さを押そう。' : '') + (unit ? '（横：' + unit + '、縦：人）' : '') + '</p>';
-        body.querySelectorAll('[data-c]').forEach(function (b) {
-          b.onclick = function () { var h = +b.dataset.h, k = +b.dataset.c; if (h === freq[k]) { i++; while (i < n && freq[i] === 0) i++; draw(); if (i >= n) ctx.ok(); } else { ctx.miss(); draw([k, h]); } };
+        var s = '<defs><pattern id="' + pid + '" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M-2 2L2 -2M0 8L8 0M6 10L10 6" stroke="' + NAVY + '" stroke-width="1.3"/></pattern></defs>';
+        if (i < n) s += '<rect x="' + f1(X(i)) + '" y="' + f1(Y(top)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(top)) + '" fill="#fff1db"/>';
+        for (var v = 0; v <= top; v++) s += '<path d="M' + L + ' ' + f1(Y(v)) + 'H' + (W - R) + '" stroke="#dbe2ea"/>' + txt(L - 7, f1(Y(v) + 5), v, 'end', 14);
+        freq.forEach(function (c, k) { if (k < i && c > 0) s += '<rect x="' + f1(X(k)) + '" y="' + f1(Y(c)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(c)) + '" fill="url(#' + pid + ')" stroke="' + NAVY + '" stroke-width="2"/>'; });
+        if (bad) s += '<rect x="' + f1(X(bad[0])) + '" y="' + f1(Y(bad[1])) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(0) - Y(bad[1])) + '" fill="#ffc9c9" fill-opacity=".7" stroke="#c92a2a" stroke-width="1.5"/>';
+        s += '<path d="M' + L + ' ' + f1(Y(0)) + 'H' + (W - R) + 'M' + L + ' ' + f1(Y(0)) + 'V' + T + '" stroke="' + INK + '" stroke-width="1.4" fill="none"/>';
+        edges.forEach(function (e, k) { s += txt(f1(X(k)), f1(Y(0) + 19), f(e), 'middle', 14); });
+        if (i < n) for (var h = 1; h <= top; h++) s += '<rect class="db-hc2" data-h="' + h + '" x="' + f1(X(i)) + '" y="' + f1(Y(h)) + '" width="' + f1(X(1) - X(0)) + '" height="' + f1(Y(h - 1) - Y(h)) + '" fill="' + NAVY + '" fill-opacity="0"/>';
+        body.innerHTML = '<div class="db-hist2"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="ヒストグラム">' + s + '</svg></div>' +
+          '<p class="db-note">' + (i < n ? 'オレンジの列で、度数の高さを押そう。' : '') + '（横：' + (unit === 'm' ? 'ｍ' : unit) + '、縦：人）</p>';
+        body.querySelectorAll('.db-hc2').forEach(function (r) {
+          r.addEventListener('click', function () {
+            var h = +r.getAttribute('data-h');
+            if (h === freq[i]) { i++; while (i < n && freq[i] === 0) i++; draw(); if (i >= n) ctx.ok(''); } else { ctx.miss(); draw([i, h]); }
+          });
         });
       }
       while (i < n && freq[i] === 0) i++;
       draw();
-      if (ctx.solved) ctx.ok();
+      if (ctx.solved) ctx.ok('');
+    };
+  }
+
+  // ---- 続きの問題を、同じ問題の下へ順に出していく（テスト対策の seqTask と同じ） ----
+  // parts：[{ head?, mount, note? }]。1 つできたら、その下に次を出す（そこまでスクロール）
+  function seq(parts) {
+    return function (body, ctx) {
+      body.innerHTML = '';
+      function open(i) {
+        var p = parts[i], box = document.createElement('section'), inner = document.createElement('div'), fired = false;
+        box.className = 'db-part' + (i ? ' next' : '');
+        if (p.head) box.innerHTML = '<p class="db-ph">' + md(p.head) + '</p>';
+        box.appendChild(inner); body.appendChild(box);
+        p.mount(inner, {
+          solved: ctx.solved, miss: ctx.miss,
+          ok: function (say) {
+            if (fired) return; fired = true;
+            if (i === parts.length - 1) { ctx.ok(say || ''); return; }
+            if (say && p.note) box.insertAdjacentHTML('beforeend', '<div class="db-psay">' + say + '</div>');
+            var nx = open(i + 1);
+            if (!ctx.solved) setTimeout(function () { try { nx.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { nx.scrollIntoView(); } }, 380);
+          }
+        });
+        return box;
+      }
+      open(0);
+    };
+  }
+
+  // ---- 小さい順に並べてから、順に答える（中央値・最頻値・四分位数 など）2026-11-23 ----
+  //   並べた行は、スマホでも PC でもかならず横 1 列。並べ終わったら数のカードは消して、すぐ下に問題を出す
+  //   steps：[{ q, ans, wrong, memo?, hint?, mark?, tint? }]
+  //     mark：{ at: 位置, lab }（at は 0 から数えた番号。3.5 なら 4 番目と 5 番目の間に ∨、整数ならその数を ○ で囲む）
+  //           { hl: [番号…], lab }（その数に色をつける：最頻値）
+  //     tint：[から, まで]（その問題を答えている間、その範囲に色をつける：前半・後半）
+  function sortSteps(data, steps, o) {
+    o = o || {};
+    var s = sorted(data), n = s.length, LB = ['ア', 'イ', 'ウ', 'エ'];
+    steps.forEach(function (st) { st.ch = st.ch || shuffle([st.ans].concat(st.wrong.slice(0, 3))); });
+    return function (body, ctx) {
+      var got = ctx.solved ? n : 0, used = data.map(function () { return !!ctx.solved; }), k = ctx.solved ? steps.length : 0, tried = [], bad = -1;
+      function rowHTML() {
+        var mk = {}, at = function (i) { return mk[i] = mk[i] || {}; };
+        steps.slice(0, k).forEach(function (st) {
+          [].concat(st.mark || []).forEach(function (m) {
+            if (m.hl) m.hl.forEach(function (i) { at(i).hl = true; });
+            else if (m.at % 1) at(Math.ceil(m.at)).v = m.lab || '';
+            else at(m.at).ring = m.lab || '';
+          });
+        });
+        var tint = got === n && k < steps.length && steps[k].tint, marked = Object.keys(mk).length > 0;
+        return '<div class="db-rowbox"><div class="db-row' + (marked ? ' mk' : '') + (n > 10 ? ' many' : '') + '" style="--n:' + n + '">' + s.map(function (v, i) {
+          var m = mk[i] || {}, c = 'db-slot' + (i < got ? ' on' : i === got ? ' now' : '') + (m.ring !== undefined ? ' ring' : '') + (m.hl ? ' hl' : '') + (tint && i >= tint[0] && i <= tint[1] ? ' tint' : '');
+          return '<span class="' + c + '">' + (i < got ? f(v) : '') + (m.v !== undefined ? '<i class="vm">∨</i>' + (m.v ? '<i class="lb lv">' + m.v + '</i>' : '') : '') + (m.ring ? '<i class="lb">' + m.ring + '</i>' : '') + '</span>';
+        }).join('') + '</div></div>';
+      }
+      function draw() {
+        var h = rowHTML();
+        if (got < n) {
+          var cols = n <= 8 ? n : Math.ceil(n / 2);
+          h += '<p class="db-note">' + (o.sortNote || '小さい数から順に押そう。') + '</p><div class="db-pool2" style="--c:' + cols + '">' + data.map(function (v, j) {
+            return '<button type="button" class="fs-card db-num' + (used[j] ? ' used' : '') + (bad === j ? ' ng' : '') + '" data-v="' + j + '"' + (used[j] ? ' disabled' : '') + '>' + f(v) + '</button>';
+          }).join('') + '</div>';
+        } else {
+          var memo = steps.slice(0, k).filter(function (st) { return st.memo; }).map(function (st) { return '<span>' + String(st.memo).replace(/</g, '&lt;') + '</span>'; }).join('');
+          var figs = steps.slice(0, k).filter(function (st) { return st.memoHTML; }).map(function (st) { return '<div class="db-mfig">' + st.memoHTML + '</div>'; }).join('');
+          if (memo) h += '<div class="db-memo2">' + memo + '</div>';
+          h += figs;
+          if (k < steps.length) {
+            var st = steps[k], fig = /^<svg/.test(st.ans), long = !fig && st.ch.some(function (v) { return String(v).length > 7; });
+            h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(st.q) + '</p><div class="sk-opts ' + (fig ? 'figs stack' : long ? 'db-o2' : 'db-o4') + '">' + st.ch.map(function (v, j) {
+              var ng = tried.indexOf(v) >= 0;
+              return '<button type="button" class="sk-opt' + (ng ? ' ng' : '') + '" data-k="' + j + '"' + (ng ? ' disabled' : '') + '><small>' + LB[j] + '</small><span>' + (fig ? v : md(v)) + '</span></button>';
+            }).join('') + '</div>' + (tried.length && st.hint ? '<p class="db-note">' + md(st.hint) + '</p>' : '');
+          }
+        }
+        body.innerHTML = h;
+        body.querySelectorAll('[data-v]').forEach(function (b) {
+          b.onclick = function () {
+            var j = +b.dataset.v;
+            if (data[j] === s[got]) { used[j] = true; got++; bad = -1; draw(); if (got === n && !steps.length) ctx.ok(paras(o.say)); }
+            else { bad = j; ctx.miss(); draw(); }
+          };
+        });
+        body.querySelectorAll('[data-k]').forEach(function (b) {
+          b.onclick = function () {
+            var st = steps[k], v = st.ch[+b.dataset.k];
+            if (v === st.ans) { k++; tried = []; draw(); if (k === steps.length) ctx.ok(paras(o.say)); }
+            else { tried.push(v); ctx.miss(); draw(); }
+          };
+        });
+      }
+      draw();
+      if (ctx.solved) ctx.ok(paras(o.say));
+    };
+  }
+
+  // ---- 箱ひげ図をかく（指やマウスで、数直線の上を押して・なぞって位置を決める）2026-11-23 ----
+  //   箱（第1・第3四分位数）→ 箱の中の線（中央値）→ ひげ（最小値・最大値）の順にかく。
+  //   押している間は線がついてきて、値が上に出る。はなすと答え合わせ
+  var BOX_ORDER = [1, 3, 2, 0, 4], BOX_NAME = ['最小値', '第 1 四分位数', '中央値（第 2 四分位数）', '第 3 四分位数', '最大値'];
+  function fiveHTML(five, cur) {
+    var hd = ['最小値', '第 1 四分位数', '中央値', '第 3 四分位数', '最大値'];
+    return '<table class="db-t db-five"><tr>' + hd.map(function (h, i) { return '<th' + (i === cur ? ' class="hl"' : '') + '>' + h + '</th>'; }).join('') + '</tr><tr>' + five.map(function (v, i) { return '<td' + (i === cur ? ' class="hl"' : '') + '>' + f(v) + '</td>'; }).join('') + '</tr></table>';
+  }
+  function boxDraw(five, lo, hi, step, o) {
+    o = o || {};
+    return function (body, ctx) {
+      var W = 340, H = 128, L = 18, R = 18, yc = 50, bh = 36, y0 = 100, k = ctx.solved ? 5 : 0, P = {}, busy = false;
+      var X = function (v) { return L + (v - lo) / (hi - lo) * (W - L - R); }, f1 = function (v) { return (+v).toFixed(1); };
+      var snap = five.some(function (v) { return v % 1; }) ? 0.5 : 1;
+      if (ctx.solved) five.forEach(function (v, i) { P[i] = v; });
+      var st = '';
+      for (var v = lo; v <= hi + 1e-9; v += 1) st += '<path d="M' + f1(X(v)) + ' 8V' + y0 + '" stroke="' + ((v - lo) % step ? '#f1f4f7' : '#e1e7ee') + '"/>';
+      st += '<path d="M' + (L - 8) + ' ' + y0 + 'H' + (W - R + 8) + '" stroke="' + INK + '" stroke-width="1.3"/>';
+      for (v = lo; v <= hi + 1e-9; v += 1) st += '<path d="M' + f1(X(v)) + ' ' + y0 + 'v' + ((v - lo) % step ? 3 : 6) + '" stroke="' + INK + '"/>' + ((v - lo) % step ? '' : txt(f1(X(v)), y0 + 21, f(v), 'middle', 14));
+      body.innerHTML = '<div class="db-bdt"></div><div class="db-bd"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="箱ひげ図をかく">' + st + '<g class="dy"></g><rect class="hit" x="0" y="0" width="' + W + '" height="' + H + '" fill="transparent"/></svg></div><p class="db-note db-bdn"></p>';
+      var svg = body.querySelector('svg'), dy = body.querySelector('.dy');
+      function shape(Q, live, ng) {
+        var s = '', top = yc - bh / 2, line = function (x, y1, y2, c, w) { return '<path d="M' + f1(x) + ' ' + y1 + 'V' + y2 + '" stroke="' + (c || NAVY) + '" stroke-width="' + (w || 2.2) + '"/>'; };
+        if (Q[1] !== undefined && Q[3] !== undefined) s += '<rect x="' + f1(Math.min(X(Q[1]), X(Q[3]))) + '" y="' + top + '" width="' + f1(Math.abs(X(Q[3]) - X(Q[1]))) + '" height="' + bh + '" fill="' + BLUE + '" stroke="' + NAVY + '" stroke-width="2"/>';
+        else if (Q[1] !== undefined) s += line(X(Q[1]), top, top + bh);
+        if (Q[2] !== undefined) s += line(X(Q[2]), top, top + bh, NAVY, 2.8);
+        if (Q[0] !== undefined) s += '<path d="M' + f1(X(Q[0])) + ' ' + yc + 'H' + f1(X(Q[1])) + 'M' + f1(X(Q[0])) + ' ' + (yc - 10) + 'V' + (yc + 10) + '" stroke="' + INK + '" stroke-width="2" fill="none"/>';
+        if (Q[4] !== undefined) s += '<path d="M' + f1(X(Q[3])) + ' ' + yc + 'H' + f1(X(Q[4])) + 'M' + f1(X(Q[4])) + ' ' + (yc - 10) + 'V' + (yc + 10) + '" stroke="' + INK + '" stroke-width="2" fill="none"/>';
+        if (live !== undefined) {
+          var c = ng ? '#c92a2a' : '#e8590c', x = X(live), bx = Math.max(22, Math.min(W - 22, x));
+          s += '<path d="M' + f1(x) + ' 18V' + y0 + '" stroke="' + c + '" stroke-width="1.6" stroke-dasharray="4 3"/>' +
+            '<rect x="' + f1(bx - 20) + '" y="0" width="40" height="18" rx="5" fill="' + c + '"/>' + txt(f1(bx), 14, f(live), 'middle', 14, false, '#fff');
+        }
+        return s;
+      }
+      function note() {
+        body.querySelector('.db-bdt').innerHTML = fiveHTML(five, k < 5 ? BOX_ORDER[k] : -1);
+        body.querySelector('.db-bdn').innerHTML = k < 5 ? '<b>' + BOX_NAME[BOX_ORDER[k]] + '</b>（' + f(five[BOX_ORDER[k]]) + '）の位置を押そう。' : '';
+      }
+      function paint(live, ng) { var Q = {}; Object.keys(P).forEach(function (i) { Q[i] = P[i]; }); if (live !== undefined && k < 5) Q[BOX_ORDER[k]] = live; dy.innerHTML = shape(Q, live, ng); }
+      function valAt(ev) {
+        var r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W, v = lo + (x - L) / (W - L - R) * (hi - lo);
+        return Math.max(lo, Math.min(hi, Math.round(v / snap) * snap));
+      }
+      var down = false;
+      svg.addEventListener('pointerdown', function (ev) { if (k >= 5 || busy) return; down = true; try { svg.setPointerCapture(ev.pointerId); } catch (e) {} ev.preventDefault(); paint(valAt(ev)); });
+      svg.addEventListener('pointermove', function (ev) { if (down) paint(valAt(ev)); });
+      var up = function (ev) {
+        if (!down) return; down = false;
+        var v = valAt(ev), want = five[BOX_ORDER[k]];
+        if (Math.abs(v - want) < 1e-9) { P[BOX_ORDER[k]] = want; k++; paint(); note(); if (k === 5) ctx.ok(paras(o.say || 'ひげの両はしが最小値と最大値、箱の両はしが第 1・第 3 四分位数、箱の中の線が中央値です。')); }
+        else { ctx.miss(); busy = true; paint(v, true); body.querySelector('.db-bdn').innerHTML = f(v) + ' ではないよ。表の値をもう一度見よう。'; setTimeout(function () { busy = false; paint(); note(); }, 900); }
+      };
+      svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', function () { down = false; paint(); });
+      paint(); note();
+      if (ctx.solved) ctx.ok(paras(o.say || ''));
     };
   }
 
@@ -243,8 +404,10 @@
       if (ctx.solved) o.order.forEach(function (c) { c.v = c.a; });
       function firstOpen() { for (var k = 0; k < o.order.length; k++) if (o.order[k].v === null) return o.order[k]; return null; }
       cur = firstOpen();
+      // reveal：下の欄（標準偏差など）と公式は、そこまで来たら 1 つずつ出す
+      var reached = function (c) { return !o.reveal || c.v !== null || c === cur; };
       function draw(bad) {
-        var grid = o.grids[g], html = '<div class="db-tw"><table class="db-t">' + grid.map(function (row, ri) {
+        var grid = o.grids[g], html = !grid ? '' : '<div class="db-tw"><table class="db-t">' + grid.map(function (row, ri) {
           return '<tr>' + row.map(function (c) {
             if (c === null) return '<td class="off"></td>';
             if (typeof c === 'object' && c.a !== undefined) return '<td class="fill' + (c === cur ? ' now' : '') + (c.v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(c) + '">' + (c.v !== null ? md(c.v) : '') + '</td>';
@@ -253,8 +416,9 @@
           }).join('') + '</tr>';
         }).join('') + '</table></div>';
         var box = function (c) { return '<span class="fill db-box' + (c === cur ? ' now' : '') + (c.v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(c) + '">' + (c.v !== null ? md(c.v) : '') + '</span>'; };
-        if (o.below) html += '<table class="db-t db-b">' + o.below.map(function (r) { return '<tr><th>' + md(r[0]) + '</th><td class="fill' + (r[1] === cur ? ' now' : '') + (r[1].v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(r[1]) + '">' + (r[1].v !== null ? md(r[1].v) : '') + '</td></tr>'; }).join('') + '</table>';
-        if (o.formula) html += '<div class="db-fx">' + (o.formulaHead ? '<p class="db-fh">公式　' + o.formulaHead + '</p>' : '') + '<p class="db-fl fit1">' + o.formula(box) + '</p></div>';
+        var below = (o.below || []).filter(function (r) { return reached(r[1]); });
+        if (below.length) html += '<table class="db-t db-b">' + below.map(function (r) { return '<tr><th>' + md(r[0]) + '</th><td class="fill' + (r[1] === cur ? ' now' : '') + (r[1].v !== null ? ' ok' : '') + '" data-i="' + o.order.indexOf(r[1]) + '">' + (r[1].v !== null ? md(r[1].v) : '') + '</td></tr>'; }).join('') + '</table>';
+        if (o.formula && (!o.formulaAt || reached(o.formulaAt))) html += '<div class="db-fx">' + (o.formulaHead ? '<p class="db-fh">公式　' + o.formulaHead + '</p>' : '') + '<p class="db-fl fit1">' + o.formula(box) + '</p></div>';
         if (o.grids.length > 1) html = '<div class="sk-ctrl db-flip"><button type="button" class="fs-btn" data-flip>表の向きを変える</button></div>' + html;
         html += '<div class="db-cards">' + (cur ? cur.cards.map(function (v, k) { return '<button type="button" class="fs-card' + (bad === v ? ' db-bad' : '') + '" data-k="' + k + '">' + md(v) + '</button>'; }).join('') : '') + '</div>';
         if (cur && cur.hint) html = '<p class="db-note">' + md(cur.hint) + '</p>' + html;
@@ -287,7 +451,7 @@
         var h = (o.pre || '') + (memo ? '<ol class="db-memo">' + memo + '</ol>' : '');
         if (k < steps.length) {
           var s = steps[k], fig = /^<svg/.test(s.ans), long = !fig && s.ch.some(function (v) { return /[぀-ヿ一-鿿]/.test(v) && v.length > 9; });
-          h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(s.q) + '</p><div class="sk-opts' + (fig ? ' figs stack' : long ? ' stack wrap' : '') + '">' + s.ch.map(function (v, j) {
+          h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(s.q) + '</p><div class="sk-opts' + (fig ? ' figs stack' : long ? ' stack wrap' : o.compact ? ' db-o4' : '') + '">' + s.ch.map(function (v, j) {
             var bad = tried.indexOf(v) >= 0;
             return '<button type="button" class="sk-opt' + (bad ? ' ng' : '') + '" data-k="' + j + '"' + (bad ? ' disabled' : '') + '><small>' + LBL[j] + '</small><span>' + (fig ? v : md(v)) + '</span></button>';
           }).join('') + '</div>' + (tried.length && s.hint ? '<p class="db-note">' + md(s.hint) + '</p>' : '');
@@ -323,5 +487,6 @@
   global.DB = { md: md, sum: sum, mean: mean, sorted: sorted, median: median, halves: halves, quartiles: quartiles, modes: modes, f: f, list: list, near: near,
     dotPlot: dotPlot, histogram: histogram, boxPlot: boxPlot, scatter: scatter, cloudNear: cloudNear, corr: corr,
     line: line, grid: grid, fitAll: fitAll, rootS: rootS, sdForms: sdForms, chain: chain, paras: paras,
-    run: run, sortTask: sortTask, thenPick: thenPick, dotTask: dotTask, histTask: histTask, cell: cell, tableTask: tableTask, hd: hd, termQuiz: termQuiz };
+    run: run, sortTask: sortTask, thenPick: thenPick, dotTask: dotTask, histTask: histTask, cell: cell, tableTask: tableTask, hd: hd, termQuiz: termQuiz,
+    seq: seq, sortSteps: sortSteps, boxDraw: boxDraw, fiveHTML: fiveHTML };
 })(window);
