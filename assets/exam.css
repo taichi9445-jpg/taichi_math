@@ -126,3 +126,6 @@
 /* 表：埋める欄の線は実線に（iPhone で点線の罫線が消えることがあるため） */
 .ex-part .db-t td.fill { border-style: solid; border-color: #aeb8c5; }
 .ex-hintbody > svg { display: block; width: 100%; max-width: 340px; height: auto; margin: 0 auto; }
+/* ---- 2026-11-24 ---- */
+/* 「平均値 = …」の「平均値」が途中で折れないように（ことばの所はまとめて、式の空白で折り返す） */
+.ex-done .fs-jp, .ex-memo .fs-jp { white-space: nowrap; }

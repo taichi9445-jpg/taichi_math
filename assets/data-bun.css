@@ -135,3 +135,7 @@
 #app .db-cards .fs-card{flex:1 1 0;min-width:0;max-width:96px;padding-left:0;padding-right:0}
 #app .sk-q .ask,#app .db-q2,#app .db-ph,#app .sk-ans p{word-break:normal;overflow-wrap:anywhere;line-break:strict;text-wrap:pretty}
 @media (max-width:480px){.db-part .db-t th,.db-part .db-t td{min-width:26px;padding:1px 2px}}
+/* 6 択（テスト対策）：横 3 つ × 2 段 */
+#app .sk-opts.db-o3{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+#app .sk-opts.db-o3 .sk-opt{min-height:50px;padding:14px 2px 4px;font-size:17px}
+#app .sk-opts.db-o3 .sk-opt small{font-size:10px}

@@ -276,8 +276,8 @@
   //     tint：[から, まで]（その問題を答えている間、その範囲に色をつける：前半・後半）
   function sortSteps(data, steps, o) {
     o = o || {};
-    var s = sorted(data), n = s.length, LB = ['ア', 'イ', 'ウ', 'エ'];
-    steps.forEach(function (st) { st.ch = st.ch || shuffle([st.ans].concat(st.wrong.slice(0, 3))); });
+    var s = sorted(data), n = s.length, LB = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ'];
+    steps.forEach(function (st) { st.ch = st.ch || shuffle([st.ans].concat(st.wrong.slice(0, (o.n || 4) - 1))); });
     return function (body, ctx) {
       var got = ctx.solved ? n : 0, used = data.map(function () { return !!ctx.solved; }), k = ctx.solved ? steps.length : 0, tried = [], bad = -1;
       function rowHTML() {
@@ -309,7 +309,7 @@
           h += figs;
           if (k < steps.length) {
             var st = steps[k], fig = /^<svg/.test(st.ans), long = !fig && st.ch.some(function (v) { return String(v).length > 7; });
-            h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(st.q) + '</p><div class="sk-opts ' + (fig ? 'figs stack' : long ? 'db-o2' : 'db-o4') + '">' + st.ch.map(function (v, j) {
+            h += '<p class="db-q2"><b>' + (k + 1) + '</b> ' + md(st.q) + '</p><div class="sk-opts ' + (fig ? 'figs stack' : long ? 'db-o2' : st.ch.length > 4 ? 'db-o3' : 'db-o4') + '">' + st.ch.map(function (v, j) {
               var ng = tried.indexOf(v) >= 0;
               return '<button type="button" class="sk-opt' + (ng ? ' ng' : '') + '" data-k="' + j + '"' + (ng ? ' disabled' : '') + '><small>' + LB[j] + '</small><span>' + (fig ? v : md(v)) + '</span></button>';
             }).join('') + '</div>' + (tried.length && st.hint ? '<p class="db-note">' + md(st.hint) + '</p>' : '');

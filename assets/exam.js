@@ -554,17 +554,26 @@
       { q: '平均値を求める式を選びなさい。', ans: plus(d) + '÷6', wrong: meanF, n: 4, hint: '平均値 = (データの合計) ÷ (データの個数)' },
       { pre: '<p class="ex-memo">' + md('平均値 = (' + d.join(' + ') + ') ÷ 6') + '</p>', q: '平均値を選びなさい。', ans: f(mean) + u, wrong: D.near(mean, [sum / 5, (mn + mx) / 2, med, mean + 0.5], 5).map(function (v) { return v + u; }), hint: '合計を 6 でわろう。' }
     ], { n: 6, noCount: true, done: '平均値 = (' + d.join(' + ') + ') ÷ 6 = ' + f(mean) + '（点）' });
-    var med1 = D.sortTask(d, D.thenPick('中央値を選びなさい。', f(med) + u, D.near(med, [so[2], so[3], mean, (mn + mx) / 2], 5).map(function (v) { return v + u; }),
-      'データは 6 個（偶数）なので、中央値は 3 番目と 4 番目の平均。(' + so[2] + ' + ' + so[3] + ') ÷ 2 = ' + f(med) + '（点）'));
+    // 2026-11-24 先生の要望（データの分析 32・34 にそろえる）：小さい順に並べたら、そのすぐ下で 中央値 → 最頻値（60 点はさらに四分位数・最小値・最大値）と続けて答える。
+    //   並べた行はかならず横 1 列。中央値・四分位数の位置に ∨（間）や ○（その数）の印、最頻値に色が残る
+    var hl = []; so.forEach(function (v, i) { if (v === g.mode) hl.push(i); });
     var modeW = uniq([f(med), f(mean), mx, mn, g.mode + 1, g.mode - 1, 2].map(function (v) { return v + u; })).filter(function (v) { return v !== g.mode + u; });
-    var mode1 = chooseTask([{ q: '最頻値を選びなさい。', ans: g.mode + u, wrong: shuffle(modeW), hint: 'いちばん多く出てくる値をさがそう。' }],
-      { n: 6, done: '最頻値 = ' + g.mode + '（点）', say: g.mode + ' が 2 回でいちばん多いので、最頻値は ' + g.mode + '（点）' });
+    var steps = [
+      { q: '中央値を選びなさい。', ans: f(med) + u, wrong: D.near(med, [so[2], so[3], mean, (mn + mx) / 2], 5).map(function (v) { return v + u; }), memo: '中央値 ' + f(med) + u, mark: { at: 2.5, lab: '中央値' }, hint: 'データは 6 個（偶数）なので、3 番目と 4 番目の平均。' },
+      { q: '最頻値を選びなさい。', ans: g.mode + u, wrong: shuffle(modeW), memo: '最頻値 ' + g.mode + u, mark: { hl: hl }, hint: 'いちばん多く出てくる値をさがそう。' }
+    ];
+    var say = ['データは 6 個（偶数）なので、中央値は 3 番目と 4 番目の平均。(' + so[2] + ' + ' + so[3] + ') ÷ 2 = ' + f(med) + '（点）', g.mode + ' が 2 回でいちばん多いので、最頻値は ' + g.mode + '（点）'];
     var parts = [
       { head: '(1) 平均値', mount: mean1 },
-      { head: '(2) 中央値　データを小さい順に並べなさい。', mount: med1, note: true }
+      { head: '(2) データを小さい順に並べて、中央値と最頻値' + (level >= 60 ? '、四分位数' : '') + 'を求めなさい。', mount: null, note: true }
     ];
-    if (level >= 60) parts = parts.concat(boxParts(so, med, mean));   // 60 点：中央値のあとに四分位数と箱ひげ図
-    parts.push({ head: '(' + (parts.length + 1) + ') 最頻値', mount: mode1 });
+    if (level >= 60) {   // 60 点：最頻値のあとに 第1・第3四分位数 → 最小値・最大値、そのあと箱ひげ図
+      var bp = boxParts(so, med, mean);
+      steps = steps.concat(bp.steps);
+      say.push('第1四分位数 ' + so[1] + '、第3四分位数 ' + so[4] + '、最小値 ' + mn + '、最大値 ' + mx + '（点）');
+      parts.push({ head: '(3) 箱ひげ図', mount: bp.box });
+    }
+    parts[1].mount = D.sortSteps(d, steps, { n: 6, say: say });
     return {
       q: '【データの代表値' + (level >= 60 ? 'と箱ひげ図' : '') + '】<br>以下のデータは、6 人の小テスト（10 点満点）の得点である。<br>' +
         (level >= 60 ? '代表値と四分位数を求め、箱ひげ図を選びなさい。' : '平均値・中央値・最頻値を求めなさい。'), sub: D.line(d),
@@ -572,18 +581,18 @@
     };
   }
 
-  // ---- 60 点：最小値・第1四分位数・第3四分位数・最大値 → 正しい箱ひげ図を 4 択 ----
+  // ---- 60 点：第1四分位数・第3四分位数・最小値・最大値（並べた行の続き）→ 正しい箱ひげ図を 4 択 ----
   //   6 個のデータ（小さい順に so[0]〜so[5]）。下半分 so[0..2] の中央値が第1四分位数 so[1]、上半分 so[3..5] の中央値が第3四分位数 so[4]
   function boxParts(so, med, mean) {
     var u = ' 点', q1 = so[1], q3 = so[4], mn = so[0], mx = so[5];
     var pool = uniq(so.concat([med, so[2], so[3], (so[0] + so[1]) / 2, (so[4] + so[5]) / 2]).map(function (v) { return f(v); }));
     var opts = function (ans, extra) { return shuffle(uniq(extra.map(function (v) { return f(v); }).concat(shuffle(pool))).filter(function (v) { return v !== f(ans); })).slice(0, 5).map(function (v) { return v + u; }); };
-    var quart = chooseTask([
-      { q: '最小値を選びなさい。', ans: f(mn) + u, wrong: opts(mn, [mx, q1]), hint: 'いちばん小さい値。' },
-      { q: '第1四分位数を選びなさい。', ans: f(q1) + u, wrong: opts(q1, [(so[0] + so[1]) / 2, so[2], mn]), hint: 'データを中央値で前半 3 個（' + so.slice(0, 3).join('、') + '）と後半 3 個に分ける。前半の中央値が第1四分位数。' },
-      { q: '第3四分位数を選びなさい。', ans: f(q3) + u, wrong: opts(q3, [(so[4] + so[5]) / 2, so[3], mx]), hint: '後半 3 個（' + so.slice(3).join('、') + '）の中央値が第3四分位数。' },
-      { q: '最大値を選びなさい。', ans: f(mx) + u, wrong: opts(mx, [mn, q3]), hint: 'いちばん大きい値。' }
-    ], { n: 6, noCount: true, done: '最小値 ' + mn + '、第1四分位数 ' + q1 + '、中央値 ' + f(med) + '、第3四分位数 ' + q3 + '、最大値 ' + mx + '（点）' });
+    var steps = [
+      { q: '第1四分位数を選びなさい。', ans: f(q1) + u, wrong: opts(q1, [(so[0] + so[1]) / 2, so[2], mn]), memo: '第1四分位数 ' + q1 + u, mark: { at: 1, lab: 'Q₁' }, tint: [0, 2], hint: '色のついた前半 3 個の中央値が第1四分位数。' },
+      { q: '第3四分位数を選びなさい。', ans: f(q3) + u, wrong: opts(q3, [(so[4] + so[5]) / 2, so[3], mx]), memo: '第3四分位数 ' + q3 + u, mark: { at: 4, lab: 'Q₃' }, tint: [3, 5], hint: '色のついた後半 3 個の中央値が第3四分位数。' },
+      { q: '最小値を選びなさい。', ans: f(mn) + u, wrong: opts(mn, [mx, q1]), memo: '最小値 ' + mn + u, hint: 'いちばん小さい値。' },
+      { q: '最大値を選びなさい。', ans: f(mx) + u, wrong: opts(mx, [mn, q3]), memo: '最大値 ' + mx + u, hint: 'いちばん大きい値。' }
+    ];
     // 箱ひげ図：正しい 1 つ ＋ よくあるまちがい 3 つ
     var five = [mn, q1, med, q3, mx], key = function (a) { return a.map(function (v) { return f(v); }).join(','); };
     var okFive = function (a) { for (var i = 0; i < 4; i++) if (a[i] > a[i + 1]) return false; return a[0] >= 0 && a[4] <= 10; };
@@ -594,10 +603,7 @@
     var fig = function (a) { return D.boxPlot(a, 0, 10, 1); };
     var box = D.chain([{ q: '正しい箱ひげ図を選びなさい。', ans: fig(five), wrong: wrongs.map(fig), memo: '箱ひげ図', memoHTML: fig(five), hint: '左から 最小値・第1四分位数・中央値・第3四分位数・最大値 の順。箱の中の線が中央値。' }],
       { say: '' });
-    return [
-      { head: '(3) 最小値・第1四分位数・第3四分位数・最大値', mount: quart },
-      { head: '(4) 箱ひげ図', mount: box }
-    ];
+    return { steps: steps, box: box };
   }
 
   // ---- 7 度数分布表 → ヒストグラム（1 つの大問で） ----
@@ -608,7 +614,7 @@
     var edges = range(s.k + 1, function (i) { return s.lo + i * s.w; }), data = [];
     fr.forEach(function (c, i) { for (var j = 0; j < c; j++) data.push(s.w === 1 ? +(edges[i] + rint(0, 9) / 10).toFixed(1) : rint(edges[i], edges[i + 1] - 1)); });
     data = D.sorted(data);
-    var un = s.unit, cls = function (i) { return edges[i] + ' 以上 ' + edges[i + 1] + ' 未満'; }, mid = function (i) { return f((edges[i] + edges[i + 1]) / 2); };
+    var un = s.unit === 'm' ? 'ｍ' : s.unit, cls = function (i) { return edges[i] + ' 以上 ' + edges[i + 1] + ' 未満'; }, mid = function (i) { return f((edges[i] + edges[i + 1]) / 2); };
     var cells = fr.map(function (v) { return D.cell(v, ['0', '1', '2', '3', '4', '5']); }), tot = D.cell(10, ['8', '9', '10', '11', '12', '20']);
     tot.hint = '度数の合計は、データの個数と同じ';
     var grid = [[D.hd('階級（' + un + '）'), D.hd('階級値（' + un + '）'), D.hd('度数（人）')]].concat(fr.map(function (_, i) { return [cls(i), mid(i), cells[i]]; }), [['計', null, tot]]);
@@ -762,16 +768,16 @@
     var H = D.hd, horiz = [[H('')].concat(range(N, function (i) { return H(String(i + 1)); }), [H('合計'), H('平均')]),
       [H('データ')].concat(x, [sumC, meanC]), [H('偏差')].concat(dC, [null, null]), [H('偏差²')].concat(sC, [ssC, vC])];
     var sd = rootOf(V), sdU = sd + ' ' + unit;
-    var vWrong = uniq([ss, V + 1, V * 2, f(ss / 5)]).filter(function (v) { return v !== String(V); });
-    var sdWrong = uniq([V + ' ' + unit, (V * V) + ' ' + unit, rootOf(ss) + ' ' + unit, '√' + (V + 1) + ' ' + unit, (V * 2) + ' ' + unit]).filter(function (v) { return v !== sdU; });
+    var vWrong = uniq([V + ' ' + unit, ss, V + 1, V * 2, f(ss / 5)]).filter(function (v) { return v !== String(V); });
+    var sdWrong = uniq([sd, V + ' ' + unit, (V * V) + ' ' + unit, rootOf(ss) + ' ' + unit, '√' + (V + 1) + ' ' + unit, (V * 2) + ' ' + unit]).filter(function (v) { return v !== sdU; });
     return {
       q: '以下は、6 人の小テストの得点（点）である。<br>このデータの分散と標準偏差を求めなさい。',
       mount: seqTask([
         { head: '(1) 表を埋めなさい。', mount: D.tableTask({ grids: [horiz], order: [sumC, meanC].concat(dC, sC, [ssC, vC]), say: '' }) },
         { head: '(2) 分散と標準偏差', mount: D.chain([
-          { q: '分散を選びなさい。', ans: String(V), wrong: vWrong, memo: '分散 = ' + V, hint: '分散 = (偏差の 2 乗の合計) ÷ (データの個数)' },
-          { q: '標準偏差を選びなさい。', ans: sdU, wrong: sdWrong, memo: '標準偏差 = ' + sdU, hint: '標準偏差 = √分散。単位はデータと同じ「点」。' }
-        ], { say: '分散は偏差の 2 乗の平均値で ' + ss + ' ÷ 6 = ' + V + '。標準偏差は √' + V + (sd !== '√' + V ? ' = ' + sd : '') + '（' + unit + '）' }) }
+          { q: '分散を選びなさい。', ans: String(V), wrong: vWrong, memo: '分散 = ' + V, hint: '分散 = (偏差の 2 乗の合計) ÷ (データの個数)。分散には単位をつけないよ。' },
+          { q: '標準偏差を選びなさい。単位にも注意しよう。', ans: sdU, wrong: sdWrong, memo: '標準偏差 = ' + sdU, hint: '標準偏差 = √分散。単位はデータと同じ「点」。' }
+        ], { say: '分散は偏差の 2 乗の平均値で ' + ss + ' ÷ 6 = ' + V + '。標準偏差は √' + V + (sd !== '√' + V ? ' = ' + sd : '') + '（' + unit + '）。単位がつくのは標準偏差だけ。' }) }
       ])
     };
   }
